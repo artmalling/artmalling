@@ -10,7 +10,6 @@
  *        
  ******************************************************************************/
 -->
-
 <%@ page language="java" contentType="text/html;charset=utf-8" import="common.util.Util, 
    common.vo.SessionInfo, kr.fujitsu.ffw.base.BaseProperty"   %>
 
