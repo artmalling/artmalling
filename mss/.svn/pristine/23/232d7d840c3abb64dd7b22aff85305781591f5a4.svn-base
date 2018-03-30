@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae203.mc">
+<!-- MASTER 조회 -->
+    <gauce name="H_MASTER">  
+        <column colName="STR_CD"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"      colType="TB_STRING"      size="11"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"    colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_DT"      colType="TB_STRING"      size="25"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_S_DT"    colType="TB_STRING"      size="10"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_E_DT"    colType="TB_STRING"      size="10"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+     <gauce name="H_DETAIL">  
+        <column colName="P_MBSH_NO"         colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_CUST_NAME"       colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_SS_NO"           colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="P_HOME_ADDR"       colType="TB_STRING"      size="100"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="P_HOME_PH1"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_HOME_PH2"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="P_HOME_PH3"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_MOBILE_PH1"      colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="P_MOBILE_PH2"      colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_MOBILE_PH3"      colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_EMAIL"           colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+    </gauce> 
+    <query name="SEL_MASTER">
+        <![CDATA[     
+		    SELECT STR.STR_CD
+		         , MST.EVENT_CD
+		         , MST.EVENT_NAME
+		         , MST.EVENT_S_DT||MST.EVENT_E_DT AS EVENT_DT
+		         , MST.EVENT_S_DT
+		         , MST.EVENT_E_DT
+		      FROM DPS.PC_EVTMST MST, DPS.PC_STREVT STR
+		     WHERE MST.EVENT_CD = STR.EVENT_CD
+		       AND MST.EVENT_TYPE = '5'
+		       AND STR.STR_CD = ?
+		       AND ((? >= MST.EVENT_S_DT AND ? <= MST.EVENT_E_DT) OR
+		                                (? >= MST.EVENT_S_DT AND ? <= MST.EVENT_E_DT) OR
+		                                (MST.EVENT_S_DT >= ? AND MST.EVENT_S_DT <= ?) OR
+		                                (MST.EVENT_E_DT >= ? AND MST.EVENT_E_DT <= ?))
+		       AND MST.EVENT_CD LIKE ? || '%' 
+        ]]>        
+    </query> 
+    
+     <!-- Detail SAVE -->
+    <query name="INS_PRMMENTY">
+        <![CDATA[
+            INSERT INTO  MSS.MC_PRMMENTY ( 
+                                      ENTRY_DT
+                                    , STR_CD
+                                    , EVENT_CD
+                                    , SEQ_NO
+                                    , ENTY_NAME
+                                    , SS_NO
+                                    , PHONE1_NO
+                                    , PHONE2_NO
+                                    , PHONE3_NO
+                                    , HP1_NO
+                                    , HP2_NO
+                                    , HP3_NO
+                                    , ADDR
+                                    , EMAIL
+                                    , RECP_NO
+                                    , ENTY_PATH
+                                    , REG_DATE
+                                    , REG_ID
+                                    , MOD_DATE
+                                    , MOD_ID
+                                       )
+                   VALUES  ( 
+                               ?
+                             , ?
+                             , ?
+                             ,  (SELECT NVL(MAX(SEQ_NO), 0) + 1 SEQ_NO
+                                     FROM MSS.MC_PRMMENTY
+                                    WHERE ENTRY_DT = ?
+                                      AND STR_CD = ?
+                                      AND EVENT_CD = ?)
+                             , ?
+                             , DCS.SC_Crypto_FUN('ENC', ?)
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , ? 
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , ? 
+                             , '02'
+                             , SYSDATE
+                             , ?
+                             , SYSDATE 
+                             , ?
+                           ) 
+        ]]>
+    </query> 
+ 
+    <!-- H_RESULT 조회 -->
+    <gauce name="H_RESULT">  
+        <column colName="MBSH_NO"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+     
+    <query name="SEL_RESULT">
+        <![CDATA[      
+			SELECT POI.MBSH_NO
+              FROM DPS.PS_TRHEADER TRH, DPS.PS_TRPOINT POI
+             WHERE TRH.STR_CD  = POI.STR_CD
+               AND TRH.SALE_DT = POI.SALE_DT
+               AND TRH.POS_NO  = POI.POS_NO
+               AND TRH.TRAN_NO = POI.TRAN_NO
+          --     AND POI.IN_TYPE = 'C'
+               AND TRH.STR_CD  = ?  
+               AND SUBSTR(TRH.SALE_DT,3,6) = SUBSTR(?,2,6)
+               AND TRH.POS_NO  = SUBSTR(?,8,4)
+               AND TRH.TRAN_NO = SUBSTR(?,12,5)
+        ]]>        
+    </query>  
+    
+    <!-- H_MBSH_NO 조회 -->
+    <gauce name="H_MBSH_NO">  
+        <column colName="P_MBSH_NO"         colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_CUST_NAME"       colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_SS_NO"           colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="P_HOME_ZIP_CD1"    colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_HOME_ZIP_CD2"    colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_HOME_ADDR1"      colType="TB_STRING"      size="100"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_HOME_ADDR2"      colType="TB_STRING"      size="100"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="P_HOME_PH1"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_HOME_PH2"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="P_HOME_PH3"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_MOBILE_PH1"      colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="P_MOBILE_PH2"      colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_MOBILE_PH3"      colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_EMAIL1"          colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_EMAIL2"          colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce> 
+  
+</service>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/eord104.eo">
+    
+    
+    <!-- 발주일 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+        SELECT SLP.SLIP_NO                                                                /* 전표넘버*/
+             , SLP.ORD_DT 
+             , SLP.STR_CD                                                           /* 점코드     */
+             , DPS.FN_GET_STORE_NAME(SLP.STR_CD)     AS STR_NM_1                    /* 점명       */
+             , SLP.PUMBUN_CD                                                        /* 브랜드코드   */
+             , DPS.FN_GET_PUMBUN_NAME(SLP.PUMBUN_CD) AS PUMBUN_NM_1                 /* 브랜드명     */
+             , SLP.SLIP_FLAG                                                        /* 전표구분   */
+             , COM.FN_GET_COMM_NAME('D', 'P201', SLP.SLIP_FLAG) AS  SLIP_FLAG_NM    /* 전표구분명 */
+             , SLP.SLIP_PROC_STAT                                                                  /* 전표진행상태 */
+             , COM.FN_GET_COMM_NAME('D', 'P207', SLP.SLIP_PROC_STAT) AS  SLIP_PROC_STAT_NM         /* 전표진행상태명 */
+             , CASE WHEN SLP.CHK_DT = '        ' THEN '' ELSE SLP.CHK_DT END AS CHK_DT
+             , CASE SLP.SLIP_FLAG WHEN 'B' THEN SLP.ORD_TOT_QTY *-1 ELSE SLP.ORD_TOT_QTY END     AS ORD_TOT_QTY  --발주수량
+             , CASE SLP.SLIP_FLAG WHEN 'B' THEN SLP.NEW_COST_TAMT  *-1 ELSE SLP.NEW_COST_TAMT  END     AS NEW_COST_TAMT   -- 신원가금액
+             , CASE SLP.SLIP_FLAG WHEN 'B' THEN SLP.NEW_SALE_TAMT  *-1 ELSE SLP.NEW_SALE_TAMT  END     AS NEW_SALE_TAMT   -- 신매가그매액
+             , CASE SLP.SLIP_FLAG WHEN 'B' THEN SLP.CHK_TOT_QTY  *-1 ELSE SLP.CHK_TOT_QTY  END     AS CHK_TOT_QTY  --검품수량
+             , CASE SLP.SLIP_FLAG WHEN 'B' THEN SLP.CHK_COST_TAMT  *-1 ELSE SLP.CHK_COST_TAMT  END     AS CHK_COST_TAMT  --검품원가
+             , CASE SLP.SLIP_FLAG WHEN 'B' THEN SLP.CHK_SALE_TAMT  *-1 ELSE SLP.CHK_SALE_TAMT  END     AS CHK_SALE_TAMT  --검품매가
+             , PBN.SKU_FLAG             --단품구분
+          FROM DPS.PO_SLPMST SLP
+             , DPS.PC_STRPBN PBN
+         WHERE PBN.STR_CD  = SLP.STR_CD
+           AND PBN.PUMBUN_CD = SLP.PUMBUN_CD
+           AND SLP.SLIP_FLAG IN('A','B')
+       --    AND SLP.SLIP_PROC_STAT IN ('04', '09')
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND SLP.ORD_CF_DT <> '        '
+           AND SLP.DEL_FLAG  = 'N'
+        -- AND PBN.EDI_YN = 'Y'  
+           AND SLP.STR_CD = ?
+           AND SLP.VEN_CD = ?
+           AND SLP.PUMBUN_CD LIKE ? || '%'
+           AND SLP.SLIP_FLAG LIKE ? || '%'
+        ]]>
+    </query>
+    <!-- 발주일 -->
+    <query name="SEL_ORD_DT">
+        <![CDATA[
+           AND SLP.ORD_CF_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+    
+     <!-- 검품 예정일 -->
+    <query name="SEL_CHK_DT">
+        <![CDATA[
+           AND SLP.CHK_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+    <!-- 정렬 -->
+    <query name="SEL_ORDERBY">
+        <![CDATA[
+      ORDER BY SLP.STR_CD, SLP.SLIP_NO DESC
+        ]]>
+    </query>
+    
+    <!-- 상세조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+        SELECT DTL.STR_CD
+             , DTL.PUMBUN_CD
+             , DPS.FN_GET_PUMMOK_NAME(DTL.PUMMOK_CD) AS  PUMMOK_NM
+             , CASE WHEN DTL.SKU_CD = '        ' THEN '' ELSE DTL.SKU_CD END AS SKU_CD
+             , DPS.FN_GET_SKU_NAME(DTL.SKU_CD) AS SKU_NM 
+             , DTL.MG_RATE
+             , CASE DTL.SLIP_FLAG WHEN 'B' THEN DTL.NEW_COST_PRC *-1 ELSE DTL.NEW_COST_PRC END     AS NEW_COST_PRC
+             , CASE DTL.SLIP_FLAG WHEN 'B' THEN DTL.NEW_SALE_PRC *-1 ELSE DTL.NEW_SALE_PRC END     AS NEW_SALE_PRC
+             , CASE DTL.SLIP_FLAG WHEN 'B' THEN DTL.ORD_QTY *-1 ELSE DTL.ORD_QTY END               AS ORD_QTY
+             , CASE DTL.SLIP_FLAG WHEN 'B' THEN DTL.NEW_COST_AMT *-1 ELSE DTL.NEW_COST_AMT END     AS NEW_COST_AMT
+             , CASE DTL.SLIP_FLAG WHEN 'B' THEN DTL.NEW_SALE_AMT *-1 ELSE DTL.NEW_SALE_AMT END     AS NEW_SALE_AMT
+             , CASE DTL.SLIP_FLAG WHEN 'B' THEN DTL.CHK_QTY *-1 ELSE DTL.CHK_QTY END               AS CHK_QTY
+             , CASE DTL.SLIP_FLAG WHEN 'B' THEN DTL.CHK_COST_AMT *-1 ELSE DTL.CHK_COST_AMT END     AS CHK_COST_AMT
+             , CASE DTL.SLIP_FLAG WHEN 'B' THEN DTL.CHK_SALE_AMT *-1 ELSE DTL.CHK_SALE_AMT END     AS CHK_SALE_AMT
+          FROM DPS.PO_SLPDTL    DTL  
+             , DPS.PO_SLPMST    MST
+             , DPS.PC_STRPBN    PBN
+         WHERE DTL.STR_CD    =  MST.STR_CD
+           AND DTL.SLIP_NO   = MST.SLIP_NO
+           AND DTL.STR_CD    = PBN.STR_CD
+           AND MST.PUMBUN_CD = PBN.PUMBUN_CD
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND DTL.STR_CD = ?
+           AND DTL.SLIP_NO = ?   
+        ]]>
+    </query>
+    
+    
+
+</service>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 하진영
+ * 회 사 명 : 가하홀딩스
+ * 작 성 일 : 2011.09.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 사은품지급내역(영수증별)
+ -->
+<service name="/mcae450.mc">
+
+<!-- 사은행사 MASTER 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="RTN_DT"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />  
+        <column colName="RTN_POS"           colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="RTN_POS_NM"        colType="TB_STRING"     size="100"   dec="0" keyType="TB_NORMAL"  />
+        <column colName="RTN_TRAN"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="O_SALE_DT"         colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />  
+        <column colName="O_POS_NO"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="O_TRAN_NO"         colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="EVENT_CD"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />  
+        <column colName="EVENT_NAME"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  /> 
+        <column colName="SALE_TOT_AMT"      colType="TB_DECIMAL"    size="20"    dec="0" keyType="TB_NORMAL"  />   
+        <column colName="SKU_CD"          	colType="TB_STRING"     size="100"   dec="0" keyType="TB_NORMAL"  />  
+        <column colName="SKU_NAME"        	colType="TB_STRING"     size="100"   dec="0" keyType="TB_NORMAL"  />
+        <column colName="PRSNT_QTY"         colType="TB_DECIMAL"    size="20"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="PRSNT_AMT"         colType="TB_DECIMAL"    size="20"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="PRSNT_DT"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="PRSNT_NO"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="SEQ_NO"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+    </gauce>
+     
+    <query name="SEL_MASTER">
+        <![CDATA[   
+
+		SELECT A.STR_CD
+		     , A.SALE_DT RTN_DT
+		     , A.POS_NO  RTN_POS
+		     , DPS.FN_GET_POS_NAME(A.STR_CD,A.POS_NO) RTN_POS_NM
+		     , A.TRAN_NO RTN_TRAN
+		     , A.O_SALE_DT
+		     , A.O_POS_NO
+		     , A.O_TRAN_NO 
+		     , C.EVENT_CD
+		     , DPS.FN_GET_EVENT_NAME(C.EVENT_CD) EVENT_NAME
+		     , A.SALE_TOT_AMT
+		     , C.SKU_CD
+		     , DPS.FN_GET_SKU_NAME(C.SKU_CD) SKU_NAME
+		     , C.PRSNT_QTY
+		     , C.PRSNT_AMT
+		     , B.PRSNT_DT
+		     , B.PRSNT_NO
+		     , B.SEQ_NO
+		 FROM DPS.PS_DISHEADER A
+		    , MSS.MC_PRSNTRECP B
+		    , MSS.MC_EVTSKUPRSNT C
+		WHERE A.STR_CD= ?
+		AND A.SALE_DT BETWEEN ? AND ?
+		AND A.POS_NO < '9000'
+		AND A.TRAN_FLAG='1' -- 반품
+		AND A.POS_NO LIKE ?||'%'
+		AND A.TRAN_NO LIKE ?||'%'
+		AND A.O_POS_NO IS NOT NULL
+		AND A.STR_CD = B.STR_CD
+		AND B.PRSNT_DT BETWEEN TO_CHAR(TO_DATE(A.O_SALE_DT)-100,'YYYYMMDD') AND A.O_SALE_DT
+		AND B.SALE_DT = A.O_SALE_DT
+		AND B.POS_NO = A.O_POS_NO
+		AND B.TRAN_NO = A.O_TRAN_NO
+		AND B.STR_CD = C.STR_CD
+		AND B.PRSNT_DT = C.PRSNT_DT
+		AND B.PRSNT_NO = C.PRSNT_NO
+		AND C.PRSNT_FLAG IN ('1','2','3')
+		AND C.CANCEL_GB <> '2'
+		AND C.EVENT_CD LIKE ?||'%'
+		ORDER BY STR_CD
+		       , RTN_DT
+		       , RTN_POS
+		       , RTN_TRAN
+		       , O_SALE_DT
+		       , O_POS_NO
+		       , O_TRAN_NO
+        ]]>        
+    </query>
+    
+<!-- 사은행사 DETAIL 조회 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="PRSNT_DT"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="PRSNT_NO"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="SEQ_NO"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="SALE_DT"         	colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />  
+        <column colName="POS_NO"          	colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="POS_NM"        	colType="TB_STRING"     size="100"   dec="0" keyType="TB_NORMAL"  />
+        <column colName="TRAN_NO"         	colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="RTN_YN"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="RTN_DT"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />  
+        <column colName="RTN_POS"           colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="RTN_POS_NM"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="RTN_TRAN"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="RTN_AMT"      		colType="TB_DECIMAL"    size="20"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="DT"            	colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />   
+    </gauce>
+    
+    <query name="SEL_DETAIL">
+        <![CDATA[   
+			SELECT A.STR_CD
+			     , A.PRSNT_DT
+			     , A.PRSNT_NO
+			     , A.SEQ_NO
+			     , A.SALE_DT
+			     , A.POS_NO
+			     , DPS.FN_GET_POS_NAME(A.STR_CD, A.POS_NO) POS_NM
+			     , A.TRAN_NO
+			     , SUBSTR(A.YN,1,1) RTN_YN
+			     , SUBSTR(A.YN,2,8) RTN_DT
+			     , SUBSTR(A.YN,10,4) RTN_POS
+			     , DPS.FN_GET_POS_NAME(A.STR_CD, SUBSTR(A.YN,10,4)) RTN_POS_NM
+			     , SUBSTR(A.YN,14,5) RTN_TRAN
+			     --, SUBSTR(A.YN,19,13) RTN_AMT
+			     , ( SELECT SALE_TOT_AMT 
+			          FROM DPS.PS_DISHEADER
+			         WHERE STR_CD = A.STR_CD
+			           AND SALE_DT = A.SALE_DT
+			           AND POS_NO = A.POS_NO 
+			           AND TRAN_NO = A.TRAN_NO ) RTN_AMT
+			     , DECODE(SUBSTR(A.YN,2,8),NULL,NULL,?)DT
+			FROM 
+			(
+			SELECT A.STR_CD
+			     , A.PRSNT_DT
+			     , A.PRSNT_NO
+			     , A.SEQ_NO
+			     , A.SALE_DT
+			     , A.POS_NO
+			     , A.TRAN_NO
+			     , DPS.FN_CHK_EVTRECP(A.STR_CD, A.SALE_DT, A.POS_NO, A.TRAN_NO) YN
+			  FROM MSS.MC_PRSNTRECP A
+			WHERE A.STR_CD = ?
+			  AND A.PRSNT_DT= ? 
+			  AND A.PRSNT_NO = ? 
+			  ) A
+			ORDER BY STR_CD
+			       , PRSNT_DT
+			       , PRSNT_NO
+        ]]>        
+    </query>
+    
+</service>

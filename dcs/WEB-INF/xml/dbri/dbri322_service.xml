@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.05.30
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  회원 매출 순위 현황
+ -->
+<service name="/dbri322.db">
+    <!-- 회원 매출 순위 현황  -->
+    <gauce name="H_MASTER"> 
+    	<column colName="NUM"            		colType="TB_STRING"      size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    	<column colName="CUST_NO"       		colType="TB_STRING"      size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    	<column colName="CUST_NAME"       		colType="TB_STRING"      size="50"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    	<column colName="CUST_GRADE"       		colType="TB_STRING"      size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_SALE_AMT"      	colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT" 		        colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_SALE_RATE"     	colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 회원 매출 순위 현황 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+           SELECT A.NUM	      --순위
+			     , A.CUST_ID	AS 	 CUST_NO     				  --회원id
+			     , A.CUST_NAME								      --회원명
+			     , C.CUST_GRADE                      			  -- 회원등급
+			     , NVL(A.REAL_SALE_AMT,0) AS CUST_SALE_AMT 		  -- 회원매출
+			     , D.POINT                   					  -- 잔여포인트
+			FROM (
+			      SELECT CUST_ID
+			           , CUST_NAME
+			           , SUM(REAL_SALE_AMT) AS REAL_SALE_AMT      
+                 	   , RANK() OVER(ORDER BY SUM(REAL_SALE_AMT) DESC) AS NUM      
+			        FROM (             
+			              SELECT D.CARD_NO, D.CUST_ID, D.CUST_NAME
+			                  , SUM(DECODE(C.TRAN_FLAG,'0',NVL(C.SALE_TOT_AMT,0) - NVL(C.REDU_TOT_AMT,0) - NVL(C.DC_TOT_AMT,0),
+			                                              (NVL(C.SALE_TOT_AMT,0) - NVL(C.REDU_TOT_AMT,0) - NVL(C.DC_TOT_AMT,0))*-1)) AS REAL_SALE_AMT
+			               FROM DCS.DO_POINT_ADD A
+			                  , DCS.DB_BRANCH B
+			                  , DPS.PS_TRHEADER C
+			                  , ( 
+			                     SELECT N.CARD_NO, M.CUST_ID, M.CUST_NAME
+			                       FROM DCS.DM_CUSTOMER M
+			                          , DCS.DM_CARD     N
+			                      WHERE M.CUST_ID = N.CUST_ID                                              
+			                        AND M.COMP_PERS_FLAG = 'P'
+			                        AND M.CUST_STAT_FLAG = '0'
+			                   ) D
+			              WHERE A.BRCH_ID = B.BRCH_ID
+			                AND DCS.F_GET_STR_CD(A.BRCH_ID)     = C.STR_CD  (+)
+			                AND '20' || SUBSTR(A.RECP_NO, 2, 6) = C.SALE_DT (+)
+			                AND SUBSTR(A.RECP_NO, 8, 4)         = C.POS_NO  (+)
+			                AND SUBSTR(A.RECP_NO, 12, 5)        = C.TRAN_NO (+)
+                			AND B.STR_CD = ?
+			                AND A.ADD_DT  BETWEEN ? AND ?
+			                AND A.CARD_NO = D.CARD_NO
+			              GROUP BY D.CARD_NO, D.CUST_ID, D.CUST_NAME
+			                
+			              UNION ALL   
+			
+			              SELECT D.CARD_NO, D.CUST_ID, D.CUST_NAME
+			                  , SUM(NVL(C.SALE_TOT_AMT,0) - NVL(C.REDU_TOT_AMT,0) - NVL(C.DC_TOT_AMT,0)) AS REAL_SALE_AMT
+			               FROM DCS.DO_POINT_USE A
+			                  , DCS.DB_BRANCH B
+			                  , DPS.PS_TRHEADER C
+			                  , ( 
+			                     SELECT N.CARD_NO, M.CUST_ID, M.CUST_NAME
+			                       FROM DCS.DM_CUSTOMER M
+			                          , DCS.DM_CARD     N
+			                      WHERE M.CUST_ID = N.CUST_ID                                              
+			                        AND M.COMP_PERS_FLAG = 'P'
+			                        AND M.CUST_STAT_FLAG = '0'
+			                   ) D
+			              WHERE A.BRCH_ID = B.BRCH_ID
+			                AND DCS.F_GET_STR_CD(A.BRCH_ID)     = C.STR_CD  (+)
+			                AND '20' || SUBSTR(A.RECP_NO, 2, 6) = C.SALE_DT (+)
+			                AND SUBSTR(A.RECP_NO, 8, 4)         = C.POS_NO  (+)
+			                AND SUBSTR(A.RECP_NO, 12, 5)        = C.TRAN_NO (+)
+                			AND B.STR_CD = ?
+			                AND A.USE_DT  BETWEEN ? AND ?
+			                AND A.CARD_NO = D.CARD_NO
+			              GROUP BY D.CARD_NO, D.CUST_ID, D.CUST_NAME
+			            )
+			      GROUP BY  CUST_ID, CUST_NAME  
+			      ORDER BY 3 DESC
+			      )A 
+			      , DCS.V_DO_CUST_GRADE_CURR C
+			      , DCS.DO_CUST_TPOINT D
+			  WHERE A.CUST_ID = C.CUST_ID
+			    AND A.CUST_ID = D.CUST_ID
+			    AND A.REAL_SALE_AMT BETWEEN ? AND ?
+			    AND A.NUM <= ?
+        ]]>        
+    </query>  
+    
+    
+    <!-- 회원 매출 순위 현황 -->
+    <query name="SEL_MASTER_BACK">        
+        <![CDATA[
+           SELECT  ROWNUM                              -- 순위
+                 , A.CUST_NO                           -- 회원번호
+                 , B.CUST_NAME                         -- 회원명
+                 , C.CUST_GRADE                        -- 회원등급
+                 , NVL(A.SALE_AMT,0) AS CUST_SALE_AMT  -- 회원매출
+                 , D.POINT					           -- 잔여포인트
+              FROM (
+                      SELECT A.CUST_NO
+                           , SUM(A.NORM_SALE_AMT) SALE_AMT
+                        FROM DPS.PS_DAYCUST A
+                       WHERE A.STR_CD = ?
+                         AND A.SALE_DT >= ?
+                         AND A.SALE_DT <= ?
+                       GROUP BY A.CUST_NO
+                       ORDER BY 2 DESC
+                  ) A
+                  , DCS.DM_CUSTOMER B
+                  , DCS.V_DO_CUST_GRADE_CURR C
+                  , DCS.DO_CUST_TPOINT D
+            WHERE A.CUST_NO = B.CUST_ID
+              AND A.CUST_NO = C.CUST_ID
+              AND A.CUST_NO = D.CUST_ID
+              AND A.SALE_AMT BETWEEN ? AND ?
+              AND ROWNUM <= ?
+              ORDER BY 5 DESC
+        ]]>        
+    </query>  
+    
+    
+    
+    
+</service>

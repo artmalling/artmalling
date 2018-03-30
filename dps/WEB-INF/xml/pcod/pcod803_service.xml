@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.01.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  POS 메세지 관리
+ -->
+<service name="/pcod803.pc">
+
+    <!-- POS 메세지  마스터 헤더 -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"    colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MSG_ID"    colType="TB_STRING" size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MSG_EXPL"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MSG_FLAG"  colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"    colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- POS 메세지  상세 헤더 -->
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="MSG_ID"      colType="TB_STRING"  size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRT_FLAG"    colType="TB_STRING"  size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MSG_NO"      colType="TB_DECIMAL" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SORT_NO"     colType="TB_DECIMAL" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRT_MSG"     colType="TB_STRING"  size="42"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"      colType="TB_STRING"  size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- POS 메세지 조회조건 마스터 조회 쿼리  -->
+    <query name="SEL_POSRCPMSG">        
+        <![CDATA[
+            SELECT STR_CD
+                 , MSG_ID
+                 , MSG_EXPL
+                 , MSG_FLAG
+                 , USE_YN
+              FROM DPS.PC_POSRCPMSG
+             WHERE STR_CD   LIKE ?
+               AND MSG_FLAG LIKE ?
+               AND USE_YN   LIKE ?
+               AND MSG_EXPL LIKE '%'|| ? ||'%'
+             ORDER BY MSG_ID
+        ]]>        
+    </query>
+
+    <!-- POS 메세지 디테일 조회 쿼리  -->            
+    <query name="SEL_POSRCPMSGDTL">
+        <![CDATA[
+            SELECT MSG_ID
+                 , PRT_FLAG
+                 , MSG_NO
+                 , SORT_NO
+                 , PRT_MSG
+                 , USE_YN
+              FROM DPS.PC_POSRCPMSGDTL
+             WHERE MSG_ID   = ?
+             ORDER BY SORT_NO
+        ]]>
+    </query>
+    
+    <!-- 새로운 POS 메세지  ID 조회 쿼리  -->
+    <query name="SEL_POSRCPMSG_NEW_ID">        
+        <![CDATA[
+            SELECT LPAD( NVL( MAX( TO_NUMBER(MSG_ID) ) + 1, 1 ), 4, '0') AS NEW_MSG_ID
+              FROM DPS.PC_POSRCPMSG
+        ]]>        
+    </query>
+    
+    <!-- POS 메세지  마스터 신규 입력  -->
+    <query name="INS_POSRCPMSG">        
+        <![CDATA[
+            INSERT INTO DPS.PC_POSRCPMSG (
+                                          MSG_ID
+                                        , STR_CD
+                                        , MSG_FLAG
+                                        , MSG_EXPL
+                                        , USE_YN
+                                        , REG_DATE
+                                        , REG_ID
+                                        , MOD_DATE
+                                        , MOD_ID
+                                         )
+                                  VALUES (
+                                          ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , SYSDATE
+                                        , ?
+                                        , SYSDATE
+                                        , ?
+                                         )
+            
+        ]]>        
+    </query>
+    
+    <!-- POS 메세지  마스터 수정  -->
+    <query name="UPD_POSRCPMSG">
+        <![CDATA[
+            UPDATE DPS.PC_POSRCPMSG
+               SET STR_CD    = ? 
+                 , MSG_FLAG  = ? 
+                 , MSG_EXPL  = ? 
+                 , USE_YN    = ?
+                 , MOD_DATE  = SYSDATE
+                 , MOD_ID    = ?
+             WHERE MSG_ID    = ? 
+        ]]>
+    </query>
+    
+    <!-- POS 메세지  디테일 신규 입력  -->
+    <query name="INS_POSRCPMSGDTL">        
+        <![CDATA[
+            INSERT INTO DPS.PC_POSRCPMSGDTL (
+                                             MSG_ID
+                                           , MSG_NO
+                                           , PRT_FLAG
+                                           , PRT_MSG
+                                           , SORT_NO
+                                           , USE_YN
+                                           , REG_DATE
+                                           , REG_ID
+                                           , MOD_DATE
+                                           , MOD_ID
+                                            )
+                                     VALUES (
+                                             ?
+                                           , ( SELECT NVL( MAX( MSG_NO ) + 1, 1 ) FROM DPS.PC_POSRCPMSGDTL WHERE MSG_ID = ? )
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , SYSDATE
+                                           , ?
+                                           , SYSDATE
+                                           , ?
+                                            )
+            
+        ]]>        
+    </query>
+    
+    <!-- POS 메세지  디테일 수정  -->
+    <query name="UPD_POSRCPMSGDTL">
+        <![CDATA[
+            UPDATE DPS.PC_POSRCPMSGDTL
+               SET PRT_FLAG  = ? 
+                 , PRT_MSG   = ? 
+                 , SORT_NO   = ?
+                 , USE_YN    = ?
+                 , MOD_DATE  = SYSDATE
+                 , MOD_ID    = ?
+             WHERE MSG_ID    = ? 
+               AND MSG_NO    = ?
+        ]]>
+    </query>
+    <!-- POS 메세지  디테일 사용여부 수정  -->
+    <query name="UPD_POSRCPMSGDTL_USE_YN">
+        <![CDATA[
+            UPDATE DPS.PC_POSRCPMSGDTL
+               SET USE_YN    = ?
+                 , MOD_DATE  = SYSDATE
+                 , MOD_ID    = ?
+             WHERE MSG_ID    = ? 
+        ]]>
+    </query>
+</service>

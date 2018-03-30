@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 조형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  청구 대상 데이터 청구.
+ -->
+<service name="/psal923.ps">
+    <!-- VAN사청구대상 목록 -->
+    <gauce name="H_MASTER">
+        <column colName="COMM_CODE"       colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+		<column colName="COMM_NAME1"      colType="TB_STRING"  size="30"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CNT"             colType="TB_DECIMAL" size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PROC_CNT"        colType="TB_DECIMAL" size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="RTN_MSG"         colType="TB_STRING"  size="60"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEQ">
+        <column colName="CHRG_SEQ"       colType="TB_STRING"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <!-- 청구대상 목록 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.COMM_CODE
+			      ,A.COMM_NAME1
+			      ,B.CNT
+			      ,'' AS PROC_CNT
+			      ,'' AS RTN_MSG
+			  FROM COM.TC_COMMCODE A,  
+			     (SELECT '1' AS FCL_FLAG
+			            , (SELECT COUNT ( * )
+			                 FROM (SELECT A.*
+			                      FROM DPS.PD_BUYREQPREP A
+			                          ,DPS.PD_POSTPONE B
+			                     WHERE A.STR_CD = B.STR_CD(+)
+			                           AND A.SALE_DT = B.SALE_DT(+)
+			                           AND A.POS_NO = B.POS_NO(+)
+			                           AND A.TRAN_NO = B.TRAN_NO(+)
+			                           AND A.POS_SEQ_NO = B.POS_SEQ_NO(+)
+			                           AND A.PAY_TYPE = B.PAY_TYPE(+)
+			                           AND NVL(A.APPR_DT,'00000000') < ? -- 어제까지의 데이터
+			                           AND A.CHRG_DT IS NULL -- 청구가 안된 건
+			                           AND B.SALE_DT IS NULL -- 청구보류가 되지 않은 건
+			                    UNION ALL
+			                    SELECT A.*
+			                      FROM DPS.PD_BUYREQPREP A
+			                          ,DPS.PD_POSTPONE B
+			                     WHERE A.STR_CD = B.STR_CD
+			                           AND A.SALE_DT = B.SALE_DT
+			                           AND A.POS_NO = B.POS_NO
+			                           AND A.TRAN_NO = B.TRAN_NO
+			                           AND A.POS_SEQ_NO = B.POS_SEQ_NO
+			                           AND A.PAY_TYPE = B.PAY_TYPE
+			                           AND NVL(A.APPR_DT,'00000000') < ? -- 어제까지의 데이터
+			                           AND A.CHRG_DT IS NULL -- 청구가 안된 건
+			                           AND B.DUE_DT <= ? -- 청구보류건 청구일이 당일이전인 건
+			                     )  m)   AS CNT
+			                     FROM DUAL) B
+			 WHERE     A.COMM_PART LIKE 'D033'
+			       AND A.COMM_CODE = '1'
+			       AND A.COMM_CODE = B.FCL_FLAG(+)
+			ORDER BY A.COMM_CODE
+        ]]>        
+    </query>
+    
+    <!-- 청구대상 목록 조회 -->
+    <query name="SEL_HEADER">        
+        <![CDATA[
+            SELECT 
+               P.CHRG_DT
+		      ,P.CHRG_SEQ
+		      ,P.REC_FLAG
+		      ,P.REC_CNT
+		      ,P.SUM_AMT
+		      ,P.FILLER
+		      ,P.EDI_SEND_DATE
+		      ,P.REG_DATE
+		      ,P.REG_ID
+		  FROM DPS.PD_BUYREQH P
+             WHERE P.CHRG_DT = ?
+               AND P.CHRG_SEQ = ?
+        ]]>        
+    </query>
+    
+    <!-- 청구대상 목록 조회 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT P.CHRG_DT
+                  ,P.CHRG_SEQ
+                  ,P.SEQ_NO
+                  ,P.REC_FLAG
+                  ,P.DEVICE_ID
+                  ,P.WORK_FLAG
+                  ,P.COMP_NO
+                  ,P.CARD_NO
+                  ,P.EXP_DT
+                  ,P.DIV_MONTH
+                  ,P.APPR_AMT
+                  ,P.SVC_AMT
+                  ,P.APPR_NO
+                  ,P.APPR_DT
+                  ,P.APPR_TIME
+                  ,P.CAN_DT
+                  ,P.CAN_TIME
+                  ,P.CCOMP_CD
+                  ,P.BCOMP_CD
+                  ,P.JBRCH_ID
+                  ,P.DOLLAR_FLAG
+                  ,P.FILLER
+                  ,P.REG_DATE
+                  ,P.REG_ID
+              FROM DPS.PD_BUYREQD P
+             WHERE P.CHRG_DT = ?
+               AND P.CHRG_SEQ = ?
+        ]]>        
+    </query>
+    
+    <!-- 청구대상 목록 조회 -->
+    <query name="SEL_CHRGSEQ">        
+        <![CDATA[
+         SELECT CHRG_SEQ 
+           FROM DPS.PD_BUYREQH
+          WHERE CHRG_DT       = ?
+            AND EDI_SEND_DATE IS NULL
+        ]]>        
+    </query>
+    
+    <!-- 청구대상 목록 조회 -->
+    <query name="UPD_BUYREQH">        
+        <![CDATA[
+         UPDATE DPS.PD_BUYREQH
+            SET EDI_SEND_DATE = SYSDATE
+          WHERE CHRG_DT       = ?
+            AND CHRG_SEQ      = ?
+            AND EDI_SEND_DATE IS NULL 
+        ]]>        
+    </query>
+    
+    <!-- 점별KSNET단말기ID조회  -->
+    <query name="SEL_DEVICEID">        
+        <![CDATA[
+			SELECT A.COMM_NAME2 AS DEVICE_ID
+			  FROM COM.TC_COMMCODE A 
+			     , DPS.PC_STRMST B
+			 WHERE A.SYS_PART = 'D'
+			   AND A.COMM_PART = B.VANID_FLAG
+			   AND A.REFER_CODE = B.STR_CD
+			   AND B.STR_CD = ? 
+        ]]>        
+    </query>
+    
+</service>

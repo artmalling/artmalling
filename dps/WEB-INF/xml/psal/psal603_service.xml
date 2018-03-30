@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2010.04.19
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  사은품수령후매출취소현황
+ -->
+<service name="/psal603.ps">
+
+    <!-- 사은품수령후매출취소현황 헤더  -->
+    <gauce name="H_SEL_GIFT_CANCEL">
+        <column colName="SALE_DT"      colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="POS_NO"       colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TRAN_NO"      colType="TB_STRING"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PUMBUN_CD"    colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PUMBUN_NM"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="POSSALE_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SAL_CAN_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="EST_RTN_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="RTN_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="BUY_COST_PRC" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SKU_NAME"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+
+    <!-- 사은품수령후매출취소현황 -->
+    <query name="SEL_GIFT_CANCEL">
+        <![CDATA[
+        SELECT REC.SALE_DT
+             , REC.POS_NO
+             , REC.TRAN_NO
+             , PRS.PUMBUN_CD
+             , DPS.FN_GET_PUMBUN_NAME(PRS.PUMBUN_CD) AS PUMBUN_NM
+             , PRS.POSSALE_AMT
+             , PRS.POSSALE_AMT AS SAL_CAN_AMT
+             , ESM.BUY_COST_PRC AS EST_RTN_AMT
+             , REC.PAY_AMT
+             , ESM.BUY_COST_PRC - REC.PAY_AMT AS RTN_AMT
+             , ESM.BUY_COST_PRC
+             , SKU.SKU_NAME
+          FROM MSS.MC_POSRECOVERY REC
+             , MSS.MC_PRSNTPBN    PRS
+             , MSS.MC_EVTSKUPRSNT EVT
+             , MSS.MC_EVTSKUMST   ESM
+             , DPS.PC_STRSKUMST   SKU
+         WHERE PRS.PRSNT_DT  = EVT.PRSNT_DT
+           AND PRS.STR_CD    = EVT.STR_CD
+           AND PRS.PRSNT_NO  = EVT.PRSNT_NO
+           AND ESM.STR_CD    = EVT.STR_CD
+           AND ESM.SKU_CD    = EVT.SKU_CD
+           AND SKU.STR_CD    = EVT.STR_CD
+           AND SKU.SKU_CD    = EVT.SKU_CD
+           AND ESM.EVENT_CD  = EVT.EVENT_CD
+           AND REC.SALE_DT   = PRS.PRSNT_DT
+           AND REC.STR_CD    = PRS.STR_CD
+           AND REC.POS_NO    = PRS.POS_NO
+           AND REC.TRAN_NO   = PRS.TRAN_NO
+           AND PRS.STR_CD    = ?
+           AND REC.SALE_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+    
+    <query name="SEL_GIFT_CANCEL_WHERE_POS_NO">
+        <![CDATA[
+           AND REC.POS_NO    LIKE ?||'%'
+        ]]>
+    </query>
+    
+</service>

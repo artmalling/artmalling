@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.10
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  품번정보를 조회한다.
+ -->
+<service name="/pcod202.pc">
+
+  <gauce name="H_SEL_MASTER">   
+        <column colName="PUMBUN_CD"        colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_NAME"        colType="TB_STRING" size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"           colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"         colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BIZ_TYPE"         colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_PUMBUN_CD"    colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="REP_PUMBUN_NAME"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAX_FLAG"         colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_FLAG"      colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_TYPE"      colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_FLAG"         colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="SKU_TYPE"         colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STYLE_TYPE"       colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="ITG_ORD_FLAG"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="BRAND_CD"         colType="TB_STRING" size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="APP_S_DT"         colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="APP_E_DT"         colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"           colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_PBNMST">
+        <![CDATA[
+			SELECT PMT.PUMBUN_CD         
+			     , PMT.PUMBUN_NAME      
+			     , PMT.RECP_NAME                      
+			     , VMT.VEN_CD       
+			     , VMT.VEN_NAME        
+			     , PMT.BIZ_TYPE              
+			     , PMT.REP_PUMBUN_CD    
+			     , (SELECT PUMBUN_NAME  FROM DPS.PC_PBNMST WHERE PUMBUN_CD = PMT.REP_PUMBUN_CD)    AS REP_PUMBUN_NM
+			     , PMT.TAX_FLAG     
+			     , PMT.PUMBUN_FLAG
+			     , PMT.PUMBUN_TYPE           
+			     , PMT.SKU_FLAG         
+			     , PMT.SKU_TYPE                       
+			     , PMT.STYLE_TYPE   
+			     , PMT.ITG_ORD_FLAG
+			     , BRD.BRAND_NM BRAND_CD     
+			     , PMT.APP_S_DT         
+			     , PMT.APP_E_DT        
+			     , PMT.USE_YN         
+              FROM DPS.PC_PBNMST PMT     
+                 , DPS.PC_VENMST VMT
+                 , DPS.PC_BRDMST BRD
+             WHERE PMT.VEN_CD = VMT.VEN_CD
+               AND PMT.BRAND_CD  = BRD.BRAND_CD(+)  
+        ]]>         
+    </query>  
+    <query name="SEL_PBNMST_WHERE_BIZ_TYPE">
+        <![CDATA[
+               AND PMT.BIZ_TYPE         = ?
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_WHERE_SKU_FLAG">
+        <![CDATA[
+               AND PMT.SKU_FLAG         = ?
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_WHERE_PUMBUN_TYPE">
+        <![CDATA[
+               AND PMT.PUMBUN_TYPE      = ?
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_WHERE_PUMBUN_FLAG">
+        <![CDATA[
+               AND PMT.PUMBUN_FLAG      = ?
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_WHERE_SKU_TYPE">
+        <![CDATA[
+               AND PMT.SKU_TYPE         = ?
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_WHERE_USE_YN">
+        <![CDATA[
+               AND PMT.USE_YN           = ?
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_WHERE_LIKE_REP_PUMBUN_CD">
+        <![CDATA[
+               AND PMT.REP_PUMBUN_CD    =  ?
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_WHERE_LIKE_VEN_CD">
+        <![CDATA[
+               AND VMT.VEN_CD LIKE    ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_WHERE_LIKE_VEN_NAME">
+        <![CDATA[
+               AND VMT.VEN_NAME LIKE  '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_WHERE_LIKE_PUMBUN_CD">
+        <![CDATA[
+               AND PMT.PUMBUN_CD LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_WHERE_LIKE_PUMBUN_NAME">
+        <![CDATA[
+               AND PMT.PUMBUN_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_PBNMST_ORDER">
+        <![CDATA[
+            ORDER BY PMT.PUMBUN_CD
+        ]]>
+    </query>
+    
+</service>

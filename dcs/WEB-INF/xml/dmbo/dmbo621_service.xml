@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작  성  자  : 김영진
+ * 회  사  명  : 한국후지쯔
+ * 작  성  일  : 2010.03.23
+ * 변  경  일  : 
+ * 변경내용 : 
+ * 개    요 :  영수증사후적립(회원등록이전)
+ -->
+<service name="/dmbo621.do">
+
+    <gauce name="H_CUST"> 
+        <column colName="FLAG"         colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"      colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"    colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH1"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH2"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH3"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="MOBILE_PH1"   colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"   colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"   colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_ADDR"    colType="TB_STRING"  size="406" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT"        colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL1"       colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL2"       colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRADE_NAME"   colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH1"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH2"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH3"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"      colType="TB_STRING"  size="64"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_STAT_CD" colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 회원정보 조회 -->
+    <query name="SEL_CUSTINFO">        
+        <![CDATA[
+            SELECT '' AS FLAG
+                 , A.CUST_ID
+                 , A.CUST_NAME
+                 , A.HOME_PH1
+                 , A.HOME_PH2
+                 , A.HOME_PH3
+                 , A.MOBILE_PH1 
+                 , A.MOBILE_PH2 
+                 , A.MOBILE_PH3
+                 , A.SS_NO
+                 , DECODE(NULL, '', A.HOME_ZIP_CD1 ||'-'|| A.HOME_ZIP_CD2 ||' '|| A.HOME_ADDR1 ||' '|| A.HOME_ADDR2) HOME_ADDR
+                 , C.POINT
+                 , A.EMAIL1
+                 , A.EMAIL2
+                 , COM.FN_GET_COMM_NAME('D', 'D011', B.CUST_GRADE) GRADE_NAME
+                 , A.OFFI_PH1
+                 , A.OFFI_PH2
+                 , A.OFFI_PH3
+                 , (SELECT MAX(CARD_NO) KEEP(DENSE_RANK FIRST ORDER BY MOD_DATE DESC) AS CARD_NO 
+                      FROM DCS.DM_CARD 
+                     WHERE CUST_ID      = A.CUST_ID
+                       AND CARD_STAT_CD = '0') AS CARD_NO
+                 , (SELECT MAX(D.CARD_STAT_CD)  
+                      FROM DCS.DM_CARD  D
+                     WHERE D.CUST_ID = A.CUST_ID
+                       AND D.CARD_NO = CARD_NO
+                       AND D.CARD_STAT_CD = '0') CARD_STAT_CD
+              FROM DCS.DM_CUSTOMER A
+                 , DCS.DO_CUST_GRADE B
+                 , DCS.DO_CUST_TPOINT C
+             WHERE A.CUST_ID = B.CUST_ID
+               AND A.CUST_ID = C.CUST_ID
+               AND A.CUST_ID = ( 
+                                 SELECT UNIQUE A.CUST_ID 
+                                   FROM DCS.DM_CARD A
+                                      , DCS.DM_CUSTOMER B
+                                  WHERE A.CUST_ID  =  B.CUST_ID
+                                    AND A.CARD_NO    LIKE ? || '%'
+                                    AND B.SS_NO      LIKE ? || '%'
+                                    AND A.CUST_ID    LIKE ? || '%'
+                               )
+               AND A.COMP_PERS_FLAG = ?
+               AND B.BRCH_ID        = ?    
+        ]]>        
+    </query>    
+
+    <!-- 회원정보 조회 법인/단체-->
+    <query name="SEL_CUSTINFO_COM">        
+        <![CDATA[
+            SELECT '' AS FLAG
+                 , A.CUST_ID
+                 , A.CUST_NAME
+                 , A.HOME_PH1
+                 , A.HOME_PH2
+                 , A.HOME_PH3
+                 , A.MOBILE_PH1 
+                 , A.MOBILE_PH2 
+                 , A.MOBILE_PH3
+                 , A.SS_NO
+                 , DECODE(NULL, '', A.HOME_ZIP_CD1 ||'-'|| A.HOME_ZIP_CD2 ||' '|| A.HOME_ADDR1 ||' '|| A.HOME_ADDR2) HOME_ADDR
+                 , C.POINT
+                 , A.EMAIL1
+                 , A.EMAIL2
+                 , COM.FN_GET_COMM_NAME('D', 'D011', B.CUST_GRADE) GRADE_NAME
+                 , A.OFFI_PH1
+                 , A.OFFI_PH2
+                 , A.OFFI_PH3
+                 , (SELECT MAX(CARD_NO) KEEP(DENSE_RANK FIRST ORDER BY MOD_DATE DESC) AS CARD_NO 
+                      FROM DCS.DM_CARD 
+                     WHERE CUST_ID      = A.CUST_ID
+                       AND CARD_STAT_CD = '0') AS CARD_NO
+                 , D.CARD_STAT_CD
+              FROM DCS.DM_CUSTOMER A
+                 , DCS.DO_CUST_GRADE B
+                 , DCS.DO_CUST_TPOINT C
+                 , DCS.DM_CARD        D
+             WHERE A.CUST_ID = B.CUST_ID
+               AND A.CUST_ID = C.CUST_ID
+               AND A.CUST_ID = D.CUST_ID
+               AND A.CUST_ID = ( 
+                                 SELECT UNIQUE A.CUST_ID 
+                                   FROM DCS.DM_CARD A
+                                      , DCS.DM_CUSTOMER B
+                                  WHERE A.CUST_ID  =  B.CUST_ID
+                                    AND A.CARD_NO    LIKE ? || '%'
+                                    AND B.SS_NO      LIKE ? || '%'
+                                    AND A.CUST_ID    LIKE ? || '%'
+                               )
+               AND A.COMP_PERS_FLAG <> ?
+               AND B.BRCH_ID        =  ?    
+        ]]>        
+    </query>    
+
+    <gauce name="H_MASTER"> 
+        <column colName="FLAG"           colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"   size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"   size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"        colType="TB_STRING"   size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"         colType="TB_DECIMAL"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_FLAG"      colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM_CD"        colType="TB_STRING"   size="18"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM_NAME"      colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PRC"       colType="TB_DECIMAL"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"       colType="TB_DECIMAL"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"       colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <query name="SEL_MASTER">
+    <![CDATA[
+        SELECT '' AS FLAG
+             , A.STR_CD
+             , A.SALE_DT
+             , A.POS_NO 
+             , A.TRAN_NO
+             , B.SEQ_NO
+             , A.TRAN_FLAG
+             , B.ITEM_CD
+             , B.ITEM_NAME
+             , B.SALE_PRC
+             , DECODE(TRAN_FLAG, 0, 1, -1) * B.SALE_QTY SALE_QTY
+             , DECODE(TRAN_FLAG, 0, 1, -1) * B.SALE_AMT SALE_AMT
+          FROM DPS.PS_TRHEADER A
+             , DPS.PS_TRITEM B
+             , DCS.DB_BRANCH C
+         WHERE A.STR_CD  = B.STR_CD
+           AND A.SALE_DT = B.SALE_DT
+           AND A.POS_NO  = B.POS_NO
+           AND A.TRAN_NO = B.TRAN_NO
+           AND A.STR_CD  = C.STR_CD
+           AND A.STR_CD  = ?
+           AND A.SALE_DT = ?
+           AND A.POS_NO  = ?
+           AND A.TRAN_NO = ?
+           AND C.BRCH_ID = ?
+          ]]>
+    </query>
+    
+    <gauce name="H_DETAIL"> 
+        <column colName="FLAG"              colType="TB_STRING"   size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_ID"            colType="TB_STRING"   size="200"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_NM"            colType="TB_STRING"   size="200"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_VAL_DISP"      colType="TB_STRING"   size="200"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_VAL"           colType="TB_DECIMAL"  size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_VAL2"          colType="TB_DECIMAL"  size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_VAL3"          colType="TB_STRING"   size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_VAL4"          colType="TB_STRING"   size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <query name="SEL_DETAIL">
+    <![CDATA[
+                  WITH TEMP
+           AS (SELECT A.STR_CD
+                    , A.SALE_DT
+                    , A.POS_NO
+                    , A.TRAN_NO
+                    , A.SEQ_NO
+                    , A.PAY_TYPE
+                    , A.PAY_AMT
+                    , a.pay_data_06 as ccomp_cd
+               FROM DPS.PS_TRPAID A
+               WHERE A.STR_CD  = ?
+                 AND A.SALE_DT = ?
+                 AND A.POS_NO  = ?
+                 AND A.TRAN_NO = ?
+               )
+        SELECT ''                                                  AS  FLAG, 'SALE_DT' AS COL_ID
+             , '거래일자'                                          AS COL_NM
+             , TO_CHAR(TO_DATE(SALE_DT, 'YYYYMMDD'), 'YYYY/MM/DD') AS COL_VAL_DISP
+             , 0                                                   AS COL_VAL
+             , 0                                                   AS COL_VAL2
+             , ''                                                  AS COL_VAL3 
+             , ''                                                  AS COL_VAL4 
+          FROM TEMP where rownum = 1
+        UNION ALL
+        SELECT '', 'STR_CD',  '점포코드', STR_CD,  0, 0, '', '' FROM TEMP where rownum = 1
+        UNION ALL
+        SELECT '', 'POS_NO',  'POS번호',  POS_NO,  0, 0, '', '' FROM TEMP where rownum = 1
+        UNION ALL
+        SELECT '', 'TRAN_NO', '거래번호', TRAN_NO, 0, 0, '', '' FROM TEMP where rownum = 1
+        UNION ALL
+        SELECT '', 'PAY_AMT'
+             , case when pay_type = '11' 
+               then COM.FN_GET_COMM_NAME('D', 'D010', PAY_TYPE) || '(' || COM.FN_GET_COMM_NAME('D', 'D061', ccomp_cd)|| ')'
+                    -- 제휴카드면 카드발급사를 추가로 표시함.
+                    -- D010 : 결재수단코드/명,  D016 : 제휴카드사코드.명
+               else COM.FN_GET_COMM_NAME('D', 'D010', PAY_TYPE) 
+               end           
+       --      , (SELECT A.COMM_NAME1
+       --           FROM COM.TC_COMMCODE A
+       --          WHERE A.SYS_PART = 'D'
+       --            AND A.COMM_PART = 'D010'
+       --            AND A.COMM_CODE = PAY_TYPE)
+             , TO_CHAR(PAY_AMT, 'FM999,999,999'), 0, PAY_AMT, PAY_TYPE, ccomp_cd FROM TEMP
+        UNION ALL
+        SELECT '', 'PAY_AMT_SUM', '합계금액', TO_CHAR(SUM(PAY_AMT), 'FM999,999,999'), NVL(SUM(PAY_AMT),0), 0, '', '' FROM TEMP HAVING DECODE(NVL(SUM(PAY_AMT),0), 0, 0, 1) = 1
+        UNION ALL
+        SELECT '', 'OCC_POINT', '적립된 포인트', TO_CHAR(NVL(X.OCC_POINT,0), 'FM999,999,999'), NVL(X.OCC_POINT,0), 0, '', ''
+          FROM DPS.PS_TRPOINT X, TEMP A--, DCS.DO_RECP_ADD Y                  
+       WHERE X.STR_CD(+)  = A.STR_CD
+           AND X.SALE_DT(+) = A.SALE_DT
+           AND X.POS_NO(+)  = A.POS_NO
+           AND X.TRAN_NO(+) = A.TRAN_NO
+           --AND X.STR_CD     = Y.STR_CD(+)
+           --AND X.SALE_DT    = Y.SALE_DT(+)
+           --AND X.POS_NO     = Y.POS_NO(+)
+           --AND X.TRAN_NO    = Y.TRAN_NO(+)
+           and rownum = 1  
+    ]]>
+    </query>
+    
+    <query name="SEL_RECP_CNT">        
+        <![CDATA[
+         SELECT count(a.STR_CD) as REC_CNT
+          FROM DCS.DO_RECP_ADD a
+         WHERE a.STR_CD  = ?
+           AND a.SALE_DT = ?
+           AND a.POS_NO  = ?
+           AND a.TRAN_NO = ?
+        ]]>        
+    </query>
+    
+    <query name="INS_RECP">
+     <![CDATA[
+          INSERT INTO DCS.DO_RECP_ADD (
+                      SALE_DT     
+					, STR_CD      
+					, POS_NO      
+					, TRAN_NO     
+					, CARD_NO     
+					, BRCH_ID     
+					, RECP_NO     
+					, RECP_AMT    
+					, ADD_POINT   
+					, BASE_APOINT 
+					, CAM_APOINT  
+					, CAM_ID      
+					, EVENT_APOINT
+					, EVENT_CD    
+					, ETC_APOINT  
+					, PROC_FLAG   
+					, REG_DATE    
+					, REG_ID 
+                    )
+              VALUES ( 
+                      ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+                    , SYSDATE /* REG_DATE */
+                    , ? 
+                   )
+     ]]>
+    </query>
+    
+    
+    <query name="NEXT_POINT_SEQ">        
+        <![CDATA[
+         SELECT MAX(a.SEQ_NO) as SEQ_NO
+          FROM DPS.PS_TRPOINT a
+         WHERE a.STR_CD  = ?
+           AND a.SALE_DT = ?
+           AND a.POS_NO  = ?
+           AND a.TRAN_NO = ?
+        ]]>        
+    </query>
+    
+    <query name="INS_POINT">
+     <![CDATA[
+          INSERT INTO DPS.PS_TRPOINT (
+                          STR_CD
+                        , TRAN_NO
+                        , SALE_DT
+                        , POS_NO
+                        , SEQ_NO
+                        , POINT_TYPE
+                        , PAY_TYPE_01
+                        , PAY_DTL_01
+                        , TRG_AMT_01
+                        , PAY_TYPE_02
+                        , PAY_DTL_02
+                        , TRG_AMT_02
+                        , PAY_TYPE_03
+                        , PAY_DTL_03
+                        , TRG_AMT_03
+                        , PAY_TYPE_04
+                        , PAY_DTL_04
+                        , TRG_AMT_04
+                        , PAY_TYPE_05
+                        , PAY_DTL_05
+                        , TRG_AMT_05
+                        , PAY_TYPE_06
+                        , PAY_DTL_06
+                        , TRG_AMT_06
+                        , PAY_TYPE_07
+                        , PAY_DTL_07
+                        , TRG_AMT_07
+                        , PAY_TYPE_08
+                        , PAY_DTL_08
+                        , TRG_AMT_08
+                        , PAY_CNT
+                        , PAY_TOT_AMT
+                        , ORG_TRAN_NO
+                        , ORG_APPR_NO
+                        , IN_TYPE
+                        , MBSH_NO
+                        , EXE_TYPE
+                        , APPR_NO
+                        , RSLT_CD
+                        , RSLT_MSG
+                        , CUST_NM
+                        , CUST_GRADE
+                        , ACML_POINT
+                        , OCC_POINT
+                        , BASE_APOINT
+                        , CAM_APOINT
+                        , EVENT_APOINT
+                        , ETC_APOINT
+                        , MSG_01
+                        , MSG_02
+                        , REG_DATE
+                        )
+                        VALUES ( 
+                          ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , SYSDATE /* REG_DATE */
+                        )
+     ]]>
+    </query>
+    
+    <!-- Pop-Up  조회 SQL -->
+    <query name="SEL_STR_CD">
+        <![CDATA[
+            SELECT A.BRCH_ID
+                 , A.BRCH_NAME 
+                 , A.STR_CD
+                 , B.STR_NAME
+                 , A.COMP_NO 
+                 , A.REP_BRAND_NM          
+              FROM DCS.DB_BRANCH A, DPS.PC_STRMST B
+             WHERE A.STR_CD = B.STR_CD
+               AND A.BRCH_ID = ?              
+             ORDER BY A.BRCH_ID
+        ]]>
+    </query>
+</service>

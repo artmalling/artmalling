@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.18
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 스타일코드 공통 XML
+ -->
+<service name="/ccom006.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_STYLEMST">
+      <column colName="SEL"         colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STYLE_CD"    colType="TB_STRING" size="54"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STYLE_NAME"  colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMBUN_CD"   colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMMOK_CD"   colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 스타일코드 조회 SQL -->
+    <query name="SEL_STYLEMST">
+        <![CDATA[                                        
+            SELECT 'F'        AS SEL
+                 , STY.STYLE_CD
+                 , STY.STYLE_NAME
+                 , STY.PUMBUN_CD
+                 , STY.PUMMOK_CD
+              FROM DPS.PC_STYLEMST STY
+             WHERE 1=1
+        ]]>
+    </query>
+    <query name="SEL_STYLEMST_WHERE_STYLE_CD">
+        <![CDATA[
+               AND STY.STYLE_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_STYLEMST_WHERE_LIKE_STYLE_CD">
+        <![CDATA[
+               AND STY.STYLE_CD   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_STYLEMST_WHERE_STYLE_NAME">
+        <![CDATA[
+               AND STY.STYLE_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_STYLEMST_WHERE_AUTHORITY">
+        <![CDATA[           
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.PUMBUN_CD   = STY.PUMBUN_CD
+                               AND MYORG.USER_ID     = ?
+                               AND MYORG.ORG_FLAG    = ?
+                               AND ROWNUM            = 1
+                          )
+        ]]>
+    </query>
+    <query name="SEL_STYLEMST_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND STY.PUMBUN_CD           = ?
+        ]]>
+    </query>
+    <query name="SEL_STYLEMST_WHERE_USE_YN">
+        <![CDATA[
+               AND STY.USE_YN           = ?
+        ]]>
+    </query>
+    <query name="SEL_STYLEMST_WHERE_STYLE_TYPE">
+        <![CDATA[
+               AND STY.STYLE_TYPE       = ?
+        ]]>
+    </query>
+    <query name="SEL_STYLEMST_ORDER">
+        <![CDATA[
+             ORDER BY STY.STYLE_CD
+        ]]>
+    </query>
+</service>

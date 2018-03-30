@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  입금현황조회
+ -->
+<service name="/psal938.ps">
+    <gauce name="H_MASTER"> 
+        <column colName="PEXPT_DT"      colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_NM"      colType="TB_STRING"    size="43"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JBRCH_ID"      colType="TB_STRING"    size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JBRCH_NM"      colType="TB_STRING"    size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JBRCH_TYPE_NM" colType="TB_STRING"    size="43"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHRG_DT"       colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_CNT"       colType="TB_DECIMAL"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"       colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMIS_AMT"     colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PEXPT_AMT"     colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_DT"        colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                
+    </gauce>
+    
+    <gauce name="H_DETAIL"> 
+        <column colName="PAY_DT"        colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_SEQ"       colType="TB_INT"       size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"        colType="TB_INT"       size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REC_FLAG"      colType="TB_STRING"    size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DATA_FLAG_NM"  colType="TB_STRING"    size="42"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHRG_DT"       colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"       colType="TB_STRING"    size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_MONTH"     colType="TB_INT"       size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_AMT"      colType="TB_DECIMAL"   size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_NO"       colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_DT"       colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_NM"      colType="TB_STRING"    size="43"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JBRCH_ID"      colType="TB_STRING"    size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FILLER1"       colType="TB_STRING"    size="43"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PEXPT_DT"      colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PB_PM_NM"      colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="S_FEE"         colType="TB_DECIMAL"   size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_FEE"         colType="TB_DECIMAL"   size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="M_FEE"         colType="TB_DECIMAL"   size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HAP_FEE"       colType="TB_DECIMAL"   size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                  
+    </gauce>
+
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT '20' || A.PEXPT_DT                      AS PEXPT_DT       -- 입금예정일
+                 , DPS.FN_GET_JBRCH_INFO('B', A.JBRCH_ID) || ' ' || DPS.FN_GET_CCOMP_NM(DPS.FN_GET_JBRCH_INFO('B', A.JBRCH_ID))
+                                                           AS BCOMP_NM       -- 매입사코드/명
+                 , A.JBRCH_ID                                                -- 가맹점번호
+                 , DPS.FN_GET_JBRCH_NM(A.JBRCH_ID)         AS JBRCH_NM       -- 가맹점번호명
+                 , ( SELECT COM.FN_GET_COMM_NAME('D', 'D070', JBRCH_TYPE)
+                       FROM DPS.PD_BRANCH
+                      WHERE JBRCH_ID = A.JBRCH_ID
+                   )                                       AS JBRCH_TYPE_NM  -- 가맹점종류
+                 , '20' || A.SEND_DT                       AS CHRG_DT        -- 청구일자
+                 , A.TOT_CNT                                                 -- 입금정상건수
+                 , A.TOT_AMT                                                 -- 입금정상금액
+                 , A.COMIS_AMT                                               -- 수수료
+                 , A.PEXPT_AMT                                               -- 입금액
+                 , A.PAY_DT                                                  -- 수신일자
+              FROM DPS.PD_PAYD A
+             WHERE DPS.FN_GET_JBRCH_INFO('S', A.JBRCH_ID)   = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_PEXPT_DT">        
+        <![CDATA[
+                AND A.PEXPT_DT BETWEEN SUBSTR(?, 3, 6)  AND SUBSTR(?,3,6)  --  조회조건1 (입금예정일)
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_SEND_DT">        
+        <![CDATA[
+                AND A.SEND_DT  BETWEEN SUBSTR(?, 3, 6)  AND SUBSTR(?, 3, 6)  --  조회조건1 (청구일자)
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_PAY_DT">        
+        <![CDATA[
+                AND A.PAY_DT   BETWEEN ? AND ?                           --  조회조건1 (수신일자)
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_BCOMP_CD">        
+        <![CDATA[
+                AND DPS.FN_GET_JBRCH_INFO('B', A.JBRCH_ID)   = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_JBRCH_ID">        
+        <![CDATA[
+                AND A.JBRCH_ID   = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT PAY_DT                                               -- 수신일자
+                 , PAY_SEQ                                              -- 수신처리순번
+                 , SEQ_NO                                               -- 수신처리NO
+                 , REC_FLAG                                             -- 레코드구분
+                 , DATA_FLAG || ' ' || COM.FN_GET_COMM_NAME('D', 'D034', DATA_FLAG) AS DATA_FLAG_NM  -- 데이터구분
+                 , '20'||RECV_DT                            AS CHRG_DT  -- 청구일자
+                 , CARD_NO                                              -- 카드번호
+                 , DIV_MONTH                                            -- 할부
+                 , DECODE(DATA_FLAG, '67', TRADE_AMT * -1, TRADE_AMT)   AS APPR_AMT -- 승인금액
+                 , APPR_NO                                              -- 승인번호
+                 , '20'||SALE_DT                            AS APPR_DT  -- 승인일자
+                 , CCOMP_CD || ' ' || DPS.FN_GET_CCOMP_NM(CCOMP_CD)
+                                                            AS BCOMP_NM -- 매입사코드/명
+                 , JBRCH_ID                                             -- 가맹점번호
+                 , DECODE(FILLER1, '0','0.정상', '1.취소')  AS FILLER1  -- 정상취소구분
+                 , '20' || SUBSTR(FILLER2, 1, 6)            AS PEXPT_DT -- 입금예정일
+                 , SUBSTR(FILLER2, 7, 26)                   AS PB_PM_NM -- 거래품번품목명
+                 , DECODE(DATA_FLAG, '67', DPS.FN_GET_TASACARD_FEE('IS', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT) * -1, DPS.FN_GET_TASACARD_FEE('IS', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT))
+                                                            AS S_FEE    -- 수수료
+                 , DECODE(DATA_FLAG, '67', DPS.FN_GET_TASACARD_FEE('IP', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT) * -1, DPS.FN_GET_TASACARD_FEE('IP', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT))
+                                                            AS P_FEE    -- 포인트
+                 , DECODE(DATA_FLAG, '67', DPS.FN_GET_TASACARD_FEE('IM', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT) * -1, DPS.FN_GET_TASACARD_FEE('IM', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT))
+                                                            AS M_FEE    -- 무이자
+                 , DECODE(DATA_FLAG, '67', DPS.FN_GET_TASACARD_FEE('IS', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT) * -1, DPS.FN_GET_TASACARD_FEE('IS', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT))
+                 + DECODE(DATA_FLAG, '67', DPS.FN_GET_TASACARD_FEE('IP', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT) * -1, DPS.FN_GET_TASACARD_FEE('IP', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT))
+                 + DECODE(DATA_FLAG, '67', DPS.FN_GET_TASACARD_FEE('IM', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT) * -1, DPS.FN_GET_TASACARD_FEE('IM', JBRCH_ID, '20'||SALE_DT, DIV_MONTH, TRADE_AMT))
+                                                            AS HAP_FEE  -- 합계수수료
+              FROM DPS.PD_STND
+             WHERE PAY_DT                        = ?   
+               AND '20' || SUBSTR(FILLER2, 1, 6) = ?  
+               AND '20'||RECV_DT                 = ?    
+               AND JBRCH_ID                      = ?
+             ORDER BY PAY_DT, PAY_SEQ, SEQ_NO
+        ]]>        
+    </query>
+</service>

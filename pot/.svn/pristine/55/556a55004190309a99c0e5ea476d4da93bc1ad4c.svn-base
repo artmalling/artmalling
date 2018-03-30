@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 조직공통 XML
+ -->
+<service name="/ccom900.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_COMMON">
+      <column colName="CODE"       colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SORT"       colType="TB_DECIMAL" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 코드/명 조회 -->
+    <gauce name="H_COMMON_REFER">
+      <column colName="CODE"        colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SORT"        colType="TB_DECIMAL" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="REFER_CODE"  colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="REFER_VALUE" colType="TB_DECIMAL" size="10"   dec="2" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 엑셀다운로그  -->
+    <gauce name="H_DOWNLOG">
+      <column colName="DOWN_COND"   colType="TB_STRING" size="1000"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 기타코드조회 SQL -->
+    <query name="SEL_ETC_CODE">
+        <![CDATA[
+            -- 기타코드조회 SQL                                        
+            SELECT COMM_CODE    AS CODE
+                 , COMM_NAME1   AS NAME
+                 , INQR_ORDER   AS SORT
+              FROM COM.TC_COMMCODE
+             WHERE SYS_PART  = ?
+               AND COMM_PART = ?
+               AND USE_YN = 'Y'
+             ORDER BY SORT, CODE
+        ]]>
+    </query>
+    <!-- 기타코드조회 SQL -->
+    <query name="SEL_ETC_CODE_REFER">
+        <![CDATA[
+		    -- 기타코드조회 SQL                                        
+            SELECT COMM_CODE    AS CODE
+                 , COMM_NAME1   AS NAME
+                 , INQR_ORDER   AS SORT
+                 , REFER_CODE
+                 , REFER_VALUE
+              FROM COM.TC_COMMCODE
+             WHERE SYS_PART  = ?
+               AND COMM_PART = ?
+               AND USE_YN = 'Y'
+             ORDER BY SORT, CODE
+        ]]>
+    </query>
+    <!-- 엑셀 다운 로그 기록 -->
+    <query name="INS_DOWNLOG">
+        <![CDATA[
+            INSERT INTO COM.TC_DOWNLOG(USER_ID                           
+                                     , PID                              
+                                     , DOWN_DATE                         
+                                     , DOWN_COND                         
+                                      )                                  
+                                VALUES(?                                
+                                     , ?                                
+                                     , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+                                     , ?                                 
+                                      )
+        ]]>
+    </query>
+
+</service>

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.17
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  시설구분별 관리기준
+ -->
+<service name="/mren101.mr">
+    <!-- 시설구분별 관리기준 -->
+    <gauce name="H_SEL_MR_FCLMST">
+		<column colName="STR_CD"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="HUSE_FLAG"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="AREA"            colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EXCL_AREA"       colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SHR_AREA"        colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="AREA_FLAG"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ORG_CD"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ORG_NM"          colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="USE_YN"          colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PWR_CAL_YN"      colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="WARMWTR_CAL_YN"  colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="STEAM_CAL_YN"    colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="COLDWTR_CAL_YN"  colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="WTRWORKS_CAL_YN" colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GRAYWTR_CAL_YN"  colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GAS_CAL_YN"      colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PUB_DIV_RATE"    colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="INSGB"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+   
+    <!-- 조회 Query  -->
+    <query name="SEL_MR_FCLMST"> 
+        <![CDATA[   
+			SELECT FCM.STR_CD
+			     , FCM.HUSE_FLAG
+			     , FCM.AREA
+			     , FCM.EXCL_AREA
+			     , FCM.SHR_AREA
+			     , FCM.AREA_FLAG
+			     , FCM.ORG_CD
+                 , (SELECT ORM.ORG_NAME 
+                      FROM DPS.PC_ORGMST ORM
+                     WHERE FCM.ORG_CD = ORM.ORG_CD) AS ORG_NM
+			     , FCM.USE_YN
+			     , FCM.PWR_CAL_YN
+			     , FCM.WARMWTR_CAL_YN
+			     , FCM.STEAM_CAL_YN
+			     , FCM.COLDWTR_CAL_YN
+			     , FCM.WTRWORKS_CAL_YN
+			     , FCM.GRAYWTR_CAL_YN
+			     , FCM.GAS_CAL_YN
+			     , FCM.PUB_DIV_RATE
+			     , 'Y' AS INSGB
+			  FROM MSS.MR_FCLMST    FCM
+			 WHERE FCM.STR_CD = ?
+        ]]>        
+    </query>
+    
+    <!-- 신규등록을 위한 조회 Query  -->
+    <query name="SEL_MR_FCLMST_NEW"> 
+        <![CDATA[   
+			SELECT STM.STR_CD
+			     , CASE WHEN STM.FCL_FLAG = '5'  THEN '3' 
+			            WHEN STM.FCL_FLAG = '6'  THEN '2' 
+			            ELSE '1' END AS HUSE_FLAG
+			     , FCM.AREA
+			     , FCM.EXCL_AREA
+			     , FCM.SHR_AREA
+			     , FCM.AREA_FLAG
+			     , FCM.ORG_CD
+			     , (SELECT ORM.ORG_NAME 
+			          FROM DPS.PC_ORGMST ORM
+			         WHERE FCM.ORG_CD = ORM.ORG_CD) AS ORG_NM
+			     , NVL(FCM.USE_YN, 'Y')          AS USE_YN
+			     , NVL(FCM.PWR_CAL_YN, 'N')      AS PWR_CAL_YN
+			     , NVL(FCM.WARMWTR_CAL_YN, 'N')  AS WARMWTR_CAL_YN
+			     , NVL(FCM.STEAM_CAL_YN, 'N')    AS STEAM_CAL_YN
+			     , NVL(FCM.COLDWTR_CAL_YN, 'N')  AS COLDWTR_CAL_YN
+			     , NVL(FCM.WTRWORKS_CAL_YN, 'N') AS WTRWORKS_CAL_YN
+			     , NVL(FCM.GRAYWTR_CAL_YN, 'N')  AS GRAYWTR_CAL_YN
+			     , NVL(FCM.GAS_CAL_YN, 'N')      AS GAS_CAL_YN
+			     , NVL(FCM.PUB_DIV_RATE, '1')    AS PUB_DIV_RAT
+			     , NVL(FCM.STR_CD, 'N')          AS INSGB
+			  FROM DPS.PC_STRMST    STM
+			     , MSS.MR_FCLMST    FCM
+			 WHERE STM.STR_CD = FCM.STR_CD(+)
+			   AND STM.STR_CD = ?
+        ]]>        
+    </query>
+    
+    <!-- 저장  Query  -->
+    <query name="UPD_MR_FCLMST"> 
+        <![CDATA[   
+            MERGE INTO MSS.MR_FCLMST FCM
+            USING (SELECT ? AS STR_CD
+                        , ? AS HUSE_FLAG
+                        , ? AS AREA
+                        , ? AS EXCL_AREA
+                        , ? AS SHR_AREA
+                        , ? AS AREA_FLAG
+                        , ? AS ORG_CD
+                        , ? AS USE_YN
+                        , ? AS PWR_CAL_YN
+                        , ? AS WARMWTR_CAL_YN
+                        , ? AS STEAM_CAL_YN
+                        , ? AS COLDWTR_CAL_YN
+                        , ? AS WTRWORKS_CAL_YN
+                        , ? AS GRAYWTR_CAL_YN
+                        , ? AS GAS_CAL_YN
+                        , ? AS PUB_DIV_RATE
+                        , ? AS REG_ID
+                        , ? AS MOD_ID
+                     FROM DUAL  )  DUL
+               ON ( FCM.STR_CD = DUL.STR_CD)
+             WHEN MATCHED THEN UPDATE SET HUSE_FLAG          = DUL.HUSE_FLAG      
+                                        , AREA               = DUL.AREA           
+                                        , EXCL_AREA          = DUL.EXCL_AREA      
+                                        , SHR_AREA           = DUL.SHR_AREA       
+                                        , AREA_FLAG          = DUL.AREA_FLAG      
+                                        , ORG_CD             = DUL.ORG_CD         
+                                        , USE_YN             = DUL.USE_YN         
+                                        , PWR_CAL_YN         = DUL.PWR_CAL_YN     
+                                        , WARMWTR_CAL_YN     = DUL.WARMWTR_CAL_YN 
+                                        , STEAM_CAL_YN       = DUL.STEAM_CAL_YN   
+                                        , COLDWTR_CAL_YN     = DUL.COLDWTR_CAL_YN 
+                                        , WTRWORKS_CAL_YN    = DUL.WTRWORKS_CAL_YN
+                                        , GRAYWTR_CAL_YN     = DUL.GRAYWTR_CAL_YN 
+                                        , GAS_CAL_YN         = DUL.GAS_CAL_YN 
+                                        , PUB_DIV_RATE       = DUL.PUB_DIV_RATE
+                                        , MOD_ID             = DUL.MOD_ID
+                                        , MOD_DATE           = SYSDATE
+         WHEN NOT MATCHED THEN INSERT (   STR_CD         
+                                        , HUSE_FLAG      
+                                        , AREA           
+                                        , EXCL_AREA      
+                                        , SHR_AREA       
+                                        , AREA_FLAG      
+                                        , ORG_CD         
+                                        , USE_YN         
+                                        , PWR_CAL_YN     
+                                        , WARMWTR_CAL_YN 
+                                        , STEAM_CAL_YN   
+                                        , COLDWTR_CAL_YN 
+                                        , WTRWORKS_CAL_YN
+                                        , GRAYWTR_CAL_YN 
+                                        , GAS_CAL_YN
+                                        , PUB_DIV_RATE
+                                        , REG_ID
+                                        , REG_DATE
+                                        , MOD_ID
+                                        , MOD_DATE) 
+                                VALUES (  DUL.STR_CD         
+                                        , DUL.HUSE_FLAG      
+                                        , DUL.AREA           
+                                        , DUL.EXCL_AREA      
+                                        , DUL.SHR_AREA       
+                                        , DUL.AREA_FLAG      
+                                        , DUL.ORG_CD         
+                                        , DUL.USE_YN         
+                                        , DUL.PWR_CAL_YN     
+                                        , DUL.WARMWTR_CAL_YN 
+                                        , DUL.STEAM_CAL_YN   
+                                        , DUL.COLDWTR_CAL_YN 
+                                        , DUL.WTRWORKS_CAL_YN
+                                        , DUL.GRAYWTR_CAL_YN 
+                                        , DUL.GAS_CAL_YN     
+                                        , DUL.PUB_DIV_RATE     
+                                        , DUL.REG_ID
+                                        , SYSDATE
+                                        , DUL.MOD_ID
+                                        , SYSDATE) 
+        ]]>        
+    </query>
+</service>

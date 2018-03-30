@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 
+ * 작 성 일    : 2010.02.17
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  가맹점 입금관리
+ -->
+<service name="/dbri203.db">
+    <!-- 가맹점 입금 관리 -->
+    <gauce name="H_MASTER"> 
+        <column colName="CHK_BOX"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_ID"       colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NO"       colType="TB_STRING"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_BRAND_NM"  colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="S_DT"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="E_DT"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_POINT"     colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REAL_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG"          colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 가맹점 입금 관리 조회 - 미입금 -->
+    <query name="SEL_MASTER_NO">        
+        <![CDATA[
+            SELECT 'F' AS CHK_BOX
+                 , A.BRCH_ID        
+                 , B.BRCH_NAME 
+                 , B.COMP_NO 
+                 , B.REP_BRAND_NM  
+                 , ? || '01' S_DT
+                 , TO_CHAR(LAST_DAY(? ||'01'),'YYYYMMDD') E_DT
+                 , SUM(A.ADD_POINT)  ADD_POINT 
+                 , TO_CHAR(ADD_MONTHS(TO_DATE(?, 'YYYYMM'), 1), 'YYYYMM') || B.BRCH_PAY_DAY PAY_DT 
+                 , TO_CHAR(SYSDATE, 'YYYYMMDD') REAL_DT  
+                 , '1' FLAG 
+              FROM DCS.DO_POINT_ADD A
+                 , DCS.DB_BRANCH    B
+             WHERE A.BRCH_ID = B.BRCH_ID
+               AND A.PAY_DT    IS   NULL
+               AND A.ADD_DT    LIKE ? ||'%'
+               AND A.BRCH_ID   LIKE ? ||'%'
+               AND B.COMP_NO   LIKE ? ||'%'
+             GROUP BY A.BRCH_ID, B.BRCH_NAME, B.COMP_NO, B.REP_BRAND_NM, B.BRCH_PAY_DAY
+             ORDER BY A.BRCH_ID
+        ]]>        
+    </query>  
+    
+    <!-- 가맹점 입금 관리 조회 - 입금 -->
+    <query name="SEL_MASTER_YES">        
+        <![CDATA[
+            SELECT '' AS CHK_BOX
+                 , A.BRCH_ID        
+                 , C.BRCH_NAME 
+                 , C.COMP_NO 
+                 , C.REP_BRAND_NM  
+                 , ? || '01' S_DT
+                 , TO_CHAR(LAST_DAY(? ||'01'),'YYYYMMDD') E_DT
+                 , SUM(B.ADD_POINT)  ADD_POINT 
+                 , TO_CHAR(ADD_MONTHS(TO_DATE(?, 'YYYYMM'), 1), 'YYYYMM') || C.BRCH_PAY_DAY PAY_DT 
+                 , A.PAY_DT REAL_DT  
+                 , '2' FLAG -- 입금
+              FROM DCS.DB_BR_INPAY  A
+                 , DCS.DO_POINT_ADD B
+                 , DCS.DB_BRANCH    C
+             WHERE A.ADD_ID  = B.ADD_ID
+               AND B.BRCH_ID = C.BRCH_ID
+               AND B.ADD_DT    LIKE ? ||'%'
+               AND B.BRCH_ID   LIKE ? ||'%'
+               AND C.COMP_NO   LIKE ? ||'%'
+             GROUP BY A.BRCH_ID, C.BRCH_NAME, C.COMP_NO, C.REP_BRAND_NM, C.BRCH_PAY_DAY, A.PAY_DT
+             ORDER BY A.BRCH_ID, A.PAY_DT
+        ]]>        
+    </query>  
+    
+    <!-- 가맹점 입금 관리 조회 - 전체 -->
+    <query name="SEL_MASTER_ALL">        
+        <![CDATA[
+            SELECT CHK_BOX
+                 , BRCH_ID
+                 , BRCH_NAME
+                 , COMP_NO
+                 , REP_BRAND_NM
+                 , S_DT
+                 , E_DT
+                 , ADD_POINT
+                 , PAY_DT
+                 , REAL_DT
+                 , FLAG
+              FROM (    
+                    SELECT 'F' AS CHK_BOX
+                         , A.BRCH_ID        
+                         , B.BRCH_NAME 
+                         , B.COMP_NO 
+                         , B.REP_BRAND_NM  
+                         , ? || '01' S_DT
+                         , TO_CHAR(LAST_DAY(? ||'01'),'YYYYMMDD') E_DT
+                         , SUM(A.ADD_POINT)  ADD_POINT 
+                         , TO_CHAR(ADD_MONTHS(TO_DATE(?, 'YYYYMM'), 1), 'YYYYMM') || B.BRCH_PAY_DAY PAY_DT 
+                         , TO_CHAR(SYSDATE, 'YYYYMMDD') REAL_DT  
+                         , '1' FLAG 
+                      FROM DCS.DO_POINT_ADD A
+                         , DCS.DB_BRANCH    B
+                     WHERE A.BRCH_ID = B.BRCH_ID
+                       AND A.PAY_DT    IS   NULL
+                       AND A.ADD_DT    LIKE ? ||'%'
+                       AND A.BRCH_ID   LIKE ? ||'%'
+                       AND B.COMP_NO   LIKE ? ||'%'
+                     GROUP BY A.BRCH_ID, B.BRCH_NAME, B.COMP_NO, B.REP_BRAND_NM, B.BRCH_PAY_DAY
+                    UNION ALL 
+                    SELECT '' AS CHK_BOX
+                         , A.BRCH_ID        
+                         , C.BRCH_NAME 
+                         , C.COMP_NO 
+                         , C.REP_BRAND_NM  
+                         , ? || '01' S_DT
+                         , TO_CHAR(LAST_DAY(? ||'01'),'YYYYMMDD') E_DT
+                         , SUM(B.ADD_POINT)  ADD_POINT 
+                         , TO_CHAR(ADD_MONTHS(TO_DATE(?, 'YYYYMM'), 1), 'YYYYMM') || C.BRCH_PAY_DAY PAY_DT 
+                         , A.PAY_DT REAL_DT  
+                         , '2' FLAG 
+                      FROM DCS.DB_BR_INPAY  A
+                         , DCS.DO_POINT_ADD B
+                         , DCS.DB_BRANCH    C
+                     WHERE A.ADD_ID  = B.ADD_ID
+                       AND B.BRCH_ID = C.BRCH_ID
+                       AND B.ADD_DT    LIKE ? ||'%'
+                       AND B.BRCH_ID   LIKE ? ||'%'
+                       AND C.COMP_NO   LIKE ? ||'%'
+                     GROUP BY A.BRCH_ID, C.BRCH_NAME, C.COMP_NO, C.REP_BRAND_NM, C.BRCH_PAY_DAY, A.PAY_DT
+                   )
+              ORDER BY BRCH_ID, FLAG DESC
+        ]]>        
+    </query>  
+</service>

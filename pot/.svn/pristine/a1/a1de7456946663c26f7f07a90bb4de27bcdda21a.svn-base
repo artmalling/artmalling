@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.02
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 사은행사 마스터 관리 - 제휴카드사 조회
+ -->
+<service name="/ccom216.cc">    
+
+    <!-- POPUP HEADER -->
+    <gauce name="H_SEL_CODE">
+	    <column colName="CHK"          colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CODE"     colType="TB_STRING"   size="2"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="NAME"     colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_CD"       colType="TB_STRING"   size="6"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"       colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+
+    <!-- POPUP SEARCH DATA -->
+    <query name="SEL_CODE">
+        <![CDATA[  
+		SELECT 'F' AS CHK
+		     , CCOMP_CD AS CODE
+		     , CCOMP_NM AS NAME
+		     , VEN_CD
+		     , DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VEN_NM
+		  FROM MSS.MC_VENMST A, DPS.PD_CARDCOMP B
+		 WHERE A.CARD_COMP = B.CCOMP_CD
+		   AND A.STR_CD = ?
+		   AND A.CARD_COMP LIKE ? || '%' 
+        ]]>
+    </query> 
+    
+    <!-- POPUP SEARCH DATA -->
+    <query name="SEL_CODE_NAME">
+        <![CDATA[  
+          AND CCOMP_NM LIKE ? || '%' 
+        ]]>
+    </query> 
+    
+    <!-- POPUP SEARCH DATA -->
+    <query name="SEL_CODE_ORDER">
+        <![CDATA[  
+         ORDER BY CCOMP_CD, VEN_CD
+        ]]>
+    </query> 
+</service>
+

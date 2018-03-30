@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : KHJ
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2016.11.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  회원조회
+ -->
+<service name="/dctm504.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="GRP_SEQ"       colType="TB_DECIMAL" size="13"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        
+        <column colName="TRAN_DATE"     colType="TB_STRING"  size="10"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REQ_PART"      colType="TB_STRING"  size="32"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TRAN_GUBUN"    colType="TB_STRING"  size="32"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SMS_SUBJ"      colType="TB_STRING"  size="100"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SMS_CONT"     	colType="TB_STRING"  size="2000" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TRAN_REQ_CNT"  colType="TB_DECIMAL" size="13"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TRAN_CNT"      colType="TB_DECIMAL" size="13"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PURE_AMT"    	colType="TB_DECIMAL" size="13"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="VAT"      		colType="TB_DECIMAL" size="13"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TOT_AMT"      	colType="TB_DECIMAL" size="13"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_ID"        colType="TB_STRING"  size="50"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TRAN_ID"       colType="TB_STRING"  size="50"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_DATE"     colType="TB_STRING"  size="10"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TRAN_TYPE"     colType="TB_STRING"  size="10"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+
+    <!-- 회원탈퇴등록 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+          
+			SELECT A.GRP_SEQ                                                                  AS GRP_SEQ
+			       , MIN(A.TRAN_DATE)                                                           AS TRAN_DATE
+			       , NULL                                                                     AS REQ_PART
+			       , NULL                                                                     AS TRAN_GUBUN
+				   , MIN(A.MMS_SUBJECT)          	                                              AS SMS_SUBJ
+			       , MIN(A.MMS_BODY)                                                            AS SMS_CONT
+			       , COUNT(A.TRAN_SEQ)                                                          AS TRAN_REQ_CNT
+			       , COUNT(DECODE(A.TRAN_STATUS,'3',DECODE(A.TRAN_RSLT,'0',A.TRAN_SEQ,NULL),NULL))  AS TRAN_CNT
+			       , SUM(DECODE(A.TRAN_STATUS,'3',DECODE(A.TRAN_RSLT,'0',A.CHG_AMT,0),0))           AS PURE_AMT
+			       , SUM(DECODE(A.TRAN_STATUS,'3',DECODE(A.TRAN_RSLT,'0',A.CHG_AMT,0),0))/10        AS VAT
+			       , SUM(DECODE(A.TRAN_STATUS,'3',DECODE(A.TRAN_RSLT,'0',A.CHG_AMT,0),0))*1.1       AS TOT_AMT
+			       , NVL(MIN((SELECT USER_NAME FROM COM.TC_USRMST WHERE USER_ID = A.REG_ID )), MIN(A.REG_ID) ) AS REG_ID
+       			   , NVL(MIN((SELECT USER_NAME FROM COM.TC_USRMST WHERE USER_ID = A.TRAN_ID )), MIN(A.TRAN_ID) ) AS TRAN_ID
+       			   , MIN(A.REG_DATE) AS REG_DATE
+       			   , MIN(A.TRAN_TYPE2) AS TRAN_TYPE
+			  FROM 
+			  (
+			  SELECT A.TRAN_PR                                          AS TRAN_SEQ
+			       , C.S_SSQL                                           AS GRP_SEQ
+			       , TO_CHAR(A.TRAN_DATE,'YYYYMMDD')                    AS TRAN_DATE
+			       , A.TRAN_STATUS                                      AS TRAN_STATUS
+			       , A.TRAN_TYPE                                        AS TRAN_TYPE
+			       , DECODE(B.MMS_SUBJECT,NULL,C.S_TITLE,B.MMS_SUBJECT) AS MMS_SUBJECT
+			       , DECODE(B.MMS_BODY, NULL, A.TRAN_MSG, B.MMS_BODY)   AS MMS_BODY
+			       , B.FILE_TYPE1                                       AS FILE_TYPE1
+			       , TRAN_RSLT                                          AS TRAN_RSLT
+			       , CASE WHEN TRAN_TYPE = 4 THEN 10
+			              ELSE CASE WHEN TRAN_TYPE=6 AND FILE_TYPE1 IS NULL THEN 27
+			                        ELSE 90
+			                   END
+			         END                                                AS CHG_AMT
+			       , CASE WHEN TRAN_TYPE = 4 THEN 'SMS'
+			              ELSE CASE WHEN TRAN_TYPE=6 AND FILE_TYPE1 IS NULL THEN 'LMS'
+			                        ELSE 'MMS'
+			                   END
+			         END                                                AS TRAN_TYPE2
+			       , C.S_ID 											AS REG_ID
+			       , C.S_SNAME 											AS TRAN_ID
+			       , C.S_DATE                                         AS REG_DATE
+        ]]>        
+    </query>      
+
+			   
+    <query name="SEL_MASTER2">   
+        <![CDATA[   
+			       , EM_TRAN_MMS@SMS_ART B
+			       , SMST@SMS_ART C
+
+			   WHERE 1=1
+			     AND A.TRAN_PR <> 0
+			     AND A.TRAN_PR = B.MMS_SEQ(+)
+			     AND A.TRAN_PR = C.S_SQL (+)
+			     ) A
+			     GROUP BY GRP_SEQ
+			     ORDER BY 1
+	]]>        
+    </query>
+    
+    <query name="SEL_MASTER_GRP">   
+    <![CDATA[ 
+	        SELECT MAX(GRP_SEQ)       AS GRP_SEQ
+	         , MAX(TRAN_DATE)     AS TRAN_DATE
+	         , MAX(REQ_PART)        AS REQ_PART
+	         , MAX(TRAN_GUBUN)      AS TRAN_GUBUN
+	         , SMS_SUBJ
+	         , MAX(SMS_CONT)        AS SMS_CONT
+	         , SUM(TRAN_REQ_CNT)    AS TRAN_REQ_CNT
+	         , SUM(TRAN_CNT)        AS TRAN_CNT
+	         , SUM(PURE_AMT)        AS PURE_AMT
+	         , SUM(VAT)             AS VAT
+	         , SUM(TOT_AMT)         AS TOT_AMT
+	         , MAX(REG_ID)          AS REG_ID
+	         , MAX(TRAN_ID)         AS TRAN_ID
+	         , MAX(REG_DATE)        AS REG_DATE
+	         , TRAN_TYPE
+	     FROM (
+	 ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_GRP2">   
+    <![CDATA[ 
+	        ) GROUP BY SMS_SUBJ, TRAN_TYPE
+	 ]]>        
+    </query>
+
+
+</service>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/eren101.er">
+    
+     <!--  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+            SELECT B.STR_CD
+                 , DPS.FN_GET_STORE_NAME(B.STR_CD) AS STR_NM
+                 , A.CAL_YM
+                 , A.CNTR_ID
+                 , A.CAL_TYPE
+                 , B.CNTR_S_DT
+                 , B.CNTR_E_DT 
+                 , COM.FN_GET_COMM_NAME('D', 'P003', B.RENT_TYPE) AS RENT_TYPE
+                 , COM.FN_GET_COMM_NAME('D', 'P084', B.RENT_FLAG) AS RENT_FLAG
+                 , B.RENT_DEPOSIT
+                 , B.MM_RENTFEE
+                 , NVL(A.RENT_AMT,0)        AS RENT_AMT
+                 , NVL(A.RENT_VAT_AMT,0)    ASRENT_VAT_AMT 
+                 , NVL(A.TAX_AMT,0)         AS TAX_AMT
+                 , NVL(A.TAX_VAT_AMT,0)     AS TAX_VAT_AMT
+                 , NVL(A.NTAX_AMT,0)        AS NTAX_AMT
+                 , NVL(A.BAL_AMT,0)         AS BAL_AMT
+                 , NVL(A.ARREAR_AMT,0)      AS ARREAR_AMT
+                 , NVL(A.MOD_AMT,0)         AS MOD_AMT
+                 , A.MOD_REASON
+                 , NVL(A.REAL_CHAREG_AMT,0) AS REAL_CHAREG_AMT
+              FROM MSS.MR_CALMST A, MSS.MR_CNTRMST B
+             WHERE A.CNTR_ID = B.CNTR_ID 
+               AND B.STR_CD = ?
+               AND B.VEN_CD = ?
+               AND A.CAL_YM BETWEEN ? AND ? 
+          ORDER BY B.STR_CD
+                 , A.CAL_YM
+                 , B.CNTR_S_DT
+        ]]>
+    </query>   
+    
+    <query name="SEL_DETAIL">
+        <![CDATA[
+            SELECT B.MNTN_ITEM_NM
+	             , A.USE_QTY
+	             , A.USE_AMT
+	          FROM MSS.MR_CALITEM A, MSS.MR_MNTNITEM B
+	         WHERE A.STR_CD = B.STR_CD
+	           AND A.MNTN_ITEM_CD = B.MNTN_ITEM_CD
+	           AND A.STR_CD     = ?
+	           AND A.CAL_YM     = ?
+	           AND A.CNTR_ID    = ?
+	           AND A.CAL_TYPE   = ?
+          ORDER BY B.MNTN_ITEM_NM
+        ]]>
+    </query>
+
+</service>

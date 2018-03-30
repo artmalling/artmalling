@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif118.mg">
+<!-- 코드/명 조회 -->
+    
+     <gauce name="H_MASTER">
+      <column colName="GIFT_TYPE_NAME"     colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_TYPE"      colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCARD_NO"    	   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STAT_FLAG"  		   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="IN_DT"  			   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="POUT_DT"   		   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ORG_NAME" 		   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="POUT_FLAG" 		   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="POUT_TYPE"   	   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SALE_DT"   		   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SALE_FLAG"  		   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SALE_PART_NM" 	   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="DRAWL_DT"   		   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="DRAWL_FLAG"   	   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ACDT_FLAG"   	   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ACDT_REG_DT"        colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ACDT_NO"  		   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ACDT_PROC_FLAG"     colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ACDT_RSN_CD"        colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+     </gauce>  
+    
+     
+
+    
+    <gauce name="H_GIFT_TYPE_CD"> 
+        <column colName="CODE"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    <!-- 상품권 종류 조회 -->
+    <query name="SEL_GIFT_TYPE_CD">
+        <![CDATA[                                        
+         SELECT GIFT_TYPE_CD     AS CODE
+			    , GIFT_TYPE_NAME   AS NAME
+			 FROM MSS.MG_GIFTTPMST
+			WHERE GIFT_TYPE_FLAG = '01' 
+		    ORDER BY CODE
+        ]]>
+    </query>
+    
+    <gauce name="H_GIFT_AMT_TYPE"> 
+        <column colName="CODE"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    <!-- 금종코드 조회 -->
+    <query name="SEL_GIFT_AMT_TYPE">
+        <![CDATA[                                        
+		SELECT GIFT_AMT_TYPE AS CODE
+			    , GIFT_AMT_NAME AS NAME
+			 FROM MSS.MG_GIFTAMTMST
+			WHERE ISSUE_TYPE = '1'
+			  AND GIFT_TYPE_CD = ?
+         ORDER BY CODE
+        ]]>
+    </query>
+    
+    <!-- 상품권 정보 리스트 조회 -->
+    <query name="SEL_MASTER_SEARCH">
+        <![CDATA[                                        
+			SELECT B.GIFT_TYPE_NAME             				  /*    상품권 종류명           */
+    			 , F.GIFT_AMT_NAME              				  /*    금종                    */
+    			 , A.GIFTCARD_NO                				  /*    상품권번호              */
+    			 , A.STAT_FLAG                  				  /*    상태정보                */
+   			 	 , A.IN_DT                      				  /*    입고일                  */
+   			 	 , A.POUT_DT                    				  /*    불출일                  */
+   			     , D.ORG_NAME  AS POUT_PART_NM  				  /*    불출부서명              */
+    			 , A.POUT_FLAG                  				  /*    불출구분                */
+     			 , A.POUT_TYPE                  				  /*    불출유형                */
+     			 , A.SALE_DT                    				  /*    판매일                  */
+     			 , A.SALE_FLAG                  				  /*    판매구분                */
+     			 , E.ORG_NAME  AS SALE_PART_NM  				  /*    판매부서명              */
+    			 , A.DRAWL_DT                  					  /*    회수일                  */
+    			 , A.DRAWL_FLAG                					  /*    회수구분                */
+     			 , DECODE(A.ACDT_FLAG, 'Y', '사고', 'N', '미사고')/*    사고여부                */
+    			 , A.ACDT_REG_DT               					  /*    사고등록일              */
+     			 , A.ACDT_NO                    				  /*    사고번호                */
+     			 --, C.ACDT_PROC_FLAG              				  /*    사고처리구분            */ 
+     			 , (CASE WHEN C.ACDT_PROC_FLAG = '1' THEN '사고' 
+     			         WHEN C.ACDT_PROC_FLAG = '2' THEN '해지' ELSE '' END) AS ACDT_PROC_FLAG     -- 사고처리구분 = 1:사고 , 2:사고해지     
+    			 , DECODE(C.ACDT_RSN_CD, 01, '파손', 02, '분실')  /*    사고사유코드            */
+ 		      FROM MSS.MG_GIFTMST   A
+   			     , MSS.MG_GIFTTPMST B
+    			 , (
+     			   SELECT GIFTCARD_NO
+          		   		, ACDT_PROC_FLAG  
+          		  	    , ACDT_RSN_CD        
+           		   		, MAX(ACDT_DT)     AS ACDT_DT
+          		   		, MAX(ACDT_STR)    AS ACDT_STR
+            	   		, MAX(ACDT_SEQ_NO) AS ACDT_SEQ_NO
+          			 FROM MSS.MG_GIFTACDT
+         			GROUP BY GIFTCARD_NO 
+               	 		, ACDT_PROC_FLAG
+                		, ACDT_RSN_CD
+     			    ) C
+    			 , DPS.PC_ORGMST    D
+     			 , DPS.PC_ORGMST    E
+     			 , MSS.MG_GIFTAMTMST F
+ 			 WHERE A.GIFT_TYPE_CD   = B.GIFT_TYPE_CD
+   			   AND A.GIFTCARD_NO    = C.GIFTCARD_NO (+)
+   			   AND A.ACDT_REG_DT = C.ACDT_DT (+)
+   			   AND A.ACDT_STR   = C.ACDT_STR (+)
+  			   AND A.ACDT_NO    = C.ACDT_SEQ_NO (+)
+  			   AND A.POUT_PART_CD   = D.ORG_CD (+)
+   			   AND A.POUT_PART_CD   = E.ORG_CD (+)
+   			   AND A.GIFT_AMT_TYPE = F.GIFT_AMT_TYPE
+   			   AND A.GIFT_TYPE_CD  = F.GIFT_TYPE_CD
+  			   AND B.GIFT_TYPE_CD LIKE ? || '%'
+ 			   AND A.STAT_FLAG LIKE ? || '%'
+ 			   AND A.IN_DT BETWEEN ? AND ? 
+ 			   AND A.GIFT_AMT_TYPE LIKE ? || '%'
+ 			   AND A.GIFTCARD_NO LIKE ? || '%'
+        ]]>
+    </query>
+    
+</service>

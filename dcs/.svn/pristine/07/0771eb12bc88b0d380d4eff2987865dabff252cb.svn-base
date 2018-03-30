@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작  성  자  : 김영진
+ * 회  사  명  : 한국후지쯔
+ * 작  성  일  : 2010.03.23
+ * 변  경  일  : 
+ * 변경내용 : 
+ * 개          요 :  포인트승인내역조회
+ -->
+<service name="/dmbo612.do">
+
+    <!-- 포인트승인내역조회-->
+    <gauce name="H_MASTER"> 
+        <column colName="APPR_ID"          colType="TB_STRING"   size="17"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"          colType="TB_STRING"   size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"          colType="TB_STRING"   size="64"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"        colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRADE_CD"         colType="TB_STRING"   size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRADE_NM"         colType="TB_STRING"   size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT"            colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_USE_FLAG"     colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ADD_USE_FLAG_NM"  colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_NO"          colType="TB_STRING"   size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_RECP_NO"        colType="TB_STRING"   size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAN_FLAG"         colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 포인트승인내역조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.APPR_ID
+                 , A.SALE_DT
+                 , DCS.SC_Crypto_FUN('DEC', A.CARD_NO) AS CARD_NO
+                 , ( 
+                     SELECT BRCH_NAME 
+                       FROM DCS.DB_BRANCH
+                      WHERE BRCH_ID = A.BRCH_ID 
+                   ) BRCH_NAME
+                 , A.TRADE_CD
+                 , CASE WHEN A.TRADE_CD IN ('100010','200020', '300040') 
+                        THEN '적립' 
+                        ELSE '사용' 
+                   END TRADE_NM
+                 --, CASE WHEN A.TRADE_CD IN ('100010','200020', '300040') 
+                 --       THEN A.TOT_POINT 
+                 --       ELSE A.TRADE_AMT 
+                 --  END POINT
+                 , CASE WHEN A.TRADE_CD IN ('100010','200020', '300040')
+                        THEN ( SELECT DISTINCT ADD_POINT
+                                 FROM DCS.DO_POINT_ADD
+                                WHERE  CARD_NO = A.CARD_NO
+                                  AND  RECP_NO = A.RECP_NO)
+                        ELSE A.TRADE_AMT
+                   END POINT
+                 , A.ADD_USE_FLAG
+                 , CASE WHEN A.TRADE_CD IN ('100010','200020', '300040') 
+                        THEN (
+                              COM.FN_GET_COMM_NAME('D', 'D006', A.ADD_USE_FLAG) 
+                             )    
+                        ELSE (
+                              COM.FN_GET_COMM_NAME('D', 'D007', A.ADD_USE_FLAG)
+                             )  
+                   END ADD_USE_FLAG_NM
+                 , A.RECP_NO       --거래영수증번호
+                 , A.O_RECP_NO     --반품 원거래번호
+                 --, A.CAN_FLAG
+                 , CASE WHEN A.TRADE_CD IN('300040','300050') 
+                        THEN '취소'
+                        ELSE '정상'
+                   END CAN_FLAG
+              FROM DCS.DO_APPR_TR A 
+             WHERE A.SALE_DT BETWEEN ? AND ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_CARD_NO">   
+        <![CDATA[
+          	   AND A.CARD_NO   =  DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_BRCH_ID">   
+        <![CDATA[
+          	   AND A.BRCH_ID   =  ?
+          	 
+        ]]>        
+    </query>
+    
+    <query name="SEL_ORDERBY">   
+        <![CDATA[
+          	ORDER BY A.SALE_DT DESC, A.SALE_TM  DESC
+          	 
+        ]]>        
+    </query>
+</service>

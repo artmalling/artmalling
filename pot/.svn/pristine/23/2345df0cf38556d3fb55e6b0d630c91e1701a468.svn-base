@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.17
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : F&B코너 공통 XML
+ -->
+<service name="/ccom018.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_FNBMENU">
+      <column colName="SEL"             colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="MENU_FLAG_CD"    colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="MENU_FLAG_NAME"  colType="TB_STRING" size="20"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- F&B코너 조회 SQL -->
+    <query name="SEL_FNBMENU">
+        <![CDATA[                                        
+            SELECT 'F'        AS SEL
+                 , MENU.MENU_FLAG_CD
+                 , MENU.MENU_FLAG_NAME
+              FROM DPS.PC_FNBMENUKIND MENU
+                 , DPS.PC_FNBSHOPMST  SHOP
+             WHERE MENU.STR_CD        = SHOP.STR_CD
+               AND MENU.FNB_SHOP_CD   = SHOP.FNB_SHOP_CD
+        ]]>
+    </query>
+    <query name="SEL_FNBMENU_WHERE_MENU_FLAG_CD">
+        <![CDATA[
+               AND MENU.MENU_FLAG_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBMENU_WHERE_LIKE_MENU_FLAG_CD">
+        <![CDATA[
+               AND MENU.MENU_FLAG_CD   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBMENU_WHERE_MENU_FLAG_NAME">
+        <![CDATA[
+               AND MENU.MENU_FLAG_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBMENU_WHERE_STR_CD">
+        <![CDATA[
+               AND MENU.STR_CD           = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBMENU_WHERE_FNB_SHOP_CD">
+        <![CDATA[
+               AND MENU.FNB_SHOP_CD      = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBMENU_WHERE_USE_YN">
+        <![CDATA[
+               AND MENU.USE_YN           = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBMENU_WHERE_FNB_SHOP_FLAG">
+        <![CDATA[
+               AND SHOP.FNB_SHOP_FLAG    = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBMENU_ORDER">
+        <![CDATA[
+             ORDER BY MENU.MENU_FLAG_CD
+        ]]>
+    </query>
+</service>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.05.30
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  회원 매출 현황(일)
+ -->
+<service name="/dbri313.db">
+    <!-- 월단위 포인트 현황  -->
+    <gauce name="H_MASTER"> 
+    	<column colName="SALE_DT"       		colType="TB_STRING"      size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    	<column colName="CMPR_DT"       		colType="TB_STRING"      size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"       	colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_SALE_AMT"      	colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NCUST_SALE_AMT"  		colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_TOT_SALE_AMT"     	colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_CUST_SALE_AMT"     colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_NCUST_SALE_AMT"    colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_CUST_SALE_AMT"  	colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_NCUST_SALE_AMT"    colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_CUST_SALE_RATE"    colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_NCUST_SALE_RATE"  	colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_SALE_RATE"     	colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NCUST_SALE_RATE"    	colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_DANGA"  			colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="CUST_DANGA"    		colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NCUST_DANGA"  			colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PRE_CUST_SALE_RATE"  	colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_NCUST_SALE_RATE"  	colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_TOT_DANGA"  		colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_CUST_DANGA"  		colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_NCUST_DANGA"  		colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 회원 매출 현황(일) -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT SALE_DT,(SELECT CMPR_DT FROM DPS.PS_SCHEDULE Z WHERE Z.STR_CD = '01' AND Z.SALE_DT = XXX.SALE_DT) CMPR_DT,
+                                 TOT_SALE_AMT -- 총매출
+                                ,CUST_SALE_AMT--회원매출
+                                ,NCUST_SALE_AMT-- 비회원매출
+                                ,PRE_TOT_SALE_AMT -- 대비총매출
+                                ,PRE_CUST_SALE_AMT-- 대비회원매출
+                                ,PRE_NCUST_SALE_AMT-- 대비비회원매출
+                                ,ADD_CUST_SALE_AMT --회원매출증감
+                                ,ADD_NCUST_SALE_AMT --비회원매출증감
+                                ,ADD_CUST_SALE_RATE --회원매출증감율
+                                ,ADD_NCUST_SALE_RATE --비회원매출증감율
+                                ,CUST_SALE_RATE --회원매출구성비
+                                ,NCUST_SALE_RATE -- 비회원매출구성비
+                                ,TOT_DANGA-- 총매출 객단가
+                                ,CUST_DANGA--회원매출 객단가
+                                ,NCUST_DANGA-- 비회원매출 객단가
+                                ,PRE_CUST_SALE_RATE --대비회원매출구성비
+                                ,PRE_NCUST_SALE_RATE -- 대비비회원매출구성비
+                                ,PRE_TOT_DANGA-- 대비총매출 객단가
+                                ,PRE_CUST_DANGA--대비회원매출 객단가
+                                ,PRE_NCUST_DANGA-- 대비비회원매출 객단가
+                        FROM
+                            (
+                              SELECT XX.SALE_DT,
+                                     XX.NORM_SALE_AMT  AS TOT_SALE_AMT -- 총매출
+                                    ,NVL(XZ.SALE_AMT,0) AS CUST_SALE_AMT--회원매출
+                                    ,XX.NORM_SALE_AMT - NVL(XZ.SALE_AMT,0) AS NCUST_SALE_AMT-- 비회원매출
+                                    ,YY.NORM_SALE_AMT  AS PRE_TOT_SALE_AMT -- 대비총매출
+                                    ,NVL(YZ.SALE_AMT,0) AS PRE_CUST_SALE_AMT-- 대비회원매출
+                                    ,YY.NORM_SALE_AMT - NVL(YZ.SALE_AMT,0) AS PRE_NCUST_SALE_AMT-- 대비비회원매출
+                                    ,NVL(XZ.SALE_AMT,0) - NVL(YZ.SALE_AMT,0) AS    ADD_CUST_SALE_AMT --회원매출증감
+                                    ,(XX.NORM_SALE_AMT - NVL(XZ.SALE_AMT,0)) - (YY.NORM_SALE_AMT - NVL(YZ.SALE_AMT,0))  AS    ADD_NCUST_SALE_AMT --비회원매출증감
+                                                                        
+                                    --,ROUND((NVL(XZ.SALE_AMT,0) - NVL(YZ.SALE_AMT,0)) / NVL(YZ.SALE_AMT,0) * 100, 2) AS    ADD_CUST_SALE_RATE --회원매출증감율
+                                    ,NVL(ROUND((NVL(XZ.SALE_AMT,0) - NVL(YZ.SALE_AMT,0)) / NVL(YZ.SALE_AMT, NULL) * 100, 2), 0) AS    ADD_CUST_SALE_RATE --회원매출증감율
+                                    
+                                    ,ROUND(((XX.NORM_SALE_AMT - NVL(XZ.SALE_AMT,0)) - (YY.NORM_SALE_AMT - NVL(YZ.SALE_AMT,0))) / (YY.NORM_SALE_AMT - NVL(YZ.SALE_AMT,0))* 100, 2) AS    ADD_NCUST_SALE_RATE --비회원매출증감율
+                                    ,DECODE(XX.NORM_SALE_AMT,0,0,ROUND((NVL(XZ.SALE_AMT,0)/XX.NORM_SALE_AMT)*100,2)) AS CUST_SALE_RATE --회원매출구성비
+                                    ,DECODE(XX.NORM_SALE_AMT,0,0, ROUND(((XX.NORM_SALE_AMT - NVL(XZ.SALE_AMT,0))/XX.NORM_SALE_AMT)*100,2))  AS NCUST_SALE_RATE -- 비회원매출구성비
+                                    ,ROUND(XX.NORM_SALE_AMT/ XX.CUST_CNT)  AS TOT_DANGA-- 총매출 객단가
+                                    ,ROUND(NVL(XZ.SALE_AMT,0)/ NVL(XZ.CUST_CNT,1)) AS CUST_DANGA--회원매출 객단가
+                                    ,DECODE((XX.CUST_CNT - NVL(XZ.CUST_CNT,0)),0,0, ROUND((XX.NORM_SALE_AMT - NVL(XZ.SALE_AMT,0))/(XX.CUST_CNT - NVL(XZ.CUST_CNT,0)))) AS NCUST_DANGA-- 비회원매출 객단가
+                                    ,DECODE(YY.NORM_SALE_AMT,0,0,ROUND((NVL(YZ.SALE_AMT,0)/YY.NORM_SALE_AMT)*100,2)) AS PRE_CUST_SALE_RATE --대비회원매출구성비
+                                    ,DECODE(YY.NORM_SALE_AMT,0,0, ROUND(((YY.NORM_SALE_AMT - NVL(YZ.SALE_AMT,0))/YY.NORM_SALE_AMT)*100,2))  AS PRE_NCUST_SALE_RATE -- 대비비회원매출구성비
+                                    ,ROUND(YY.NORM_SALE_AMT/ YY.CUST_CNT)  AS PRE_TOT_DANGA-- 대비총매출 객단가
+                                    ,ROUND(NVL(YZ.SALE_AMT,0)/ NVL(YZ.CUST_CNT,1)) AS PRE_CUST_DANGA--대비회원매출 객단가
+                                    ,DECODE((YY.CUST_CNT - NVL(YZ.CUST_CNT,0)),0,0, ROUND((YY.NORM_SALE_AMT - NVL(YZ.SALE_AMT,0))/(YY.CUST_CNT - NVL(YZ.CUST_CNT,0)))) AS PRE_NCUST_DANGA-- 대비비회원매출 객단가
+                                FROM
+                                (
+                                    --SELECT STR_CD,SALE_DT, SUM(NORM_SALE_AMT) NORM_SALE_AMT, SUM(DECODE(CUST_CNT,0,1,CUST_CNT)) CUST_CNT
+                                    SELECT SALE_DT, SUM(NORM_SALE_AMT) NORM_SALE_AMT, SUM(DECODE(CUST_CNT,0,1,CUST_CNT)) CUST_CNT
+                                     FROM DPS.PS_DAYPBN A
+                                    WHERE 1=1 --STR_CD = '01'
+                                      AND SALE_DT >= ?
+                                      AND SALE_DT <= ?
+                                     --GROUP BY STR_CD,SALE_DT
+                                     GROUP BY SALE_DT
+                                    ORDER BY 1,2,3
+                                ) XX,
+                                (
+                                    --SELECT STR_CD,SALE_DT,  SUM(SALE_AMT) SALE_AMT, COUNT(1) CUST_CNT
+                                    SELECT SALE_DT,  SUM(NORM_SALE_AMT) SALE_AMT, COUNT(1) CUST_CNT
+                                        FROM  DPS.PS_DAYCUST B
+                                    WHERE 1=1 --STR_CD = '01'
+                                      AND SALE_DT >= ?
+                                      AND SALE_DT <= ?
+                                 	GROUP BY SALE_DT
+                                ) XZ,
+                                (
+                                    --SELECT A.STR_CD,B.SALE_DT, SUM(NORM_SALE_AMT) NORM_SALE_AMT, SUM(DECODE(CUST_CNT,0,1,CUST_CNT)) CUST_CNT
+                                    SELECT B.SALE_DT, SUM(NORM_SALE_AMT) NORM_SALE_AMT, SUM(DECODE(CUST_CNT,0,1,CUST_CNT)) CUST_CNT
+                                     FROM DPS.PS_DAYPBN A, DPS.PS_SCHEDULE B
+                                    WHERE 1=1 --A.STR_CD = '01'
+                                        AND A.SALE_DT = B.CMPR_DT
+                                        AND B.SALE_DT BETWEEN ? AND ?
+                                     GROUP BY B.SALE_DT
+                                    ORDER BY 1,2,3
+                                ) YY,
+                                (
+                                   --SELECT A.STR_CD,B.SALE_DT,  SUM(SALE_AMT) SALE_AMT, COUNT(1) CUST_CNT
+                                    SELECT B.SALE_DT,  SUM(NORM_SALE_AMT) SALE_AMT, COUNT(1) CUST_CNT
+                                        FROM  DPS.PS_DAYCUST A, DPS.PS_SCHEDULE B
+                                    WHERE 1=1 --A.STR_CD = '01'
+                                        AND A.SALE_DT = B.CMPR_DT
+                                        AND B.SALE_DT BETWEEN ? AND ?
+                                 	GROUP BY B.SALE_DT 
+                                ) YZ
+                                WHERE 1=1
+                                  --AND XX.STR_CD = YY.STR_CD(+) 
+                                  AND XX.SALE_DT = YY.SALE_DT(+)
+                                  --AND XX.STR_CD = XZ.STR_CD(+) 
+                                  AND XX.SALE_DT = XZ.SALE_DT(+)
+                                  --AND YY.STR_CD = YZ.STR_CD(+) 
+                                  AND YY.SALE_DT = YZ.SALE_DT(+)
+                        ) XXX
+         ORDER BY SALE_DT
+        ]]>        
+    </query>  
+</service>

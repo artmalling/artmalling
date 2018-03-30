@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  반송상세데이터를 조회한다.
+ -->
+<service name="/psal933.ps">
+    <!-- 입금상세데이터 목록 -->
+    <gauce name="H_MASTER">
+        <column colName="PAY_DT"      colType="TB_STRING"    size="8"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="DATA_FLAG"   colType="TB_STRING"    size="43"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+		<column colName="SALE_DT"     colType="TB_STRING"    size="6"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="RECV_DT"     colType="TB_STRING"    size="6"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="CARD_NO"     colType="TB_STRING"    size="20"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="DIV_MONTH"   colType="TB_STRING"    size="2"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+		<column colName="APPR_NO"     colType="TB_STRING"    size="10"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="CRTN_CD"     colType="TB_STRING"    size="4"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="VRTN_FLAG"   colType="TB_STRING"    size="43"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="TRADE_AMT"   colType="TB_DECIMAL"   size="12"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="CCOMP_NM"    colType="TB_STRING"    size="43"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="JBRCH_ID"    colType="TB_STRING"    size="15"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="JBRCH_NM"    colType="TB_STRING"    size="43"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="CHECKCARD_YN"    colType="TB_STRING"    size="43"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 입금상세데이터 조회 -->
+    <query name="SEL_MASTER_TEMP">        
+        <![CDATA[
+            SELECT A.PAY_DT
+                 , COM.FN_GET_COMM_NAME('D', 'D034', A.DATA_FLAG) DATA_FLAG
+                 , A.SALE_DT
+                 , A.RECV_DT
+                 , A.CARD_NO
+                 , A.DIV_MONTH
+                 , A.APPR_NO
+                 , A.CRTN_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D041', A.VRTN_CD) VRTN_FLAG
+                 , A.TRADE_AMT
+                 , DPS.FN_GET_CCOMP_NM(A.CCOMP_CD) CCOMP_NM
+                 , A.JBRCH_ID 
+                 , B.JBRCH_NM
+              FROM DPS.PD_RTND A 
+                 , DPS.PD_BRANCH B
+                 , DPS.PD_CARDCOMP C
+             WHERE A.JBRCH_ID = B.JBRCH_ID
+               AND A.CCOMP_CD = C.CCOMP_CD
+               AND B.STR_CD    LIKE ? || '%'
+               AND DECODE(?,'1',A.PAY_DT,A.SALE_DT) BETWEEN ? AND ?  -- A.PAY_DT 8 자리 일자임,  A.SALE_DT6 자리 일자임.
+               AND A.CCOMP_CD  LIKE ? || '%'
+               AND C.BCOMP_CD  LIKE ? || '%'
+               AND A.JBRCH_ID  LIKE ? || '%'
+               AND A.DATA_FLAG LIKE ? || '%'
+               AND A.CARD_NO   LIKE ? || '%'
+               AND A.APPR_NO   LIKE ? || '%'
+        ]]>        
+    </query>
+    
+    <!-- 입금상세데이터 목록 20150320 재무팀 조윤지사원 요청 취소시 금액앞에 '-' 표시 & 체크카드 여부 추가-->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.PAY_DT
+                 , COM.FN_GET_COMM_NAME('D', 'D034', A.DATA_FLAG) DATA_FLAG
+                 , A.SALE_DT
+                 , A.RECV_DT
+                 , A.CARD_NO
+                 , A.DIV_MONTH
+                 , A.APPR_NO
+                 , A.CRTN_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D041', A.VRTN_CD) VRTN_FLAG
+                 , DECODE(A.DATA_FLAG, '61', A.TRADE_AMT, '64', -1 * A.TRADE_AMT,A.TRADE_AMT) AS TRADE_AMT
+                 , DPS.FN_GET_CCOMP_NM(A.CCOMP_CD) CCOMP_NM
+                 , A.JBRCH_ID 
+                 , B.JBRCH_NM
+                 , NVL(DPS.FN_GET_CHECKCARD_YN(SUBSTR(A.CARD_NO,1,6)),'N') CHECKCARD_YN
+              FROM DPS.PD_RTND A 
+                 , DPS.PD_BRANCH B
+                 , DPS.PD_CARDCOMP C
+             WHERE A.JBRCH_ID = B.JBRCH_ID
+               AND A.CCOMP_CD = C.CCOMP_CD
+               AND B.STR_CD    LIKE ? || '%'
+               AND DECODE(?,'1',A.PAY_DT,A.SALE_DT) BETWEEN ? AND ?  -- A.PAY_DT 8 자리 일자임,  A.SALE_DT6 자리 일자임.
+               AND A.CCOMP_CD  LIKE ? || '%'
+               AND C.BCOMP_CD  LIKE ? || '%'
+               AND A.JBRCH_ID  LIKE ? || '%'
+               AND A.DATA_FLAG LIKE ? || '%'
+               AND A.CARD_NO   LIKE ? || '%'
+               AND A.APPR_NO   LIKE ? || '%'
+        ]]>        
+    </query>
+    
+</service>

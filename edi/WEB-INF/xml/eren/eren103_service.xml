@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/eren103.er">
+    
+    
+    <!-- 마스터 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+		SELECT GAUG_TYPE
+		     , COM.FN_GET_COMM_NAME('D', 'M039', GAUG_TYPE) AS GAUG_TYPE_NM
+		     , B.GAUG_ID
+		     , (TIME_01+TIME_02+TIME_03+TIME_04+TIME_05+TIME_06+TIME_07+TIME_08+TIME_09+TIME_10+TIME_11+TIME_12
+		       +TIME_13+TIME_14+TIME_15+TIME_16+TIME_17+TIME_18+TIME_19+TIME_20+TIME_21+TIME_22+TIME_23) * B.DIV_RATE AS TOT_USE
+		     , TIME_00 * B.DIV_RATE AS TIME_00
+		     , TIME_01 * B.DIV_RATE AS TIME_01
+		     , TIME_02 * B.DIV_RATE AS TIME_02
+		     , TIME_03 * B.DIV_RATE AS TIME_03
+		     , TIME_04 * B.DIV_RATE AS TIME_04
+		     , TIME_05 * B.DIV_RATE AS TIME_05
+		     , TIME_06 * B.DIV_RATE AS TIME_06
+		     , TIME_07 * B.DIV_RATE AS TIME_07
+		     , TIME_08 * B.DIV_RATE AS TIME_08
+		     , TIME_09 * B.DIV_RATE AS TIME_09
+		     , TIME_10 * B.DIV_RATE AS TIME_10
+		     , TIME_11 * B.DIV_RATE AS TIME_11
+		     , TIME_12 * B.DIV_RATE AS TIME_12
+		     , TIME_13 * B.DIV_RATE AS TIME_13
+		     , TIME_14 * B.DIV_RATE AS TIME_14
+		     , TIME_15 * B.DIV_RATE AS TIME_15
+		     , TIME_16 * B.DIV_RATE AS TIME_16
+		     , TIME_17 * B.DIV_RATE AS TIME_17
+		     , TIME_18 * B.DIV_RATE AS TIME_18
+		     , TIME_19 * B.DIV_RATE AS TIME_19
+		     , TIME_20 * B.DIV_RATE AS TIME_20
+		     , TIME_21 * B.DIV_RATE AS TIME_21
+		     , TIME_22 * B.DIV_RATE AS TIME_22
+		     , TIME_23 * B.DIV_RATE AS TIME_23
+       	  FROM MSS.MR_CNTRMST A
+       	     , MSS.MR_GAUGMAP B
+     	     , MSS.MR_GAUGMST C
+     	     , (SELECT GAUG_ID 
+     	             , SUM(DECODE(TIME_ZONE,'00',USE_QTY,0)) AS TIME_00    
+		     	     , SUM(DECODE(TIME_ZONE,'01',USE_QTY,0)) AS TIME_01
+		     	     , SUM(DECODE(TIME_ZONE,'02',USE_QTY,0)) AS TIME_02
+		     	     , SUM(DECODE(TIME_ZONE,'03',USE_QTY,0)) AS TIME_03
+		     	     , SUM(DECODE(TIME_ZONE,'04',USE_QTY,0)) AS TIME_04
+		     	     , SUM(DECODE(TIME_ZONE,'05',USE_QTY,0)) AS TIME_05
+		     	     , SUM(DECODE(TIME_ZONE,'06',USE_QTY,0)) AS TIME_06
+		     	     , SUM(DECODE(TIME_ZONE,'07',USE_QTY,0)) AS TIME_07
+		     	     , SUM(DECODE(TIME_ZONE,'08',USE_QTY,0)) AS TIME_08
+		     	     , SUM(DECODE(TIME_ZONE,'09',USE_QTY,0)) AS TIME_09
+		     	     , SUM(DECODE(TIME_ZONE,'10',USE_QTY,0)) AS TIME_10
+		     	     , SUM(DECODE(TIME_ZONE,'11',USE_QTY,0)) AS TIME_11
+		     	     , SUM(DECODE(TIME_ZONE,'12',USE_QTY,0)) AS TIME_12
+		     	     , SUM(DECODE(TIME_ZONE,'13',USE_QTY,0)) AS TIME_13
+		     	     , SUM(DECODE(TIME_ZONE,'14',USE_QTY,0)) AS TIME_14
+		     	     , SUM(DECODE(TIME_ZONE,'15',USE_QTY,0)) AS TIME_15
+		     	     , SUM(DECODE(TIME_ZONE,'16',USE_QTY,0)) AS TIME_16
+		     	     , SUM(DECODE(TIME_ZONE,'17',USE_QTY,0)) AS TIME_17
+		     	     , SUM(DECODE(TIME_ZONE,'18',USE_QTY,0)) AS TIME_18
+		     	     , SUM(DECODE(TIME_ZONE,'19',USE_QTY,0)) AS TIME_19
+		     	     , SUM(DECODE(TIME_ZONE,'20',USE_QTY,0)) AS TIME_20
+		     	     , SUM(DECODE(TIME_ZONE,'21',USE_QTY,0)) AS TIME_21
+		     	     , SUM(DECODE(TIME_ZONE,'22',USE_QTY,0)) AS TIME_22
+		     	     , SUM(DECODE(TIME_ZONE,'23',USE_QTY,0)) AS TIME_23
+		     	  FROM MSS.MR_GAUGUSED                            
+		     	 WHERE STR_CD = ?
+		     	   AND USE_DT BETWEEN ? AND ?  
+		     	 GROUP BY GAUG_ID) D
+     	 WHERE A.CNTR_ID = B.CNTR_ID   
+     	   AND B.GAUG_ID = C.GAUG_ID
+     	   AND C.GAUG_ID = D.GAUG_ID
+     	   AND C.GAUG_TYPE LIKE ? || '%'
+     	   AND A.VEN_CD  = ?
+        ]]>
+    </query>
+   
+    <!-- 상세조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+        SELECT USE_DT
+             , (TIME_01+TIME_02+TIME_03+TIME_04+TIME_05+TIME_06+TIME_07+TIME_08+TIME_09+TIME_10+TIME_11+TIME_12
+               +TIME_13+TIME_14+TIME_15+TIME_16+TIME_17+TIME_18+TIME_19+TIME_20+TIME_21+TIME_22+TIME_23) * B.DIV_RATE AS TOT_USE
+             , TIME_00 * B.DIV_RATE AS TIME_00
+             , TIME_01 * B.DIV_RATE AS TIME_01
+             , TIME_02 * B.DIV_RATE AS TIME_02
+             , TIME_03 * B.DIV_RATE AS TIME_03
+             , TIME_04 * B.DIV_RATE AS TIME_04
+             , TIME_05 * B.DIV_RATE AS TIME_05
+             , TIME_06 * B.DIV_RATE AS TIME_06
+             , TIME_07 * B.DIV_RATE AS TIME_07
+             , TIME_08 * B.DIV_RATE AS TIME_08
+             , TIME_09 * B.DIV_RATE AS TIME_09
+             , TIME_10 * B.DIV_RATE AS TIME_10
+             , TIME_11 * B.DIV_RATE AS TIME_11
+             , TIME_12 * B.DIV_RATE AS TIME_12
+             , TIME_13 * B.DIV_RATE AS TIME_13
+             , TIME_14 * B.DIV_RATE AS TIME_14
+             , TIME_15 * B.DIV_RATE AS TIME_15
+             , TIME_16 * B.DIV_RATE AS TIME_16
+             , TIME_17 * B.DIV_RATE AS TIME_17
+             , TIME_18 * B.DIV_RATE AS TIME_18
+             , TIME_19 * B.DIV_RATE AS TIME_19
+             , TIME_20 * B.DIV_RATE AS TIME_20
+             , TIME_21 * B.DIV_RATE AS TIME_21
+             , TIME_22 * B.DIV_RATE AS TIME_22
+             , TIME_23 * B.DIV_RATE AS TIME_23
+          FROM MSS.MR_CNTRMST A
+             , MSS.MR_GAUGMAP B
+             , MSS.MR_GAUGMST C
+             , (SELECT GAUG_ID    
+                     , USE_DT
+                     , SUM(DECODE(TIME_ZONE,'00',USE_QTY,0)) AS TIME_00
+                     , SUM(DECODE(TIME_ZONE,'01',USE_QTY,0)) AS TIME_01
+                     , SUM(DECODE(TIME_ZONE,'02',USE_QTY,0)) AS TIME_02
+                     , SUM(DECODE(TIME_ZONE,'03',USE_QTY,0)) AS TIME_03
+                     , SUM(DECODE(TIME_ZONE,'04',USE_QTY,0)) AS TIME_04
+                     , SUM(DECODE(TIME_ZONE,'05',USE_QTY,0)) AS TIME_05
+                     , SUM(DECODE(TIME_ZONE,'06',USE_QTY,0)) AS TIME_06
+                     , SUM(DECODE(TIME_ZONE,'07',USE_QTY,0)) AS TIME_07
+                     , SUM(DECODE(TIME_ZONE,'08',USE_QTY,0)) AS TIME_08
+                     , SUM(DECODE(TIME_ZONE,'09',USE_QTY,0)) AS TIME_09
+                     , SUM(DECODE(TIME_ZONE,'10',USE_QTY,0)) AS TIME_10
+                     , SUM(DECODE(TIME_ZONE,'11',USE_QTY,0)) AS TIME_11
+                     , SUM(DECODE(TIME_ZONE,'12',USE_QTY,0)) AS TIME_12
+                     , SUM(DECODE(TIME_ZONE,'13',USE_QTY,0)) AS TIME_13
+                     , SUM(DECODE(TIME_ZONE,'14',USE_QTY,0)) AS TIME_14
+                     , SUM(DECODE(TIME_ZONE,'15',USE_QTY,0)) AS TIME_15
+                     , SUM(DECODE(TIME_ZONE,'16',USE_QTY,0)) AS TIME_16
+                     , SUM(DECODE(TIME_ZONE,'17',USE_QTY,0)) AS TIME_17
+                     , SUM(DECODE(TIME_ZONE,'18',USE_QTY,0)) AS TIME_18
+                     , SUM(DECODE(TIME_ZONE,'19',USE_QTY,0)) AS TIME_19
+                     , SUM(DECODE(TIME_ZONE,'20',USE_QTY,0)) AS TIME_20
+                     , SUM(DECODE(TIME_ZONE,'21',USE_QTY,0)) AS TIME_21
+                     , SUM(DECODE(TIME_ZONE,'22',USE_QTY,0)) AS TIME_22
+                     , SUM(DECODE(TIME_ZONE,'23',USE_QTY,0)) AS TIME_23
+                  FROM MSS.MR_GAUGUSED                            
+                 WHERE STR_CD = ?
+                   AND USE_DT BETWEEN ? AND ?  
+                 GROUP BY GAUG_ID, USE_DT) D
+         WHERE A.CNTR_ID = B.CNTR_ID   
+           AND B.GAUG_ID = C.GAUG_ID
+           AND C.GAUG_ID = D.GAUG_ID
+           AND A.VEN_CD  = ?
+           AND D.GAUG_ID = ?
+       ORDER BY USE_DT
+        ]]>
+    </query>
+</service>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  포인트강제처리현황표
+ -->
+<service name="/dmbo605.do">
+    <!-- dmbo605 헤더 -->
+    <gauce name="H_MASTER"> 
+        <column colName="BRCH_NAME"       colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROT_DT"         colType="TB_STRING"     size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"       colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_NAME"       colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT"           colType="TB_DECIMAL"    size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REASON_NAME"     colType="TB_STRING"     size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"          colType="TB_STRING"     size="100"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--포인트 강제처리 현황표 조회  -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT (
+			        SELECT BRCH_NAME 
+			          FROM DCS.DB_BRANCH 
+			         WHERE BRCH_ID = A.BRCH_ID
+			       ) BRCH_NAME
+			     , A.PROC_DT
+			     , (
+			        SELECT CUST_NAME
+			          FROM DCS.DM_CUSTOMER 
+			         WHERE CUST_ID = (
+			                          SELECT CUST_ID 
+			                            FROM DCS.DM_CARD 
+			                           WHERE CARD_NO = A.CARD_NO
+			                         )
+			       ) CUST_NAME
+			     , COM.FN_GET_COMM_NAME('D','D026' ,A.PROC_FLAG)  PROC_NAME
+			     , DECODE(A.PROC_FLAG, 'A', A.POINT, A.POINT*(-1)) AS POINT
+			     , DECODE(A.PROC_FLAG, 'A',(COM.FN_GET_COMM_NAME('D','D008' ,A.REASON_CD)),'U', 
+			       (COM.FN_GET_COMM_NAME('D','D009' ,A.REASON_CD)),'') REASON_NAME
+			     , A.REMARK
+			  FROM DCS.DO_FORCE_POINT A
+			 WHERE A.PROC_DT BETWEEN ? AND ?
+			   AND A.BRCH_ID LIKE ? || '%'
+			   AND A.CONF_DATE IS NOT NULL
+			 ORDER BY A.BRCH_ID, A.PROC_DT, CUST_NAME
+        ]]>        
+    </query>
+
+     <!--포인트 강제처리 현황표 조회  리포트-->
+    <query name="SEL_MASTER_REPORT">        
+        <![CDATA[
+            SELECT A.BRCH_ID || ' ' || DCS.F_GET_BRCH_NAME(A.BRCH_ID) AS BRCH_NAME
+                 , B.MOBILE_PH1
+                 , B.MOBILE_PH2
+                 , B.MOBILE_PH3
+                 , A.PROC_DT
+                 , B.CUST_ID || ' ' || B.CUST_NAME AS CUST_NAME
+                 , COM.FN_GET_COMM_NAME('D', 'D026',A.PROC_FLAG) AS PROC_NAME
+                 , DECODE(A.PROC_FLAG, 'A', A.POINT, '-'|| A.POINT) AS POINT
+                 , DECODE(A.PROC_FLAG, 'A', COM.FN_GET_COMM_NAME('D', 'D008',A.REASON_CD),'U', 
+                   COM.FN_GET_COMM_NAME('D', 'D009',A.REASON_CD),'') AS REASON_NAME
+                 , A.REMARK
+              FROM DCS.DO_FORCE_POINT A
+                 , DCS.DM_CUSTOMER B
+                 , DCS.DM_CARD C
+             WHERE A.CARD_NO = C.CARD_NO
+               AND B.CUST_ID = C.CUST_ID
+               AND A.PROC_DT BETWEEN ? AND ?
+               AND A.BRCH_ID LIKE ? || '%'
+               AND A.CONF_DATE IS NOT NULL
+             ORDER BY A.BRCH_ID, A.PROC_DT, CUST_NAME
+        ]]>        
+    </query>
+    
+</service>

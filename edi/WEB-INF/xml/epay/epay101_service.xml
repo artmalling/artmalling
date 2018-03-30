@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/epay101.ea">
+   
+    <!-- 조회 (직매입) -->
+    <query name="SEL_BILL1">
+        <![CDATA[
+        SELECT BILL.STR_CD                                                  /* 점 */
+             , DPS.FN_GET_STORE_NAME(BILL.STR_CD) AS STR_NM                 /* 점명 */
+             , BILL.VEN_CD                                                  /* 협력사 */    
+             , DPS.FN_GET_VENDOR_NAME(BILL.VEN_CD) AS VEN_NM                /* 협력사명 */
+             , BILL.PAY_YM                                                   /* 해당년월 */  
+             , BILL.PAY_CYC                                                 /* 지불주기 */      
+             , BILL.PAY_CNT                                                 /* 지불회차 */
+             , BILL.BTIME_BAL_AMT                                      /* 전월이월잔액 */
+             , BILL.NTIME_SUP_AMT                                     /* 공급가 */
+             , BILL.NTIME_VAT_AMT                                     /* 부가세 */
+             , BILL.COMIS_SALE_AMT                                    /* 이익액 */
+             , BILL.NTIME_PAY_AMT                                       /* 지불대상금액 */
+             , BILL.NTIME_DED_AMT                                         /* 공제액*/
+             , BILL.NTIME_DED_CASH_AMT                             /* 공제액 */
+             , BILL.NTIME_HOLD_AMT                                     /* 보류액*/
+             , BILL.NTIME_BFPAY_AMT                                   /* 선급금액*/
+             , BILL.NTIME_RLPAY_AMT                                    /* 실지불액 */
+             , BILL.NTIME_BAL_AMT                                        /* 지불후잔액*/
+          FROM DPS.PP_BILLMST   BILL
+             , DPS.PC_STRVENMST VEN
+             ,  ( SELECT STR_CD, CLOSE_YM, (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                                                WHEN '53' then '2' 
+                                                                WHEN '54' then '2' 
+                                                                WHEN '55' then '3' 
+                                                                WHEN '56' then '3' 
+                                                                WHEN '57' then '3'  END) PAY_CYC,
+                        (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                              WHEN '53' then '1' 
+                                              WHEN '54' then '2' 
+                                              WHEN '55' then '1' 
+                                              WHEN '56' then '2' 
+                                              WHEN '57' then '3'  END) PAY_CNT
+                   FROM DPS.PC_MCLOSE
+                  WHERE CLOSE_TASK_FLAG = 'PPAY' 
+                    AND CLOSE_YN = 'Y' 
+                    AND CLOSE_UNIT_FLAG IN ('52','53', '54', '55', '56', '57')) MCL
+         WHERE BILL.STR_CD = VEN.STR_CD
+           AND BILL.VEN_CD = VEN.VEN_CD
+           AND BILL.STR_CD = MCL.STR_CD
+           AND BILL.PAY_YM = MCL.CLOSE_YM
+           AND BILL.PAY_CYC = MCL.PAY_CYC
+           AND BILL.PAY_CNT = MCL.PAY_CNT
+           AND BILL.STR_CD  = ?
+           AND BILL.VEN_CD  = ?
+           AND VEN.BIZ_TYPE = ?
+           AND BILL.PAY_CYC LIKE ? || '%'
+           AND BILL.PAY_CNT LIKE ? || '%'
+           AND BILL.PAY_YM  >=  ?
+           AND BILL.PAY_YM  <=  ?
+           AND BILL.PUMBUN_CD LIKE ? || '%'        
+        ]]>
+    </query>
+    
+    <!-- 조회 (특정매입) -->
+    <query name="SEL_BILL2">
+        <![CDATA[
+	        SELECT BILL.STR_CD                                                  /* 점 */
+                 , DPS.FN_GET_STORE_NAME(BILL.STR_CD) AS STR_NM         /* 점명 */
+                 , BILL.VEN_CD                                          /* 협력사 */    
+                 , DPS.FN_GET_VENDOR_NAME(BILL.VEN_CD) AS VEN_NM        /* 협력사명 */
+                 , BILL.PAY_YM                                          /* 해당년월 */  
+                 , BILL.PAY_CYC                                         /* 지불주기 */      
+                 , BILL.PAY_CNT                                         /* 지불회차 */
+                 , BILL.BTIME_BAL_AMT                                   /* 전월이월잔액 */
+                 , VENPAY.SUP_AMT                                       /* 공급가 */
+                 , VENPAY.VAT_AMT                                       /* 부가세 */
+                 , VENPAY.SALE_TOT_AMT                                  /* 총매출 */
+                 , VENPAY.REDU_AMT                                      /* 할인*/
+                 , VENPAY.SALE_AMT                                      /* 매출 */
+                 , BILL.COMIS_SALE_AMT                                  /* 이익액 */
+                 , BILL.NTIME_PAY_AMT                                   /* 지불대상금액 */
+                 , BILL.NTIME_DED_AMT                              /* 공제액 */
+                 , BILL.NTIME_DED_CASH_AMT                             /* 공제액 */
+                 , BILL.NTIME_HOLD_AMT                                  /* 보류액 */
+                 , BILL.NTIME_BFPAY_AMT                                 /* 선급금액*/
+                 , BILL.NTIME_RLPAY_AMT                                 /* 실지불액 */
+                 , BILL.NTIME_BAL_AMT                                   /* 지불후잔액*/
+              FROM DPS.PP_BILLMST   BILL
+                 , (
+                    SELECT STR_CD
+                         , PAY_YM
+                         , PAY_CYC
+                         , PAY_CNT
+                         , VEN_CD
+                         , SUM(SUP_AMT)      AS SUP_AMT
+                         , SUM(VAT_AMT)      AS VAT_AMT
+                         , SUM(SALE_TOT_AMT) AS SALE_TOT_AMT
+                         , SUM(REDU_AMT)     AS REDU_AMT
+                         , SUM(SALE_AMT)     AS SALE_AMT
+                      FROM DPS.PP_VENPAYDTL 
+                     WHERE STR_CD   = ?
+                       AND VEN_CD   = ?
+                       AND BIZ_TYPE = ?
+                       AND PAY_CYC  LIKE ? || '%'
+                       AND PAY_CNT  LIKE ? || '%'
+                       AND PAY_YM   >=  ?
+                       AND PAY_YM   <=  ?
+                     GROUP BY STR_CD
+                            , PAY_YM
+                            , PAY_CYC
+                            , PAY_CNT
+                            , VEN_CD
+                   ) VENPAY
+                 , DPS.PC_STRVENMST VEN
+                 , ( SELECT STR_CD, CLOSE_YM, (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                                                    WHEN '53' then '2' 
+                                                                    WHEN '54' then '2' 
+                                                                    WHEN '55' then '3' 
+                                                                    WHEN '56' then '3' 
+                                                                    WHEN '57' then '3'  END) PAY_CYC,
+                            (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                                  WHEN '53' then '1' 
+                                                  WHEN '54' then '2' 
+                                                  WHEN '55' then '1' 
+                                                  WHEN '56' then '2' 
+                                                  WHEN '57' then '3'  END) PAY_CNT
+                       FROM DPS.PC_MCLOSE
+                      WHERE CLOSE_TASK_FLAG = 'PPAY' 
+                        AND CLOSE_YN = 'Y' 
+                        AND CLOSE_UNIT_FLAG IN ('52','53', '54', '55', '56', '57')) MCL
+             WHERE BILL.STR_CD  = VEN.STR_CD
+               AND BILL.VEN_CD  = VEN.VEN_CD
+               AND BILL.STR_CD  = MCL.STR_CD
+               AND BILL.PAY_YM =  MCL.CLOSE_YM
+               AND BILL.PAY_CYC = MCL.PAY_CYC
+               AND BILL.PAY_CNT = MCL.PAY_CNT
+               AND BILL.STR_CD  = VENPAY.STR_CD(+)
+               AND BILL.VEN_CD  = VENPAY.VEN_CD(+)
+               AND BILL.PAY_YM  = VENPAY.PAY_YM(+)
+               AND BILL.PAY_CYC = VENPAY.PAY_CYC(+)
+               AND BILL.PAY_CNT = VENPAY.PAY_CNT(+)
+               AND BILL.STR_CD  = ?
+               AND BILL.VEN_CD  = ?
+               AND VEN.BIZ_TYPE = ?
+               AND BILL.PAY_CYC LIKE ? || '%'
+               AND BILL.PAY_CNT LIKE ? || '%'
+               AND BILL.PAY_YM  >=  ?
+               AND BILL.PAY_YM  <=  ? 
+               AND BILL.PUMBUN_CD LIKE ? || '%'
+        ]]>
+    </query>
+    
+    <!-- 조회 (임대을) -->
+    <query name="SEL_BILL3">
+        <![CDATA[
+        SELECT BILL.STR_CD                                                  /* 점 */
+             , DPS.FN_GET_STORE_NAME(BILL.STR_CD) AS STR_NM         /* 점명 */
+             , BILL.VEN_CD                                          /* 협력사 */    
+             , DPS.FN_GET_VENDOR_NAME(BILL.VEN_CD) AS VEN_NM        /* 협력사명 */
+             , BILL.PAY_YM                                          /* 해당년월 */  
+             , BILL.PAY_CYC                                         /* 지불주기 */      
+             , BILL.PAY_CNT                                         /* 지불회차 */
+             , BILL.BTIME_BAL_AMT                                   /* 전월이월잔액 */ 
+             , VENPAY.SALE_TOT_AMT                                  /* 총매출 */
+             , VENPAY.REDU_AMT                                      /* 할인*/
+             , VENPAY.SALE_AMT                                      /* 매출 */
+             , BILL.COMIS_SALE_AMT                                  /* 이익액 */
+             , BILL.NTIME_PAY_AMT                                   /* 지불대상금액 */
+             , BILL.NTIME_DED_AMT                                   /* 공제액 */
+             , BILL.NTIME_DED_CASH_AMT                             /* 공제액 */
+             , BILL.NTIME_HOLD_AMT                                  /* 보류액 */
+             , BILL.NTIME_BFPAY_AMT                                 /* 선급금액*/
+             , BILL.NTIME_RLPAY_AMT                                 /* 실지불액 */
+             , BILL.NTIME_BAL_AMT                                   /* 지불후잔액*/
+          FROM DPS.PP_BILLMST   BILL
+             , (
+                SELECT STR_CD
+                     , PAY_YM
+                     , PAY_CYC
+                     , PAY_CNT
+                     , VEN_CD
+                     , SUM(SUP_AMT)      AS SUP_AMT
+                     , SUM(VAT_AMT)      AS VAT_AMT
+                     , SUM(SALE_TOT_AMT) AS SALE_TOT_AMT
+                     , SUM(REDU_AMT)     AS REDU_AMT
+                     , SUM(SALE_AMT)     AS SALE_AMT
+                  FROM DPS.PP_VENPAYDTL 
+                 WHERE STR_CD   = ?
+                   AND VEN_CD   = ?
+                   AND BIZ_TYPE = ?
+                   AND PAY_CYC  LIKE ? || '%'
+                   AND PAY_CNT  LIKE ? || '%'
+                   AND PAY_YM   >=  ?
+                   AND PAY_YM   <=  ?
+                 GROUP BY STR_CD
+                        , PAY_YM
+                        , PAY_CYC
+                        , PAY_CNT
+                        , VEN_CD
+               ) VENPAY
+             , DPS.PC_STRVENMST VEN
+             ,  ( SELECT STR_CD, CLOSE_YM, (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                                                WHEN '53' then '2' 
+                                                                WHEN '54' then '2' 
+                                                                WHEN '55' then '3' 
+                                                                WHEN '56' then '3' 
+                                                                WHEN '57' then '3'  END) PAY_CYC,
+                        (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                              WHEN '53' then '1' 
+                                              WHEN '54' then '2' 
+                                              WHEN '55' then '1' 
+                                              WHEN '56' then '2' 
+                                              WHEN '57' then '3'  END) PAY_CNT
+                   FROM DPS.PC_MCLOSE
+                  WHERE CLOSE_TASK_FLAG = 'PPAY' 
+                    AND CLOSE_YN = 'Y' 
+                    AND CLOSE_UNIT_FLAG IN ('52','53', '54', '55', '56', '57')) MCL
+         WHERE BILL.STR_CD  = VEN.STR_CD
+           AND BILL.VEN_CD  = VEN.VEN_CD
+           AND BILL.STR_CD  = MCL.STR_CD
+           AND BILL.PAY_YM  = MCL.CLOSE_YM
+           AND BILL.PAY_CYC = MCL.PAY_CYC
+           AND BILL.PAY_CNT = MCL.PAY_CNT
+           AND BILL.STR_CD  = VENPAY.STR_CD(+)
+           AND BILL.VEN_CD  = VENPAY.VEN_CD(+)
+           AND BILL.PAY_YM  = VENPAY.PAY_YM(+)
+           AND BILL.PAY_CYC = VENPAY.PAY_CYC(+)
+           AND BILL.PAY_CNT = VENPAY.PAY_CNT(+)
+           AND BILL.STR_CD  = ?
+           AND BILL.VEN_CD  = ?
+           AND VEN.BIZ_TYPE = ?
+           AND BILL.PAY_CYC LIKE ? || '%'
+           AND BILL.PAY_CNT LIKE ? || '%'
+           AND BILL.PAY_YM  >= ?
+           AND BILL.PAY_YM  <= ?    
+           AND BILL.PUMBUN_CD LIKE ? || '%'    
+        ]]>
+    </query>
+    
+    
+    
+     <!-- 선급내역 팝업 -->
+    <query name="SEL_PREDEFDED1">
+        <![CDATA[
+        SELECT TO_CHAR(TO_DATE(INPUT_DT), 'YYYY/MM/DD') AS INPUT_DT         /* 지불일자 */                                 
+             , LPAD(SEQ_NO, 3, 0) AS SEQ_NO                                 /* 순번 */                                   
+             , REASON_CD                                                    /* 사유코드 */                             
+             , COM.FN_GET_COMM_NAME('D', 'P413', REASON_CD) AS REASON_NM    /* 사유코드 */                             
+             , TO_CHAR(INPUT_AMT, '999,999,999,999') AS INPUT_AMT 
+             , INPUT_AMT AS INPUTAMTSUM                              
+             , REMARK                                          
+          FROM DPS.PP_PREDEFDED
+         WHERE STR_CD  = ?
+           AND PAY_YM  = ?
+           AND PAY_CYC = ?
+           AND PAY_CNT = ?
+           AND VEN_CD  = ? 
+           AND PAY_CD_FLAG = '3'         /* 선급금보류공제항목 : 3(선급금) */ 
+        ]]>
+    </query>
+    
+    <!-- 보류내역 팝업 -->
+    <query name="SEL_PREDEFDED2">
+        <![CDATA[
+        SELECT TO_CHAR(TO_DATE(INPUT_DT), 'YYYY/MM/DD') AS INPUT_DT         /* 지불일자 */                                 
+             , LPAD(SEQ_NO, 3, 0) AS SEQ_NO                                           /* 순번 */                                   
+             , REASON_CD                                                    /* 사유코드 */                             
+             , COM.FN_GET_COMM_NAME('D', 'P411', REASON_CD) AS REASON_NM    /* 사유코드 */                             
+             , INPUT_AMT                        
+             , REMARK                                          
+          FROM DPS.PP_PREDEFDED
+         WHERE STR_CD  = ?
+           AND PAY_YM  = ?
+           AND PAY_CYC = ?
+           AND PAY_CNT = ?
+           AND VEN_CD  = ? 
+           AND PAY_CD_FLAG = '1'         /* 선급금보류공제항목 : 1(보류) */
+        ]]>
+    </query>
+    
+     <!-- 공제내역 팝업 -->
+    <query name="SEL_PREDEFDED3">
+        <![CDATA[
+	       SELECT TO_CHAR(TO_DATE(A.INPUT_DT), 'YYYY/MM/DD') AS INPUT_DT                     
+	             , LPAD(SEQ_NO, 3, 0) AS SEQ_NO                                                               
+	             , REASON_CD                                                                 
+	             , COM.FN_GET_COMM_NAME('D', 'P412', REASON_CD) AS REASON_NM                     
+	             , INPUT_AMT         
+	             , DECODE(VAT_YN, 'Y', '포함','포함안함') AS VAT_YN
+	             , DECODE(DED_REG_FLAG, '0', '일반', '1', '임대공제') AS DED_REG_FLAG       
+	             , DECODE(CASH_IN_YN,'N', '현금입금아님','현금입금') AS CASH_IN_YN                         
+	             , REMARK                                          
+	          FROM DPS.PP_PREDEFDED A
+	         WHERE STR_CD  = ?
+	           AND PAY_YM  = ?
+	           AND PAY_CYC = ?
+	           AND PAY_CNT = ?
+	           AND VEN_CD  = ?
+	           AND PAY_CD_FLAG = '2'          /* 선급금보류공제항목 : 2(공제) */
+        ]]>
+    </query>
+    
+          
+      
+    
+    
+
+</service>

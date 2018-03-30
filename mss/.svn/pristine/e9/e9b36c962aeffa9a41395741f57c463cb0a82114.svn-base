@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.02.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  SMS발송관리
+ -->
+<service name="/mpro104.mp">
+    <!-- 약속대장마스터 -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"        colType="TB_STRING"     size="2"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"      colType="TB_STRING"     size="40"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAKE_DT"       colType="TB_STRING"     size="8"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAKE_SEQ"      colType="TB_DECIMAL"    size="3"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_DELI_DT"    colType="TB_STRING"     size="8"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FRST_PROM_DT"  colType="TB_STRING"     size="8"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NM"       colType="TB_STRING"     size="40"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH"     colType="TB_STRING"     size="40"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROM_TYPE"     colType="TB_STRING"     size="40"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_STAT"     colType="TB_STRING"     size="40"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROM_DTL"      colType="TB_STRING"     size="100"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH1"    colType="TB_STRING"     size="32"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"    colType="TB_STRING"     size="32"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"    colType="TB_STRING"     size="32"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SMS_YN"        colType="TB_STRING"     size="32"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- SMS발송 -->   
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="SEND_DT"        colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"         colType="TB_DECIMAL"    size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEND_TYPE"      colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEND_CONTENT"   colType="TB_STRING"     size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECV_PH1"       colType="TB_STRING"     size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECV_PH2"       colType="TB_STRING"     size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECV_PH3"       colType="TB_STRING"     size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEND_PH1"       colType="TB_STRING"     size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEND_PH2"       colType="TB_STRING"     size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEND_PH3"       colType="TB_STRING"     size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 약속대장 조회 쿼리  -->
+    <!-- 접수일자 기준 -->
+    <query name="SEL_PROMISE_TAKE_DT">        
+        <![CDATA[
+            SELECT PMC.STR_CD
+                 , STR.STR_NAME
+                 , PMC.TAKE_DT
+                 , PMC.TAKE_SEQ
+                 , PMC.IN_DELI_DT
+                 , PMC.FRST_PROM_DT
+                 , PMC.CUST_NM
+                 , '' AS MOBILE_PH
+                 , COM.FN_GET_COMM_NAME('D','M021',PMC.PROM_TYPE) AS PROM_TYPE 
+                 , COM.FN_GET_COMM_NAME('D','M024',PMC.PROC_STAT) AS PROC_STAT 
+                 , PMC.PROM_DTL
+                 , DCS.SC_Crypto_FUN('DEC', PMC.MOBILE_PH1) AS MOBILE_PH1
+                 , DCS.SC_Crypto_FUN('DEC', PMC.MOBILE_PH2) AS MOBILE_PH2
+                 , DCS.SC_Crypto_FUN('DEC', PMC.MOBILE_PH3) AS MOBILE_PH3
+                 , DECODE(PMC.SMS_YN, NULL, 'F', 'F', 'F', 'T') AS SMS_YN
+              FROM MSS.MP_PROMISECERT PMC
+                 , DPS.PC_STRMST      STR
+             WHERE PMC.STR_CD = STR.STR_CD
+               AND PMC.PROM_TYPE             LIKE ? || '%'
+               AND PMC.CUST_NM               LIKE '%' || ? || '%'
+               AND PMC.STR_CD                = ?
+               AND PMC.TAKE_DT               >= ?
+               AND PMC.TAKE_DT               <= ?
+             ORDER BY PMC.STR_CD, PMC.TAKE_DT, PMC.TAKE_SEQ 
+        ]]>        
+    </query>
+    
+    <!-- 입고예정일 기준 -->
+    <query name="SEL_PROMISE_IN_DELI_DT">        
+        <![CDATA[
+            SELECT PMC.STR_CD
+                 , STR.STR_NAME
+                 , PMC.TAKE_DT
+                 , PMC.TAKE_SEQ
+                 , PMC.IN_DELI_DT
+                 , PMC.FRST_PROM_DT
+                 , PMC.CUST_NM
+                 , '' AS MOBILE_PH
+                 , COM.FN_GET_COMM_NAME('D','M021',PMC.PROM_TYPE) AS PROM_TYPE 
+                 , COM.FN_GET_COMM_NAME('D','M024',PMC.PROC_STAT) AS PROC_STAT 
+                 , PMC.PROM_DTL
+                 , DCS.SC_Crypto_FUN('DEC', PMC.MOBILE_PH1) AS MOBILE_PH1
+                 , DCS.SC_Crypto_FUN('DEC', PMC.MOBILE_PH2) AS MOBILE_PH2
+                 , DCS.SC_Crypto_FUN('DEC', PMC.MOBILE_PH3) AS MOBILE_PH3
+                 , DECODE(PMC.SMS_YN, NULL, 'F', 'F', 'F', 'T') AS SMS_YN
+              FROM MSS.MP_PROMISECERT PMC
+                 , DPS.PC_STRMST      STR
+             WHERE PMC.STR_CD = STR.STR_CD
+               AND PMC.PROM_TYPE             LIKE ? || '%'
+               AND PMC.CUST_NM               LIKE '%' || ? || '%'
+               AND PMC.STR_CD                = ?
+               AND PMC.IN_DELI_DT            >= ?
+               AND PMC.IN_DELI_DT            <= ?
+             ORDER BY PMC.STR_CD, PMC.TAKE_DT, PMC.TAKE_SEQ 
+        ]]>        
+    </query>
+    
+    <!-- 약속예정일 기준 -->
+    <query name="SEL_PROMISE_FIRST_PROM_DT">        
+        <![CDATA[
+            SELECT PMC.STR_CD
+                 , STR.STR_NAME
+                 , PMC.TAKE_DT
+                 , PMC.TAKE_SEQ
+                 , PMC.IN_DELI_DT
+                 , PMC.FRST_PROM_DT
+                 , PMC.CUST_NM
+                 , '' AS MOBILE_PH
+                 , COM.FN_GET_COMM_NAME('D','M021',PMC.PROM_TYPE) AS PROM_TYPE 
+                 , COM.FN_GET_COMM_NAME('D','M024',PMC.PROC_STAT) AS PROC_STAT 
+                 , PMC.PROM_DTL
+                 , DCS.SC_Crypto_FUN('DEC', PMC.MOBILE_PH1) AS MOBILE_PH1
+                 , DCS.SC_Crypto_FUN('DEC', PMC.MOBILE_PH2) AS MOBILE_PH2
+                 , DCS.SC_Crypto_FUN('DEC', PMC.MOBILE_PH3) AS MOBILE_PH3
+                 , DECODE(PMC.SMS_YN, NULL, 'F', 'F', 'F', 'T') AS SMS_YN
+              FROM MSS.MP_PROMISECERT PMC
+                 , DPS.PC_STRMST      STR
+             WHERE PMC.STR_CD = STR.STR_CD
+               AND PMC.PROM_TYPE             LIKE ? || '%'
+               AND PMC.CUST_NM               LIKE '%' || ? || '%'
+               AND PMC.STR_CD                = ?
+               AND PMC.FRST_PROM_DT          >= ?
+               AND PMC.FRST_PROM_DT          <= ?
+             ORDER BY PMC.STR_CD, PMC.TAKE_DT, PMC.TAKE_SEQ 
+        ]]>        
+    </query>
+
+    <!-- SMS리스트 조회 쿼리  -->            
+    <query name="SEL_SMSSENDMGR">
+        <![CDATA[
+            SELECT SMG.SEND_DT
+                 , SMG.SEQ_NO
+                 , SMG.SEND_TYPE
+                 , SMG.SEND_CONTENT
+                 , DCS.SC_Crypto_FUN('DEC', SMG.RECV_PH1) AS RECV_PH1
+                 , DCS.SC_Crypto_FUN('DEC', SMG.RECV_PH2) AS RECV_PH2
+                 , DCS.SC_Crypto_FUN('DEC', SMG.RECV_PH3) AS RECV_PH3
+                 , SMG.SEND_PH1
+                 , SMG.SEND_PH2
+                 , SMG.SEND_PH3
+              FROM MSS.MP_PROMISECERT   PRS
+                 , MSS.MP_SMSSENDMGR    SMG
+             WHERE SMG.TAKE_DT     = PRS.TAKE_DT
+               AND SMG.STR_CD      = PRS.STR_CD
+               AND SMG.TAKE_SEQ    = PRS.TAKE_SEQ
+               AND SMG.TAKE_SEQ    = ?
+               AND SMG.STR_CD      = ?
+               AND SMG.TAKE_DT     = ?
+             ORDER BY SMG.SEND_DT, SMG.SEQ_NO    
+        ]]>
+    </query>
+    
+    
+    <!-- SMS 전송관리 신규 입력  -->
+    <query name="INS_SMSSENDMGR">        
+        <![CDATA[
+            INSERT INTO MSS.MP_SMSSENDMGR( SEND_DT
+                                         , SEQ_NO
+                                         , TAKE_DT
+                                         , STR_CD
+                                         , TAKE_SEQ
+                                         , SEND_TYPE
+                                         , SEND_CONTENT
+                                         , RECV_PH1
+                                         , RECV_PH2
+                                         , RECV_PH3
+                                         , SEND_PH1
+                                         , SEND_PH2
+                                         , SEND_PH3
+                                         , REG_DATE
+                                         , REG_ID
+                                         , MOD_DATE
+                                         , MOD_ID
+                                         )
+                                  VALUES ( ?
+                                         , (SELECT NVL(MAX(SEQ_NO)+1, 1) FROM MSS.MP_SMSSENDMGR WHERE SEND_DT=?)
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , DCS.SC_Crypto_FUN('ENC', ?)
+                                         , DCS.SC_Crypto_FUN('ENC', ?)
+                                         , DCS.SC_Crypto_FUN('ENC', ?)
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                         )
+            
+        ]]>        
+    </query>
+
+    
+    <!-- SMS 전송관리 수정  -->
+    <query name="UPD_VENMST">
+        <![CDATA[
+            UPDATE MSS.MP_SMSSENDMGR
+               SET SEND_TYPE        = ? 
+                 , RECV_PH1         = DCS.SC_Crypto_FUN('ENC', ?) 
+                 , RECV_PH2         = DCS.SC_Crypto_FUN('ENC', ?) 
+                 , RECV_PH3         = DCS.SC_Crypto_FUN('ENC', ?)
+                 , SEND_PH1         = ?
+                 , SEND_PH2         = ?
+                 , SEND_PH3         = ?
+                 , SEND_CONTENT     = ?
+                 , MOD_DATE         = SYSDATE
+                 , MOD_ID           = ?
+             WHERE SEND_DT          = ? 
+               AND SEQ_NO           = ?
+        ]]>
+    </query>
+    
+    
+</service>

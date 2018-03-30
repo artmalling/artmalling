@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.23
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 카드발급사조회
+ -->
+<service name="/ccom030.cc">    
+
+    <!-- POPUP HEADER -->
+    <gauce name="H_MASTER">
+        <column colName="CODE"          colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="NAME"          colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="BIN_NO"        colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="VCARD_NAME"    colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+
+    <!-- POPUP SEARCH DATE -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+            SELECT CODE
+                 , NAME
+                 , BIN_NO
+                 , VCARD_NAME
+              FROM ( SELECT DISTINCT CCOMP_CD AS CODE
+                         , (SELECT CCOMP_NM 
+                             FROM DPS.PD_CARDCOMP 
+                            WHERE CCOMP_CD = A.CCOMP_CD
+                           ) AS NAME
+                         , BIN_NO
+                         , COM.FN_GET_COMM_NAME('D', 'D032', A.VCARD_TYPE) VCARD_NAME  
+                       FROM DPS.PD_CARDBIN A
+                   )
+             WHERE CODE LIKE ? || '%'   
+               AND NAME LIKE ? || '%'   
+             ORDER BY CODE 
+        ]]>
+    </query>
+    
+</service>
+

@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal212.ps">
+
+    <!-- 매출수기등록 품목 헤더 -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="CHK"           colType="TB_STRING"   size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"       colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"        colType="TB_STRING"   size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"        colType="TB_DECIMAL"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETC_GBN"       colType="TB_STRING"   size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"       colType="TB_STRING"   size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TIME"     colType="TB_STRING"   size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_USER_ID"  colType="TB_STRING"   size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_FLAG"     colType="TB_STRING"   size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM_CD"       colType="TB_STRING"   size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM_CD_TYPE"  colType="TB_STRING"   size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM_NAME"     colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"     colType="TB_STRING"   size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"   colType="TB_STRING"   size="50" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"     colType="TB_STRING"   size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"   colType="TB_STRING"   size="50" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_FLAG"    colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"    colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PRC"      colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"      colType="TB_DECIMAL"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"      colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_FLAG"     colType="TB_STRING"   size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_FLAG"      colType="TB_STRING"   size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"      colType="TB_DECIMAL"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 엑셀업로드 헤더 -->
+    <gauce name="H_UPLOAD"> 
+        <column colName="PUMBUN_CD"     colType="TB_STRING"   size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"     colType="TB_STRING"   size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PRC"      colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                          
+        <column colName="SALE_QTY"      colType="TB_DECIMAL"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"      colType="TB_DECIMAL"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 매출수기등록 품목 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT 'F'             AS CHK
+			     , A.STR_CD                /* VARCHAR2(2)     점코드                         */
+			     , A.SALE_DT               /* VARCHAR2(8)     매출일자                       */
+			     , A.POS_NO                /* VARCHAR2(4)     POS번호                        */
+			     , A.SEQ_NO                /* NUMBER(3)       순번                           */
+			     , A.ETC_GBN	           /* VARCHAR2(1)	  수기등록구분(1:품번 2:단품)    */
+			     , A.TRAN_NO               /* VARCHAR2(5)     거래번호                       */
+			     , A.SALE_TIME             /* VARCHAR2(6)     판매시간                       */
+			     , A.SALE_USER_ID          /* VARCHAR2(10)    판매사원번호                   */
+			     , A.TRAN_FLAG             /* VARCHAR2(1)     거래구분(0:매출1:반품)         */
+			     , A.ITEM_CD               /* VARCHAR2(18)    상품코드                       */
+			     , A.ITEM_CD_TYPE          /* VARCHAR2(1)     상품구분                       */
+			     , A.ITEM_NAME             /* VARCHAR2(40)    상품명                         */
+			     , A.PUMBUN_CD             /* VARCHAR2(6)     품번코드                       */
+			     , C.PUMBUN_NAME           /* VARCHAR2(50)    품번명                         */
+			     , A.PUMMOK_CD             /* VARCHAR2(4)     품목코드                       */
+			     , E.PUMMOK_NAME           /* VARCHAR2(50)    품목명                         */
+			     , A.EVENT_FLAG	           /* VARCHAR2(2)	  행사구분                       */
+			     , A.EVENT_RATE	           /* VARCHAR2(2)	  행사율                         */
+			     , A.SALE_PRC              /* NUMBER(9)       판매단가                       */
+			     , A.SALE_QTY              /* NUMBER(3)       판매수량                       */
+			     , A.SALE_AMT              /* NUMBER(9)       매출금액                       */
+			     , A.PROC_FLAG             /* VARCHAR2(1)     처리구분(0:미처리, 1:처리완료) */ 
+			     , A.REG_FLAG			   /* VARCHAR2(1)     등록구분(P:프로그램, I:인터페이스) */
+			     , A.CUST_CNT			   /* NUMBER          객수 */
+			  FROM DPS.PS_SALEETC  A       -- 매출수기등록
+			     , DPS.PC_PBNMST   B       -- 품번마스터
+			     , DPS.PC_STRPBN   C       -- 점별품번
+			     , DPS.PC_PBNPMK   D       -- 품번별 품목
+			     , DPS.PC_PMKMST   E       -- 품목마스터
+			 WHERE A.PUMBUN_CD = B.PUMBUN_CD
+			   AND A.STR_CD    = C.STR_CD
+			   AND A.PUMBUN_CD = C.PUMBUN_CD
+			   AND A.PUMBUN_CD = D.PUMBUN_CD
+			   AND A.PUMMOK_CD = E.PUMMOK_SRT_CD
+			   AND E.PUMMOK_CD = D.PUMMOK_CD
+			   AND A.STR_CD    = ?
+			   AND A.SALE_DT   = ?
+			   AND A.TRAN_FLAG = ?
+			   AND A.POS_NO    = ?
+			   AND A.ETC_GBN   = ?	--1 품목 2 단품
+			 ORDER BY A.PUMBUN_CD
+        ]]>        
+    </query>
+    
+    <!-- 매출수기등록 품목 입력 -->
+    <query name="INS_MASTER">        
+        <![CDATA[
+			INSERT INTO DPS.PS_SALEETC
+			          (
+			            STR_CD          /* VARCHAR2(2)     점코드                         */
+			          , SALE_DT         /* VARCHAR2(8)     매출일자                       */
+			          , POS_NO          /* VARCHAR2(4)     POS번호                        */
+			          , SEQ_NO          /* NUMBER(3)       순번                           */
+			          , ETC_GBN         /* VARCHAR2(1)     수기등록구분(1:품번 2:단품)    */
+			          , TRAN_NO         /* VARCHAR2(5)     거래번호                       */
+			          , SALE_TIME       /* VARCHAR2(6)     판매시간                       */
+			          , SALE_USER_ID    /* VARCHAR2(10)    판매사원번호                   */
+			          , TRAN_FLAG       /* VARCHAR2(1)     거래구분(0매출1반품)           */
+			          , ITEM_CD         /* VARCHAR2(18)    상품코드                       */
+			          , ITEM_CD_TYPE    /* VARCHAR2(1)     상품구분                       */
+			          , ITEM_NAME       /* VARCHAR2(40)    상품명                         */
+			          , PUMBUN_CD       /* VARCHAR2(6)     품번코드                       */
+			          , PUMMOK_CD       /* VARCHAR2(4)     품목코드                       */
+			          , EVENT_FLAG      /* VARCHAR2(2)     행사구분                       */
+			          , EVENT_RATE      /* VARCHAR2(2)     행사율                         */
+			          , SALE_PRC        /* NUMBER(9)       판매단가                       */
+			          , SALE_QTY        /* NUMBER(3)       판매수량                       */
+			          , SALE_AMT        /* NUMBER(9)       매출금액                       */
+			          , PROC_FLAG       /* VARCHAR2(1)     처리구분(0:미처리, 1:처리완료) */
+			          , REG_DATE        /* DATE    등록일                                 */
+			          , REG_ID          /* VARCHAR2(10)    등록자                         */
+			          , MOD_DATE        /* DATE    수정일                                 */
+			          , MOD_ID          /* VARCHAR2(10)    수정자                         */
+			          , REG_FLAG        /* VARCHAR2(1)     등록구분(P:프로그램, I:인터페이스) */
+			          , CUST_CNT        /* NUMBER          객수 */
+			          )
+			    VALUES(
+			            ?
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , (
+						SELECT TO_CHAR(SYSDATE, 'HH24MISS')
+						  FROM DUAL
+			            )
+			          , ?
+			          , ?
+			          , ? || ? || '-' || '00'
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , ? * ?
+			          , 'N'
+			          , SYSDATE
+			          , ?
+			          , SYSDATE
+			          , ?
+			          , 'P'
+			          , ?
+			          )
+        ]]>        
+    </query>
+    
+    <!-- 순번발번 -->
+    <query name="SEL_SEQ_NO">        
+        <![CDATA[
+			SELECT NVL(MAX(SEQ_NO), 0) + 1 AS SEQ_NO
+			  FROM DPS.PS_SALEETC
+			 WHERE STR_CD  = ?
+			   AND SALE_DT = ?
+			   AND POS_NO  = ?
+        ]]>        
+    </query>
+    
+
+	<!-- 행사구분 헤더 -->
+    <gauce name="H_SEL_HS_MG"> 
+        <column colName="EVENT_FLAG"      colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"      colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_MG_RATE"    colType="TB_DECIMAL"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"        colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"        colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 행사구분 -->
+    <query name="SEL_HS_MG">        
+        <![CDATA[
+			SELECT A.EVENT_FLAG
+			     , A.EVENT_RATE
+			     , A.NORM_MG_RATE
+			     , A.APP_S_DT
+			     , A.APP_E_DT
+			  FROM DPS.PC_MARGINMST A
+			 WHERE A.STR_CD     = ?
+			   AND A.PUMBUN_CD  = ?
+			   --AND A.EVENT_FLAG = '00'
+			   --AND A.MG_FLAG    = '0'
+			   AND A.EVENT_RATE = '00'
+			   AND A.EVENT_CD   = '00000000000'
+			   AND ? BETWEEN A.APP_S_DT AND A.APP_E_DT
+        ]]>        
+    </query>
+    
+    <!-- 엑셀업로드 브랜드명, 품목명, 행사구분, 행사율  헤더 -->
+    <gauce name="H_SEL_EXCEL"> 
+        <column colName="PUMBUN_CD"      colType="TB_STRING"   size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"    colType="TB_STRING"   size="50" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"      colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"    colType="TB_STRING"   size="50" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_SRT_CD"  colType="TB_STRING"   size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_FLAG"     colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"     colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 엑셀업로드 브랜드명, 품목명, 행사구분, 행사율  쿼리 -->
+    <query name="SEL_EXCEL">        
+        <![CDATA[
+            SELECT PBN.PUMBUN_CD        /* 브랜드코드   */
+			     , PBN.PUMBUN_NAME      /* 브랜드명     */
+                 , PMK.PUMMOK_CD        /* 픔품목코드   */
+                 , PMK.PUMMOK_NAME      /* 품목명       */
+                 , PMK.PUMMOK_SRT_CD    /* 품목단축코드 */
+                 , MGM.EVENT_FLAG       /* 행사구분     */
+			     , MGM.EVENT_RATE       /* 행사율       */
+			  FROM DPS.PC_PBNMST PBN    /* 품번마스터   */
+                 , DPS.PC_PMKMST PMK    /* 품목마스터   */
+                 , DPS.PC_PBNPMK PPK    /* 품번별품목   */
+                 , DPS.PC_MARGINMST MGM /* 마진마스터   */
+			 WHERE PBN.PUMBUN_CD     = PPK.PUMBUN_CD
+               AND PMK.PUMMOK_CD     = PPK.PUMMOK_CD
+               AND PBN.PUMBUN_CD     = MGM.PUMBUN_CD
+               AND PBN.USE_YN        = 'Y'
+			   AND PBN.PUMBUN_CD     = ?
+               AND PMK.PUMMOK_SRT_CD = ?
+               AND PBN.PUMBUN_TYPE   = '0'
+               AND PBN.SKU_FLAG      = '2'
+               AND PBN.BIZ_TYPE      = '2'
+               AND MGM.STR_CD        = ?
+			   --AND MGM.EVENT_FLAG    = '00'
+			   --AND MGM.MG_FLAG       = '0'
+			   AND MGM.EVENT_RATE    = '00'
+			   AND MGM.EVENT_CD      = '00000000000'
+               AND ? BETWEEN MGM.APP_S_DT AND MGM.APP_E_DT
+        ]]>        
+    </query>
+</service>

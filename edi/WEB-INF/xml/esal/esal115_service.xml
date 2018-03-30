@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal115.es">
+    
+   
+    <!-- 일일거래현황 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+				SELECT A.ENTR_DT
+				     , A.REG_ID
+				     , MIN(C.PUMBUN_NAME) PUMBUN_NAME
+				     , COUNT(A.CUST_ID) TOT_CNT
+				     , COUNT(DECODE(A.DI,'0',CUST_ID, NULL)) DI_CNT0
+				     , COUNT(DECODE(A.DI,'1',CUST_ID, NULL)) DI_CNT1
+				FROM
+				(
+				    SELECT A.ENTR_DT
+				         , A.REG_ID
+				         , A.DI
+				         , A.CUST_ID
+				      FROM DCS.DM_CUSTOMER A
+				           , DCS.DM_CARD B
+				    WHERE A.ENTR_DT >='20170630'
+				    AND A.DI IS NOT NULL
+				    AND A.DI <> '9'     --- 외부 가입고객 엑셀업로드 
+				    AND A.CUST_ID = B.CUST_ID
+				    AND A.ENTR_DT BETWEEN ?  AND ?
+				    AND A.REG_ID = ?
+				) A
+				, DPS.PC_STRPBN C
+				WHERE A.REG_ID = C.PUMBUN_CD
+				GROUP BY A.ENTR_DT, A.REG_ID
+        ]]>
+    </query>       
+      
+    
+    
+
+</service>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 
+ * 작 성 일 : 2010.05.11
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  세금계산서 미발행 일괄 유보처리
+ -->
+<service name="/ppay301.pp">
+
+    <!-- 조회조건  리스트 -->
+    <gauce name="H_SEARCH"> 
+    <column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_YM"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CYC"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CNT"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="BIZ_TYPE"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="TAX_FLAG"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VEN_CD"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="TERM_S_DT"      colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="TERM_E_DT"      colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CHK1"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CHK2"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="SEL"            colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+  
+      <!-- 작업내역 리스트 -->
+    <gauce name="H_LIST"> 
+    <column colName="JOB_PRG_ID"      colType="TB_STRING"  size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="JOB_PRG_NM"      colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="REG_DATE"        colType="TB_STRING"  size="19"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PROC_ID"         colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PROC_YN"         colType="TB_STRING"  size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="STR_CD"          colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="STR_NM"          colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VEN_CD"          colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="VEN_NM"          colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="REMARK"          colType="TB_STRING"  size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+        
+    <!-- 내역조회 -->
+    <query name="SEL_LIST">
+        <![CDATA[
+
+            SELECT JOB_PRG_ID
+                 , COM.FN_GET_COMM_NAME('D', 'P418', JOB_PRG_ID) AS JOB_PRG_NM
+                 , REG_DATE
+                 , PROC_ID
+                 , PROC_YN
+                 , STR_CD 
+                 , DECODE(STR_CD, '%', '전체', DPS.FN_GET_STORE_NAME(STR_CD))  AS STR_NM
+                 , VEN_CD
+                 , DECODE(VEN_CD, '%', '전체', DPS.FN_GET_VENDOR_NAME(VEN_CD)) AS VEN_NM    
+                 , REMARK                               
+              FROM DPS.PP_JOBLOG
+             WHERE PROC_YM  = ?
+               AND PAY_CYC  = ?
+               AND PAY_CNT  = ?
+               AND STR_CD   LIKE ? || '%'
+               AND VEN_CD   LIKE ? || '%'
+               AND PROC_SEQ <> 0
+               AND PID      = 'PPAY301'
+             ORDER BY PROC_DT DESC
+                    , PROC_SEQ DESC
+        ]]>
+    </query>
+ </service>

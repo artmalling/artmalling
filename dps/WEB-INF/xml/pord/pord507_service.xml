@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.06
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  수입발주대비 입고현황 
+ -->
+<service name="/pord507.po">
+    
+    <!-- INVOICE 리스트 -->
+    <gauce name="H_LIST"> 
+        <column colName="STR_CD"              colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="OFFER_YM"            colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="OFFER_SEQ_NO"        colType="TB_DECIMAL" size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_NM"              colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"           colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_NM"           colType="TB_STRING"  size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_CD"              colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_NM"              colType="TB_STRING"  size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="OFFER_DT"            colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CURRENCY_CD"         colType="TB_STRING"  size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="OFFER_SHEET_NO"      colType="TB_STRING"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ORDER_TOT_QTY"       colType="TB_DECIMAL" size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ORDER_TOT_AMT"       colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ORDER_TOT_WON_AMT"   colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="OFFER_TOT_QTY"       colType="TB_DECIMAL" size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="OFFER_TOT_AMT"       colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="INVOICE_TOT_QTY"     colType="TB_DECIMAL" size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="INVOICE_TOT_AMT"     colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="INVOICE_WON_TOT_AMT" colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHK_TOT_QTY"         colType="TB_DECIMAL" size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHK_COST_TAMT"       colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="OFFER_TOT_WON_AMT"   colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_EXC_TAMT"        colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 수입발주대비 입고현황  OFFER 조회 -->
+    <query name="SEL_LIST_OFFER">
+        <![CDATA[  
+			SELECT OFFM.STR_CD
+			     , OFFM.OFFER_YM
+			     , OFFM.OFFER_SEQ_NO
+			     , MAX(DPS.FN_GET_STORE_NAME(OFFM.STR_CD))     AS STR_NM
+			     , MAX(OFFM.PUMBUN_CD)                         AS PUMBUN_CD
+			     , MAX(DPS.FN_GET_PUMBUN_NAME(OFFM.PUMBUN_CD)) AS PUMBUN_NM
+			     , MAX(OFFM.VEN_CD)                            AS VEN_CD
+			     , MAX(DPS.FN_GET_VENDOR_NAME(OFFM.VEN_CD))    AS VEN_NM
+			     , MAX(OFFM.OFFER_DT)                          AS OFFER_DT
+			     , OFFM.CURRENCY_CD                            AS CURRENCY_CD
+			     , MAX(OFFM.OFFER_SHEET_NO)                    AS OFFER_SHEET_NO
+			     , SUM(NVL(ORDM.ORDER_TOT_QTY,0))              AS ORDER_TOT_QTY
+			     , SUM(NVL(ORDM.ORDER_TOT_AMT,0))              AS ORDER_TOT_AMT
+			     , SUM(NVL(ORDM.ORDER_TOT_WON_AMT,0))          AS ORDER_TOT_WON_AMT
+			     , MAX(NVL(OFFM.OFFER_TOT_QTY,0))              AS OFFER_TOT_QTY
+			     , MAX(NVL(OFFM.OFFER_TOT_AMT,0))              AS OFFER_TOT_AMT
+			     , MAX(NVL(INVM.INVOICE_TOT_QTY,0))            AS INVOICE_TOT_QTY
+			     , MAX(NVL(INVM.INVOICE_TOT_AMT,0))            AS INVOICE_TOT_AMT
+			     , MAX(NVL(INVM.INVOICE_WON_TOT_AMT,0))        AS INVOICE_WON_TOT_AMT
+			     , MAX(NVL(SLPM.CHK_TOT_QTY,0))                AS CHK_TOT_QTY
+			     , MAX(NVL(SLPM.CHK_COST_TAMT,0))              AS CHK_COST_TAMT
+			     , MAX(NVL(OFFM.OFFER_TOT_WON_AMT,0))          AS OFFER_TOT_WON_AMT        /* OFFER원화금액 */
+			     , MAX(NVL(SLPM.CHK_EXC_TAMT,0))               AS CHK_EXC_TAMT             /* 입고(검품)외화금액 */
+			  FROM (
+			        SELECT OFM.STR_CD
+			             , OFM.OFFER_YM
+			             , OFM.OFFER_SEQ_NO
+			             , OFM.PUMBUN_CD
+			             , OFM.VEN_CD
+			             , OFM.OFFER_DT
+			             , OFM.CURRENCY_CD
+			             , OFM.OFFER_SHEET_NO
+			             , OFM.OFFER_TOT_QTY
+			             , OFM.OFFER_TOT_AMT
+			             , NVL(OFM.EXC_RATE,0)*NVL(OFM.OFFER_TOT_AMT,0) AS OFFER_TOT_WON_AMT  /* OFFER원화금액 */
+			          FROM DPS.PO_OFFMST OFM
+			         WHERE OFM.STR_CD         = ?
+			           AND OFM.OFFER_DT BETWEEN ? AND ?
+			           AND OFM.OFFER_SHEET_NO  LIKE ? ||'%'
+			           AND OFM.PUMBUN_CD       LIKE ? ||'%'
+			           AND OFM.VEN_CD          LIKE ? ||'%'
+			       ) OFFM
+			     , (
+			        SELECT OFM.STR_CD 
+			             , OFM.OFFER_YM
+			             , OFM.OFFER_SEQ_NO
+			             , ORM.ORDER_YM
+			             , ORM.ORDER_SEQ_NO
+			             , ORM.ORDER_SHEET_NO
+			             , MAX(ORM.ORDER_TOT_QTY) AS ORDER_TOT_QTY
+			             , MAX(ORM.ORDER_TOT_AMT) AS ORDER_TOT_AMT
+			             , MAX(NVL(ORM.EXC_RATE,0)*NVL(ORM.ORDER_TOT_AMT,0)) AS ORDER_TOT_WON_AMT
+			             , MAX(ORM.EXC_APP_DT)    AS EXC_APP_DT
+			             , MAX(ORM.EXC_RATE)      AS EXC_RATE 
+			          FROM DPS.PO_OFFMST OFM
+			             , DPS.PO_OFFDTL OFD
+			             , DPS.PO_ORDMST ORM
+			         WHERE OFM.STR_CD         = ?
+			           AND OFM.OFFER_DT BETWEEN ? AND ?
+			           AND OFM.OFFER_SHEET_NO  LIKE ? ||'%'
+			           AND OFM.PUMBUN_CD       LIKE ? ||'%'
+			           AND OFM.VEN_CD          LIKE ? ||'%'
+			           AND OFD.STR_CD          = OFM.STR_CD
+			           AND OFD.OFFER_YM        = OFM.OFFER_YM
+			           AND OFD.OFFER_SEQ_NO    = OFM.OFFER_SEQ_NO
+			           AND ORM.STR_CD          = OFD.STR_CD
+			           AND ORM.ORDER_YM        = OFD.ORDER_YM
+			           AND ORM.ORDER_SEQ_NO    = OFD.ORDER_SEQ_NO
+			         GROUP BY OFM.STR_CD 
+			                , OFM.OFFER_YM
+			                , OFM.OFFER_SEQ_NO
+			                , ORM.ORDER_YM
+			                , ORM.ORDER_SEQ_NO
+			                , ORM.ORDER_SHEET_NO
+			       ) ORDM
+			     , (
+			        SELECT OFM.STR_CD
+			             , OFM.OFFER_YM
+			             , OFM.OFFER_SEQ_NO
+			             , SUM(NVL(INV.INVOICE_TOT_QTY,0))     AS INVOICE_TOT_QTY
+			             , SUM(NVL(INV.INVOICE_TOT_AMT,0))     AS INVOICE_TOT_AMT
+			             , SUM(NVL(INV.INVOICE_WON_TOT_AMT,0)) AS INVOICE_WON_TOT_AMT
+			          FROM DPS.PO_INVMST INV
+			             , DPS.PO_OFFMST OFM
+			         WHERE OFM.STR_CD         = ?
+			           AND OFM.OFFER_DT BETWEEN ? AND ?
+			           AND OFM.OFFER_SHEET_NO  LIKE ? ||'%'
+			           AND OFM.PUMBUN_CD       LIKE ? ||'%'
+			           AND OFM.VEN_CD          LIKE ? ||'%'
+			           AND INV.STR_CD          = OFM.STR_CD
+			           AND INV.OFFER_YM        = OFM.OFFER_YM
+			           AND INV.OFFER_SEQ_NO    = OFM.OFFER_SEQ_NO
+			         GROUP BY OFM.STR_CD
+			                , OFM.OFFER_YM
+			                , OFM.OFFER_SEQ_NO
+			       ) INVM
+			     , (
+			        SELECT OFM.STR_CD
+			             , OFM.OFFER_YM
+			             , OFM.OFFER_SEQ_NO
+			             , SUM(SLP.CHK_TOT_QTY)   AS CHK_TOT_QTY
+			             , SUM(SLP.CHK_COST_TAMT) AS CHK_COST_TAMT
+			             , SUM(SLP.CHK_EXC_TAMT)  AS CHK_EXC_TAMT     /* 검품외화금액 */
+			          FROM DPS.PO_OFFMST OFM
+			             , DPS.PO_SLPMST SLP
+			         WHERE OFM.STR_CD         = ?
+			           AND OFM.OFFER_DT BETWEEN ? AND ?
+			           AND OFM.OFFER_SHEET_NO  LIKE ? ||'%'
+			           AND OFM.PUMBUN_CD       LIKE ? ||'%'
+			           AND OFM.VEN_CD          LIKE ? ||'%'
+			           AND SLP.STR_CD         = OFM.STR_CD
+			           AND SLP.OFFER_YM       = OFM.OFFER_YM
+			           AND SLP.OFFER_SEQ_NO   = OFM.OFFER_SEQ_NO
+			           AND SLP.SLIP_FLAG      = 'A'
+			           AND SLP.SLIP_PROC_STAT = '09'
+			         GROUP BY OFM.STR_CD
+			                , OFM.OFFER_YM
+			                , OFM.OFFER_SEQ_NO
+			       ) SLPM
+			 WHERE ORDM.STR_CD         (+)= OFFM.STR_CD
+			   AND ORDM.OFFER_YM       (+)= OFFM.OFFER_YM
+			   AND ORDM.OFFER_SEQ_NO   (+)= OFFM.OFFER_SEQ_NO
+			   AND INVM.STR_CD         (+)= OFFM.STR_CD
+			   AND INVM.OFFER_YM       (+)= OFFM.OFFER_YM
+			   AND INVM.OFFER_SEQ_NO   (+)= OFFM.OFFER_SEQ_NO
+			   AND SLPM.STR_CD         (+)= OFFM.STR_CD
+			   AND SLPM.OFFER_YM       (+)= OFFM.OFFER_YM
+			   AND SLPM.OFFER_SEQ_NO   (+)= OFFM.OFFER_SEQ_NO                
+			   AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = OFFM.STR_CD
+                               AND MYORG.PUMBUN_CD   = OFFM.PUMBUN_CD
+                               AND MYORG.USER_ID     = ?
+                               AND ROWNUM            = 1                               
+                               AND MYORG.ORG_FLAG    = ?
+                           )
+			 GROUP BY OFFM.STR_CD
+			        , OFFM.OFFER_YM
+			        , OFFM.OFFER_SEQ_NO
+			        , OFFM.CURRENCY_CD
+	    ]]>
+    </query>
+    
+    <!-- 수입발주대비 입고현황  ORDER 조회 -->
+    <query name="SEL_LIST_ORDER">
+        <![CDATA[  
+            SELECT ORDM.STR_CD
+                 , ORDM.OFFER_YM
+                 , ORDM.OFFER_SEQ_NO
+                 , MAX(DPS.FN_GET_STORE_NAME(ORDM.STR_CD))     AS STR_NM
+                 , MAX(ORDM.PUMBUN_CD)                         AS PUMBUN_CD
+                 , MAX(DPS.FN_GET_PUMBUN_NAME(ORDM.PUMBUN_CD)) AS PUMBUN_NM
+                 , MAX(ORDM.VEN_CD)                            AS VEN_CD
+                 , MAX(DPS.FN_GET_VENDOR_NAME(ORDM.VEN_CD))    AS VEN_NM
+                 , MAX(ORDM.OFFER_DT)                          AS OFFER_DT
+                 , ORDM.CURRENCY_CD                            AS CURRENCY_CD
+                 , MAX(ORDM.OFFER_SHEET_NO)                    AS OFFER_SHEET_NO
+                 , SUM(NVL(ORDM.ORDER_TOT_QTY,0))              AS ORDER_TOT_QTY
+                 , SUM(NVL(ORDM.ORDER_TOT_AMT,0))              AS ORDER_TOT_AMT
+                 , SUM(NVL(ORDM.ORDER_TOT_WON_AMT,0))          AS ORDER_TOT_WON_AMT
+                 , MAX(ORDM.OFFER_TOT_QTY)                     AS OFFER_TOT_QTY
+                 , MAX(ORDM.OFFER_TOT_AMT)                     AS OFFER_TOT_AMT
+                 , MAX(NVL(INVM.INVOICE_TOT_QTY,0))            AS INVOICE_TOT_QTY
+                 , MAX(NVL(INVM.INVOICE_TOT_AMT,0))            AS INVOICE_TOT_AMT
+                 , MAX(NVL(INVM.INVOICE_WON_TOT_AMT,0))        AS INVOICE_WON_TOT_AMT
+                 , MAX(NVL(SLPM.CHK_TOT_QTY,0))                AS CHK_TOT_QTY
+                 , MAX(NVL(SLPM.CHK_COST_TAMT,0))              AS CHK_COST_TAMT
+                 , MAX(ORDM.OFFER_TOT_WON_AMT)                 AS OFFER_TOT_WON_AMT
+                 , MAX(NVL(SLPM.CHK_EXC_TAMT,0))               AS CHK_EXC_TAMT
+              FROM (
+                    SELECT OFD.STR_CD 
+                         , OFD.OFFER_YM
+                         , OFD.OFFER_SEQ_NO
+                         , ORM.ORDER_YM
+                         , ORM.ORDER_SEQ_NO
+                         , ORM.ORDER_SHEET_NO
+                         , ORM.CURRENCY_CD
+                         , MAX(OFM.PUMBUN_CD)      AS PUMBUN_CD
+                         , MAX(OFM.VEN_CD)         AS VEN_CD
+                         , MAX(OFM.OFFER_DT)       AS OFFER_DT
+                         , MAX(OFM.OFFER_SHEET_NO) AS OFFER_SHEET_NO
+                         , MAX(OFM.OFFER_TOT_QTY)  AS OFFER_TOT_QTY
+                         , MAX(OFM.OFFER_TOT_AMT)  AS OFFER_TOT_AMT
+                         , MAX(NVL(OFM.EXC_RATE,0)*NVL(OFM.OFFER_TOT_AMT,0)) AS OFFER_TOT_WON_AMT  /* OFFER원화금액 */
+                         , MAX(ORM.ORDER_TOT_QTY)  AS ORDER_TOT_QTY
+                         , MAX(ORM.ORDER_TOT_AMT)  AS ORDER_TOT_AMT
+                         , MAX(NVL(ORM.EXC_RATE,0)*NVL(ORM.ORDER_TOT_AMT,0)) AS ORDER_TOT_WON_AMT
+                         , MAX(ORM.EXC_APP_DT)     AS EXC_APP_DT
+                         , MAX(ORM.EXC_RATE)       AS EXC_RATE 
+                      FROM DPS.PO_ORDMST ORM
+                         , DPS.PO_OFFDTL OFD
+                         , DPS.PO_OFFMST OFM
+                     WHERE ORM.STR_CD         = ?
+                       AND ORM.ORDER_DT BETWEEN ? AND ?
+                       AND ORM.ORDER_SHEET_NO  LIKE ? ||'%'
+                       AND OFD.STR_CD          = ORM.STR_CD       
+                       AND OFD.ORDER_YM        = ORM.ORDER_YM
+                       AND OFD.ORDER_SEQ_NO    = ORM.ORDER_SEQ_NO
+                       AND OFM.STR_CD          = OFD.STR_CD       
+                       AND OFM.OFFER_YM        = OFD.OFFER_YM
+                       AND OFM.OFFER_SEQ_NO    = OFD.OFFER_SEQ_NO
+                       AND OFM.PUMBUN_CD       LIKE ? ||'%'
+                       AND OFM.VEN_CD          LIKE ? ||'%'
+                     GROUP BY OFD.STR_CD 
+                            , OFD.OFFER_YM
+                            , OFD.OFFER_SEQ_NO
+                            , ORM.ORDER_YM
+                            , ORM.ORDER_SEQ_NO
+                            , ORM.ORDER_SHEET_NO
+                            , ORM.CURRENCY_CD
+                   ) ORDM
+                 , (
+                    SELECT OFM.STR_CD
+                         , OFM.OFFER_YM
+                         , OFM.OFFER_SEQ_NO
+                         , SUM(INV.INVOICE_TOT_QTY)     AS INVOICE_TOT_QTY
+                         , SUM(INV.INVOICE_TOT_AMT)     AS INVOICE_TOT_AMT
+                         , SUM(INV.INVOICE_WON_TOT_AMT) AS INVOICE_WON_TOT_AMT
+                      FROM (
+                            SELECT OFD.STR_CD 
+                                 , OFD.OFFER_YM
+                                 , OFD.OFFER_SEQ_NO
+                              FROM DPS.PO_ORDMST ORM
+                                 , DPS.PO_OFFDTL OFD
+                                 , DPS.PO_OFFMST OFM
+                             WHERE ORM.STR_CD         = ?
+                               AND ORM.ORDER_DT BETWEEN ? AND ?
+                               AND ORM.ORDER_SHEET_NO  LIKE ? ||'%'
+                               AND OFD.STR_CD          = ORM.STR_CD       
+                               AND OFD.ORDER_YM        = ORM.ORDER_YM
+                               AND OFD.ORDER_SEQ_NO    = ORM.ORDER_SEQ_NO
+                               AND OFM.STR_CD          = OFD.STR_CD       
+                               AND OFM.OFFER_YM        = OFD.OFFER_YM
+                               AND OFM.OFFER_SEQ_NO    = OFD.OFFER_SEQ_NO
+                               AND OFM.PUMBUN_CD       LIKE ? ||'%'
+                               AND OFM.VEN_CD          LIKE ? ||'%'
+                             GROUP BY OFD.STR_CD 
+                                    , OFD.OFFER_YM
+                                    , OFD.OFFER_SEQ_NO
+                           ) OFM
+                         , DPS.PO_INVMST INV
+                     WHERE INV.STR_CD       = OFM.STR_CD
+                       AND INV.OFFER_YM     = OFM.OFFER_YM
+                       AND INV.OFFER_SEQ_NO = OFM.OFFER_SEQ_NO
+                     GROUP BY OFM.STR_CD
+                            , OFM.OFFER_YM
+                            , OFM.OFFER_SEQ_NO
+                   ) INVM
+                 , (
+                    SELECT OFM.STR_CD
+                         , OFM.OFFER_YM
+                         , OFM.OFFER_SEQ_NO
+                         , SUM(SLP.CHK_TOT_QTY)   AS CHK_TOT_QTY
+                         , SUM(SLP.CHK_COST_TAMT) AS CHK_COST_TAMT
+                         , SUM(SLP.CHK_EXC_TAMT)  AS CHK_EXC_TAMT
+                      FROM (
+                            SELECT OFD.STR_CD 
+                                 , OFD.OFFER_YM
+                                 , OFD.OFFER_SEQ_NO
+                              FROM DPS.PO_ORDMST ORM
+                                 , DPS.PO_OFFDTL OFD
+                                 , DPS.PO_OFFMST OFM
+                             WHERE ORM.STR_CD         = ?
+                               AND ORM.ORDER_DT BETWEEN ? AND ?
+                               AND ORM.ORDER_SHEET_NO  LIKE ? ||'%'
+                               AND OFD.STR_CD          = ORM.STR_CD       
+                               AND OFD.ORDER_YM        = ORM.ORDER_YM
+                               AND OFD.ORDER_SEQ_NO    = ORM.ORDER_SEQ_NO
+                               AND OFM.STR_CD          = OFD.STR_CD       
+                               AND OFM.OFFER_YM        = OFD.OFFER_YM
+                               AND OFM.OFFER_SEQ_NO    = OFD.OFFER_SEQ_NO
+                               AND OFM.PUMBUN_CD       LIKE ? ||'%'
+                               AND OFM.VEN_CD          LIKE ? ||'%'
+                             GROUP BY OFD.STR_CD 
+                                    , OFD.OFFER_YM
+                                    , OFD.OFFER_SEQ_NO
+                           ) OFM
+                         , DPS.PO_SLPMST SLP
+                     WHERE SLP.STR_CD         = OFM.STR_CD
+                       AND SLP.OFFER_YM       = OFM.OFFER_YM
+                       AND SLP.OFFER_SEQ_NO   = OFM.OFFER_SEQ_NO
+                       AND SLP.SLIP_FLAG      = 'A'
+                       AND SLP.SLIP_PROC_STAT = '09'
+                     GROUP BY OFM.STR_CD
+                            , OFM.OFFER_YM
+                            , OFM.OFFER_SEQ_NO
+                   ) SLPM
+             WHERE INVM.STR_CD         (+)= ORDM.STR_CD
+               AND INVM.OFFER_YM       (+)= ORDM.OFFER_YM
+               AND INVM.OFFER_SEQ_NO   (+)= ORDM.OFFER_SEQ_NO
+               AND SLPM.STR_CD         (+)= ORDM.STR_CD
+               AND SLPM.OFFER_YM       (+)= ORDM.OFFER_YM
+               AND SLPM.OFFER_SEQ_NO   (+)= ORDM.OFFER_SEQ_NO
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = ORDM.STR_CD
+                               AND MYORG.PUMBUN_CD   = ORDM.PUMBUN_CD
+                               AND MYORG.USER_ID     = ?
+                               AND ROWNUM            = 1                        
+                               AND MYORG.ORG_FLAG    = ?
+                           )
+             GROUP BY ORDM.STR_CD
+                    , ORDM.OFFER_YM
+                    , ORDM.OFFER_SEQ_NO
+                    , ORDM.CURRENCY_CD
+        ]]>
+    </query>
+    
+    <!-- 수입발주대비 DLSQHD  인보이스 조회 -->
+    <query name="SEL_LIST_INVOICE">
+        <![CDATA[  
+			SELECT INVM.STR_CD
+			     , INVM.OFFER_YM
+			     , INVM.OFFER_SEQ_NO
+			     , MAX(DPS.FN_GET_STORE_NAME(INVM.STR_CD))     AS STR_NM
+			     , MAX(INVM.PUMBUN_CD)                         AS PUMBUN_CD
+			     , MAX(DPS.FN_GET_PUMBUN_NAME(INVM.PUMBUN_CD)) AS PUMBUN_NM
+			     , MAX(INVM.VEN_CD)                            AS VEN_CD
+			     , MAX(DPS.FN_GET_VENDOR_NAME(INVM.VEN_CD))    AS VEN_NM
+			     , MAX(INVM.OFFER_DT)                          AS OFFER_DT
+			     , ORDM.CURRENCY_CD                            AS CURRENCY_CD
+			     , MAX(INVM.OFFER_SHEET_NO)                    AS OFFER_SHEET_NO
+			     , SUM(NVL(ORDM.ORDER_TOT_QTY,0))              AS ORDER_TOT_QTY
+			     , SUM(NVL(ORDM.ORDER_TOT_AMT,0))              AS ORDER_TOT_AMT
+			     , SUM(NVL(ORDM.ORDER_TOT_WON_AMT,0))          AS ORDER_TOT_WON_AMT
+			     , MAX(INVM.OFFER_TOT_QTY)                     AS OFFER_TOT_QTY
+			     , MAX(INVM.OFFER_TOT_AMT)                     AS OFFER_TOT_AMT
+			     , MAX(NVL(INVM.INVOICE_TOT_QTY,0))            AS INVOICE_TOT_QTY
+			     , MAX(NVL(INVM.INVOICE_TOT_AMT,0))            AS INVOICE_TOT_AMT
+			     , MAX(NVL(INVM.INVOICE_WON_TOT_AMT,0))        AS INVOICE_WON_TOT_AMT
+			     , MAX(NVL(SLPM.CHK_TOT_QTY,0))                AS CHK_TOT_QTY
+			     , MAX(NVL(SLPM.CHK_COST_TAMT,0))              AS CHK_COST_TAMT
+			     , MAX(INVM.OFFER_TOT_WON_AMT)                 AS OFFER_TOT_WON_AMT
+			     , MAX(NVL(SLPM.CHK_EXC_TAMT,0))               AS CHK_EXC_TAMT
+			  FROM (
+			        SELECT OFD.STR_CD 
+			             , OFD.OFFER_YM
+			             , OFD.OFFER_SEQ_NO  
+			             , OFD.CURRENCY_CD
+			             , ORM.ORDER_YM
+			             , ORM.ORDER_SEQ_NO
+			             , MAX(ORM.ORDER_TOT_QTY) AS ORDER_TOT_QTY
+			             , MAX(ORM.ORDER_TOT_AMT) AS ORDER_TOT_AMT
+			             , MAX(ORM.EXC_APP_DT)    AS EXC_APP_DT
+			             , MAX(ORM.EXC_RATE)      AS EXC_RATE 
+			             , MAX(NVL(ORM.EXC_RATE,0)*NVL(ORM.ORDER_TOT_AMT,0)) AS ORDER_TOT_WON_AMT
+			          FROM (
+			                SELECT OFD.STR_CD
+			                     , OFD.OFFER_YM
+			                     , OFD.OFFER_SEQ_NO
+			                     , OFD.ORDER_YM
+			                     , OFD.ORDER_SEQ_NO
+			                     , MAX(INM.CURRENCY_CD) AS CURRENCY_CD
+			                  FROM DPS.PO_INVMST INM
+			                     , DPS.PO_OFFMST OFM
+			                     , DPS.PO_OFFDTL OFD
+			                 WHERE INM.STR_CD     = ?
+			                   AND INM.INVOICE_DT BETWEEN ? AND ?
+			                   AND INM.INVOICE_NO LIKE ? ||'%'
+			                   AND OFM.STR_CD       = INM.STR_CD
+			                   AND OFM.OFFER_YM     = INM.OFFER_YM
+			                   AND OFM.OFFER_SEQ_NO = INM.OFFER_SEQ_NO
+			                   AND OFM.PUMBUN_CD    LIKE ? ||'%'
+			                   AND OFM.VEN_CD       LIKE ? ||'%'
+			                   AND OFD.STR_CD       = OFM.STR_CD
+			                   AND OFD.OFFER_YM     = OFM.OFFER_YM
+			                   AND OFD.OFFER_SEQ_NO = OFM.OFFER_SEQ_NO
+			                 GROUP BY OFD.STR_CD
+			                        , OFD.OFFER_YM
+			                        , OFD.OFFER_SEQ_NO
+			                        , OFD.ORDER_YM
+			                        , OFD.ORDER_SEQ_NO                       
+			               ) OFD
+			             , DPS.PO_ORDMST ORM
+			         WHERE ORM.STR_CD          = OFD.STR_CD
+			           AND ORM.ORDER_YM        = OFD.ORDER_YM
+			           AND ORM.ORDER_SEQ_NO    = OFD.ORDER_SEQ_NO
+			         GROUP BY OFD.STR_CD 
+			                , OFD.OFFER_YM
+			                , OFD.OFFER_SEQ_NO  
+			                , ORM.ORDER_YM
+			                , ORM.ORDER_SEQ_NO
+			                , OFD.CURRENCY_CD
+			       ) ORDM
+			     , (
+			        SELECT OFM.STR_CD
+			             , OFM.OFFER_YM
+			             , OFM.OFFER_SEQ_NO
+			             , MAX(OFM.PUMBUN_CD)           AS PUMBUN_CD
+			             , MAX(OFM.VEN_CD)              AS VEN_CD
+			             , MAX(OFM.OFFER_DT)            AS OFFER_DT
+			             , MAX(OFM.OFFER_SHEET_NO)      AS OFFER_SHEET_NO
+			             , MAX(OFM.OFFER_TOT_QTY)       AS OFFER_TOT_QTY
+			             , MAX(OFM.OFFER_TOT_AMT)       AS OFFER_TOT_AMT
+			             , MAX(NVL(OFM.EXC_RATE,0)*NVL(OFM.OFFER_TOT_AMT,0)) AS OFFER_TOT_WON_AMT  /* OFFER원화금액 */
+			             , SUM(INM.INVOICE_TOT_QTY)     AS INVOICE_TOT_QTY
+			             , SUM(INM.INVOICE_TOT_AMT)     AS INVOICE_TOT_AMT
+			             , SUM(INM.INVOICE_WON_TOT_AMT) AS INVOICE_WON_TOT_AMT
+			          FROM DPS.PO_OFFMST OFM
+			             , DPS.PO_INVMST INM
+			         WHERE INM.STR_CD     = ?
+			           AND INM.INVOICE_DT BETWEEN ? AND ?
+			           AND INM.INVOICE_NO LIKE ? ||'%'
+			           AND OFM.STR_CD       = INM.STR_CD
+			           AND OFM.OFFER_YM     = INM.OFFER_YM
+			           AND OFM.OFFER_SEQ_NO = INM.OFFER_SEQ_NO
+			           AND OFM.PUMBUN_CD    LIKE ? ||'%'
+			           AND OFM.VEN_CD       LIKE ? ||'%'
+			         GROUP BY OFM.STR_CD
+			                , OFM.OFFER_YM
+			                , OFM.OFFER_SEQ_NO
+			       ) INVM
+			     , (
+			        SELECT OFM.STR_CD
+			             , OFM.OFFER_YM
+			             , OFM.OFFER_SEQ_NO
+			             , SUM(SLP.CHK_TOT_QTY)   AS CHK_TOT_QTY
+			             , SUM(SLP.CHK_COST_TAMT) AS CHK_COST_TAMT
+			             , SUM(SLP.CHK_EXC_TAMT)  AS CHK_EXC_TAMT
+			          FROM DPS.PO_OFFMST OFM
+			             , DPS.PO_INVMST INM
+			             , DPS.PO_SLPMST SLP
+			         WHERE INM.STR_CD     = ?
+			           AND INM.INVOICE_DT   BETWEEN ? AND ?
+                       AND INM.INVOICE_NO   LIKE ? ||'%'
+			           AND OFM.STR_CD         = INM.STR_CD
+			           AND OFM.OFFER_YM       = INM.OFFER_YM
+			           AND OFM.OFFER_SEQ_NO   = INM.OFFER_SEQ_NO
+			           AND OFM.PUMBUN_CD    LIKE ? ||'%'
+			           AND OFM.VEN_CD       LIKE ? ||'%'
+			           AND SLP.STR_CD         = OFM.STR_CD
+			           AND SLP.OFFER_YM       = OFM.OFFER_YM
+			           AND SLP.OFFER_SEQ_NO   = OFM.OFFER_SEQ_NO
+			           AND SLP.SLIP_FLAG      = 'A'
+			           AND SLP.SLIP_PROC_STAT = '09'
+			         GROUP BY OFM.STR_CD
+			                , OFM.OFFER_YM
+			                , OFM.OFFER_SEQ_NO
+			       ) SLPM
+			 WHERE ORDM.STR_CD          (+)= INVM.STR_CD
+			   AND ORDM.OFFER_YM        (+)= INVM.OFFER_YM
+			   AND ORDM.OFFER_SEQ_NO    (+)= INVM.OFFER_SEQ_NO
+			   AND SLPM.STR_CD          (+)= INVM.STR_CD
+			   AND SLPM.OFFER_YM        (+)= INVM.OFFER_YM
+			   AND SLPM.OFFER_SEQ_NO    (+)= INVM.OFFER_SEQ_NO
+			   AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = INVM.STR_CD
+                               AND MYORG.PUMBUN_CD   = INVM.PUMBUN_CD
+                               AND MYORG.USER_ID     = ?
+                               AND ROWNUM            = 1                        
+                               AND MYORG.ORG_FLAG    = ?
+                           )
+			 GROUP BY INVM.STR_CD
+			        , INVM.OFFER_YM
+			        , INVM.OFFER_SEQ_NO
+			        , ORDM.CURRENCY_CD 
+        ]]>
+    </query>
+    
+</service>

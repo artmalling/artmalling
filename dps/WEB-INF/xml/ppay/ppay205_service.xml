@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.31
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  공제
+ -->
+<service name="/ppay205.pp">
+
+    
+    <gauce name="H_MASTER"> 
+    <column colName="SEL"                colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_YM"             colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CYC"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CYC_NM"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PAY_CNT"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PAY_CNT_NM"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VEN_CD"             colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VEN_NM"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PUMBUN_CD"       	 colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PUMBUN_NM"      	 colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY3"               colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PAY1"               colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    <column colName="PAY21"               colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    <column colName="PAY22"               colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="REASON_CD"       	 colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="REASON_NAME"      	 colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- KEYVALUE 체크 -->
+        <gauce name="H_KEYVALUE">  
+        <column colName="KEYVALUE"       colType="TB_STRING"  size="18"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- VAT 여부 세팅 -->
+        <gauce name="H_SETVAT">  
+        <column colName="COMM_CODE"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REFER_CODE"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_DETAIL"> 
+    <column colName="INPUT_DT"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="SEQ_NO"             colType="TB_STRING"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="REASON_CD"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="REASON_NM"          colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="INPUT_AMT"          colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VAT_YN"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CASH_IN_YN"         colType="TB_STRING"  size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    <column colName="REMARK"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+      
+    <!--  선급금/공제/보류  마스터  리스트  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+          SELECT DECODE(MIN(CONF_YN), 'N', 'F', 'T') AS SEL 
+               , STR_CD                                                                               /* 점 */
+               , PAY_YM                                                                               /* 매입년월 */
+               , PAY_CYC
+               , COM.FN_GET_COMM_NAME('D', 'P052', PAY_CYC)       AS PAY_CYC_NM                       /* 지불주기 */
+               , PAY_CNT
+               , CASE WHEN PAY_CYC = '1' THEN  COM.FN_GET_COMM_NAME('D', 'P407', PAY_CNT)
+                      WHEN PAY_CYC = '2' THEN  COM.FN_GET_COMM_NAME('D', 'P408', PAY_CNT)  
+                      ELSE  COM.FN_GET_COMM_NAME('D', 'P409', PAY_CNT) END  AS PAY_CNT_NM             /* 지불회차 */
+               , VEN_CD
+               , DPS.FN_GET_VENDOR_NAME(VEN_CD)    AS VEN_NM                                          /* 협력사명 */
+               , PUMBUN_CD
+			   , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NM
+               , SUM(PAY3) AS PAY3                                                                    /* 선급금액 */
+               , SUM(PAY1) AS PAY1                                                                    /* 보류금액 */
+               , SUM(PAY21) AS PAY21                                                                    /* 공제금액(입금이 아닌경우) */
+               , SUM(PAY22) AS PAY22                                                                    /* 공제금액(입금인경우) */
+               , REASON_CD
+               , DPS.FN_GET_REASON_NM(REASON_CD) REASON_NAME
+           FROM (
+                  SELECT STR_CD                                           
+                       , PAY_YM                                           
+                       , PAY_CYC                                          
+                       , PAY_CNT                                         
+                       , VEN_CD   
+                       , PUMBUN_CD                                       
+                       , DECODE(PAY_CD_FLAG, '3', INPUT_AMT, 0) AS PAY3       /* 선급금보류공제항목 : 3(선급금) */
+                       , DECODE(PAY_CD_FLAG, '1', INPUT_AMT, 0) AS PAY1       /* 선급금보류공제항목 : 1(보류) */
+                       , DECODE(PAY_CD_FLAG, '2', DECODE(CASH_IN_YN, 'N', INPUT_AMT, 0)) AS PAY21       /* 선급금보류공제항목 : 2(공제) -- 입금아닌경우*/
+                       , DECODE(PAY_CD_FLAG, '2', DECODE(CASH_IN_YN, 'Y', INPUT_AMT, 0)) AS PAY22       /* 선급금보류공제항목 : 2(공제) -- 입금인경우*/
+                       , CONF_FLAG AS CONF_YN   
+                       , REASON_CD                   
+                    FROM DPS.PP_PREDEFDED
+                   WHERE STR_CD  = ?
+                     AND PAY_YM  = ?
+                     AND PAY_CYC = ?
+                     AND PAY_CNT = ?
+                     AND VEN_CD  LIKE ? || '%'
+                     AND PUMBUN_CD  LIKE ? || '%'
+                     AND REASON_CD  LIKE  ? || '%'
+                 )
+          GROUP BY  STR_CD                                        
+                 , PAY_YM                                    
+                 , PAY_CYC                                         
+                 , PAY_CNT                                       
+                 , VEN_CD  
+                 , PUMBUN_CD
+                 , REASON_CD
+        ]]>
+    </query>
+    
+        <query name="SEL_MASTER_OLD">
+        <![CDATA[
+          SELECT DECODE(MIN(CONF_YN), 'N', 'F', 'T') AS SEL 
+               , STR_CD                                                                               /* 점 */
+               , PAY_YM                                                                               /* 매입년월 */
+               , PAY_CYC
+               , COM.FN_GET_COMM_NAME('D', 'P052', PAY_CYC)       AS PAY_CYC_NM                       /* 지불주기 */
+               , PAY_CNT
+               , CASE WHEN PAY_CYC = '1' THEN  COM.FN_GET_COMM_NAME('D', 'P407', PAY_CNT)
+                      WHEN PAY_CYC = '2' THEN  COM.FN_GET_COMM_NAME('D', 'P408', PAY_CNT)  
+                      ELSE  COM.FN_GET_COMM_NAME('D', 'P409', PAY_CNT) END  AS PAY_CNT_NM             /* 지불회차 */
+               , VEN_CD
+               , DPS.FN_GET_VENDOR_NAME(VEN_CD)    AS VEN_NM                                          /* 협력사명 */
+               , PUMBUN_CD
+			   , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NM
+               , SUM(PAY3) AS PAY3                                                                    /* 선급금액 */
+               , SUM(PAY1) AS PAY1                                                                    /* 보류금액 */
+               , SUM(PAY21) AS PAY21                                                                    /* 공제금액(입금이 아닌경우) */
+               , SUM(PAY22) AS PAY22                                                                    /* 공제금액(입금인경우) */
+           FROM (
+                  SELECT STR_CD                                           
+                       , PAY_YM                                           
+                       , PAY_CYC                                          
+                       , PAY_CNT                                         
+                       , VEN_CD   
+                       , PUMBUN_CD                                       
+                       , DECODE(PAY_CD_FLAG, '3', INPUT_AMT, 0) AS PAY3       /* 선급금보류공제항목 : 3(선급금) */
+                       , DECODE(PAY_CD_FLAG, '1', INPUT_AMT, 0) AS PAY1       /* 선급금보류공제항목 : 1(보류) */
+                       , DECODE(PAY_CD_FLAG, '2', DECODE(CASH_IN_YN, 'N', INPUT_AMT, 0)) AS PAY21       /* 선급금보류공제항목 : 2(공제) -- 입금아닌경우*/
+                       , DECODE(PAY_CD_FLAG, '2', DECODE(CASH_IN_YN, 'Y', INPUT_AMT, 0)) AS PAY22       /* 선급금보류공제항목 : 2(공제) -- 입금인경우*/
+                       , CONF_FLAG AS CONF_YN                      
+                    FROM DPS.PP_PREDEFDED
+                   WHERE STR_CD  = ?
+                     AND PAY_YM  = ?
+                     AND PAY_CYC = ?
+                     AND PAY_CNT = ?
+                     AND VEN_CD  LIKE ? || '%'
+                     AND PUMBUN_CD  LIKE ? || '%'
+                 )
+          GROUP BY  STR_CD                                        
+                 , PAY_YM                                    
+                 , PAY_CYC                                         
+                 , PAY_CNT                                       
+                 , VEN_CD  
+                 , PUMBUN_CD
+        ]]>
+    </query>  
+    
+    
+    <!-- 공제등록 수정 -->
+    <query name="UPD_MASTER">
+        <![CDATA[
+              UPDATE DPS.PP_PREDEFDED
+               SET CONF_FLAG = DECODE(?,'F','N','Y')  
+                 , CONF_DT = TO_CHAR(SYSDATE,'YYMMDD')                   
+             WHERE STR_CD    = ?    
+               AND PAY_YM    = ?
+               AND PAY_CYC   = ?
+               AND PAY_CNT   = ?                          
+               AND VEN_CD    = ?
+               AND PUMBUN_CD = ?
+               AND REASON_CD = ?
+        ]]>
+    </query>
+    <query name="UPD_MASTER_OLD">
+        <![CDATA[
+              UPDATE DPS.PP_PREDEFDED
+               SET CONF_FLAG = DECODE(?,'F','N','Y')  
+                 , CONF_DT = TO_CHAR(SYSDATE,'YYMMDD')                   
+             WHERE STR_CD    = ?    
+               AND PAY_YM    = ?
+               AND PAY_CYC   = ?
+               AND PAY_CNT   = ?                          
+               AND VEN_CD    = ?
+               AND PUMBUN_CD = ?
+        ]]>
+    </query>
+    
+     <!--  선급금 디테일  리스트  -->
+    <query name="SEL_DETAIL1">
+        <![CDATA[
+        SELECT INPUT_DT                                                       /* 지불일자 */                                 
+		     , SEQ_NO                                                       /* 순번 */                                   
+		     , REASON_CD                                                    /* 사유코드 */                             
+		     , COM.FN_GET_COMM_NAME('D', 'P413', REASON_CD) AS REASON_NM    /* 사유코드 */                             
+		     , INPUT_AMT
+		     , DECODE(VAT_YN, 'Y', '포함','포함안함') AS VAT_YN                                         
+		     , REMARK                              
+		  FROM DPS.PP_PREDEFDED
+		 WHERE STR_CD  = ?
+		   AND PAY_YM  = ?
+		   AND PAY_CYC = ?
+		   AND PAY_CNT = ?
+		   AND VEN_CD  = ? 
+		   AND PUMBUN_CD = ?
+		   AND REASON_CD = ?
+		   AND PAY_CD_FLAG = '3'         /* 선급금보류공제항목 : 3(선급금) */
+        ]]>
+    </query> 
+    
+        <query name="SEL_DETAIL1_OLD">
+        <![CDATA[
+        SELECT INPUT_DT                                                       /* 지불일자 */                                 
+		     , SEQ_NO                                                       /* 순번 */                                   
+		     , REASON_CD                                                    /* 사유코드 */                             
+		     , COM.FN_GET_COMM_NAME('D', 'P413', REASON_CD) AS REASON_NM    /* 사유코드 */                             
+		     , INPUT_AMT
+		     , DECODE(VAT_YN, 'Y', '포함','포함안함') AS VAT_YN                                         
+		     , REMARK                              
+		  FROM DPS.PP_PREDEFDED
+		 WHERE STR_CD  = ?
+		   AND PAY_YM  = ?
+		   AND PAY_CYC = ?
+		   AND PAY_CNT = ?
+		   AND VEN_CD  = ? 
+		   AND PUMBUN_CD = ?
+		   AND PAY_CD_FLAG = '3'         /* 선급금보류공제항목 : 3(선급금) */
+        ]]>
+    </query> 
+    
+    <!--  보류 디테일  리스트  -->
+    <query name="SEL_DETAIL2">
+        <![CDATA[
+        SELECT INPUT_DT                                                       /* 지불일자 */                                 
+             , SEQ_NO                                                       /* 순번 */                                   
+             , REASON_CD                                                    /* 사유코드 */                             
+             , COM.FN_GET_COMM_NAME('D', 'P411', REASON_CD) AS REASON_NM    /* 사유코드 */                             
+             , INPUT_AMT       
+             , DECODE(VAT_YN, 'Y', '포함','포함안함') AS VAT_YN                                  
+             , REMARK                             
+          FROM DPS.PP_PREDEFDED
+         WHERE STR_CD  = ?
+           AND PAY_YM  = ?
+           AND PAY_CYC = ?
+           AND PAY_CNT = ?
+           AND VEN_CD  = ? 
+           AND PUMBUN_CD = ?
+           AND REASON_CD = ?    
+           AND PAY_CD_FLAG = '1'         /* 선급금보류공제항목 : 1(보류) */
+        ]]>
+    </query> 
+    
+    <query name="SEL_DETAIL2_OLD">
+        <![CDATA[
+        SELECT INPUT_DT                                                       /* 지불일자 */                                 
+             , SEQ_NO                                                       /* 순번 */                                   
+             , REASON_CD                                                    /* 사유코드 */                             
+             , COM.FN_GET_COMM_NAME('D', 'P411', REASON_CD) AS REASON_NM    /* 사유코드 */                             
+             , INPUT_AMT       
+             , DECODE(VAT_YN, 'Y', '포함','포함안함') AS VAT_YN                                  
+             , REMARK                             
+          FROM DPS.PP_PREDEFDED
+         WHERE STR_CD  = ?
+           AND PAY_YM  = ?
+           AND PAY_CYC = ?
+           AND PAY_CNT = ?
+           AND VEN_CD  = ? 
+           AND PUMBUN_CD = ?
+           AND PAY_CD_FLAG = '1'         /* 선급금보류공제항목 : 1(보류) */
+        ]]>
+    </query> 
+    <!--  공제 디테일  리스트  -->
+    <query name="SEL_DETAIL3">
+        <![CDATA[
+       	SELECT INPUT_DT                                                       /* 지불일자 */                                 
+             , SEQ_NO                                                       /* 순번 */                                   
+             , REASON_CD                                                    /* 사유코드 */                             
+             , COM.FN_GET_COMM_NAME('D', 'P412', REASON_CD) AS REASON_NM    /* 사유코드 */                             
+             , INPUT_AMT         
+             , DECODE(VAT_YN, 'Y', '포함','포함안함') AS VAT_YN                                
+             , DECODE(CASH_IN_YN, 'Y','입금처리','입금아님' ) AS CASH_IN_YN                           
+             , REMARK  
+          FROM DPS.PP_PREDEFDED
+         WHERE STR_CD  = ?
+           AND PAY_YM  = ?
+           AND PAY_CYC = ?
+           AND PAY_CNT = ?
+           AND VEN_CD  = ? 
+           AND PUMBUN_CD = ?
+           AND REASON_CD = ?
+           AND PAY_CD_FLAG = '2'         /* 선급금보류공제항목 : 2(공제) */
+        ]]>
+    </query>
+    <query name="SEL_DETAIL3_OLD">
+        <![CDATA[
+       	SELECT INPUT_DT                                                       /* 지불일자 */                                 
+             , SEQ_NO                                                       /* 순번 */                                   
+             , REASON_CD                                                    /* 사유코드 */                             
+             , COM.FN_GET_COMM_NAME('D', 'P412', REASON_CD) AS REASON_NM    /* 사유코드 */                             
+             , INPUT_AMT         
+             , DECODE(VAT_YN, 'Y', '포함','포함안함') AS VAT_YN                                
+             , DECODE(CASH_IN_YN, 'Y','입금처리','입금아님' ) AS CASH_IN_YN                           
+             , REMARK  
+          FROM DPS.PP_PREDEFDED
+         WHERE STR_CD  = ?
+           AND PAY_YM  = ?
+           AND PAY_CYC = ?
+           AND PAY_CNT = ?
+           AND VEN_CD  = ? 
+           AND PUMBUN_CD = ?
+           AND PAY_CD_FLAG = '2'         /* 선급금보류공제항목 : 2(공제) */
+        ]]>
+    </query>  
+</service>

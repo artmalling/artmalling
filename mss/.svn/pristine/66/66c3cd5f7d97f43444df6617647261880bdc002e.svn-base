@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.04.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  반품 상품권 재사용 등록
+ -->
+<service name="/mgif306.mg">
+    <!-- 재사용 대상 상품권 헤더  -->
+    <gauce name="H_SEL_RTN_COU">
+        <column colName="DRAWL_STR"      colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_STR"      colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHECK_FLAG"     colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="STR_NAME"       colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_DT"       colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_FLAG"     colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME" colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"  colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"   colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_NO"    colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"   colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISSUE_TYPE"     colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"  colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 반품상품권 조회쿼리-->
+    <query name="SEL_RTN_COU">
+        <![CDATA[
+        SELECT MST.DRAWL_STR
+             , MST.IN_STR
+             , 'F'                                               AS CHECK_FLAG
+             , DPS.FN_GET_STORE_NAME(MST.DRAWL_STR)              AS STR_NAME
+             , MST.DRAWL_DT
+             , MST.DRAWL_FLAG
+             , TPM.GIFT_TYPE_NAME
+             , AMT.GIFT_AMT_NAME
+             , AMT.GIFTCERT_AMT
+             , MST.GIFTCARD_NO
+             , COM.FN_GET_COMM_NAME('D', 'M076', MST.DRAWL_FLAG)  AS STAT_NAME
+             , MST.GIFT_TYPE_CD
+             , MST.ISSUE_TYPE
+             , MST.GIFT_AMT_TYPE
+          FROM MSS.MG_GIFTAMTMST AMT
+             , MSS.MG_GIFTMST    MST
+             , MSS.MG_GIFTTPMST  TPM
+         WHERE AMT.GIFT_TYPE_CD  = MST.GIFT_TYPE_CD
+           AND TPM.GIFT_TYPE_CD  = MST.GIFT_TYPE_CD
+           AND AMT.ISSUE_TYPE    = MST.ISSUE_TYPE
+           AND AMT.GIFT_AMT_TYPE = MST.GIFT_AMT_TYPE
+           AND MST.STAT_FLAG     = '07'
+           AND MST.DRAWL_STR     = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_RTN_COU_WHERE_DATE">
+        <![CDATA[
+           AND MST.DRAWL_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+    
+    <query name="SEL_RTN_COU_WHERE_NO">
+        <![CDATA[
+           AND MST.GIFTCARD_NO   = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_RTN_COU_WHERE_FLAG">
+        <![CDATA[
+           AND MST.DRAWL_FLAG    = ?
+        ]]>
+    </query>
+    
+    <!-- 상품권 재사용내역을 신규등록-->
+    <query name="INS_REUSE_COU">
+        <![CDATA[
+        INSERT INTO MSS.MG_GIFTREUSE( REG_DT
+                                    , DRAWL_STR
+                                    , REG_SEQ_NO
+                                    , DRAWL_DT
+                                    , GIFT_TYPE_CD
+                                    , ISSUE_TYPE
+                                    , GIFT_AMT_TYPE
+                                    , GIFTCARD_NO
+                                    , REG_FLAG 
+                                    , REG_ID
+                                    , REG_DATE
+                                    , MOD_ID
+                                    , MOD_DATE ) 
+                             VALUES ( ?
+                                    , ?
+                                    , MSS.SQ_MG_GIFTREUSE.NEXTVAL
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , SYSDATE
+                                    , ?
+                                    , SYSDATE )
+        ]]>
+    </query>
+    
+    <!-- 재사용 상품권 정보수정-->
+    <query name="UPD_REUSE_COU">
+        <![CDATA[
+        UPDATE MSS.MG_GIFTMST
+           SET STAT_FLAG   = '03'
+             , MOD_ID      = ?
+             , MOD_DATE    = SYSDATE
+         WHERE GIFTCARD_NO = ?
+           AND DRAWL_DT <= ?
+        ]]>
+    </query>
+    
+</service>

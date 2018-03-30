@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 한국후지쯔
+ * 작 성 일    : 2010.03.18
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       : 포인트 조회
+ -->
+<service name="/dctm304.dm">
+
+    <!-- 포인트 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="PROC_DT"      colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_TIME"    colType="TB_STRING"   size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"      colType="TB_STRING"   size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_ID"      colType="TB_STRING"   size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"    colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_POINT"    colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_TYPE"     colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_TYPE_NM"  colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="USE_POINT"    colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_TYPE"     colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_TYPE_NM"  colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_NO"      colType="TB_STRING"   size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REAL_SALE_AMT"  colType="TB_DECIMAL"  size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_TYPE"  colType="TB_STRING"   size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TYPE_NAME"  colType="TB_STRING"   size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"  colType="TB_STRING"   size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+    <!-- 포인트 조회 - 개인-->
+    <query name="SEL_MASTER_PERS">        
+        <![CDATA[
+        
+        SELECT PROC_DT
+                 , PROC_TIME
+                 , DCS.SC_Crypto_FUN('DEC', CARD_NO) AS CARD_NO
+                 , BRCH_ID
+                 , BRCH_NAME
+                 , ADD_POINT
+                 , ADD_TYPE
+                 , ADD_TYPE_NM
+                 , USE_POINT
+                 , USE_TYPE
+                 , USE_TYPE_NM
+                 , DECODE(RECP_NO,'1','',RECP_NO) RECP_NO
+                 , REAL_SALE_AMT
+                 , PAY_TYPE
+                 , REPLACE(DECODE(COM.FN_GET_COMM_NAME('D','D072',PAY_TYPE),'타사카드',
+                 (SELECT MAX(CARD_NAME) FROM DPS.PD_CARDBIN WHERE BIN_NO = (SELECT SUBSTR(MAX(PAY_DATA_01),1,6) FROM DPS.PS_TRPAID WHERE STR_CD = TRIM(SUBSTR(BRCH_ID,2,2))
+                                                                                                 AND SALE_DT = TRIM('20'||SUBSTR(RECP_NO,2,6))
+                                                                                                 AND POS_NO = TRIM(SUBSTR(RECP_NO,8,4))
+                                                                                                 AND TRAN_NO = TRIM(SUBSTR(RECP_NO,12,5))
+                    )),COM.FN_GET_COMM_NAME('D','D072',PAY_TYPE))||'('||
+                    
+                 --(SELECT MAX(PAY_DATA_01) FROM DPS.PS_TRPAID WHERE STR_CD = TRIM(SUBSTR(BRCH_ID,2,2))
+                 --                                                                                AND SALE_DT = TRIM('20'||SUBSTR(RECP_NO,2,6))
+                 --                                                                                AND POS_NO = TRIM(SUBSTR(RECP_NO,8,4))
+                 --                                                                                AND TRAN_NO = TRIM(SUBSTR(RECP_NO,12,5))
+                 
+                (SELECT CASE WHEN MAX(PAY_TYPE) = '10' OR MAX(PAY_TYPE) = '13'
+                              THEN SUBSTR(MAX(PAY_DATA_01),1,6)||LPAD('*',LENGTH(MAX(PAY_DATA_01))-10,'*')||SUBSTR(MAX(PAY_DATA_01),-4)
+                         ELSE MAX(PAY_DATA_01) END
+                 FROM DPS.PS_TRPAID WHERE STR_CD = TRIM(SUBSTR(BRCH_ID,2,2))
+                                                                                                 AND SALE_DT = TRIM('20'||SUBSTR(RECP_NO,2,6))
+                                                                                                 AND POS_NO = TRIM(SUBSTR(RECP_NO,8,4))
+                                                                                                 AND TRAN_NO = TRIM(SUBSTR(RECP_NO,12,5))  
+                                                                                                 
+                    )||')','()','') TYPE_NAME
+                 ,(SELECT PUMBUN_NAME FROM DPS.PC_PBNMST WHERE PUMBUN_CD = (SELECT PUMBUN_CD FROM DPS.PS_TRITEM WHERE STR_CD = TRIM(SUBSTR(BRCH_ID,2,2))
+                                                                                  AND SALE_DT = TRIM('20'||SUBSTR(RECP_NO,2,6))
+                                                                                  AND POS_NO = TRIM(SUBSTR(RECP_NO,8,4))
+                                                                                  AND TRAN_NO = TRIM(SUBSTR(RECP_NO,12,5))
+                                                                                  AND SEQ_NO = 1)) PUMBUN_NAME
+			FROM
+			(SELECT PROC_DT
+                 , PROC_TIME
+                 , CARD_NO
+                 , BRCH_ID
+                 , BRCH_NAME
+                 , ADD_POINT
+                 , ADD_TYPE
+                 , ADD_TYPE_NM
+                 , USE_POINT
+                 , USE_TYPE
+                 , USE_TYPE_NM
+                 , RECP_NO
+                 , REAL_SALE_AMT
+                 , NVL(CASE
+                        WHEN NVL2(RECP_NO,(SELECT COUNT(DISTINCT PAY_TYPE) FROM DPS.PS_TRPAID WHERE STR_CD = TRIM(SUBSTR(BRCH_ID,2,2))
+                                                                                                                            AND SALE_DT = TRIM('20'||SUBSTR(RECP_NO,2,6))
+                                                                                                                            AND POS_NO = TRIM(SUBSTR(RECP_NO,8,4))
+                                                                                                                            AND TRAN_NO = TRIM(SUBSTR(RECP_NO,12,5))),'') = 1 THEN
+                        NVL2(RECP_NO,(SELECT DISTINCT PAY_TYPE FROM DPS.PS_TRPAID WHERE STR_CD = TRIM(SUBSTR(BRCH_ID,2,2))
+                                                                                                               AND SALE_DT = TRIM('20'||SUBSTR(RECP_NO,2,6))
+                                                                                                               AND POS_NO = TRIM(SUBSTR(RECP_NO,8,4))
+                                                                                                               AND TRAN_NO = TRIM(SUBSTR(RECP_NO,12,5))),'')
+                        WHEN NVL2(RECP_NO,(SELECT COUNT(DISTINCT PAY_TYPE) FROM DPS.PS_TRPAID WHERE STR_CD = TRIM(SUBSTR(BRCH_ID,2,2))
+                                                                                                                            AND SALE_DT = TRIM('20'||SUBSTR(RECP_NO,2,6))
+                                                                                                                            AND POS_NO = TRIM(SUBSTR(RECP_NO,8,4))
+                                                                                                                            AND TRAN_NO = TRIM(SUBSTR(RECP_NO,12,5))),'') >= 2 THEN
+                        
+                        '99' END,'98') PAY_TYPE
+              FROM 
+                   (     
+                     SELECT A.ADD_DT     PROC_DT
+                          , A.ADD_TIME   PROC_TIME
+                          , A.CARD_NO
+                          , B.BRCH_ID
+                          , B.BRCH_NAME
+                          , A.ADD_POINT
+                          , A.ADD_TYPE
+                          , COM.FN_GET_COMM_NAME('D', 'D006', A.ADD_TYPE) ADD_TYPE_NM 
+                          , 0 USE_POINT
+                          , '' USE_TYPE
+                          , '' USE_TYPE_NM
+                          , DECODE(A.ADD_TYPE,'12',
+                              (SELECT '1'||SUBSTR(O_SALE_DT,3,6)||O_POS_NO||O_TRAN_NO RECP_NO FROM DPS.PS_TRHEADER Z
+                                    WHERE Z.STR_CD = TRIM(SUBSTR(B.BRCH_ID,2,2))
+                                    AND Z.SALE_DT = TRIM('20'||SUBSTR(A.RECP_NO,2,6))
+                                    AND Z.POS_NO = TRIM(SUBSTR(A.RECP_NO,8,4))
+                                    AND Z.TRAN_NO = TRIM(SUBSTR(A.RECP_NO,12,5)))
+                              ,A.RECP_NO) RECP_NO
+                          , DECODE(TRAN_FLAG,'0',NVL(C.SALE_TOT_AMT,0) - NVL(C.REDU_TOT_AMT,0) - NVL(C.DC_TOT_AMT,0),
+                          (NVL(C.SALE_TOT_AMT,0) - NVL(C.REDU_TOT_AMT,0) - NVL(C.DC_TOT_AMT,0))*-1) AS REAL_SALE_AMT
+                       FROM DCS.DO_POINT_ADD A
+                          , DCS.DB_BRANCH B
+                          , DPS.PS_TRHEADER C
+                      WHERE A.BRCH_ID = B.BRCH_ID
+                        AND DCS.F_GET_STR_CD(A.BRCH_ID)     = C.STR_CD  (+)
+                        AND '20' || SUBSTR(A.RECP_NO, 2, 6) = C.SALE_DT (+)
+                        AND SUBSTR(A.RECP_NO, 8, 4)         = C.POS_NO  (+)
+                        AND SUBSTR(A.RECP_NO, 12, 5)        = C.TRAN_NO (+)
+                        AND A.ADD_DT  BETWEEN ? AND ?
+                        AND A.CARD_NO IN ( 
+                                           SELECT N.CARD_NO 
+                                             FROM DCS.DM_CUSTOMER M
+                                                , DCS.DM_CARD     N
+                                            WHERE M.CUST_ID = N.CUST_ID
+                                              AND M.CUST_ID = (
+                                                                SELECT UNIQUE A.CUST_ID 
+                                                                  FROM DCS.DM_CUSTOMER A
+                                                                     , DCS.DM_CARD B
+                                                                 WHERE A.CUST_ID  =  B.CUST_ID
+                                                                   AND A.COMP_PERS_FLAG = ?
+                                                                   --AND A.CUST_STAT_FLAG = '0'
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_PERS_UNION">        
+        <![CDATA[
+                     UNION ALL   
+                     SELECT A.USE_DT     PROC_DT
+                          , A.USE_TIME   PROC_TIME
+                          , DCS.SC_Crypto_FUN('DEC', A.CARD_NO) AS CARD_NO
+                          , B.BRCH_ID
+                          , B.BRCH_NAME
+                          , 0 ADD_POINT
+                          , '' ADD_TYPE
+                          , '' USE_TYPE_NM
+                          , A.USE_POINT
+                          , A.USE_TYPE
+                          , COM.FN_GET_COMM_NAME('D', 'D007', A.USE_TYPE) USE_TYPE_NM
+                          , A.RECP_NO 
+                          , DECODE(TRAN_FLAG,'0',NVL(C.SALE_TOT_AMT,0) - NVL(C.REDU_TOT_AMT,0) - NVL(C.DC_TOT_AMT,0),
+                          (NVL(C.SALE_TOT_AMT,0) - NVL(C.REDU_TOT_AMT,0) - NVL(C.DC_TOT_AMT,0))*-1) AS REAL_SALE_AMT
+                       FROM DCS.DO_POINT_USE A
+                          , DCS.DB_BRANCH B
+                          , DPS.PS_TRHEADER C
+                      WHERE A.BRCH_ID = B.BRCH_ID
+                        AND DCS.F_GET_STR_CD(A.BRCH_ID)     = C.STR_CD  (+)
+                        AND '20' || SUBSTR(A.RECP_NO, 2, 6) = C.SALE_DT (+)
+                        AND SUBSTR(A.RECP_NO, 8, 4)         = C.POS_NO  (+)
+                        AND SUBSTR(A.RECP_NO, 12, 5)        = C.TRAN_NO (+)
+                        AND A.USE_DT  BETWEEN ? AND ?
+                        AND A.CARD_NO IN ( 
+                                           SELECT N.CARD_NO 
+                                             FROM DCS.DM_CUSTOMER M
+                                                , DCS.DM_CARD     N
+                                            WHERE M.CUST_ID = N.CUST_ID
+                                              AND M.CUST_ID = (
+                                                                SELECT UNIQUE A.CUST_ID 
+                                                                  FROM DCS.DM_CUSTOMER A
+                                                                     , DCS.DM_CARD B
+                                                                 WHERE A.CUST_ID  =  B.CUST_ID
+                                                                   AND A.COMP_PERS_FLAG = ?
+                                                                   --AND A.CUST_STAT_FLAG = '0'                    
+ 
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_PERS_CUST_ID">        
+        <![CDATA[
+                                                                   AND A.CUST_ID  = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_PERS_CARD_NO">        
+        <![CDATA[
+                                                                   AND B.CARD_NO  = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_PERS_SS_NO">        
+        <![CDATA[
+                                                                   AND A.SS_NO    = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_PERS_END">        
+        <![CDATA[
+                                                              )  
+                                         )
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_PERS_ORDER">        
+        <![CDATA[    
+        		               
+                    )
+             )
+             ORDER BY PROC_DT DESC, PROC_TIME DESC  
+        ]]>        
+    </query>
+    
+    
+    
+     <!-- 포인트 조회 - 법인/단체-->
+    <query name="SEL_MASTER_COMP">        
+        <![CDATA[
+            SELECT PROC_DT
+                 , PROC_TIME
+                 , CARD_NO
+                 , BRCH_ID
+                 , BRCH_NAME
+                 , ADD_POINT
+                 , ADD_TYPE
+                 , ADD_TYPE_NM
+                 , USE_POINT
+                 , USE_TYPE
+                 , USE_TYPE_NM
+                 , RECP_NO
+                 , REAL_SALE_AMT
+              FROM 
+                   (     
+                     SELECT A.ADD_DT     PROC_DT
+                          , A.ADD_TIME   PROC_TIME
+                          , A.CARD_NO
+                          , B.BRCH_ID
+                          , B.BRCH_NAME
+                          , A.ADD_POINT
+                          , A.ADD_TYPE
+                          , COM.FN_GET_COMM_NAME('D', 'D006', A.ADD_TYPE) ADD_TYPE_NM 
+                          , 0 USE_POINT
+                          , '' USE_TYPE
+                          , '' USE_TYPE_NM
+                          , A.RECP_NO
+                          , NVL(C.SALE_TOT_AMT,0) - NVL(C.REDU_TOT_AMT,0) - NVL(C.DC_TOT_AMT,0) AS REAL_SALE_AMT
+                       FROM DCS.DO_POINT_ADD A
+                          , DCS.DB_BRANCH B
+                          , DPS.PS_TRHEADER C
+                      WHERE A.BRCH_ID = B.BRCH_ID
+                        AND DCS.F_GET_STR_CD(A.BRCH_ID)     = C.STR_CD  (+)
+                        AND '20' || SUBSTR(A.RECP_NO, 2, 6) = C.SALE_DT (+)
+                        AND SUBSTR(A.RECP_NO, 8, 4)         = C.POS_NO  (+)
+                        AND SUBSTR(A.RECP_NO, 12, 5)        = C.TRAN_NO (+)
+                        AND A.ADD_DT  BETWEEN ? AND ?
+                        AND A.CARD_NO IN ( 
+                                           SELECT N.CARD_NO 
+                                             FROM DCS.DM_CUSTOMER M
+                                                , DCS.DM_CARD     N
+                                            WHERE M.CUST_ID = N.CUST_ID
+                                              AND M.CUST_ID = (
+                                                                SELECT UNIQUE A.CUST_ID 
+                                                                  FROM DCS.DM_CUSTOMER A
+                                                                     , DCS.DM_CARD B
+                                                                 WHERE A.CUST_ID  =  B.CUST_ID
+                                                                   AND A.COMP_PERS_FLAG <> ?
+                                                                   --AND A.CUST_STAT_FLAG = '0'
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_COMP_UNION">        
+        <![CDATA[
+                     UNION ALL   
+                     SELECT A.USE_DT     PROC_DT
+                          , A.USE_TIME   PROC_TIME
+                          , A.CARD_NO
+                          , B.BRCH_ID
+                          , B.BRCH_NAME
+                          , 0 ADD_POINT
+                          , '' ADD_TYPE
+                          , '' USE_TYPE_NM
+                          , A.USE_POINT
+                          , A.USE_TYPE
+                          , COM.FN_GET_COMM_NAME('D', 'D007', A.USE_TYPE) USE_TYPE_NM
+                          , A.RECP_NO 
+                          , NVL(C.SALE_TOT_AMT,0) - NVL(C.REDU_TOT_AMT,0) - NVL(C.DC_TOT_AMT,0) AS REAL_SALE_AMT
+                       FROM DCS.DO_POINT_USE A
+                          , DCS.DB_BRANCH B
+                          , DPS.PS_TRHEADER C
+                      WHERE A.BRCH_ID = B.BRCH_ID
+                        AND DCS.F_GET_STR_CD(A.BRCH_ID)     = C.STR_CD  (+)
+                        AND '20' || SUBSTR(A.RECP_NO, 2, 6) = C.SALE_DT (+)
+                        AND SUBSTR(A.RECP_NO, 8, 4)         = C.POS_NO  (+)
+                        AND SUBSTR(A.RECP_NO, 12, 5)        = C.TRAN_NO (+)
+                        AND A.USE_DT  BETWEEN ? AND ?
+                        AND A.CARD_NO IN ( 
+                                           SELECT N.CARD_NO 
+                                             FROM DCS.DM_CUSTOMER M
+                                                , DCS.DM_CARD     N
+                                            WHERE M.CUST_ID = N.CUST_ID
+                                              AND M.CUST_ID = (
+                                                                SELECT UNIQUE A.CUST_ID 
+                                                                  FROM DCS.DM_CUSTOMER A
+                                                                     , DCS.DM_CARD B
+                                                                 WHERE A.CUST_ID  =  B.CUST_ID
+                                                                   AND A.COMP_PERS_FLAG = ?
+                                                                   --AND A.CUST_STAT_FLAG = '0'
+        ]]>        
+    </query>
+</service>

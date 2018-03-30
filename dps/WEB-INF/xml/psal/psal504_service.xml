@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal503.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="GUBUN"                colType="TB_STRING"      size="40"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_AMT"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"               colType="TB_STRING"      size="200"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="SEQ"                  colType="TB_STRING"      size="3"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GUBUN"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SYSTEM_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_AMT"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SYSTEM_POS_GAP"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNO"> 
+        <column colName="POSNO"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNOMM"> 
+        <column colName="POSNO_MIN"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSNO_MAX"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_POS_M">        
+        <![CDATA[
+
+            SELECT A.GUBUN
+                 , SUM(A.NORM_TRAN_AMT)                                                             AS NORM_TRAN_AMT
+                 , (CASE WHEN SEQ <> '1' THEN SUM(A.MAGAM_AMT)  ELSE 0 END)                         AS CASH_GAP
+                 , ''                                                                               AS REMARK
+              FROM (
+                    SELECT A.SEQ
+                         , A.GUBUN
+                         , SUM(A.NORM_TRAN_AMT)      AS NORM_TRAN_AMT
+                         , SUM(A.MAGAM_AMT)          AS MAGAM_AMT
+                      FROM (
+                            SELECT '1'           AS SEQ
+                                 , '중간+마감'   AS GUBUN
+                                 , A.TOTAL_FLAG
+                                 , A.BALANCE_FLAG
+                                 , (CASE WHEN A.TOTAL_FLAG = '02' AND A.BALANCE_FLAG IN ('301', '402') THEN SUM(A.NORM_TRAN_AMT) ELSE 0 END )   AS NORM_TRAN_AMT
+                                 , 0                                                                                                            AS MAGAM_AMT
+                              FROM DPS.PS_TRTOTAL A
+                                 , DPS.PC_POSMST  B
+                             WHERE A.STR_CD     = B.STR_CD
+                               AND A.POS_NO     = B.POS_NO
+                               AND A.STR_CD     = ?
+                               AND B.POS_FLAG   LIKE ? || '%'
+                               AND A.POS_NO     >= ?
+                               AND A.POS_NO     <= ?
+                               AND A.SALE_DT    >= ?
+                               AND A.SALE_DT    <= ?
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = A.STR_CD
+                                               AND MYORG.USER_ID     = ?
+                                           ) 
+                             GROUP BY
+                                   A.TOTAL_FLAG
+                                 , A.BALANCE_FLAG
+                           ) A
+                     GROUP BY
+                           A.SEQ
+                         , A.GUBUN
+                       
+                     UNION ALL
+          
+                    SELECT A.SEQ
+                         , A.GUBUN
+                         , SUM(A.NORM_TRAN_AMT)      AS NORM_TRAN_AMT
+                         , SUM(A.MAGAM_AMT)          AS MAGAM_AMT
+                      FROM (
+                            SELECT '2'            AS SEQ
+                                 , 'SYSTEM집계'   AS GUBUN
+                                 , A.TOTAL_FLAG
+                                 , A.BALANCE_FLAG
+                                 , (CASE WHEN A.TOTAL_FLAG = '01' AND A.BALANCE_FLAG IN ('101', '201', '203', '302', '402') THEN SUM(A.NORM_TRAN_AMT) 
+                                             WHEN A.TOTAL_FLAG = '01' AND A.BALANCE_FLAG IN ('102', '113', '116', '303') THEN SUM(A.NORM_TRAN_AMT)*(-1)   ELSE 0 END) AS NORM_TRAN_AMT
+                                 , (CASE WHEN A.TOTAL_FLAG = '01' AND A.BALANCE_FLAG = '403' THEN SUM(A.NORM_TRAN_AMT) ELSE 0 END)                             AS MAGAM_AMT
+                              FROM DPS.PS_TRTOTAL A
+                                 , DPS.PC_POSMST  B
+                             WHERE A.STR_CD     = B.STR_CD
+                               AND A.POS_NO     = B.POS_NO
+                               AND A.STR_CD     = ?
+                               AND B.POS_FLAG   LIKE ? || '%'
+                               AND A.POS_NO     >= ?
+                               AND A.POS_NO     <= ?
+                               AND A.SALE_DT    >= ?
+                               AND A.SALE_DT    <= ?
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = A.STR_CD
+                                               AND MYORG.USER_ID     = ?
+                                           ) 
+                             GROUP BY
+                                   A.TOTAL_FLAG
+                                 , A.BALANCE_FLAG
+                           ) A
+                     GROUP BY
+                           A.SEQ
+                         , A.GUBUN
+                     UNION ALL
+          
+                    SELECT A.SEQ
+                         , A.GUBUN
+                         , SUM(A.NORM_TRAN_AMT)   AS NORM_TRAN_AMT
+                         , SUM(A.MAGAM_AMT)          AS MAGAM_AMT
+                      FROM (
+                            SELECT '3'         AS SEQ
+                                 , 'POS집계'   AS GUBUN
+                                 , A.TOTAL_FLAG
+                                 , A.BALANCE_FLAG
+                                 , (CASE WHEN A.TOTAL_FLAG = '02' AND A.BALANCE_FLAG IN ('101', '201', '203', '302', '402') THEN SUM(A.NORM_TRAN_AMT) 
+                                             WHEN A.TOTAL_FLAG = '02' AND A.BALANCE_FLAG IN ('102', '113', '116', '303') THEN SUM(A.NORM_TRAN_AMT)*(-1)   ELSE 0 END) AS NORM_TRAN_AMT
+                                 , (CASE WHEN A.TOTAL_FLAG = '02' AND A.BALANCE_FLAG = '403' THEN SUM(A.NORM_TRAN_AMT) ELSE 0 END)      AS MAGAM_AMT
+                              FROM DPS.PS_TRTOTAL A
+                                 , DPS.PC_POSMST  B
+                             WHERE A.STR_CD     = B.STR_CD
+                               AND A.POS_NO     = B.POS_NO
+                               AND A.STR_CD     = ?
+                               AND B.POS_FLAG   LIKE ? || '%'
+                               AND A.POS_NO     >= ?
+                               AND A.POS_NO     <= ?
+                               AND A.SALE_DT    >= ?
+                               AND A.SALE_DT    <= ?
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = A.STR_CD
+                                               AND MYORG.USER_ID     = ?
+                                           ) 
+                             GROUP BY
+                                   A.TOTAL_FLAG
+                                 , A.BALANCE_FLAG
+                           ) A
+                     GROUP BY
+                           A.SEQ
+                         , A.GUBUN
+                   ) A
+             GROUP BY
+                   A.SEQ
+                 , A.GUBUN
+             ORDER BY
+                   A.SEQ
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_POS_D">        
+        <![CDATA[
+                        SELECT A.SEQ
+                             , A.GUBUN
+                             , SUM(SYSTEM_AMT)                   AS SYSTEM_AMT
+                             , SUM(POS_AMT)                      AS POS_AMT
+                             , SUM(SYSTEM_AMT) - SUM(POS_AMT)    AS SYSTEM_POS_GAP
+                          FROM (
+	                            SELECT A.BALANCE_FLAG         AS SEQ
+	                                 , C.COMM_NAME1           AS GUBUN
+	                                 , (CASE WHEN A.TOTAL_FLAG = '01'THEN SUM(A.NORM_TRAN_AMT) ELSE 0 END) AS SYSTEM_AMT
+	                                 , (CASE WHEN A.TOTAL_FLAG = '02'THEN SUM(A.NORM_TRAN_AMT) ELSE 0 END) AS POS_AMT
+	                              FROM DPS.PS_TRTOTAL      A
+	                                 , DPS.PC_POSMST     B
+	                                 , COM.TC_COMMCODE   C
+	                             WHERE A.STR_CD     = B.STR_CD
+	                               AND A.POS_NO     = B.POS_NO
+	                               AND C.SYS_PART   = 'D'
+	                               AND C.COMM_PART  = 'P606'
+	                               AND A.BALANCE_FLAG = C.COMM_CODE
+	                               AND A.BALANCE_FLAG IN ('101', '201', '203', '302', '402', '102', '113', '116', '303')
+	                               AND A.STR_CD     = ?
+	                               AND B.POS_FLAG   LIKE ? || '%'
+	                               AND A.POS_NO     >= ?
+	                               AND A.POS_NO     <= ?
+	                               AND A.SALE_DT    >= ?
+	                               AND A.SALE_DT    <= ?
+	                               AND EXISTS ( SELECT MYORG.USER_ID
+	                                              FROM COM.V_MYORG MYORG
+	                                             WHERE MYORG.STR_CD      = A.STR_CD
+	                                               AND MYORG.USER_ID     = ?
+	                                           ) 
+	                             GROUP BY
+	                                   A.TOTAL_FLAG
+	                                 , A.BALANCE_FLAG
+	                                 , C.COMM_NAME1
+	                           ) A
+	                     GROUP BY
+	                           A.SEQ
+	                         , A.GUBUN
+	                     ORDER BY
+	                           A.SEQ
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSNO">        
+        <![CDATA[
+            SELECT A.POS_NO
+              FROM DPS.PC_POSMST A
+             WHERE A.POS_NO = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSNOMM">        
+        <![CDATA[
+            SELECT MAX(A.POSNO_MIN) AS POSNO_MIN
+                 , MAX(A.POSNO_MAX) AS POSNO_MAX
+              FROM (
+		            SELECT MIN(A.POS_NO) AS POSNO_MIN
+		                 , ''            AS POSNO_MAX
+		              FROM DPS.PC_POSMST A
+		              
+		            UNION ALL
+		              
+		            SELECT ''            AS POSNO_MIN
+		                 , MAX(A.POS_NO) AS POSNO_MAX
+		              FROM DPS.PC_POSMST A
+		           ) A
+        ]]>        
+    </query>
+    
+    
+</service>

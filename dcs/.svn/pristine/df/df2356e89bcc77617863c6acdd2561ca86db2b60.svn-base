@@ -1,0 +1,184 @@
+/*
+ * Copyright (c) 2010 한국후지쯔. All rights reserved.
+ *
+ * This software is the confidential and proprietary information of 한국후지쯔.
+ * You shall not disclose such Confidential Information and shall use it
+ * only in accordance with the terms of the license agreement you entered into
+ * with 한국후지쯔
+ */
+
+package dbri.dao;
+
+import java.util.List;
+
+import common.util.Util;
+
+import kr.fujitsu.ffw.control.ActionForm;
+import kr.fujitsu.ffw.control.cfg.svc.shift.Service;
+import kr.fujitsu.ffw.model.AbstractDAO;
+import kr.fujitsu.ffw.model.SqlWrapper;
+import kr.fujitsu.ffw.util.String2;
+
+/**
+ * <p>SMS 회원 조회(브랜드)</p>
+ * 
+ * @created  on 1.0, 2012.06.04
+ * @created  by 강진
+ * 
+ * @modified on 
+ * @modified by 
+ * @caused   by 
+ */
+public class DBri320DAO extends AbstractDAO {
+
+    /**
+     * <p>SMS 회원 조회(브랜드)</p>
+     * 
+     */
+    public List searchMaster(ActionForm form) throws Exception {
+        List ret        = null;
+        SqlWrapper sql  = null;
+        Service svc     = null;
+        Util util = new Util();
+        String strQuery = "";
+        int i = 1;
+        
+        String strFromSDate   = String2.nvl(form.getParam("strFromSDate"));
+        String strToSDate= String2.nvl(form.getParam("strToSDate"));
+        String strFromSYear= String2.nvl(form.getParam("strFromSYear"));
+        String strToSYear= String2.nvl(form.getParam("strToSYear")); 
+        String strFromSRank= String2.nvl(form.getParam("strFromSRank"));
+        String strToSRank= String2.nvl(form.getParam("strToSRank"));
+        String strChkBusiArea1   = String2.nvl(form.getParam("strChkBusiArea1"));
+        String strChkBusiArea2	 = String2.nvl(form.getParam("strChkBusiArea2"));
+        String strChkBusiArea3   = String2.nvl(form.getParam("strChkBusiArea3"));
+        String strChkBusiArea4   = String2.nvl(form.getParam("strChkBusiArea4"));
+        String strChkBusiArea5   = String2.nvl(form.getParam("strChkBusiArea5"));
+        String strChkBusiArea6   = String2.nvl(form.getParam("strChkBusiArea6"));
+        String strChkBusiArea7   = String2.nvl(form.getParam("strChkBusiArea7"));
+        String strChkBusiArea8   = String2.nvl(form.getParam("strChkBusiArea8"));
+        String strChkBusiArea9   = String2.nvl(form.getParam("strChkBusiArea9"));
+        String strChkSexCd1= String2.nvl(form.getParam("strChkSexCd1"));
+        String strChkSexCd2   = String2.nvl(form.getParam("strChkSexCd2"));        
+        String strChkEmailYn   = String2.nvl(form.getParam("strChkEmailYn"));
+        String strChkJusoYn   = String2.nvl(form.getParam("strChkJusoYn"));
+        String strChkSmsY	= String2.nvl(form.getParam("strChkSmsY"));
+        String strChkSmsN   = String2.nvl(form.getParam("strChkSmsN"));
+        String strStrCd   = String2.nvl(form.getParam("strStrCd"));
+        String strDeptCd   = String2.nvl(form.getParam("strDeptCd"));
+        String strTeamCd   = String2.nvl(form.getParam("strTeamCd"));
+        String strPCCd   = String2.nvl(form.getParam("strPCCd"));
+        String strOrgFlag   = String2.nvl(form.getParam("strOrgFlag"));
+        
+        // 검색조건 추가 2014.07.24 ////////////////////////////////////////
+        String strFromSAmt	= String2.nvl(form.getParam("strFromSAmt"));
+        String strToSAmt	= String2.nvl(form.getParam("strToSAmt"));
+        /////////////////////////////////////////////////////////////////
+        
+        sql = new SqlWrapper();
+        svc = (Service) form.getService();
+
+        connect("pot");
+
+        if(strOrgFlag.equals("1")){
+        	sql.setString(i++, strChkSexCd1);
+        	sql.setString(i++, strChkSexCd2);
+        	sql.setString(i++, strFromSYear);
+        	sql.setString(i++, strToSYear);
+        	sql.setString(i++, strChkBusiArea1);
+        	sql.setString(i++, strChkBusiArea2);
+        	sql.setString(i++, strChkBusiArea3);
+        	sql.setString(i++, strChkBusiArea4);
+        	sql.setString(i++, strChkBusiArea5);
+        	sql.setString(i++, strChkBusiArea6);
+        	sql.setString(i++, strChkBusiArea7);
+        	sql.setString(i++, strChkBusiArea8);
+        	sql.setString(i++, strChkBusiArea9);
+
+        	sql.setString(i++, strChkEmailYn);
+        	sql.setString(i++, strChkEmailYn);
+        	sql.setString(i++, strChkEmailYn);
+        	sql.setString(i++, strChkJusoYn);
+        
+        	// 	SMS 조회조건 추가
+        	sql.setString(i++, strChkSmsY);
+        	sql.setString(i++, strChkSmsN);
+        
+        	sql.setString(i++, strFromSDate);
+        	sql.setString(i++, strToSDate);
+        	sql.setString(i++, strChkSexCd1);
+        	sql.setString(i++, strChkSexCd2);
+        	//	sql.setString(i++, strPumbunCd);
+        
+        	sql.setString(i++, strStrCd);
+        	sql.setString(i++, strDeptCd);
+        	sql.setString(i++, strTeamCd);
+        	sql.setString(i++, strPCCd);
+        	
+        	// 검색조건 추가 2014.07.24 ////////
+            sql.setString(i++, strFromSAmt);
+            sql.setString(i++, strToSAmt);
+            /////////////////////////////////
+        
+        	sql.setString(i++, strFromSRank);
+        	sql.setString(i++, strToSRank);
+        	
+        	strQuery = svc.getQuery("SEL_MASTER");
+        }else if(strOrgFlag.equals("2")){
+        	sql.setString(i++, strChkSexCd1);
+        	sql.setString(i++, strChkSexCd2);
+        	sql.setString(i++, strFromSYear);
+        	sql.setString(i++, strToSYear);
+        	sql.setString(i++, strChkBusiArea1);
+        	sql.setString(i++, strChkBusiArea2);
+        	sql.setString(i++, strChkBusiArea3);
+        	sql.setString(i++, strChkBusiArea4);
+        	sql.setString(i++, strChkBusiArea5);
+        	sql.setString(i++, strChkBusiArea6);
+        	sql.setString(i++, strChkBusiArea7);
+        	sql.setString(i++, strChkBusiArea8);
+        	sql.setString(i++, strChkBusiArea9);
+
+        	sql.setString(i++, strChkEmailYn);
+        	sql.setString(i++, strChkEmailYn);
+        	sql.setString(i++, strChkEmailYn);
+        	sql.setString(i++, strChkJusoYn);
+        
+        	// 	SMS 조회조건 추가
+        	sql.setString(i++, strChkSmsY);
+        	sql.setString(i++, strChkSmsN);
+        
+        	sql.setString(i++, strFromSDate);
+        	sql.setString(i++, strToSDate);
+        	sql.setString(i++, strChkSexCd1);
+        	sql.setString(i++, strChkSexCd2);
+        	//	sql.setString(i++, strPumbunCd);
+        
+        	sql.setString(i++, strStrCd);
+        	sql.setString(i++, strDeptCd);
+        	sql.setString(i++, strTeamCd);
+        	sql.setString(i++, strPCCd);
+        	
+        	// 검색조건 추가 2014.07.24 ////////
+            sql.setString(i++, strFromSAmt);
+            sql.setString(i++, strToSAmt);
+            /////////////////////////////////
+        
+        	sql.setString(i++, strFromSRank);
+        	sql.setString(i++, strToSRank);
+        	
+        	strQuery = svc.getQuery("SEL_MASTER1");
+        }
+        
+        
+        sql.put(strQuery);
+        ret = select2List(sql);
+      /*ret = util.decryptedStr(ret,7);
+        ret = util.decryptedStr(ret,8);
+        ret = util.decryptedStr(ret,9);
+        ret = util.decryptedStr(ret,10);
+        ret = util.decryptedStr(ret,11);*/
+        
+        return ret;
+    }
+}

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 
+ * 작 성 일    : 2010.03.03
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  OK캐쉬백상품권교환 집계표 조회
+ -->
+<service name="/dmbo640.do">
+
+    <!-- 상품권 교환 현황표 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="BRCH_ID"      colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"    colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_DT"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONV_POINT"   colType="TB_INT"     size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONV_GIFTCD_AMT"   colType="TB_INT"     size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCD_DTL_AMT"   colType="TB_INT"     size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ERR_GIFT_AMT"      colType="TB_INT"     size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY_5"        colType="TB_INT"     size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY_10"       colType="TB_INT"     size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY_50"       colType="TB_INT"     size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY_100"      colType="TB_INT"     size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권 교환 현황표 조회 -->
+    <query name="SEL_MASTER_OLD">        
+        <![CDATA[
+            SELECT A.BRCH_ID
+                 , B.BRCH_NAME
+                 , SUM(A.CONV_POINT) CONV_POINT
+                 --, SUM(   5000 * NVL(A.QTY_5,  0) 
+                 --     +  10000 * NVL(A.QTY_10, 0) 
+                 --     +  50000 * NVL(A.QTY_50, 0) 
+                 --     + 100000 * NVL(A.QTY_100,0)
+                 --     ) GIFTCD_AMT
+                 , SUM(CONV_GIFT_AMT) AS GIFTCD_AMT
+                 --, SUM(NVL(A.QTY_5,  0)) QTY_5
+                 --, SUM(NVL(A.QTY_10, 0)) QTY_10
+                 --, SUM(NVL(A.QTY_50, 0)) QTY_50
+                 --, SUM(NVL(A.QTY_100,0)) QTY_100
+                 , SUM(NVL(C.QTY_5,  0)) QTY_5
+                 , SUM(NVL(C.QTY_10, 0)) QTY_10
+                 , SUM(NVL(C.QTY_50, 0)) QTY_50
+                 , SUM(NVL(C.QTY_100,0)) QTY_100
+              FROM DCS.DO_GIFTCDOKCSHBG A
+                 , DCS.DB_BRANCH B
+	             , ( SELECT SUM(QTY_5) AS QTY_5
+						 ,	SUM(QTY_10) AS QTY_10
+						 ,	SUM(QTY_50) AS QTY_50
+						 ,	SUM(QTY_100) AS QTY_100
+						FROM (
+								SELECT CASE WHEN B.GIFTCERT_AMT = 5000 THEN 1 ELSE 0 END QTY_5
+								     , CASE WHEN B.GIFTCERT_AMT = 10000 THEN 1 ELSE 0 END QTY_10
+								     , CASE WHEN B.GIFTCERT_AMT = 50000 THEN 1  ELSE 0 END QTY_50
+								     , CASE WHEN B.GIFTCERT_AMT = 100000 THEN 1 ELSE 0 END QTY_100
+								FROM DCS.DO_GIFTCDOKCSHBG_DTL A
+								   , MSS.MG_GIFTMST B
+								WHERE A.PROC_DT BETWEEN ? AND ?
+								  AND A.GIFTCARD_NO = B.GIFTCARD_NO
+						     )
+					) C                 
+             WHERE A.BRCH_ID  = B.BRCH_ID
+               AND A.PROC_DT BETWEEN ? AND ? 
+             GROUP BY A.BRCH_ID, B.BRCH_NAME
+        ]]>        
+    </query>  
+    
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT A.BRCH_ID
+                 , B.BRCH_NAME
+                 , A.PROC_DT
+                 , SUM(A.CONV_POINT) CONV_POINT
+                 --, SUM(   5000 * NVL(A.QTY_5,  0)
+                 --     +  10000 * NVL(A.QTY_10, 0)
+                 --     +  50000 * NVL(A.QTY_50, 0)
+                 --     + 100000 * NVL(A.QTY_100,0)
+                 --     ) GIFTCD_AMT
+                 , SUM(CONV_GIFT_AMT) AS CONV_GIFTCD_AMT
+                 --, SUM(NVL(A.QTY_5,  0)) QTY_5
+                 --, SUM(NVL(A.QTY_10, 0)) QTY_10
+                 --, SUM(NVL(A.QTY_50, 0)) QTY_50
+                 --, SUM(NVL(A.QTY_100,0)) QTY_100
+                 , SUM(   5000 * NVL(C.QTY_5,  0)
+                      +  10000 * NVL(C.QTY_10, 0)
+                      +  50000 * NVL(C.QTY_50, 0)
+                      + 100000 * NVL(C.QTY_100,0)
+                      ) GIFTCD_DTL_AMT
+
+                 , SUM(CONV_GIFT_AMT)-
+                  SUM(   5000 * NVL(C.QTY_5,  0)
+                      +  10000 * NVL(C.QTY_10, 0)
+                      +  50000 * NVL(C.QTY_50, 0)
+                      + 100000 * NVL(C.QTY_100,0)
+                      ) ERR_GIFT_AMT
+                 , SUM(NVL(C.QTY_5,  0)) QTY_5
+                 , SUM(NVL(C.QTY_10, 0)) QTY_10
+                 , SUM(NVL(C.QTY_50, 0)) QTY_50
+                 , SUM(NVL(C.QTY_100,0)) QTY_100
+              FROM (SELECT BRCH_ID
+                        , PROC_DT
+						, SUM(CONV_POINT) AS CONV_POINT
+						, SUM(CONV_GIFT_AMT) AS CONV_GIFT_AMT
+					FROM DCS.DO_GIFTCDOKCSHBG
+					WHERE PROC_DT BETWEEN ? AND ?
+					GROUP BY BRCH_ID, PROC_DT) A
+                 , DCS.DB_BRANCH B
+	             , ( SELECT BRCH_ID
+	                     ,  PROC_DT
+	                     ,  SUM(QTY_5) AS QTY_5
+						 ,	SUM(QTY_10) AS QTY_10
+						 ,	SUM(QTY_50) AS QTY_50
+						 ,	SUM(QTY_100) AS QTY_100
+						FROM (
+								SELECT C.BRCH_ID
+								     , C.CARD_NO
+								     , C.PROC_DT
+								     , NVL(MSS.FN_GET_GIFTCARD_PRC(A.GIFTCARD_NO),0)
+								     , CASE WHEN MSS.FN_GET_GIFTCARD_PRC(A.GIFTCARD_NO) = 5000 THEN 1 ELSE 0 END QTY_5
+								     , CASE WHEN MSS.FN_GET_GIFTCARD_PRC(A.GIFTCARD_NO) = 10000 THEN 1 ELSE 0 END QTY_10
+								     , CASE WHEN MSS.FN_GET_GIFTCARD_PRC(A.GIFTCARD_NO) = 50000 THEN 1  ELSE 0 END QTY_50
+								     , CASE WHEN MSS.FN_GET_GIFTCARD_PRC(A.GIFTCARD_NO) = 100000 THEN 1 ELSE 0 END QTY_100
+								FROM DCS.DO_GIFTCDOKCSHBG_DTL A
+								   --, MSS.MG_GIFTMST B
+								   , DCS.DO_GIFTCDOKCSHBG C
+								WHERE C.PROC_DT BETWEEN ? AND ?
+								  --AND A.GIFTCARD_NO = B.GIFTCARD_NO
+								  AND C.PROC_DT = A.PROC_DT(+)
+								  AND C.CARD_NO = A.CARD_NO(+)
+								  AND C.SEQ_NO = A.SEQ_NO(+)
+						     )
+						GROUP BY BRCH_ID, PROC_DT
+					) C
+             WHERE A.BRCH_ID  = B.BRCH_ID
+               AND A.BRCH_ID  = C.BRCH_ID
+               AND A.PROC_DT  = C.PROC_DT
+             GROUP BY A.BRCH_ID, B.BRCH_NAME, A.PROC_DT
+             ORDER BY A.BRCH_ID, B.BRCH_NAME, A.PROC_DT
+        ]]>        
+    </query>      
+    
+</service>

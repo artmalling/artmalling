@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- 
+ * 시스템명 : 영업지원 > 사은행사관리 > 사은품지급 > 사은행사 상품권 교환
+ * 작  성  일  : 2016.08.22
+ * 작  성  자  : 강연식
+ * 수  정  자  : 
+ * 파  일  명  : mcae6100.jsp
+ * 버         전  : 1.0 (버전은 1.0부터 시작하며 0.1씩 증가)
+ * 개         요  : 
+ * 이         력  :
+ -->
+<service name="/mcae610.mc">
+
+    <!-- 교환 등록 -->
+    <gauce name="H_MASTER"> 
+        <column colName="EXCH_TYPE"   colType="TB_STRING"  size="16"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EXCH_CNT"    colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권 번호조회 -->
+	<gauce name="H_GIFTCARD_NO_CHK">
+		<column	colName="GIFTCARD_NO"		colType="TB_STRING"  size="18"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="GIFTCERT_AMT"		colType="TB_DECIMAL" size="9"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+	</gauce>
+
+    
+    <!-- 당일교환 List -->
+    <gauce name="H_TODAY">
+    	<column colName="CHECK_CD"   colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    	<column colName="STR_CD"     colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EXCH_DT"    colType="TB_STRING"   size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EXCH_TYPE"  colType="TB_STRING"   size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EXCH_PLACE" colType="TB_STRING"   size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EXCH_CNT"   colType="TB_DECIMAL"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="KEY_DATA"   colType="TB_STRING"   size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"     colType="TB_DECIMAL"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    
+    <!-- 교환횟수체크 -->
+    <gauce name="H_CNT"> 
+        <column colName="EXCH_YN"  	colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUR_CNT"  	colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRADE_YN"  colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MAX_CNT"  	colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>    
+
+    <!-- 회원정보 -->
+    <gauce name="H_CUSTDETAIL"> 
+        <column colName="CUST_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"         colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_ADDR"     colType="TB_STRING"  size="406" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT"         colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OCCURS_POINT"  colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="EMAIL"        colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRADE_NAME"    colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH1"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH2"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH3"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"       colType="TB_STRING"  size="64"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_TYPE_NM"  colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_POINT"  	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>    
+    
+    <!-- 교환횟수체크 -->
+    <query name="SEL_CNT">        
+        <![CDATA[
+            SELECT
+			    CASE WHEN CUST_CUR >= MAX_CNT THEN
+			        'N' ELSE 'Y' END EXCH_YN, 
+			    MAX_CNT-CUST_CUR CUR_CNT,
+			    CASE WHEN DCS.F_GET_CARD_TYPE(DCS.F_ENCRYPTEDSTR_M(?)) IN                
+                    ('20','30','40') THEN
+                    'N' ELSE 'Y' END GRADE_YN,
+			        MAX_CNT
+			FROM
+			    (SELECT
+			        NVL(
+			        	(SELECT
+				            COUNT(CUST_ID) CNT
+				        FROM
+				            MSS.DO_CUST_CLEAN A
+				        WHERE '01' = ?
+				        AND A.CUST_ID = (SELECT CUST_ID FROM DCS.DM_CARD WHERE CARD_NO = DCS.F_ENCRYPTEDSTR_M(?))),0) CUST_CUR,
+				        1 MAX_CNT
+				    FROM DUAL)
+
+        ]]>        
+    </query>     
+    
+    <!-- 금일교환 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT
+            	'F' CHECK_CD,
+			    A.STR_CD,
+			    TO_CHAR(A.REG_DATE,'YYYY-MM-DD HH24:MI:SS') EXCH_DT,
+			    COM.FN_GET_COMM_NAME('D','D123',A.EXCH_TYPE) EXCH_TYPE,
+			    (SELECT USER_NAME FROM COM.TC_USRMST Z WHERE Z.USER_ID = A.REG_ID) EXCH_PLACE,
+			    A.EXCH_CNT,
+			    STR_CD||EXCH_DT||EXCH_TYPE KEY_DATA,SEQ_NO
+			FROM
+			    DCS.DO_VIP_GIFT A
+			WHERE 
+			    A.STR_CD  = ?
+			AND A.EXCH_DT = TO_CHAR(SYSDATE,'YYYYMMDD')
+			AND A.CUST_ID = (SELECT CUST_ID FROM DCS.DM_CARD WHERE CARD_NO = DCS.F_ENCRYPTEDSTR_M(?))
+
+        ]]>        
+    </query>  
+    
+    <!-- 지급등록 -->
+    <query name="INS_MST">        
+        <![CDATA[
+            INSERT INTO MSS.DO_CUST_CLEAN A
+	        (EXCH_DT,
+	         SEQ_NO,
+	         CUST_ID,
+	         CARD_NO,
+	         GIFTCARD_NO,
+	         REG_DATE,
+	         REG_ID)
+	         VALUES
+	         (TO_CHAR(SYSDATE,'YYYYMMDD'),
+	         NVL((SELECT MAX(SEQ_NO)+1 FROM MSS.DO_CUST_CLEAN Z WHERE Z.EXCH_DT = TO_CHAR(SYSDATE,'YYYYMMDD')),1),
+	         (SELECT CUST_ID FROM DCS.DM_CARD WHERE CARD_NO = DCS.F_ENCRYPTEDSTR_M(?)),
+	         DCS.F_ENCRYPTEDSTR_M(?),
+	         ?,
+	         SYSDATE,
+	         ?)
+        ]]>        
+    </query>  
+    
+    <!-- 지급삭제 -->
+    <query name="DEL_MST">        
+        <![CDATA[
+            UPDATE DCS.DO_VIP_GIFT A
+			SET STR_CD = '99',
+				SEQ_NO = NVL((SELECT MAX(SEQ_NO)+1 
+							FROM DCS.DO_VIP_GIFT Z WHERE Z.STR_CD = ? AND Z.EXCH_DT = TO_CHAR(SYSDATE,'YYYYMMDD') AND Z.EXCH_TYPE = A.EXCH_TYPE),1),
+				MOD_DATE = SYSDATE,
+				MOD_ID = ?
+			WHERE STR_CD||EXCH_DT||EXCH_TYPE = ? AND SEQ_NO = ?
+        ]]>        
+    </query>  
+        
+    <!-- 회원정보 조회 -->
+    <query name="SEL_CUSTINFO">        
+        <![CDATA[
+            SELECT A.CUST_NAME
+                 , DCS.F_DECRYPTEDSTR_M(A.HOME_PH1)||'-'||DCS.F_DECRYPTEDSTR_M(A.HOME_PH2)||'-'||DCS.F_DECRYPTEDSTR_M(A.HOME_PH3) HOME_PH
+                 , DCS.F_DECRYPTEDSTR_M(A.MOBILE_PH1)||'-'||DCS.F_DECRYPTEDSTR_M(A.MOBILE_PH2)||'-'||DCS.F_DECRYPTEDSTR_M(A.MOBILE_PH3) MOBILE_PH
+                 , DCS.F_DECRYPTEDSTR_M(A.SS_NO) SS_NO
+                 , DECODE(NULL, '', A.HOME_ZIP_CD1 ||' '|| A.HOME_ADDR1 ||' '|| A.HOME_ADDR2) HOME_ADDR
+                 , C.POINT
+                 , C.OCCURS_POINT
+                 , DCS.F_DECRYPTEDSTR_M(A.EMAIL1)||'@'||DCS.F_DECRYPTEDSTR_M(A.EMAIL2) EMAIL
+
+               
+                  ,COM.FN_GET_COMM_NAME('D', 'D011', (SELECT DECODE(COUNT(X.CUST_GRADE),0,'N', MAX(X.CUST_GRADE)) CUST_GRADE
+                       FROM DCS.V_DO_CUST_GRADE_CURR X
+                      WHERE X.BRCH_ID  = A.ENTR_PATH_CD
+                        AND X.CUST_ID  = A.CUST_ID
+                   )) GRADE_NAME
+               
+                 , A.OFFI_PH1
+                 , A.OFFI_PH2
+                 , A.OFFI_PH3
+                 , DCS.F_DECRYPTEDSTR_M((SELECT MAX(CARD_NO) KEEP(DENSE_RANK FIRST ORDER BY MOD_DATE DESC) AS CARD_NO
+                      FROM DCS.DM_CARD
+                     WHERE CUST_ID      = A.CUST_ID
+                       AND CARD_STAT_CD = '0')) AS CARD_NO
+           
+                , COM.FN_GET_COMM_NAME('D', 'D115', (SELECT MAX(Z.CUST_TYPE)
+                                              FROM DCS.V_DO_CUST_TYPE_CURR Z
+                                             WHERE Z.CUST_ID = A.CUST_ID
+                                               AND Z.BRCH_ID = A.ENTR_PATH_CD
+                                            )) CUST_TYPE_NM 
+           
+           
+                                 , C.POINT + C.OCCURS_POINT AS SUM_POINT --2012.08.17 강진 추가
+              FROM DCS.DM_CUSTOMER A
+                 , DCS.DO_CUST_TPOINT C
+             WHERE 1=1
+               AND A.CUST_ID = C.CUST_ID
+               AND A.COMP_PERS_FLAG = ?
+               AND A.CUST_ID = ( 
+                                 SELECT UNIQUE A.CUST_ID 
+                                   FROM DCS.DM_CARD A
+                                      , DCS.DM_CUSTOMER B
+                                  WHERE A.CUST_ID  =  B.CUST_ID
+                                  AND A.CARD_NO = DCS.F_GET_POCARD_NO(DCS.F_ENCRYPTEDSTR_M(?))
+                                  )  
+        ]]>        
+    </query>    
+</service>

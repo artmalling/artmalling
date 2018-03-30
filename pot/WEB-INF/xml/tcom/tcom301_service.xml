@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : 
+ * 작 성 일 : 2010.06.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  다운로드로그
+ -->
+<service name="/tcom301.tc"> 
+    <gauce name="H_SEL_CODE">   
+        <column colName="CODE"     colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" />       
+        <column colName="NAME"     colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" />
+    </gauce> 
+     
+    <query name="SEL_LCODE">
+        <![CDATA[ 
+               SELECT LCODE AS CODE
+                    , LNAME AS NAME
+                 FROM COM.TC_PGMLMENU
+                WHERE SUB_SYSTEM = ?
+                ORDER BY NVL(SEQ,0), LCODE
+        ]]>    
+    </query>
+    <query name="SEL_MCODE">
+        <![CDATA[ 
+               SELECT MCODE AS CODE
+                    , MNAME AS NAME
+                 FROM COM.TC_PGMMMENU
+                WHERE LCODE   = ? 
+                ORDER BY NVL(SEQ,0), MCODE
+        ]]>    
+    </query>
+    <query name="SEL_SCODE">
+        <![CDATA[ 
+               SELECT SCODE AS CODE
+                    , SNAME AS NAME
+                 FROM COM.TC_PGMSMENU
+                WHERE LCODE   = ? 
+                  AND MCODE   = ?
+                ORDER BY NVL(SEQ,0), SCODE
+        ]]>    
+    </query> 
+    
+    <gauce name="H_SEL_LIST">   
+        <column colName="SUB_SYSTEM"	colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" />       
+        <column colName="LNAME"     	colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="MNAME"     	colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="PID"     		colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="PNAME1"     	colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="USER_ID"     	colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="USER_NAME"     colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="DOWN_DATE"     colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="DOWN_COND"     colType="TB_STRING" size="1000"  dec="0" keyType="TB_NORMAL" Mode="" />
+    </gauce> 
+    
+	<!-- 로그리스트조회 -->
+    <query name="SEL_LOG_LIST">        
+        <![CDATA[
+			SELECT COM.FN_GET_COMM_NAME('D','TC01', C.SUB_SYSTEM) SUB_SYSTEM
+			     , C.LNAME
+			     , C.MNAME
+			     , A.PID
+			     , B.PNAME1 
+			     , A.USER_ID
+			     , COM.FN_GET_USER_NAME(A.USER_ID) AS USER_NAME
+			     , TO_CHAR(TO_DATE(A.DOWN_DATE,'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS') AS DOWN_DATE
+			     , A.DOWN_COND
+			  FROM COM.TC_DOWNLOG A
+			     , COM.TC_PGMMST  B
+			     , (
+			           SELECT A.LCODE, C.LNAME , C.SUB_SYSTEM
+			                , A.MCODE, B.MNAME
+			                , A.SCODE, A.SNAME
+			             FROM COM.TC_PGMSMENU A
+			                , COM.TC_PGMMMENU B
+			                , COM.TC_PGMLMENU C
+			            WHERE A.LCODE = C.LCODE
+			              AND A.LCODE = B.LCODE
+			              AND A.MCODE = B.MCODE
+			        )C
+			 WHERE A.PID   = B.PID
+			   AND B.SCODE = C.SCODE
+        ]]>        
+    </query> 
+     
+    <query name="SEL_LOG_WHERE_SUB_SYSTEM">
+        <![CDATA[ 
+               AND C.SUB_SYSTEM      = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_LOG_WHERE_LCODE">
+        <![CDATA[ 
+               AND C.LCODE      = ?
+        ]]>    
+    </query>
+    <query name="SEL_LOG_WHERE_MCODE">
+        <![CDATA[
+               AND C.MCODE      = ?
+        ]]>    
+    </query>
+    <query name="SEL_LOG_WHERE_SCODE">
+        <![CDATA[
+               AND C.SCODE      = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_LOG_WHERE_DOWN_DATE">
+        <![CDATA[
+               AND A.DOWN_DATE BETWEEN  ? ||'0' AND ? ||'9'
+        ]]>    
+    </query>
+    
+    <query name="SEL_LOG_WHERE_USER_CD">
+        <![CDATA[
+               AND ( A.USER_ID LIKE ? || '%' OR COM.FN_GET_USER_NAME(A.USER_ID) LIKE '%' || ? || '%') 
+        ]]>    
+    </query>
+    
+    <query name="SEL_LOG_ORDER">
+        <![CDATA[
+			 ORDER BY C.SUB_SYSTEM, C.LCODE, C.MCODE, B.PID, A.USER_ID, A.DOWN_DATE 
+        ]]>    
+    </query>
+</service>

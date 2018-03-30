@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.08.05
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상품권 재사용내역 조회
+ -->
+<service name="/mgif313.mg">
+     <!-- 상품권 재사용내역 마스터  조회  -->
+    <gauce name="H_SEL_MG_GIFTREUSE_MASTER"> 
+		<column colName="DRAWL_STR"       colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REG_DT"          colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_TYPE_CD"    colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_TYPE_NAME"  colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_AMT_TYPE"   colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_AMT_NM"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_QTY"        colType="TB_DECIMAL" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_AMT"        colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 상품권 재사용내역 디테일  조회  -->
+    <gauce name="H_SEL_MG_GIFTREUSE_DETAIL"> 
+		<column colName="DRAWL_STR"       colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REG_DT"          colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"    colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME"  colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"   colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NM"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFTCARD_NO"     colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+	<!-- 지점 입고내역 마스터  조회 -->
+	 <query name="SEL_MG_GIFTREUSE_MASTER">
+	     <![CDATA[
+			SELECT GUSE.DRAWL_STR
+			     , GUSE.REG_DT
+			     , GUSE.GIFT_TYPE_CD
+			     , GTPM.GIFT_TYPE_NAME
+			     , GUSE.GIFT_AMT_TYPE
+			     , GAMT.GIFT_AMT_NAME
+			     , COUNT(1) AS GIFT_QTY
+			     , SUM(GIFTCERT_AMT) AS GIFT_AMT
+              FROM MSS.MG_GIFTREUSE GUSE
+                 , MSS.MG_GIFTTPMST GTPM
+                 , MSS.MG_GIFTAMTMST GAMT
+             WHERE GUSE.GIFT_TYPE_CD = GTPM.GIFT_TYPE_CD
+               AND GUSE.GIFT_TYPE_CD = GAMT.GIFT_TYPE_CD
+               AND GUSE.ISSUE_TYPE = GAMT.ISSUE_TYPE
+               AND GUSE.GIFT_AMT_TYPE = GAMT.GIFT_AMT_TYPE
+			   AND GUSE.GIFT_AMT_TYPE LIKE ? ||'%'
+			   AND GUSE.GIFT_TYPE_CD LIKE ? ||'%'
+			   AND GUSE.GIFTCARD_NO LIKE ? ||'%'
+			   AND GUSE.REG_DT BETWEEN ? AND ?
+			   AND GUSE.DRAWL_STR = ?
+			 GROUP BY GUSE.DRAWL_STR
+			     , GUSE.REG_DT
+			     , GUSE.GIFT_TYPE_CD
+			     , GTPM.GIFT_TYPE_NAME
+			     , GUSE.GIFT_AMT_TYPE
+			     , GAMT.GIFT_AMT_NAME
+	     ]]>
+	 </query>  
+	   
+	   <!-- 지점 입고내역 디테일  조회 -->
+     <query name="SEL_MG_GIFTREUSE_DETAIL">
+         <![CDATA[
+			SELECT GUSE.DRAWL_STR
+                 , GUSE.REG_DT
+                 , GUSE.GIFT_TYPE_CD
+                 , GTPM.GIFT_TYPE_NAME
+                 , GUSE.GIFT_AMT_TYPE
+                 , GAMT.GIFT_AMT_NAME
+			     , GUSE.GIFTCARD_NO
+              FROM MSS.MG_GIFTREUSE GUSE
+                 , MSS.MG_GIFTTPMST GTPM
+                 , MSS.MG_GIFTAMTMST GAMT
+             WHERE GUSE.GIFT_TYPE_CD = GTPM.GIFT_TYPE_CD
+               AND GUSE.GIFT_TYPE_CD = GAMT.GIFT_TYPE_CD
+               AND GUSE.ISSUE_TYPE = GAMT.ISSUE_TYPE
+               AND GUSE.GIFT_AMT_TYPE = GAMT.GIFT_AMT_TYPE
+			   AND GUSE.GIFT_AMT_TYPE LIKE ? ||'%'
+			   AND GUSE.GIFT_TYPE_CD LIKE ? ||'%'
+			   AND GUSE.GIFTCARD_NO LIKE ? ||'%'
+			   AND GUSE.REG_DT BETWEEN ? AND ?
+			   AND GUSE.DRAWL_STR = ?
+         ]]>
+     </query>        
+</service>

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이동현
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2012.05.07
+ * 변 경 일 : 
+ * 변경내용: 
+ * 개     요 :  업체브랜드관리
+ -->
+<service name="/pcod211.pc">
+
+    <gauce name="H_SEL_MASTER"> 
+       <column colName="BRAND_CD"     colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_NM"     colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <!-- 20120507 * DHL 주석처리 STR -->
+        <!-- 
+        <column colName="BRAND_FLAG01" colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_FLAG02" colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_FLAG03" colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_FLAG04" colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_FLAG05" colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_FLAG06" colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_FLAG07" colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_FLAG08" colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_FLAG09" colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_FLAG10" colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+         -->
+         <!-- 20120507 * DHL 주석처리 END -->
+    </gauce>
+ 
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 조회 쿼리  -->
+    <query name="SEL_BRAND_MST">        
+        <![CDATA[
+             SELECT  A.BRAND_CD   
+                    ,A.BRAND_NM   
+              FROM  DPS.PC_BRDMST A
+             WHERE  A.BRAND_CD LIKE ? || '%'
+               AND  A.BRAND_NM lIKE ? || '%'
+        ]]>        
+    </query>
+  <!-- 점별 행사장 신규 입력  --> 
+    <query name="INS_BRDMST">    
+        <![CDATA[
+            INSERT INTO DPS.PC_BRDMST(  BRAND_CD       
+                                        , BRAND_NM     
+                                        , REG_DATE           
+                                        , REG_ID              
+                                        , MOD_DATE
+                                        , MOD_ID
+                                         )
+                                   VALUES((SELECT LPAD( NVL(MAX(TO_NUMBER( BRAND_CD )), 10000) + 1 ,  5, '0')
+                                             FROM DPS.PC_BRDMST
+                                           )
+                                        , ?         
+                                        , SYSDATE   
+                                        , ?        
+                                        , SYSDATE  
+                                        , ?                                 
+                                         )  
+        ]]>                                
+    </query>
+    <!-- 점별 행사장 수정 입력  -->
+    <query name="UPD_BRDMST">
+        <![CDATA[
+            UPDATE DPS.PC_BRDMST
+		       SET    BRAND_NM     = ?
+                    , MOD_DATE     = SYSDATE
+                    , MOD_ID       = ? 
+             WHERE BRAND_CD        = ?
+        ]]>
+    </query> 
+    <!-- 삭제  -->
+    <query name="DEL_BRDMST">
+        <![CDATA[
+            DELETE DPS.PC_BRDMST
+             WHERE BRAND_CD          = ?
+         ]]>
+    </query>
+    
+    <!-- 브랜드코드 존재 여부 체크 -->
+    <query name="SEL_BRDCD_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT 
+              FROM DPS.PC_PBNMST 
+             WHERE BRAND_CD = ?
+         ]]>
+    </query>
+    
+    <!-- 20120507 * DHL 수정 _OLD 로 백업 STR -->
+    <!-- 
+    <query name="SEL_BRAND_MST_OLD">        
+        <![CDATA[
+             SELECT  A.BRAND_CD   
+                    ,A.BRAND_NM   
+                    ,DECODE(A.BRAND_FLAG01,'1','T','F')
+                    ,DECODE(A.BRAND_FLAG02,'1','T','F')
+                    ,DECODE(A.BRAND_FLAG03,'1','T','F')
+                    ,DECODE(A.BRAND_FLAG04,'1','T','F')
+                    ,DECODE(A.BRAND_FLAG05,'1','T','F')
+                    ,DECODE(A.BRAND_FLAG06,'1','T','F')
+                    ,DECODE(A.BRAND_FLAG07,'1','T','F')
+                    ,DECODE(A.BRAND_FLAG08,'1','T','F')
+                    ,DECODE(A.BRAND_FLAG09,'1','T','F')
+                    ,DECODE(A.BRAND_FLAG10,'1','T','F')
+              FROM  DPS.PC_BRDMST A
+             WHERE  A.BRAND_CD LIKE ? || '%'
+               AND  A.BRAND_NM lIKE ? || '%'
+        ]]>        
+    </query>
+      <query name="SEL_BR_01">
+        <![CDATA[
+           AND  BRAND_FLAG01   = '1'
+        ]]>
+    </query>
+    <query name="SEL_BR_02">
+        <![CDATA[
+           AND  BRAND_FLAG02   = '1'
+        ]]>
+    </query>
+    <query name="SEL_BR_03">
+        <![CDATA[
+           AND  BRAND_FLAG03   = '1'
+        ]]>
+    </query>
+    <query name="SEL_BR_04">
+        <![CDATA[
+           AND  BRAND_FLAG04   = '1'
+        ]]>
+    </query>
+    <query name="SEL_BR_05">
+        <![CDATA[
+           AND  BRAND_FLAG05   = '1'
+        ]]>
+    </query>
+    <query name="SEL_BR_06">
+        <![CDATA[
+           AND  BRAND_FLAG06   = '1'
+        ]]>
+    </query>
+    <query name="SEL_BR_07">
+        <![CDATA[
+           AND  BRAND_FLAG07   = '1'
+        ]]>
+    </query>
+    <query name="SEL_BR_08">
+        <![CDATA[
+           AND  BRAND_FLAG08   = '1'
+        ]]>
+    </query>
+    <query name="SEL_BR_09">
+        <![CDATA[
+           AND  BRAND_FLAG09   = '1'
+        ]]>
+    </query>
+    <query name="SEL_BR_10">
+        <![CDATA[
+           AND  BRAND_FLAG10   = '1'
+        ]]>
+    </query>
+    -->
+  <!-- 점별 행사장 신규 입력  --> 
+    <!-- 
+    <query name="INS_BRDMST_OLD">    
+        <![CDATA[
+            INSERT INTO DPS.PC_BRDMST(  BRAND_CD       
+                                        , BRAND_NM     
+                                        , BRAND_FLAG01   
+                                        , BRAND_FLAG02      
+                                        , BRAND_FLAG03
+                                        , BRAND_FLAG04    
+                                        , BRAND_FLAG05
+                                        , BRAND_FLAG06
+                                        , BRAND_FLAG07         
+                                        , BRAND_FLAG08         
+                                        , BRAND_FLAG09         
+                                        , BRAND_FLAG10         
+                                        , REG_DATE           
+                                        , REG_ID              
+                                        , MOD_DATE
+                                        , MOD_ID
+                                         )
+                                   VALUES((SELECT LPAD( NVL(MAX(TO_NUMBER( BRAND_CD )), 10000) + 1 ,  5, '0')
+                                             FROM DPS.PC_BRDMST
+                                           )
+                                        , ?         
+                                        , DECODE(?,'T',1,0)        
+                                        , DECODE(?,'T',1,0)        
+                                        , DECODE(?,'T',1,0)       
+                                        , DECODE(?,'T',1,0) 
+                                        , DECODE(?,'T',1,0)        
+                                        , DECODE(?,'T',1,0)       
+                                        , DECODE(?,'T',1,0)         
+                                        , DECODE(?,'T',1,0)  
+                                        , DECODE(?,'T',1,0)  
+                                        , DECODE(?,'T',1,0)                              
+                                        , SYSDATE   
+                                        , ?        
+                                        , SYSDATE  
+                                        , ?                                 
+                                         )  
+        ]]>                                
+    </query>
+	 -->
+    <!-- 점별 행사장 수정 입력  -->
+    <!-- 
+    <query name="UPD_BRDMST_OLD">
+        <![CDATA[
+            UPDATE DPS.PC_BRDMST
+		       SET    BRAND_NM     = ?
+                    , BRAND_FLAG01 = DECODE(?,'T',1,0)  
+                    , BRAND_FLAG02 = DECODE(?,'T',1,0)     
+                    , BRAND_FLAG03 = DECODE(?,'T',1,0)
+                    , BRAND_FLAG04 = DECODE(?,'T',1,0)   
+                    , BRAND_FLAG05 = DECODE(?,'T',1,0)
+                    , BRAND_FLAG06 = DECODE(?,'T',1,0)
+                    , BRAND_FLAG07 = DECODE(?,'T',1,0)        
+                    , BRAND_FLAG08 = DECODE(?,'T',1,0)        
+                    , BRAND_FLAG09 = DECODE(?,'T',1,0)        
+                    , BRAND_FLAG10 = DECODE(?,'T',1,0)        
+                    , MOD_DATE     = SYSDATE
+                    , MOD_ID       = ? 
+             WHERE BRAND_CD        = ?
+        ]]>
+    </query> 
+     -->
+    <!-- 20120507 * DHL 수정 _OLD 로 백업 END -->
+     
+
+</service>

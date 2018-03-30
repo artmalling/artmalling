@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  대금지불대장현황 조회/출력
+ -->
+<service name="/ppay309.pp">
+
+    <!-- 세금계산서 생성 마스터  리스트 -->
+    <gauce name="H_MASTER"> 
+        <column colName="GUBUN"          colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_CD"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NO"        colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"      colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_TOT_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_AMT"         colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUP_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAT_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_GUBUN"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_DT"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEBIT_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_DEBIT_AMT"   colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BTIME_HOLD_TAMT" colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+  
+    </gauce>
+    
+    <!-- 지불일자조회 (콤보) -->
+    <gauce name="H_PAY_DT">     
+    <column colName="NAME"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CODE"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--  지불일자조회(콤보)  -->
+    <query name="SEL_PAY_DT">
+        <![CDATA[
+            SELECT '전체'        AS NAME 
+                 , '%'           AS CODE
+             FROM DUAL
+           UNION ALL
+		    SELECT DISTINCT REAL_PAY_DT       AS NAME
+                 , REAL_PAY_DT                AS CODE 
+              FROM DPS.PP_BILLMST
+             WHERE STR_CD  = ?
+               AND PAY_YM  = ?
+               AND PAY_CYC = ?
+               AND PAY_CNT = ?
+             ORDER BY CODE
+        ]]>
+    </query>
+    
+    <!--  대금지불대장현황 조회  -->
+<query name="SEL_MASTER">
+        <![CDATA[
+        SELECT GUBUN                                      /* 구분 */
+             , A.VEN_CD                                     /* 협력사 */
+             , COMP_NO                                    /* 사업자 */
+         , VEN_NAME AS VEN_NM                         /* 협력사명 */
+         , PUMBUN_CD
+         , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NM
+         , J_TOT_AMT                                  /* 전월이월액 */
+         , TOT_AMT                                    /* 당월지불대상액 */
+         , IN_AMT                                     /* 매입금액(공급가 + 부가세) */
+         , SUP_AMT                                    /* 공급가액 */
+         , VAT_AMT                                    /* 부가세액 */
+         , PAY_GUBUN                                  /* 지불내역구분 */
+         , PAY_DT                                     /* 지불일자 */
+         , DEBIT_AMT                                  /* 지불액 */
+         , PAY_AMT                                    /* 당월잔액 */
+         , SUM_DEBIT_AMT AS SUM_DEBIT_AMT             /* 지불액 SUM */
+         , BTIME_HOLD_TAMT
+      FROM (
+            /* 이월, 매입, 지출 합계 */
+            SELECT '0' AS GUBUN
+                 , VEN_CD
+                 , PUMBUN_CD
+                 , BIZ_TYPE
+                 , SUM(J_TOT_AMT) AS J_TOT_AMT
+                 , CASE WHEN BIZ_TYPE = '1' THEN SUM(TOT_AMT)
+                        ELSE MAX(NTIME_PAY_AMT) END AS TOT_AMT
+                 , SUM(SUP_AMT) + SUM(VAT_AMT) AS IN_AMT
+                 , SUM(SUP_AMT)   AS SUP_AMT
+                 , SUM(VAT_AMT)   AS VAT_AMT
+                 , ''             AS PAY_GUBUN
+                 , MAX(PAY_DT)    AS PAY_DT
+                 , SUM(DEBIT_AMT) AS DEBIT_AMT
+                 , CASE WHEN BIZ_TYPE = '1' THEN SUM(J_TOT_AMT) + SUM(TOT_AMT) + SUM(GAP_VAT_AMT) - SUM(PAY_AMT) - SUM(DEBIT_AMT) + MAX(BTIME_HOLD_TAMT)
+                        WHEN BIZ_TYPE = '2' THEN SUM(J_TOT_AMT) + SUM(TOT_AMT) + SUM(GAP_VAT_AMT) - SUM(PAY_AMT) - SUM(DEBIT_AMT) + MAX(BTIME_HOLD_TAMT)
+                        ELSE SUM(J_TOT_AMT) + MAX(NTIME_PAY_AMT) - SUM(PAY_AMT) - SUM(DEBIT_AMT) 
+                   END  AS PAY_AMT
+                 , MAX(BTIME_HOLD_TAMT) AS BTIME_HOLD_TAMT
+                 , SUM(PAY_AMT) + SUM(DEBIT_AMT) - MAX(BTIME_HOLD_TAMT) AS SUM_DEBIT_AMT
+              FROM (
+                    SELECT BLLD.VEN_CD
+                    	 , BLLD.PUMBUN_CD
+                         , SVEN.BIZ_TYPE
+                         , SUBSTR(BLLD.SLIP_NO, 0,2)
+                         , BLLM.BTIME_HOLD_TAMT AS BTIME_HOLD_TAMT
+                         , CASE WHEN SUBSTR(BLLD.SLIP_NO, 0,2) = '91' THEN TOT_AMT 
+                           ELSE 0 END AS J_TOT_AMT
+                         , CASE WHEN  SUBSTR(BLLD.SLIP_NO, 0,2) <> '91'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '92'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '93'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '94'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '95' 
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '99'
+                                 THEN BLLD.TOT_AMT 
+                           ELSE 0 END AS TOT_AMT
+                         , CASE WHEN SVEN.BIZ_TYPE <> '1' AND SUBSTR(BLLD.SLIP_NO, 0,2) = '94' THEN BLLD.TOT_AMT 
+                                ELSE 0 END AS NTIME_PAY_AMT
+                         , CASE WHEN SUBSTR(BLLD.SLIP_NO, 0,2) = '99'
+                                 THEN BLLD.VAT_AMT 
+                           ELSE 0 END AS GAP_VAT_AMT 
+                         , CASE WHEN SUBSTR(BLLD.SLIP_NO, 0,2) <> '91'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '92'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '93'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '94'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '95' 
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '99'
+                                 THEN SUP_AMT 
+                           ELSE 0 END AS SUP_AMT 
+                         , CASE WHEN SUBSTR(BLLD.SLIP_NO, 0,2) <> '91'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '92'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '93'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '94'
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '95' 
+                                     AND SUBSTR(BLLD.SLIP_NO, 0,2) <> '99'
+                                 THEN BLLD.VAT_AMT 
+                           ELSE 0 END AS VAT_AMT 
+                         , '소계' AS PAY_DT
+                         , CASE WHEN SUBSTR(BLLD.SLIP_NO, 0,2) = '94' THEN BLLD.DEBIT_AMT 
+                           ELSE 0 END AS DEBIT_AMT
+                         , CASE WHEN SUBSTR(BLLD.SLIP_NO, 0,2) = '92'
+                                     OR SUBSTR(BLLD.SLIP_NO, 0,2) = '93'
+                                 THEN BLLD.DEBIT_AMT 
+                           ELSE 0 END AS PAY_AMT 
+                      FROM DPS.PP_BILLDTL BLLD
+                         , DPS.PP_BILLMST BLLM
+                         , DPS.PC_STRVENMST SVEN
+                     WHERE BLLD.STR_CD  = ?
+                       AND BLLD.PAY_YM  = ?
+                       AND BLLD.PAY_CYC = ?
+                       AND BLLD.PAY_CNT = ?
+                       AND BLLM.REAL_PAY_DT LIKE ? || '%'
+                       AND BLLD.VEN_CD  LIKE ? || '%'
+                       AND BLLD.PUMBUN_CD  LIKE ? || '%'
+                       AND BLLM.STR_CD = BLLD.STR_CD
+                       AND BLLM.PAY_YM = BLLD.PAY_YM
+                       AND BLLM.PAY_CYC =  BLLD.PAY_CYC
+                       AND BLLM.PAY_CNT = BLLD.PAY_CNT
+                       AND BLLM.VEN_CD  = BLLD.VEN_CD
+                       AND SVEN.STR_CD = BLLD.STR_CD
+                       AND SVEN.VEN_CD = BLLD.VEN_CD
+                   )
+              GROUP BY VEN_CD
+              		 , PUMBUN_CD
+                     , BIZ_TYPE
+               
+            UNION ALL
+             /* 세액차이액 부분  */
+            SELECT '1' AS GUBUN
+                 , BLLD.VEN_CD
+                 , BLLD.PUMBUN_CD
+                 , '' AS BIZ_TYPE
+                 , 0 AS J_TOT_AMT
+                 , SUM(DECODE(SVEN.BIZ_TYPE, '1', BLLD.TOT_AMT, 0 )) AS TOT_AMT
+                 , SUM(VAT_AMT) AS IN_AMT 
+                 , 0 AS SUP_AMT 
+                 , SUM(VAT_AMT) AS VAT_AMT 
+                 , '세액차이'     AS PAY_GUBUN
+                 , PAY_DT ||'-'|| SLIP_NO AS PAY_DT
+                 , SUM(DEBIT_AMT) AS DEBIT_AMT
+                 , 0 AS PAY_AMT 
+                 , 0 AS BTIME_HOLD_TAMT
+                 , 0 AS SUM_DEBIT_AMT
+              FROM DPS.PP_BILLDTL BLLD
+                 , DPS.PC_STRVENMST SVEN
+             WHERE BLLD.STR_CD  = ?
+               AND BLLD.PAY_YM  = ?
+               AND BLLD.PAY_CYC = ?
+               AND BLLD.PAY_CNT = ?
+               AND BLLD.PAY_DT  LIKE ? || '%'
+               AND BLLD.VEN_CD  LIKE ? || '%'
+               AND BLLD.PUMBUN_CD LIKE ? || '%'
+               AND SUBSTR(BLLD.SLIP_NO, 0,2) = '99'
+               AND SVEN.STR_CD = BLLD.STR_CD
+               AND SVEN.VEN_CD = BLLD.VEN_CD
+             GROUP BY BLLD.VEN_CD
+             		, BLLD.PUMBUN_CD
+                    , BLLD.PAY_DT
+                    , BLLD.SLIP_NO
+            UNION ALL           
+            /* 선급금 */
+            SELECT '2' AS GUBUN
+                 , VEN_CD
+                 , PUMBUN_CD
+                 , '' AS BIZ_TYPE
+                 , 0 AS J_TOT_AMT
+                 , 0 AS TOT_AMT
+                 , 0 AS IN_AMT
+                 , 0 AS SUP_AMT 
+                 , 0 AS VAT_AMT 
+                 , '선급금'     AS PAY_GUBUN
+                 , PAY_DT ||'-'|| SLIP_NO AS PAY_DT
+                 , SUM(DEBIT_AMT) AS DEBIT_AMT
+                 , 0 AS PAY_AMT 
+                 , 0 AS BTIME_HOLD_TAMT
+                 , 0 AS SUM_DEBIT_AMT
+              FROM DPS.PP_BILLDTL
+             WHERE STR_CD  = ?
+               AND PAY_YM  = ?
+               AND PAY_CYC = ?
+               AND PAY_CNT = ?
+               AND PAY_DT  LIKE ? || '%'
+               AND VEN_CD  LIKE ? || '%'
+               AND PUMBUN_CD LIKE ? || '%'
+               AND SUBSTR(SLIP_NO, 0,2) = '92'
+             GROUP BY VEN_CD
+             		, PUMBUN_CD
+                    , PAY_DT
+                    , SLIP_NO
+                    
+            UNION ALL
+    
+            /* 공제 */
+            SELECT '3' AS GUBUN
+                 , VEN_CD
+                 , PUMBUN_CD
+                 , '' AS BIZ_TYPE
+                 , 0 AS J_TOT_AMT
+                 , 0 AS TOT_AMT
+                 , 0 AS IN_AMT
+                 , 0 AS SUP_AMT 
+                 , 0 AS VAT_AMT 
+                 , '공제'     AS PAY_GUBUN
+                 , PAY_DT ||'-'|| SLIP_NO AS PAY_DT
+                 , SUM(DEBIT_AMT) AS DEBIT_AMT
+                 , 0 AS PAY_AMT 
+                 , 0 AS BTIME_HOLD_TAMT
+                 , 0 AS SUM_DEBIT_AMT
+              FROM DPS.PP_BILLDTL
+             WHERE STR_CD  = ?
+               AND PAY_YM  = ?
+               AND PAY_CYC = ?
+               AND PAY_CNT = ?
+               AND PAY_DT  LIKE ? || '%'
+               AND VEN_CD  LIKE ? || '%'
+               AND PUMBUN_CD LIKE ? || '%'
+               AND SUBSTR(SLIP_NO, 0,2) = '93'
+             GROUP BY VEN_CD
+             		, PUMBUN_CD
+                    , PAY_DT
+                    , SLIP_NO
+                    
+            UNION ALL
+    
+            /* 보류 */
+            SELECT '4' AS GUBUN
+                 , VEN_CD
+                 , PUMBUN_CD
+                 , '' AS BIZ_TYPE
+                 , 0 AS J_TOT_AMT
+                 , 0 AS TOT_AMT
+                 , 0 AS IN_AMT
+                 , 0 AS SUP_AMT 
+                 , 0 AS VAT_AMT 
+                 , '보류'     AS PAY_GUBUN
+                 , PAY_DT ||'-'|| SLIP_NO AS PAY_DT
+                 , SUM(DEBIT_AMT) AS DEBIT_AMT
+                 , 0 AS PAY_AMT 
+                 , 0 AS BTIME_HOLD_TAMT
+                 , 0 AS SUM_DEBIT_AMT
+              FROM DPS.PP_BILLDTL
+             WHERE STR_CD  = ?
+               AND PAY_YM  = ?
+               AND PAY_CYC = ?
+               AND PAY_CNT = ?
+               AND PAY_DT  LIKE ? || '%'
+               AND VEN_CD  LIKE ? || '%'
+               AND PUMBUN_CD LIKE ? || '%'
+               AND SUBSTR(SLIP_NO, 0,2) = '95'
+             GROUP BY VEN_CD
+             		, PUMBUN_CD
+                    , PAY_DT
+                    , SLIP_NO
+                    
+            UNION ALL
+    
+            /* 실지불 */
+            SELECT '5' AS GUBUN
+                 , VEN_CD
+                 , PUMBUN_CD
+                 , '' AS BIZ_TYPE
+                 , 0 AS J_TOT_AMT
+                 , 0 AS TOT_AMT
+                 , 0 AS IN_AMT
+                 , 0 AS SUP_AMT 
+                 , 0 AS VAT_AMT 
+                 , '실지불'       AS PAY_GUBUN
+                 , PAY_DT ||'-'|| SLIP_NO AS PAY_DT
+                 , SUM(DEBIT_AMT) AS DEBIT_AMT
+                 , 0 AS PAY_AMT 
+                 , 0 AS BTIME_HOLD_TAMT
+                 , 0 AS SUM_DEBIT_AMT
+              FROM DPS.PP_BILLDTL
+             WHERE STR_CD  = ?
+               AND PAY_YM  = ?
+               AND PAY_CYC = ?
+               AND PAY_CNT = ?
+               AND PAY_DT  LIKE ? || '%'
+               AND VEN_CD  LIKE ? || '%'
+               AND PUMBUN_CD LIKE ? || '%'
+               AND SUBSTR(SLIP_NO, 0,2) = '94'
+             GROUP BY VEN_CD
+             		, PUMBUN_CD
+                    , PAY_DT
+                    , SLIP_NO
+        ) A
+        , DPS.PC_VENMST B
+    WHERE A.VEN_CD   = B.VEN_CD
+      AND B.BIZ_TYPE = ?
+    ORDER BY VEN_CD
+    	   , PUMBUN_CD
+           , GUBUN
+           , COMP_NO
+                       
+        ]]>
+    </query> 
+ </service>

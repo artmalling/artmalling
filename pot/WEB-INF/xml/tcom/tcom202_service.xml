@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!-- 
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 코드 등록 조회
+ -->
+<service name="/tcom202.tc">
+ 
+    <!-- 트리뷰 -->
+    <gauce name="H_TREE_MAIN">
+        <column colName="LVL"   colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TXT"   colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="CODE"  colType="TB_STRING" size="13"   dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+
+    <!-- 트리뷰를 위한 쿼리  -->
+    <query name="SEL_TREE_VIEW">
+        <![CDATA[  
+            SELECT LVL
+                 , LNAME AS TXT
+                 , CODE
+              FROM (
+                        SELECT '2'                          LVL
+                             , LCODE                        CD1
+                             , '99'                         CD2
+                             , ''                           CD3
+                             , LNAME                        LNAME
+                             , SUB_SYSTEM                   SUB_SYSTEM
+                             , LCODE                        CODE
+                             , SEQ                          LSEQ
+                             , 0                            MSEQ
+                             , 0                            SSEQ
+                             , LPAD(NVL(SEQ ,0), 2,0 ) || LCODE  LVSEQ 
+                          FROM COM.TC_PGMLMENU      
+                         UNION
+                        SELECT '3'                          LVL
+                             , M.LCODE                      CD1
+                             , M.LCODE||M.MCODE             CD2
+                             , ''                           CD3
+                             , M.MNAME                      LNAME
+                             , L.SUB_SYSTEM                 SUB_SYSTEM
+                             , L.LCODE||M.MCODE             CODE
+                             , L.SEQ                        LSEQ
+                             , M.SEQ                        MSEQ
+                             , 0                            SSEQ
+                             ,    LPAD(NVL(L.SEQ,0), 2, 0 ) || L.LCODE 
+                              ||  LPAD(NVL(M.SEQ,0), 2, 0 ) || M.MCODE LVSEQ 
+                          FROM COM.TC_PGMMMENU M
+                             , COM.TC_PGMLMENU L
+                         WHERE L.LCODE = M.LCODE
+                         UNION
+                        SELECT '4'                          LVL
+                             , S.LCODE                      CD1 
+                             , S.LCODE||S.MCODE             CD2
+                             , S.SCODE                      CD3
+                             , S.SNAME                      LNAME
+                             , L.SUB_SYSTEM                 SUB_SYSTEM
+                             , S.LCODE||S.MCODE||S.SCODE    CODE
+                             , L.SEQ                        LSEQ
+                             , M.SEQ                        MSEQ
+                             , S.SEQ                        SSEQ 
+                             ,    LPAD(NVL(L.SEQ,0), 2, 0 ) || L.LCODE 
+                               || LPAD(NVL(M.SEQ,0), 2, 0 ) || M.MCODE   
+                               || LPAD(NVL(S.SEQ,0), 2, 0 ) LVESEQ   
+                          FROM COM.TC_PGMSMENU S
+                             , COM.TC_PGMLMENU L
+                             , COM.TC_PGMMMENU M
+                         WHERE S.LCODE = L.LCODE
+                           AND S.LCODE = M.LCODE
+                           AND S.MCODE = M.MCODE
+                   ) M
+             WHERE SUB_SYSTEM     =  ?
+             START WITH LVL       >= 2
+           CONNECT BY PRIOR CD2   = CD1
+             ORDER BY LVSEQ
+           --  ORDER BY LSEQ, MSEQ, SSEQ
+        ]]>        
+    </query>   
+    
+    <!-- 공지사항 -->
+    <gauce name="H_IO_MAIN">
+        <column colName="PID"           colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="LCODE"         colType="TB_STRING"     size="4"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="MCODE"         colType="TB_STRING"     size="4"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="SCODE"         colType="TB_STRING"     size="7"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="HELP_MSG"      colType="TB_STRING"     size="255"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="SUB_SYS"       colType="TB_STRING"     size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="MOD_NAME"      colType="TB_STRING"     size="30"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="MOD_DATE"      colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="URL_CONTENT"   colType="TB_STRING"     size="255"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="URL"           colType="TB_URL"        size="255"  dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+    
+    <!-- 트리뷰를 위한 쿼리  -->
+    <query name="SEL_HELPMSG">
+        <![CDATA[   
+            SELECT A.PID
+                 , B.LCODE
+                 , B.MCODE
+                 , A.SCODE
+                 , SUB_SYS
+                 , DECODE(B.PID, '','' ,? )        AS HELP_MSG
+                 , COM.FN_GET_USER_NAME(B.MOD_ID)  AS MOD_NAME
+                 , TO_CHAR(B.MOD_DATE, 'YYYY/MM/DD HH24:MI:SS') AS MOD_DATE
+                 , DECODE(B.PID, '','' ,? )   AS URL_CONTENT
+                 , ''   AS URL
+              FROM COM.TC_PGMMST  A
+                 , COM.TC_HELPMSG B
+             WHERE A.PID   = B.PID(+)
+               AND A.SCODE = B.SCODE(+)
+               AND A.PID     = ?
+        ]]>        
+    </query>
+    
+    <!-- Notice CLOB 등록   --> 
+    <query name="CLOB_HELPMSG">
+    <![CDATA[
+        SELECT HELP_MSG
+          FROM COM.TC_HELPMSG
+         WHERE PID   = ?
+           AND SCODE = ?
+           FOR UPDATE
+       ]]>
+    </query>
+    
+    
+    <!-- Notice 등록   --> 
+    <query name="INS_HELPMSG">        
+       <![CDATA[
+            INSERT INTO COM.TC_HELPMSG
+            (
+                    PID
+                  , LCODE
+                  , MCODE
+                  , SCODE
+                  , HELP_MSG
+                  , SUB_SYS
+                  , REG_DATE
+                  , REG_ID
+                  , MOD_DATE
+                  , MOD_ID
+            )
+            VALUES
+            (
+                    ?
+                  , ?
+                  , ?
+                  , ?
+                  , empty_clob()
+                  , ?
+                  , SYSDATE
+                  , ?
+                  , SYSDATE
+                  , ?
+            
+            )
+       ]]>
+    </query>
+
+    <!-- Notice 삭제--> 
+    <query name="DEL_HELPMSG">        
+       <![CDATA[
+            DELETE FROM COM.TC_HELPMSG 
+             WHERE PID   = ?
+               AND SCODE = ?
+       ]]>
+    </query>
+    
+    
+    <!-- 신규여부조회  -->
+    <query name="SEL_HELPMSG_CNT">
+        <![CDATA[   
+            SELECT COUNT(*) AS CNT
+              FROM COM.TC_HELPMSG B
+             WHERE PID   = ?
+               AND SCODE = ?
+        ]]>        
+    </query>
+     
+</service>

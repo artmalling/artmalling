@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/epay104.ea">
+   
+    <!-- 세금계산서 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+	        SELECT A.STR_CD
+	             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM 
+	             , A.TAX_ISSUE_DT
+	             , A.TAX_ISSUE_SEQ_NO
+	             , COM.FN_GET_COMM_NAME('D', 'P403', A.TAX_INV_FLAG) AS TAX_INV_FLAG
+			     , A.ETAX_NO 
+			     , COM.FN_GET_COMM_NAME('D', 'P401', DECODE(A.ETAX_STAT,'K', A.ETAX_STAT, DPS.FN_GET_TAX_STATE(A.EDI_SEQ_NO))) AS TAX_STAT
+			     , COM.FN_GET_COMM_NAME('D', 'P404', A.TAX_INV_TYPE) AS TAX_INV_TYPE
+	             , A.SUP_AMT
+	             , A.VAT_AMT
+	             , A.TOT_AMT
+	          FROM DPS.PP_TAXMST A, DPS.PC_STRVENMST B, DPS.PC_VENMST C 
+	         WHERE A.STR_CD = B.STR_CD 
+	           AND A.VEN_CD = B.VEN_CD
+	           AND A.VEN_CD = C.VEN_CD 
+	           AND A.STR_CD = ?
+	           AND A.VEN_CD = ?
+	           AND A.TAX_ISSUE_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+     
+</service>

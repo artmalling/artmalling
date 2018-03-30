@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.06.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  고객 현황
+ -->
+<service name="/meis083.me">
+    
+    <gauce name="H_SEL_CUST">
+        <column colName="STR_CD"  colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"  colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_YM" colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG1"   colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOTAL"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BLACK"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOLD"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BLUE"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GREEN"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG2"   colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_EXCEL">
+        <column colName="STR_CD"    colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG1"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOTAL"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BLACK"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOLD"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BLUE"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GREEN"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG2"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG3"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOTAL_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BLACK_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOLD_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BLUE_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GREEN_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG4"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <query name="SEL_CUST1">
+        <![CDATA[
+        SELECT STR_CD
+             , STR_NM
+             , ?           AS SALE_YM
+             , '구매고객수'      AS FLAG1
+             , SUM(TOTAL)  AS TOTAL
+             , SUM(BLACK)  AS BLACK
+             , SUM(GOLD)   AS GOLD
+             , SUM(BLUE)   AS BLUE
+             , SUM(GREEN)  AS GREEN
+             , '등급구성비' AS FLAG2
+          FROM ( SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , COUNT(1)                      AS TOTAL
+                      , 0                             AS BLACK
+                      , 0                             AS GOLD
+                      , 0                             AS BLUE
+                      , 0                             AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE IN('11', '21', '31', '41')
+                  GROUP BY STR_CD
+                  UNION ALL 
+                 SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , 0                             AS TOTAL
+                      , COUNT(1)                      AS BLACK
+                      , 0                             AS GOLD
+                      , 0                             AS BLUE
+                      , 0                             AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '41'
+                  GROUP BY STR_CD
+                  UNION ALL
+                 SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , 0                             AS TOTAL
+                      , 0                             AS BLACK
+                      , COUNT(1)                      AS GOLD
+                      , 0                             AS BLUE
+                      , 0                             AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '31'
+                  GROUP BY STR_CD
+                  UNION ALL
+                 SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , 0                             AS TOTAL
+                      , 0                             AS BLACK
+                      , 0                             AS GOLD
+                      , COUNT(1)                      AS BLUE
+                      , 0                             AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '21'
+                  GROUP BY STR_CD
+                  UNION ALL
+                 SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , 0                             AS TOTAL
+                      , 0                             AS BLACK
+                      , 0                             AS GOLD
+                      , 0                             AS BLUE
+                      , COUNT(1)                      AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '11'
+                  GROUP BY STR_CD ) X
+         GROUP BY STR_CD
+             , STR_NM
+         ORDER BY STR_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_CUST2">
+        <![CDATA[
+        SELECT STR_CD
+             , STR_NM
+             , ?           AS SALE_YM
+             , '매출액'  AS FLAG1
+             , SUM(TOTAL)  AS TOTAL
+             , SUM(BLACK)  AS BLACK
+             , SUM(GOLD)   AS GOLD
+             , SUM(BLUE)   AS BLUE
+             , SUM(GREEN)  AS GREEN
+             , '등급구성비' AS FLAG2
+          FROM ( SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , SUM(SALE_AMT)                 AS TOTAL
+                      , 0                             AS BLACK
+                      , 0                             AS GOLD
+                      , 0                             AS BLUE
+                      , 0                             AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE IN('11', '21', '31', '41')
+                  GROUP BY STR_CD
+                  UNION ALL 
+                 SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , 0                             AS TOTAL
+                      , SUM(SALE_AMT)                 AS BLACK
+                      , 0                             AS GOLD
+                      , 0                             AS BLUE
+                      , 0                             AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '41'
+                  GROUP BY STR_CD
+                  UNION ALL
+                 SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , 0                             AS TOTAL
+                      , 0                             AS BLACK
+                      , SUM(SALE_AMT)                 AS GOLD
+                      , 0                             AS BLUE
+                      , 0                             AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '31'
+                  GROUP BY STR_CD
+                  UNION ALL
+                 SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , 0                             AS TOTAL
+                      , 0                             AS BLACK
+                      , 0                             AS GOLD
+                      , SUM(SALE_AMT)                 AS BLUE
+                      , 0                             AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '21'
+                  GROUP BY STR_CD
+                  UNION ALL
+                 SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , 0                             AS TOTAL
+                      , 0                             AS BLACK
+                      , 0                             AS GOLD
+                      , 0                             AS BLUE
+                      , SUM(SALE_AMT)                 AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '11'
+                  GROUP BY STR_CD ) X
+         GROUP BY STR_CD
+             , STR_NM
+         ORDER BY STR_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_CUST_PIE">
+        <![CDATA[
+        SELECT SUM(BLACK)  AS BLACK
+             , SUM(GOLD)   AS GOLD
+             , SUM(BLUE)   AS BLUE
+             , SUM(GREEN)  AS GREEN
+          FROM ( SELECT COUNT(1) AS BLACK
+                      , 0        AS GOLD
+                      , 0        AS BLUE
+                      , 0        AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '41'
+                  UNION ALL
+                 SELECT 0        AS BLACK
+                      , COUNT(1) AS GOLD
+                      , 0        AS BLUE
+                      , 0        AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '31'
+                  UNION ALL
+                 SELECT 0        AS BLACK
+                      , 0        AS GOLD
+                      , COUNT(1) AS BLUE
+                      , 0        AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '21'
+                  UNION ALL
+                 SELECT 0        AS BLACK
+                      , 0        AS GOLD
+                      , 0        AS BLUE
+                      , COUNT(1) AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '11') X
+        ]]>
+    </query>
+    
+    <query name="SEL_CUST_PIE2">
+        <![CDATA[
+        SELECT ROUND(SUM(BLACK)/1000000)  AS BLACK
+             , ROUND(SUM(GOLD)/1000000)   AS GOLD
+             , ROUND(SUM(BLUE)/1000000)   AS BLUE
+             , ROUND(SUM(GREEN)/1000000)  AS GREEN
+          FROM ( SELECT SUM(SALE_AMT) AS BLACK
+                      , 0             AS GOLD
+                      , 0             AS BLUE
+                      , 0             AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '41'
+                  UNION ALL
+                 SELECT 0             AS BLACK
+                      , SUM(SALE_AMT) AS GOLD
+                      , 0             AS BLUE
+                      , 0             AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '31'
+                  UNION ALL
+                 SELECT 0              AS BLACK
+                      , 0              AS GOLD
+                      , SUM(SALE_AMT)  AS BLUE
+                      , 0              AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '21'
+                  UNION ALL
+                 SELECT 0             AS BLACK
+                      , 0             AS GOLD
+                      , 0             AS BLUE
+                      , SUM(SALE_AMT) AS GREEN
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '11') X
+        ]]>
+    </query>
+    
+    <query name="SEL_CUST_GRID">
+        <![CDATA[
+        SELECT SUBSTR(X.SALE_YM, 5)||'월' AS SALE_YM
+             , NVL(Y.BLACK, 0)            AS BLACK
+             , NVL(Y.GOLD, 0)             AS GOLD
+             , NVL(Y.BLUE, 0)             AS BLUE
+             , NVL(Y.GREEN, 0)            AS GREEN
+          FROM ( SELECT TO_CHAR(ADD_MONTHS(TO_DATE(?), LEVEL-1), 'YYYYMM') SALE_YM
+                   FROM DUAL
+                CONNECT BY LEVEL <= MONTHS_BETWEEN(TO_DATE(?), TO_DATE(?)) + 1
+               ) X 
+             , ( SELECT SALE_YM
+                      , SUM(BLACK)  AS BLACK
+                      , SUM(GOLD)   AS GOLD
+                      , SUM(BLUE)   AS BLUE
+                      , SUM(GREEN)  AS GREEN
+                   FROM ( SELECT SUBSTR(SALE_DT, 1, 6) AS SALE_YM
+                               , COUNT(1)              AS BLACK
+                               , 0                     AS GOLD
+                               , 0                     AS BLUE
+                               , 0                     AS GREEN
+                            FROM DPS.PS_DAYCUST
+                           WHERE STR_CD LIKE ? || '%'
+                             AND SALE_DT BETWEEN ? AND ?
+                             AND CUST_GRADE = '41'
+                           GROUP BY SUBSTR(SALE_DT, 1, 6)
+                           UNION ALL
+                          SELECT SUBSTR(SALE_DT, 1, 6) AS SALE_YM
+                               , 0                     AS BLACK
+                               , COUNT(1)              AS GOLD
+                               , 0                     AS BLUE
+                               , 0                     AS GREEN
+                            FROM DPS.PS_DAYCUST
+                           WHERE STR_CD LIKE ? || '%'
+                             AND SALE_DT BETWEEN ? AND ?
+                             AND CUST_GRADE = '31'
+                           GROUP BY SUBSTR(SALE_DT, 1, 6)
+                           UNION ALL
+                          SELECT SUBSTR(SALE_DT, 1, 6) AS SALE_YM
+                               , 0                     AS BLACK
+                               , 0                     AS GOLD
+                               , COUNT(1)              AS BLUE
+                               , 0                     AS GREEN
+                            FROM DPS.PS_DAYCUST
+                           WHERE STR_CD LIKE ? || '%'
+                             AND SALE_DT BETWEEN ? AND ?
+                             AND CUST_GRADE = '21'
+                           GROUP BY SUBSTR(SALE_DT, 1, 6)
+                           UNION ALL
+                          SELECT SUBSTR(SALE_DT, 1, 6) AS SALE_YM
+                               , 0                     AS BLACK
+                               , 0                     AS GOLD
+                               , 0                     AS BLUE
+                               , COUNT(1)              AS GREEN
+                            FROM DPS.PS_DAYCUST
+                           WHERE STR_CD LIKE ? || '%'
+                             AND SALE_DT BETWEEN ? AND ?
+                             AND CUST_GRADE = '11'
+                           GROUP BY SUBSTR(SALE_DT, 1, 6)  
+                        ) 
+                  GROUP BY SALE_YM
+               ) Y
+         WHERE X.SALE_YM = Y.SALE_YM(+)
+         ORDER BY X.SALE_YM
+        ]]>
+    </query>
+    
+    <query name="SEL_CUST_GRID2">
+        <![CDATA[
+        SELECT SUBSTR(X.SALE_YM, 5)||'월' AS SALE_YM
+             , NVL(Y.BLACK, 0)/1000000    AS BLACK
+             , NVL(Y.GOLD, 0)/1000000     AS GOLD
+             , NVL(Y.BLUE, 0)/1000000     AS BLUE
+             , NVL(Y.GREEN, 0)/1000000    AS GREEN
+          FROM ( SELECT TO_CHAR(ADD_MONTHS(TO_DATE(?), LEVEL-1), 'YYYYMM') SALE_YM
+                   FROM DUAL
+                CONNECT BY LEVEL <= MONTHS_BETWEEN(TO_DATE(?), TO_DATE(?)) + 1
+               ) X 
+             , ( SELECT SALE_YM
+                      , SUM(BLACK)  AS BLACK
+                      , SUM(GOLD)   AS GOLD
+                      , SUM(BLUE)   AS BLUE
+                      , SUM(GREEN)  AS GREEN
+                   FROM ( SELECT SUBSTR(SALE_DT, 1, 6) AS SALE_YM
+                               , SUM(SALE_AMT)         AS BLACK
+                               , 0                     AS GOLD
+                               , 0                     AS BLUE
+                               , 0                     AS GREEN
+                            FROM DPS.PS_DAYCUST
+                           WHERE STR_CD LIKE ? || '%'
+                             AND SALE_DT BETWEEN ? AND ?
+                             AND CUST_GRADE = '41'
+                           GROUP BY SUBSTR(SALE_DT, 1, 6)
+                           UNION ALL
+                          SELECT SUBSTR(SALE_DT, 1, 6) AS SALE_YM
+                               , 0                     AS BLACK
+                               , SUM(SALE_AMT)         AS GOLD
+                               , 0                     AS BLUE
+                               , 0                     AS GREEN
+                            FROM DPS.PS_DAYCUST
+                           WHERE STR_CD LIKE ? || '%'
+                             AND SALE_DT BETWEEN ? AND ?
+                             AND CUST_GRADE = '31'
+                           GROUP BY SUBSTR(SALE_DT, 1, 6)
+                           UNION ALL
+                          SELECT SUBSTR(SALE_DT, 1, 6) AS SALE_YM
+                               , 0                     AS BLACK
+                               , 0                     AS GOLD
+                               , SUM(SALE_AMT)         AS BLUE
+                               , 0                     AS GREEN
+                            FROM DPS.PS_DAYCUST
+                           WHERE STR_CD LIKE ? || '%'
+                             AND SALE_DT BETWEEN ? AND ?
+                             AND CUST_GRADE = '21'
+                           GROUP BY SUBSTR(SALE_DT, 1, 6)
+                           UNION ALL
+                          SELECT SUBSTR(SALE_DT, 1, 6) AS SALE_YM
+                               , 0                     AS BLACK
+                               , 0                     AS GOLD
+                               , 0                     AS BLUE
+                               , SUM(SALE_AMT)         AS GREEN
+                            FROM DPS.PS_DAYCUST
+                           WHERE STR_CD LIKE ? || '%'
+                             AND SALE_DT BETWEEN ? AND ?
+                             AND CUST_GRADE = '11'
+                           GROUP BY SUBSTR(SALE_DT, 1, 6)  
+                        ) 
+                  GROUP BY SALE_YM
+               ) Y
+         WHERE X.SALE_YM = Y.SALE_YM(+)
+         ORDER BY X.SALE_YM
+        ]]>
+    </query>
+    
+    <query name="SEL_EXCEL">
+        <![CDATA[
+        SELECT STR_CD
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+             , '구매고객수'     AS FLAG1
+             , SUM(TOTAL)  AS TOTAL
+             , SUM(BLACK)  AS BLACK
+             , SUM(GOLD)   AS GOLD
+             , SUM(BLUE)   AS BLUE
+             , SUM(GREEN)  AS GREEN
+             , '등급구성비' AS FLAG2
+             , '매출액'     AS FLAG3
+             , SUM(TOTAL_AMT)  AS TOTAL_AMT
+             , SUM(BLACK_AMT)  AS BLACK_AMT
+             , SUM(GOLD_AMT)   AS GOLD_AMT
+             , SUM(BLUE_AMT)   AS BLUE_AMT
+             , SUM(GREEN_AMT)  AS GREEN_AMT
+             , '등급구성비' AS FLAG4
+          FROM ( SELECT STR_CD
+                      , COUNT(1)      AS TOTAL
+                      , 0             AS BLACK
+                      , 0             AS GOLD
+                      , 0             AS BLUE
+                      , 0             AS GREEN
+                      , SUM(SALE_AMT) AS TOTAL_AMT
+                      , 0             AS BLACK_AMT
+                      , 0             AS GOLD_AMT
+                      , 0             AS BLUE_AMT
+                      , 0             AS GREEN_AMT
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE IN('11', '21', '31', '41')
+                  GROUP BY STR_CD
+                  UNION ALL 
+                 SELECT STR_CD
+                      , 0             AS TOTAL
+                      , COUNT(1)      AS BLACK
+                      , 0             AS GOLD
+                      , 0             AS BLUE
+                      , 0             AS GREEN
+                      , 0             AS TOTAL_AMT
+                      , SUM(SALE_AMT) AS BLACK_AMT
+                      , 0             AS GOLD_AMT
+                      , 0             AS BLUE_AMT
+                      , 0             AS GREEN_AMT
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '41'
+                  GROUP BY STR_CD
+                  UNION ALL
+                 SELECT STR_CD
+                      , 0             AS TOTAL
+                      , 0             AS BLACK
+                      , COUNT(1)      AS GOLD
+                      , 0             AS BLUE
+                      , 0             AS GREEN
+                      , 0             AS TOTAL_AMT
+                      , 0             AS BLACK_AMT
+                      , SUM(SALE_AMT) AS GOLD_AMT
+                      , 0             AS BLUE_AMT
+                      , 0             AS GREEN_AMT
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '31'
+                  GROUP BY STR_CD
+                  UNION ALL
+                 SELECT STR_CD
+                      , 0             AS TOTAL
+                      , 0             AS BLACK
+                      , 0             AS GOLD
+                      , COUNT(1)      AS BLUE
+                      , 0             AS GREEN
+                      , 0             AS TOTAL_AMT
+                      , 0             AS BLACK_AMT
+                      , 0             AS GOLD_AMT
+                      , SUM(SALE_AMT) AS BLUE_AMT
+                      , 0             AS GREEN_AMT
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '21'
+                  GROUP BY STR_CD
+                  UNION ALL
+                 SELECT STR_CD
+                      , 0             AS TOTAL
+                      , 0             AS BLACK
+                      , 0             AS GOLD
+                      , 0             AS BLUE
+                      , COUNT(1)      AS GREEN
+                      , 0             AS TOTAL_AMT
+                      , 0             AS BLACK_AMT
+                      , 0             AS GOLD_AMT
+                      , 0             AS BLUE_AMT
+                      , SUM(SALE_AMT) AS GREEN_AMT
+                   FROM DPS.PS_DAYCUST
+                  WHERE STR_CD LIKE ? || '%'
+                    AND SALE_DT BETWEEN ? AND ?
+                    AND CUST_GRADE = '11'
+                  GROUP BY STR_CD ) X
+         GROUP BY STR_CD
+         ORDER BY STR_CD
+        ]]>
+    </query>
+    
+</service>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 최재형
+ * 회 사 명 : 
+ * 작 성 일 : 2011.07.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  조직별손익계획상세 조회
+ -->
+<service name="/meis048.me">
+
+    <!-- 손익계획상세조회 헤더  -->
+    <gauce name="H_SEL_PROFIT_AND_LOSS_PLAN_DTL">
+    	<column colName="ORG_NAME"			colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="BIZ_CD"			colType="TB_STRING"		size="6"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="BIZ_CD_NM"			colType="TB_STRING"		size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="BIZ_LVL"			colType="TB_STRING" 	size="1"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_TOT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_01"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_02"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_03"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_04"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_05"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_06"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_UPPER_HALF"	colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_07"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_08"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_09"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_10"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_11"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_12"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="AMT_LOWER_HALF"	colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    </gauce>
+
+    <!-- 손익계획상세조회 -->
+    <query name="SEL_PROFIT_AND_LOSS_PLAN_DTL">
+    <![CDATA[
+    	/*******
+    	* 손익계획상세조회
+    	*******/
+		SELECT (SELECT ORG.ORG_NAME 
+				FROM DPS.PC_ORGMST ORG 
+				WHERE ORG.ORG_CD = RPAD(DECODE(?,'%', '00', ?) 
+										|| DECODE(?,'%', '00', ?) 
+										|| DECODE(?,'%', '00', ?) 
+										|| DECODE(?,'%', '00', ?), 10, '00') )		AS ORG_NAME
+		       ,DECODE(LENGTH(MMA.BIZ_CD), 6, MMA.BIZ_CD, '')         AS BIZ_CD
+		       ,DECODE(MMA.GROUP_ID, '111', '총계'
+		                           , '000', (SELECT MST.BIZ_CD_NM FROM MSS.ME_BIZCDMST MST WHERE MST.BIZ_CD = MMA.BIZ_CD)
+		                           , (SELECT MST.BIZ_CD_NM FROM MSS.ME_BIZCDMST MST WHERE MST.BIZ_CD = RPAD(MMA.BIZ_CD, 6, '0')) || '계'
+		       )                   AS BIZ_CD_NM
+		       ,DECODE(MMA.GROUP_ID, '111', '1', '000', '3', '2')                                                                   AS BIZ_LVL
+		       ,MMA.AMT_TOT
+		       ,MMA.AMT_01
+		       ,MMA.AMT_02
+		       ,MMA.AMT_03
+		       ,MMA.AMT_04
+		       ,MMA.AMT_05
+		       ,MMA.AMT_06
+		       ,MMA.AMT_UPPER_HALF
+		       ,MMA.AMT_07
+		       ,MMA.AMT_08
+		       ,MMA.AMT_09
+		       ,MMA.AMT_10
+		       ,MMA.AMT_11
+		       ,MMA.AMT_12
+		       ,MMA.AMT_LOWER_HALF
+		       --,MMA.CNT
+		       --,MMA.GROUP_ID
+		FROM (
+		      SELECT MA.L_BIZ_CD||MA.M_BIZ_CD||MA.S_BIZ_CD                           AS BIZ_CD
+		             ,SUM(MA.AMT_TOT)                               AS AMT_TOT
+		             ,SUM(MA.AMT_01)                                AS AMT_01
+		             ,SUM(MA.AMT_02)                                AS AMT_02
+		             ,SUM(MA.AMT_03)                                AS AMT_03
+		             ,SUM(MA.AMT_04)                                AS AMT_04
+		             ,SUM(MA.AMT_05)                                AS AMT_05
+		             ,SUM(MA.AMT_06)                                AS AMT_06
+		             ,SUM(MA.AMT_UPPER_HALF)                        AS AMT_UPPER_HALF
+		             ,SUM(MA.AMT_07)                                AS AMT_07
+		             ,SUM(MA.AMT_08)                                AS AMT_08
+		             ,SUM(MA.AMT_09)                                AS AMT_09
+		             ,SUM(MA.AMT_10)                                AS AMT_10
+		             ,SUM(MA.AMT_11)                                AS AMT_11
+		             ,SUM(MA.AMT_12)                                AS AMT_12
+		             ,SUM(MA.AMT_LOWER_HALF)                        AS AMT_LOWER_HALF
+		             ,COUNT(1)                                      AS CNT
+		             ,GROUPING(MA.L_BIZ_CD)||GROUPING(MA.M_BIZ_CD)||GROUPING(MA.S_BIZ_CD)   AS GROUP_ID
+		      FROM (
+		            SELECT  SUBSTR(RPT.BIZ_CD, 1, 2)                                                                  AS L_BIZ_CD
+		                   ,SUBSTR(RPT.BIZ_CD, 3, 2)                                                                  AS M_BIZ_CD
+		                   ,SUBSTR(RPT.BIZ_CD, 5, 2)                                                                  AS S_BIZ_CD
+		                   ,SUM(NVL(RPT.PLAN_AMT,0))                                                                  AS AMT_TOT
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '01', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_01
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '02', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_02
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '03', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_03
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '04', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_04
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '05', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_05
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '06', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_06
+		                   ,SUM(CASE
+		                            WHEN SUBSTR(RPT.BIZ_PLAN_YM, 5, 2) BETWEEN '01' AND '06' THEN NVL(RPT.PLAN_AMT,0)
+		                            ELSE 0
+		                        END)                                                                                                                AS AMT_UPPER_HALF
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '07', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_07
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '08', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_08
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '09', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_09
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '10', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_10
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '11', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_11
+		                   ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM, 5, 2), '12', NVL(RPT.PLAN_AMT,0), 0))                  AS AMT_12
+		                   ,SUM(CASE
+		                            WHEN SUBSTR(RPT.BIZ_PLAN_YM, 5, 2) BETWEEN '07' AND '12' THEN NVL(RPT.PLAN_AMT,0)
+		                            ELSE 0
+		                        END)                                                                                                                AS AMT_LOWER_HALF             
+		            FROM MSS.ME_BIZPLANRPT RPT 
+		            WHERE 1 = 1
+					AND RPT.BIZ_PLAN_YEAR = ?
+					AND RPT.STR_CD LIKE ?
+					AND RPT.DEPT_CD LIKE ?
+					AND RPT.TEAM_CD LIKE ?
+					AND RPT.PC_CD LIKE  ?
+					AND NVL(RPT.PLAN_AMT,0) > 0
+		            GROUP BY RPT.BIZ_CD
+		            ORDER BY RPT.BIZ_CD
+		           ) MA
+		      GROUP BY ROLLUP(L_BIZ_CD, M_BIZ_CD, S_BIZ_CD)
+		      HAVING (COUNT(1) != 1 OR GROUPING(MA.L_BIZ_CD)||GROUPING(MA.M_BIZ_CD)||GROUPING(MA.S_BIZ_CD) != '001') 
+		         AND (COUNT(1) != 1 OR GROUPING(MA.L_BIZ_CD)||GROUPING(MA.M_BIZ_CD)||GROUPING(MA.S_BIZ_CD) != '011')
+		     ) MMA
+    ]]>
+    </query>
+
+</service>

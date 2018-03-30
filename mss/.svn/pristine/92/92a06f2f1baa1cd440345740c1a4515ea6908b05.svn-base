@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  월 직접 사용량 조회
+ -->
+<service name="/mren305.mr">
+    <!-- 월 직접 사용량 조회 -->
+    <gauce name="H_SEL_MASTER">
+        <column colName="CAL_YM"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HUSE_ID"       colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DONGHO"        colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HHOLD_NAME"    colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNTR_AREA"     colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_10_QTY"   colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_10_AMT"   colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_21_AMT"   colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_22_QTY"   colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_22_AMT"   colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_30_QTY"   colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_30_AMT"   colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_AMT"       colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+ 
+    <!-- 조회 Query  -->
+    <query name="SEL_MASTER"> 
+        <![CDATA[    
+            SELECT MST.CAL_YM
+                 , HOL.HUSE_ID
+                 , MST.DONG || MST.HO AS DONGHO
+                 , HOL.HHOLD_NAME
+                 , MST.CNTR_AREA
+                 , SUM(CASE WHEN MNT.CAL_CD = '10' THEN CAL.USE_QTY ELSE 0 END) AS GAUG_10_QTY /*전체전기사용량*/
+                 , SUM(CASE WHEN MNT.CAL_CD = '10' THEN CAL.USE_AMT ELSE 0 END) AS GAUG_10_AMT /*전체전기요금*/
+                 , SUM(CASE WHEN MNT.CAL_CD = '21' THEN CAL.USE_AMT ELSE 0 END) AS GAUG_21_AMT /*전체난방요금*/
+                 , SUM(CASE WHEN MNT.CAL_CD = '22' THEN CAL.USE_QTY ELSE 0 END) AS GAUG_22_QTY /*전체급탕사용량*/
+                 , SUM(CASE WHEN MNT.CAL_CD = '22' THEN CAL.USE_AMT ELSE 0 END) AS GAUG_22_AMT /*전체급탕요금*/  
+                 , SUM(CASE WHEN MNT.CAL_CD = '30' THEN CAL.USE_QTY ELSE 0 END) AS GAUG_30_QTY /*전체증기사용량*/
+                 , SUM(CASE WHEN MNT.CAL_CD = '30' THEN CAL.USE_AMT ELSE 0 END) AS GAUG_30_AMT /*전체증기요금*/   
+                 , SUM(CAL.USE_AMT) AS USE_AMT
+              FROM MSS.MR_CALMST    MST
+                 , MSS.MR_HHOLDMST  HOL
+                 , MSS.MR_CALITEM   CAL
+                 , MSS.MR_MNTNITEM  MNT
+             WHERE MST.CNTR_ID  = HOL.HHOLD_ID  
+               AND MST.CNTR_ID  = CAL.CNTR_ID
+               AND MST.CAL_YM   = CAL.CAL_YM
+               AND MST.CAL_TYPE = CAL.CAL_TYPE
+               AND CAL.STR_CD   = MNT.STR_CD
+               AND CAL.MNTN_ITEM_CD = MNT.MNTN_ITEM_CD
+               AND HOL.STR_CD   = ?
+               AND MST.CAL_YM BETWEEN ? AND ?
+               AND MST.DONG LIKE ? || '%'
+               AND MST.HO LIKE ? || '%'
+          GROUP BY MST.CAL_YM
+                 , HOL.HUSE_ID
+                 , MST.DONG || MST.HO
+                 , HOL.HHOLD_NAME
+                 , MST.CNTR_AREA
+          ORDER BY MST.CAL_YM, HOL.HUSE_ID
+        ]]>        
+    </query>
+   
+</service>

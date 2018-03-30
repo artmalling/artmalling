@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.09
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/dmbo406.do">
+    
+    <gauce name="H_MASTER"> 
+    <column colName="USE_DT"             colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="POS_NO"             colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="TRAN_NO"            colType="TB_STRING"  size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="SALE_TIME"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CPN_NM"            colType="TB_STRING"  size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="BRAND_NM"            colType="TB_STRING"  size="100"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PBN_NM"            colType="TB_STRING"  size="100"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="SALE_TOT_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="DC_TOT_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="ADD_POINT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CUST_NAME"            colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="CUST_ID"         colType="TB_STRING"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CPN_TYPE_NM"         colType="TB_STRING"  size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+   
+    
+    <!--  기간별전자쿠폰사용내역 리스트  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+        SELECT A.USE_DT
+		     , B.POS_NO
+		     , B.TRAN_NO
+		     , B.SALE_TIME
+		     , F.CPN_NM
+		     , DPS.FN_GET_PBN_BRD_NAME(G.PUMBUN_CD) AS BRAND_NM
+		     , DPS.FN_GET_PUMBUN_NAME(G.PUMBUN_CD) AS PBN_NM
+		     , B.SALE_TOT_AMT
+		     , B.DC_TOT_AMT
+		     , C.ADD_POINT
+		     , D.CUST_NAME
+		     , D.CUST_ID
+		     , COM.FN_GET_COMM_NAME('D','D110', F.CPN_TYPE) AS CPN_TYPE_NM
+		  FROM DCS.DO_E_CPN_USE A
+		     , DPS.PS_TRHEADER B
+		     , DCS.DO_POINT_ADD C
+		     , DCS.DM_CUSTOMER D
+		     , DCS.DB_BRANCH E
+		     , DCS.DO_E_COUPON F
+		     , DPS.PS_TRITEM G
+		 WHERE A.STR_CD               = ?
+		   AND A.USE_DT               BETWEEN ? AND ?
+		   AND A.USE_DT = B.SALE_DT
+		   AND SUBSTR(A.RECP_NO,8,4)  = B.POS_NO
+		   AND SUBSTR(A.RECP_NO,12,5) = B.TRAN_NO
+		   AND A.STR_CD               = E.STR_CD
+		   AND E.BRCH_ID              = C.BRCH_ID
+		   AND A.RECP_NO              = C.RECP_NO
+		   AND A.CUST_ID              = D.CUST_ID
+		   AND A.STR_CD               = F.STR_CD
+		   AND A.CUST_ID              = F.CUST_ID
+		   AND A.CPN_ID               = F.CPN_ID
+		   AND B.STR_CD               = G.STR_CD
+		   AND B.SALE_DT              = G.SALE_DT
+		   AND B.POS_NO               = G.POS_NO
+		   AND B.TRAN_NO              = G.TRAN_NO
+		   AND G.SEQ_NO               = 1
+		   AND F.CPN_TYPE             LIKE ?   -- 쿠폰종류 선택    
+		 ORDER BY A.USE_DT
+		     , B. POS_NO
+		     , B.TRAN_NO
+        ]]>
+    </query> 
+    
+    
+ </service>

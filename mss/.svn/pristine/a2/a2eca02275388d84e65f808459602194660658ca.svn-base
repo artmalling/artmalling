@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 강진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.07.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  할인쿠폰번호조회
+ -->
+<service name="/mcae607.mc">
+
+<!-- 할인쿠폰번호 MASTER 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"            	colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CPNNO"            		colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_FROM_DT"          	colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="CPN_TO_DT"        		colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="CPN_CNT"        		colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="P_CNT"        			colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="M_CNT"          		colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="T_CNT"    				colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_SALE_AMT"          	colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="M_SALE_AMT"          	colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"          colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_DETAIL">  
+        <column colName="STR_CD"       			colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPNNO"            		colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_DT"               colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="POS_NO"              	colType="TB_STRING"     size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TRAN_NO"          		colType="TB_STRING"    	size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="SALE_GB"               colType="TB_STRING"    	size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SALE_AMT"              colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_CNT"             	colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="M_CNT"        			colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="P_SALE_AMT"          	colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="M_SALE_AMT"    		colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+    
+    <query name="SEL_MASTER">
+        <![CDATA[   
+		SELECT 
+		       STR_CD
+		     , CPNNO
+		     , MIN(CPN_FROM_DT) AS CPN_FROM_DT
+		     , MAX(CPN_TO_DT) AS CPN_TO_DT
+		     , SUM(CPN_CNT) AS CPN_CNT
+		     , SUM(P_CNT) AS P_CNT
+		     , SUM(M_CNT) AS M_CNT
+		     , SUM(P_CNT) - -  SUM(M_CNT) AS T_CNT
+		     , SUM(P_SALE_AMT) AS P_SALE_AMT
+		     , SUM(M_SALE_AMT) AS M_SALE_AMT
+		     , SUM(TOT_SALE_AMT) AS TOT_SALE_AMT
+		FROM
+		    (
+		        SELECT a.STR_CD
+		             , A.PAY_DATA_01 AS CPNNO
+		             , MIN(A.SALE_DT) AS CPN_FROM_DT 
+		             , MAX(A.SALE_DT) AS CPN_TO_DT
+		             , COUNT(*) AS CPN_CNT
+		             , CASE WHEN B.TRAN_FLAG = '0' THEN 1 ELSE 0 END AS P_CNT
+		             , CASE WHEN B.TRAN_FLAG <> '0' THEN -1 ELSE 0 END  AS M_CNT
+		             , CASE WHEN B.TRAN_FLAG = '0' THEN SUM(B.SALE_TOT_AMT) ELSE 0 END AS P_SALE_AMT
+		             , CASE WHEN B.TRAN_FLAG <> '0' THEN -SUM(B.SALE_TOT_AMT) ELSE 0 END  AS M_SALE_AMT
+		             , CASE WHEN B.TRAN_FLAG = '0' THEN SUM(B.SALE_TOT_AMT) ELSE - SUM(B.SALE_TOT_AMT)  END AS TOT_SALE_AMT -- 매출액 
+		        FROM DPS.PS_TRMCPNPAID A
+		           , DPS.PS_TRMCPNHEADER B
+		        WHERE A.PAY_TYPE = '33'
+		        AND A.STR_CD = ?
+		        AND A.SALE_DT >= ?
+		        AND A.SALE_DT <= ?
+		        AND A.PAY_DATA_01 LIKE ?||'%'
+		        AND A.STR_CD = B.STR_CD
+		        AND A.SALE_DT = B.SALE_DT
+		        AND A.POS_NO = B.POS_NO
+		        AND A.TRAN_NO = B.TRAN_NO
+		        GROUP BY A.STR_CD, A.PAY_DATA_01, B.TRAN_FLAG
+		    )
+		GROUP BY STR_CD, CPNNO    
+		ORDER BY STR_CD, CPNNO
+        ]]>        
+    </query>
+    
+    <query name="SEL_DETAIL">
+        <![CDATA[   
+        SELECT A.STR_CD -- 점
+        	 , A.PAY_DATA_01 AS CPNNO
+             , A.SALE_DT -- 매출일자
+             , A.POS_NO -- POSNO
+             , A.TRAN_NO -- 거래번호
+             , CASE WHEN B.TRAN_FLAG = '0' THEN '발생' ELSE '취소' END AS SALE_GB -- 매출구분
+             , CASE WHEN B.TRAN_FLAG = '0' THEN B.SALE_TOT_AMT ELSE - B.SALE_TOT_AMT  END AS SALE_AMT -- 매출액 
+             
+             , CASE WHEN B.TRAN_FLAG = '0' THEN 1 ELSE 0 END AS P_CNT
+             , CASE WHEN B.TRAN_FLAG <> '0' THEN - 1 ELSE 0 END  AS M_CNT
+             , CASE WHEN B.TRAN_FLAG = '0' THEN SALE_TOT_AMT ELSE 0 END AS P_SALE_AMT
+             , CASE WHEN B.TRAN_FLAG <> '0' THEN - SALE_TOT_AMT ELSE 0 END  AS M_SALE_AMT
+             
+        FROM DPS.PS_TRMCPNPAID A
+           , DPS.PS_TRMCPNHEADER B
+        WHERE A.PAY_TYPE = '33'
+        AND A.STR_CD = ?
+        AND A.SALE_DT >= ?
+        AND A.SALE_DT <= ?
+        AND A.PAY_DATA_01 LIKE ?
+        AND A.STR_CD = B.STR_CD
+        AND A.SALE_DT = B.SALE_DT
+        AND A.POS_NO = B.POS_NO
+        AND A.TRAN_NO = B.TRAN_NO
+        ]]>        
+    </query>
+    
+</service>

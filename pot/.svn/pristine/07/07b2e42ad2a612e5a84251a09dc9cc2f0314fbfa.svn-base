@@ -1,0 +1,73 @@
+<%@ page language="java" contentType="text/html;charset=utf-8" %>
+<% request.setCharacterEncoding("utf-8"); %>
+<%@ page import="common.dao.CCom900DAO, java.io.*, common.vo.SessionInfo, kr.fujitsu.ffw.util.String2" %>
+<%@ taglib uri="/WEB-INF/tld/button.tld"  prefix="button" %>
+<%
+	String userId		= null;
+	String pid			= null;
+	String subSystem	= null;       
+	String lcode		= null;
+	String mcode		= null;
+	String title		= null;
+	String url			= null;
+	String url2			= null;
+	String permission	= null;
+	
+	pid		= request.getParameter("pid");
+	lcode	= request.getParameter("lcode");
+    mcode	= request.getParameter("mcode");
+    title	= request.getParameter("title");    
+    url 	= request.getParameter("url");
+
+
+    SessionInfo sessionInfo = (SessionInfo)(session.getAttribute("sessionInfo"));
+
+    if (sessionInfo != null) {   
+	    sessionInfo.setPGM_ID(pid); 
+	    sessionInfo.setL_CD(lcode); 
+	    sessionInfo.setM_CD(mcode);
+	    
+	    session.setAttribute("sessionInfo", sessionInfo);
+	    
+	    userId = sessionInfo.getUSER_ID();				//사용자ID        
+        subSystem = pid.substring(0,1).toUpperCase();	//주업무영역
+
+        try {
+        	CCom900DAO dao = new CCom900DAO();
+            //버튼 권한처리
+            permission = dao.getButtonPermission(userId, pid);              	            
+//			버튼권한 (세션에서 제거함)
+//            session.setAttribute("buttonPermission", permission);
+//			프로그램 타이틀   (세션에서 제거함)
+//            session.setAttribute("title", title);
+
+            //사용자 방문 로그 기록
+            dao.setLog(userId, pid, subSystem, lcode, mcode);
+            // URL에 버튼권한/프로그램명 전달
+            url2 = url + "&pid="+pid;
+             	            	            
+        }
+        catch(Exception e) {
+            throw new JspException(e);
+        }
+	    
+	    //session.setAttribute("sessionInfo", sessionInfo);
+	    out.println(".");
+    }
+    else {
+%>
+        <script language="JavaScript">
+		//Filter에서 체크하고 있긴 합니다만.... 일단 살려놓습니다.20110713
+        alert("사용자 세션이 종료되었습니다. 다시 로그인하십시오.");
+    	</script>       
+<%      
+    }
+%>
+
+<script language="JavaScript">
+	<!-- 2011.08.04 lcode ADD(MARIO OUTLET) -->
+	top.mainFrame.fn_CreateWin('<%=pid%>', '<%=title%>', '<%=url2%>', '<%=permission%>', '<%=title%>', '<%=lcode%>');
+</script>
+
+
+

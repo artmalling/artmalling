@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 
+ * 작 성 일    : 2010.02.21
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개          요 :  회원메모관리
+ -->
+<service name="/dctm112.dm">
+    <!-- 회원메모관리 List -->
+    <gauce name="H_MASTER"> 
+        <column colName="MEMO_DATE"       colType="TB_STRING"  size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMM_NAME1"      colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"         colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"       colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_PERS_FLAG"  colType="TB_STRING"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"           colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MEMO_DESC"       colType="TB_STRING"  size="400" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_ID"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USER_NAME"       colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 회원정보 -->
+    <gauce name="H_CUSTDETAIL"> 
+        <column colName="CUST_NAME"   colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH1"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH2"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH3"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="MOBILE_PH1"  colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"  colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"  colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"       colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_ADDR"   colType="TB_STRING"  size="406" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT"       colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL1"      colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL2"      colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRADE_NAME"  colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>    
+
+    <!-- 회원메모 상세 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="MEMO_DATE"       colType="TB_STRING"  size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MEMO_TYPE"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"         colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"       colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_PERS_FLAG"  colType="TB_STRING"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MEMO_DESC"       colType="TB_STRING"  size="400" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 회원메모관리 리스트 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[            
+            SELECT A.MEMO_DATE 
+                 , COM.FN_GET_COMM_NAME('D', 'D020', A.MEMO_TYPE) COMM_NAME1
+                 , A.CUST_ID 
+                 , B.CUST_NAME
+                 , B.COMP_PERS_FLAG    
+                 , DCS.SC_Crypto_FUN('DEC', B.SS_NO) AS SS_NO   
+                 , A.MEMO_DESC  
+                 , A.REG_ID
+                 , C.USER_NAME
+              FROM DCS.DM_MEMO A
+                 , DCS.DM_CUSTOMER B
+                 , COM.TC_USRMST C
+             WHERE A.CUST_ID   = B.CUST_ID
+               AND A.REG_ID    = C.USER_ID
+               AND A.MEMO_DATE BETWEEN ? || '000000' AND ? || '235959'
+               AND B.CUST_STAT_FLAG = '0'
+               AND B.CUST_ID   IN (
+                                    SELECT UNIQUE A.CUST_ID 
+                                      FROM DCS.DM_CUSTOMER A
+                                         , DCS.DM_CARD B
+                                     WHERE A.CUST_ID  =  B.CUST_ID 
+           ]]>        
+    </query>  
+    
+    <query name="SEL_MASTER_CUST_ID">        
+        <![CDATA[
+                                       AND A.CUST_ID  = ?
+           ]]>        
+    </query> 
+    <query name="SEL_MASTER_SS_NO">        
+        <![CDATA[      
+                                       AND B.SS_NO    = DCS.SC_Crypto_FUN('ENC', ?)                                       
+           ]]>        
+    </query>
+    <query name="SEL_MASTER_CARD_NO">        
+        <![CDATA[
+                                       AND B.CARD_NO  = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+           ]]>        
+    </query>
+    <query name="SEL_MASTER_END">        
+        <![CDATA[
+                                  )      
+           ]]>        
+    </query>
+    
+    <!-- 회원정보 조회 -->
+    <query name="SEL_CUSTINFO">        
+        <![CDATA[
+            SELECT A.CUST_NAME
+                 , A.HOME_PH1
+                 , A.HOME_PH2
+                 , A.HOME_PH3
+                 , A.MOBILE_PH1 
+                 , A.MOBILE_PH2 
+                 , A.MOBILE_PH3
+                 , A.SS_NO
+                 , DECODE(NULL, '', A.HOME_ZIP_CD1 ||'-'|| A.HOME_ZIP_CD2 ||' '|| A.HOME_ADDR1 ||' '|| A.HOME_ADDR2) HOME_ADDR
+                 , C.POINT
+                 , A.EMAIL1
+                 , A.EMAIL2
+                 , COM.FN_GET_COMM_NAME('D', 'D011', B.CUST_GRADE) GRADE_NAME
+              FROM DCS.DM_CUSTOMER A
+                 , DCS.V_DO_CUST_GRADE_CURR B
+                 , DCS.DO_CUST_TPOINT C
+             WHERE A.CUST_ID = B.CUST_ID
+               AND A.CUST_ID = C.CUST_ID
+               AND A.CUST_ID = ?
+        ]]>        
+    </query>    
+    
+    <!-- 회원메모관리 상세 조회 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT A.MEMO_DATE 
+                 , A.MEMO_TYPE
+                 , A.CUST_ID 
+                 , B.CUST_NAME
+                 , B.COMP_PERS_FLAG             
+                 , A.MEMO_DESC  
+              FROM DCS.DM_MEMO A
+                 , DCS.DM_CUSTOMER B
+                 , COM.TC_USRMST C
+             WHERE A.CUST_ID   = B.CUST_ID
+               AND A.REG_ID    = C.USER_ID
+               AND A.CUST_ID   = ? 
+               AND A.MEMO_DATE = ?
+           ]]>        
+    </query>  
+    
+    <!-- 회원메모 등록  -->
+    <query name="INS_MEMO">        
+        <![CDATA[
+            INSERT INTO DCS.DM_MEMO (
+                                     CUST_ID      
+                                   , MEMO_DATE    
+                                   , MEMO_TYPE      
+                                   , MEMO_DESC       
+                                   , REG_ID   
+                                    ) 
+                             VALUES (
+                                     ?
+                                   , TO_CHAR(SYSDATE,'YYYYMMDDhh24miss')
+                                   , ?
+                                   , ?
+                                   , ?                 
+                                   )   
+         ]]>   
+    </query>  
+    
+    <!-- 회원메모 수정 -->
+    <query name="UPD_MEMO">
+        <![CDATA[
+            UPDATE DCS.DM_MEMO
+               SET MEMO_DESC   = ?  
+             WHERE CUST_ID     = ?
+               AND MEMO_DATE   = ?  
+        ]]>
+    </query> 
+</service>

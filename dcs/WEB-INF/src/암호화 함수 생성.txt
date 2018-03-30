@@ -1,0 +1,39 @@
+-- 자바 파일 oracle에 업로드
+loadjava -u dcs/dcs@127.0.0.1:1521:HGP -v -r EncryptionUtil.java
+dropjava -u dcs/dcs@127.0.0.1:1521:HGP EncryptionUtil.java
+
+
+loadjava -u dcs/dcs@127.0.0.1:1521:HGP -v -r seedx.java
+dropjava -u dcs/dcs@127.0.0.1:1521:HGP seedx.java
+
+
+-- 생성 쿼리
+CREATE OR REPLACE FUNCTION  DCS.F_ENCRYPTEDPASSWD_M(STR VARCHAR2)
+RETURN VARCHAR2
+AS
+LANGUAGE JAVA
+NAME 'EncryptionUtilMario.encryptedPasswd(java.lang.String) return java.lang.String';
+
+
+
+CREATE OR REPLACE FUNCTION  DCS.F_ENCRYPTEDSTR_M(STR VARCHAR2)
+RETURN VARCHAR2
+AS
+LANGUAGE JAVA
+NAME 'EncryptionUtilMario.encryptedStr(java.lang.String) return java.lang.String';
+
+
+
+CREATE OR REPLACE FUNCTION  DCS.F_DECRYPTEDSTR_M(STR VARCHAR2)
+RETURN VARCHAR2
+AS
+LANGUAGE JAVA
+NAME 'EncryptionUtilMario.decryptedStr(java.lang.String) return java.lang.String';
+
+
+
+--조회 쿼리
+SELECT F_ENCRYPTEDPASSWD_M('1')
+     , F_ENCRYPTEDSTR_M('1')
+     , F_DECRYPTEDSTR_M('sx7HUUGBRYJQz7tU9dbkkA==')
+  FROM dual;

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  데이터변경이력조회
+ -->
+<service name="/dctm433.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="CHECK1"         colType="TB_STRING"  size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SS_NO_ORG"      colType="TB_STRING"  size="13"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SS_NO"          colType="TB_STRING"  size="64"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CARD_NO_ORG"    colType="TB_STRING"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CARD_NO"        colType="TB_STRING"  size="64"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PWD_NO_ORG"     colType="TB_STRING"  size="4"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PWD_NO"         colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />  
+        <column colName="HOME_PH1_ORG"   colType="TB_STRING"  size="4"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="HOME_PH1"       colType="TB_STRING"  size="32"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="HOME_PH2_ORG"   colType="TB_STRING"  size="4"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="HOME_PH2"       colType="TB_STRING"  size="32"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="HOME_PH3_ORG"   colType="TB_STRING"  size="4"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="HOME_PH3"       colType="TB_STRING"  size="32"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH1_ORG" colType="TB_STRING"  size="4"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH1"     colType="TB_STRING"  size="32"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH2_ORG" colType="TB_STRING"  size="4"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH2"     colType="TB_STRING"  size="32"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH3_ORG" colType="TB_STRING"  size="4"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH3"     colType="TB_STRING"  size="32"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="EMAIL1_ORG"     colType="TB_STRING"  size="50"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="EMAIL1"         colType="TB_STRING"  size="128"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="EMAIL2_ORG"     colType="TB_STRING"  size="50"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="EMAIL2"         colType="TB_STRING"  size="128"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" /> 
+     </gauce>    
+
+    <!-- 연계카드 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT '' AS CHECK1
+                 , SS_NO_ORG
+                 , SS_NO
+                 , CARD_NO_ORG
+                 , CARD_NO
+                 , PWD_NO_ORG
+                 , PWD_NO 
+              FROM DCS.MIG_CUST             
+        ]]>        
+    </query>
+    
+    <!-- 패밀리카드 리스트 조회 -->
+    <query name="SEL_MASTER_CARD">   
+        <![CDATA[    
+            SELECT '' AS CHECK1
+                 , SS_NO_ORG
+                 , SS_NO
+                 , CARD_NO_ORG
+                 , CARD_NO
+                 , PWD_NO_ORG
+                 , PWD_NO 
+                 , HOME_PH1_ORG    
+                 , HOME_PH1        
+                 , HOME_PH2_ORG    
+                 , HOME_PH2        
+                 , HOME_PH3_ORG    
+                 , HOME_PH3        
+                 , MOBILE_PH1_ORG  
+                 , MOBILE_PH1      
+                 , MOBILE_PH2_ORG  
+                 , MOBILE_PH2      
+                 , MOBILE_PH3_ORG  
+                 , MOBILE_PH3      
+                 , EMAIL1_ORG      
+                 , EMAIL1          
+                 , EMAIL2_ORG      
+                 , EMAIL2          
+              FROM DCS.MIG_CUST_CARD             
+        ]]>        
+    </query>    
+    
+    <query name="UPD_MIG_CUST">
+        <![CDATA[
+            UPDATE DCS.MIG_CUST
+               SET SS_NO       = DCS.SC_Crypto_FUN('ENC', ?)                  
+                 , CARD_NO     = DCS.SC_Crypto_FUN('ENC', ?)                 
+                 , PWD_NO      = DCS.SC_Crypto_FUN('ENC', ?)  
+             WHERE SS_NO_ORG   = ?
+               AND CARD_NO_ORG = ?
+               AND PWD_NO_ORG  = ?
+        ]]>
+    </query>   
+    
+    <query name="UPD_MIG_CUST_CARD">
+        <![CDATA[
+            UPDATE DCS.MIG_CUST_CARD
+               SET SS_NO          = DCS.SC_Crypto_FUN('ENC', ?)                  
+                 , CARD_NO        = DCS.SC_Crypto_FUN('ENC', ?)                
+                 , PWD_NO         = DCS.SC_Crypto_FUN('ENC', ?)
+                 , HOME_PH1       = DCS.SC_Crypto_FUN('ENC', ?)   
+                 , HOME_PH2       = DCS.SC_Crypto_FUN('ENC', ?)   
+                 , HOME_PH3       = DCS.SC_Crypto_FUN('ENC', ?)   
+                 , MOBILE_PH1     = DCS.SC_Crypto_FUN('ENC', ?)   
+                 , MOBILE_PH2     = DCS.SC_Crypto_FUN('ENC', ?)   
+                 , MOBILE_PH3     = DCS.SC_Crypto_FUN('ENC', ?)   
+                 , EMAIL1         = DCS.SC_Crypto_FUN('ENC', ?)   
+                 , EMAIL2         = DCS.SC_Crypto_FUN('ENC', ?) 
+             WHERE SS_NO_ORG      = ?
+        ]]>
+    </query>       
+</service>

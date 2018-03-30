@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 :
+ * 변경내용 :
+ * 개    요 :  로그인 체크
+ -->
+<service name="/ecom001.ec">	
+    <!-- 사용자 조회-->
+    <query name="SEL_EDI_USER">
+        <![CDATA[
+        SELECT 'edi' AS USER_ID
+             , 'edi_user' AS USER_NAME
+             , 'ESAL' AS SUB_MENU
+          FROM DUAL
+        ]]>
+    </query>
+    
+    <!-- 로그인 페이지 점코드 -->
+    <query name="SEL_STRCD">
+        <![CDATA[
+        SELECT STR_CD AS CODE, STR_NAME AS NAME  
+          FROM DPS.PC_STRMST 
+         WHERE FCL_FLAG = '1'
+           AND STR_FLAG  = '1'
+      ORDER BY CODE
+        ]]>
+    </query>
+    
+    <!-- 로그인 브랜드  담당 브랜드 명 -->
+    <query name="SEL_PUM_BLAND">
+        <![CDATA[
+        SELECT B.BUYER_CD AS BUYER_CD
+             , B.BUYER_NAME AS BUYER_NAME  
+		  FROM DPS.PC_STRPBN A, DPS.PC_BUYERMST B
+		 WHERE A.STR_CD = B.STR_CD
+		   AND A.CHAR_BUYER_CD = B.BUYER_CD
+		   AND A.STR_CD = ?  
+		   AND A.PUMBUN_CD = ?
+        ]]>
+    </query>
+    
+     <!-- 로그인 협력사  담당 브랜드 명 -->
+    <query name="SEL_VEN_BLAND">
+        <![CDATA[
+        SELECT CHAR_NAME
+		     , PHONE
+		  FROM 
+		       ( SELECT SORT
+		              , CHAR_NAME
+		              , PHONE
+		           FROM ( SELECT CASE WHEN VEN_TASK_FLAG = '1' THEN 1    -- EDI 담당자
+		                              WHEN VEN_TASK_FLAG = '3' THEN 2    -- 영업 담당자
+		                         ELSE 3 END AS SORT                      
+		                       , CHAR_NAME
+		                       , HP1_NO || '-' || HP2_NO || '-' ||  HP3_NO AS PHONE
+		                    FROM DPS.PC_VENEMP
+		                   WHERE USE_YN = 'Y'
+		                     AND VEN_CD = ?)
+		          ORDER BY SORT
+		       )
+		WHERE ROWNUM = 1  
+        ]]>
+    </query>
+    
+    <!-- 로그인 시스템   담당자 명 -->
+    <query name="SEL_SYSTEM">
+        <![CDATA[
+        SELECT SYS_PART
+             , COMM_PART 
+             , COMM_CODE 
+             , COMM_NAME1 
+             , COMM_NAME2 
+             , DECODE ( USE_YN, 'Y', 'T' 
+             , 'N', 'F' 
+             , USE_YN ) AS USE_YN 
+             , REFER_VALUE 
+             , INQR_ORDER
+             , '0' AS ENABLE1
+          FROM COM.TC_COMMCODE
+         WHERE 1=1               
+           AND COMM_PART LIKE 'E002%'
+           AND SYS_PART = 'E'
+           AND COMM_CODE = '01' 
+      ORDER BY INQR_ORDER
+        ]]>
+    </query>
+    
+    
+    
+    <!-- 브랜드 조회 -->
+    <query name="SEL_PUMBUN">
+        <![CDATA[
+        SELECT A.STR_CD AS STR_CD
+             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM
+             , A.USER_ID AS USER_ID
+             , A.PWD_NO AS PWD_NO
+             , A.PWD_REQ_DT AS PWD_REG_DT
+             , A.EMAIL AS EMAIL
+             , A.USE_END_DT AS USE_END_DT
+             , A.LAST_CONN_DT AS LAST_CONN_DT
+             , A.REG_ID AS REG_ID
+             , A.MOD_ID AS MOD_ID
+             , B.PUMBUN_CD AS PUMBUN_CD
+             , B.PUMBUN_NAME AS PUMBUN_NM
+             , B.VEN_CD AS VEN_CD
+             , C.VEN_NAME AS VEN_NAME
+             , C.BIZ_TYPE AS BIZ_TYPE
+             , B.CHAR_BUYER_CD AS CHAR_BUYER_CD
+             , A.PWD_CNT AS PWD_CNT
+             , '2' AS GB
+		  FROM MSS.EM_EDIUSER A, DPS.PC_STRPBN B, DPS.PC_VENMST C
+		 WHERE A.STR_CD = B.STR_CD
+		   AND A.USER_ID = B.PUMBUN_CD
+		   AND B.VEN_CD = C.VEN_CD
+		   AND A.USER_GUBN = '2'
+		   AND A.STR_CD = ? 
+		   AND A.USER_ID = ?
+		   AND (A.PWD_NO = ? OR A.PWD_NO = DCS.SC_Crypto_FUN('ENC',?))
+        ]]>
+    </query>
+    
+    <!-- 협력사 조회  -->
+    <query name="SEL_VEN">
+        <![CDATA[
+        SELECT A.STR_CD AS STR_CD
+             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM
+             , A.USER_ID AS USER_ID
+             , A.PWD_NO AS PWD_NO
+             , A.PWD_REQ_DT AS PWD_REG_DT
+             , A.EMAIL AS EMAIL
+             , A.USE_END_DT AS USE_END_DT
+             , A.LAST_CONN_DT AS LAST_CONN_DT
+             , A.REG_ID AS REG_ID
+             , A.MOD_ID AS MOD_ID
+             , B.VEN_CD AS VEN_CD
+             , B.VEN_NAME AS VEN_NAME
+             , B.BIZ_TYPE AS BIZ_TYPE
+             , A.PWD_CNT AS PWD_CNT
+             , '1' AS GB
+             , A.REG_DATE AS REG_DATE
+          FROM MSS.EM_EDIUSER A, 
+               DPS.PC_STRVENMST B
+         WHERE A.STR_CD = B.STR_CD
+           AND A.USER_ID = B.VEN_CD
+           AND A.USER_GUBN = '1'
+           AND A.USE_YN = 'Y'
+           AND A.STR_CD = ?
+           AND A.USER_ID = ?
+           AND (A.PWD_NO = ? OR A.PWD_NO = DCS.SC_Crypto_FUN('ENC',?))
+     
+         UNION ALL
+        SELECT A.STR_CD AS STR_CD
+             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM
+             , A.USER_ID AS USER_ID
+             , A.PWD_NO AS PWD_NO
+             , A.PWD_REQ_DT AS PWD_REG_DT
+             , A.EMAIL AS EMAIL
+             , A.USE_END_DT AS USE_END_DT
+             , A.LAST_CONN_DT AS LAST_CONN_DT
+             , A.REG_ID AS REG_ID
+             , A.MOD_ID AS MOD_ID
+             , A.USER_ID AS VEN_CD
+             , (CASE WHEN A.USER_ID = '99999' THEN '택발행대행사' ELSE '행사지원' END) AS VEN_NAME
+             , ' ' AS BIZ_TYPE
+             , A.PWD_CNT AS PWD_CNT
+             , '@' AS GB
+             , REG_DATE AS REG_DATE
+          FROM MSS.EM_EDIUSER A
+         WHERE A.USE_YN = 'Y'
+           AND A.USER_GUBN = '@'
+           AND A.STR_CD = ?
+           AND A.USER_ID = ?
+           AND (A.PWD_NO = ? OR A.PWD_NO = DCS.SC_Crypto_FUN('ENC',?))
+        ]]>
+    </query>
+    
+    
+     <!-- 비밀번호변경 확인 -->
+    <query name="SEL_PWDCH">
+        <![CDATA[
+        SELECT PWD_NO AS PWD_NO 
+             , LAST_CONN_DT AS LAST_CONN_DT
+		  FROM MSS.EM_EDIUSER
+	     WHERE STR_CD = ?
+	       AND USER_ID = ?
+        ]]>
+    </query>
+    
+    <!-- 비밀번호변경 저장 -->
+    <query name="UPD_PWD">
+        <![CDATA[
+        UPDATE MSS.EM_EDIUSER 
+           SET PWD_NO = DCS.SC_Crypto_FUN('ENC', ?)
+             , PWD_REQ_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+             , LAST_CONN_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+             , PWD_CNT = 0
+             , MOD_ID = ?
+             , MOD_DATE = SYSDATE
+             
+	     WHERE STR_CD = ?
+		   AND USER_ID = ?
+        ]]>
+    </query>
+    
+    <!-- 로그인 실패시 1 증가 -->
+    <query name="UPD_USER_CNT">
+        <![CDATA[
+        UPDATE MSS.EM_EDIUSER 
+           SET PWD_CNT = NVL(PWD_CNT,0) + 1
+		 WHERE STR_CD =  ?
+		   AND USER_ID = ?  
+        ]]>
+    </query>
+    
+    <!-- 로그인 실패 횟수 조회 -->
+    <query name="SEL_USER_CNT">
+        <![CDATA[
+        SELECT PWD_CNT AS PWD_CNT
+	      FROM MSS.EM_EDIUSER
+	     WHERE STR_CD  =  ?
+	       AND USER_ID = ?   
+        ]]>
+    </query>
+    
+     <!-- 로그인 접속일  -->
+    <query name="UPD_CONN_DT">
+        <![CDATA[
+        UPDATE MSS.EM_EDIUSER 
+           SET LAST_CONN_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+             , PWD_CNT = 0
+		 WHERE STR_CD = ?
+		   AND USER_ID = ?  
+        ]]>
+    </query>    
+             
+    <!-- 로그인시 사번의 구분값(협력사인지 대응업체인지) -->
+    <query name="SEL_GUBUN">
+        <![CDATA[
+        SELECT USER_GUBN
+	      FROM MSS.EM_EDIUSER
+	     WHERE USER_ID  = ?
+	       AND STR_CD   = ?
+        ]]>
+    </query>               
+
+</service>

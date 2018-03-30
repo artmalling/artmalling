@@ -1,0 +1,595 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 이어울림
+ * 작 성 일 : 2016.10.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 무인정산자료 비교표조회한다.
+ -->
+<service name="/psal611.ps">
+    
+    <!-- 무인정산자료 비교표 HEADER -->
+    <gauce name="H_SEL_MASTER_OLD"> 
+        <column colName="STR_CD"         colType="TB_STRING"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NAME"       colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BRAND_CD"   	 colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BRAND_NAME"     colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"        colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CASH_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INGIFT_AMT"     colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUTGIFT_AMT"    colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETC_AMT"    	 colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORD"    		 colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 무인정산자료 비교표 조회 -->
+    <query name="SEL_MASTER_OLD">
+        <![CDATA[
+			SELECT A.STR_CD
+			     , A.SALE_DT
+			     , A.POS_NO 
+			     , B.POS_NAME 
+			     , B.RSPNS_NAME AS BRAND_CD
+			     , NVL((SELECT PUMBUN_NAME FROM DPS.PC_STRPBN WHERE PUMBUN_CD = B.RSPNS_NAME),B.RSPNS_NAME) AS BRAND_NAME 
+			     , SALE_AMT1 AS TOT_AMT
+			     , SALE_AMT101 - SALE_AMT102  AS CASH_AMT     
+			     , SALE_AMT105 + SALE_AMT108 - (SALE_AMT106 + SALE_AMT109) AS CARD_AMT  -- 은련카드 포함
+			     , SALE_AMT111 - (SALE_AMT112+SALE_AMT113) AS INGIFT_AMT
+			     , SALE_AMT114 - (SALE_AMT115+SALE_AMT116) AS OUTGIFT_AMT     
+			     , SALE_AMT601 - SALE_AMT602 AS ETC_AMT
+			     , 0 ORD
+			  FROM (
+			        SELECT A.STR_CD
+			             , A.SALE_DT
+			             , A.POS_NO
+			             --, SUM(DECODE(A.BALANCE_FLAG, '1'  , A.NORM_TRAN_AMT, 0)) AS SALE_AMT1       -- 총매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '3'  , A.NORM_TRAN_AMT, 0)) AS SALE_AMT1       -- 총매출	할인 적용된 금액
+			             , SUM(DECODE(A.BALANCE_FLAG, '101', A.NORM_TRAN_AMT, 0)) AS SALE_AMT101     -- 현금매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '102', A.NORM_TRAN_AMT, 0)) AS SALE_AMT102     -- 현금반품
+			             , SUM(DECODE(A.BALANCE_FLAG, '105', A.NORM_TRAN_AMT, 0)) AS SALE_AMT105     -- 카드매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '106', A.NORM_TRAN_AMT, 0)) AS SALE_AMT106     -- 카드반품
+			             , SUM(DECODE(A.BALANCE_FLAG, '108', A.NORM_TRAN_AMT, 0)) AS SALE_AMT108     -- 은련카드매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '109', A.NORM_TRAN_AMT, 0)) AS SALE_AMT109     -- 은련카드반품             
+			             , SUM(DECODE(A.BALANCE_FLAG, '111', A.NORM_TRAN_AMT, 0)) AS SALE_AMT111     -- 자사상품권회수
+			             , SUM(DECODE(A.BALANCE_FLAG, '112', A.NORM_TRAN_AMT, 0)) AS SALE_AMT112     -- 상품권환불(자상)
+			             , SUM(DECODE(A.BALANCE_FLAG, '113', A.NORM_TRAN_AMT, 0)) AS SALE_AMT113     -- 거스름(자상)
+			             , SUM(DECODE(A.BALANCE_FLAG, '114', A.NORM_TRAN_AMT, 0)) AS SALE_AMT114     -- 제휴상품권회수
+			             , SUM(DECODE(A.BALANCE_FLAG, '115', A.NORM_TRAN_AMT, 0)) AS SALE_AMT115     -- 상품권환불(제상)
+			             , SUM(DECODE(A.BALANCE_FLAG, '116', A.NORM_TRAN_AMT, 0)) AS SALE_AMT116     -- 거스름(제상)
+			             , SUM(DECODE(A.BALANCE_FLAG, '601', A.NORM_TRAN_AMT, 0)) AS SALE_AMT601     -- 외상매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '602', A.NORM_TRAN_AMT, 0)) AS SALE_AMT602     -- 외상반품
+			          FROM (
+			                SELECT  X.STR_CD
+			                      , X.SALE_DT
+			                      , X.POS_NO
+			                      , X.INQR_ORDER
+			                      , X.BALANCE_FLAG
+			                      , X.COMM_NAME1
+			                      , X.NORM_TRAN_CNT
+			                      , X.NORM_TRAN_AMT
+			                   FROM (
+			                       SELECT  A.STR_CD
+			                             , A.SALE_DT
+			                             , A.POS_NO
+			                             , C.INQR_ORDER
+			                             , A.BALANCE_FLAG
+			                             , C.COMM_NAME1
+			                             , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_CNT END AS NORM_TRAN_CNT
+			                             , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_AMT END AS NORM_TRAN_AMT
+			                          FROM DPS.PS_TRTOTAL A
+			                             , DPS.PC_POSMST     B
+			                             , (
+			                                SELECT COMM_CODE
+			                                     , COMM_NAME1
+			                                     , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+			                                  FROM COM.TC_COMMCODE
+			                                 WHERE COMM_PART = 'P606'
+			                                   AND SYS_PART  = 'D'
+			                                   AND USE_YN    = 'Y'
+			                                   AND COMM_CODE <> '170'
+			                               ) C
+			                         WHERE A.STR_CD       = B.STR_CD
+			                           AND A.POS_NO       = B.POS_NO
+			                           AND A.BALANCE_FLAG = C.COMM_CODE
+			                           AND A.TOTAL_FLAG   = '01'
+			                           AND A.STR_CD       LIKE ? || '%'
+			                           AND B.FLOR_CD      LIKE '%' || '%'
+			                           AND B.POS_FLAG     LIKE '%' || '%'
+			                           AND B.HALL_CD      LIKE '%' || '%'
+			                           AND A.POS_NO       >= '1001'
+			                           AND A.POS_NO       <= '8999'
+			                           AND A.POS_NO LIKE ?||'%'
+			                           AND A.SALE_DT      BETWEEN ? AND ?
+			                           AND EXISTS ( SELECT MYORG.USER_ID
+			                                          FROM COM.V_MYORG MYORG
+			                                         WHERE MYORG.STR_CD      = A.STR_CD
+			                                           AND MYORG.USER_ID     = 'fkl'
+			                                       )
+			                        
+			                        
+			                        ) X
+			                    WHERE X.BALANCE_FLAG IN ('3' -- '1'
+			                                            , '101'
+			                                            , '102'
+			                                            , '105'
+			                                            , '106'
+			                                            , '108'
+			                                            , '109'
+			                                            , '111'
+			                                            , '112'
+			                                            , '113'
+			                                            , '114'
+			                                            , '115'
+			                                            , '116'
+			                                            , '601'
+			                                            , '602'
+			                                            )
+			               ) A
+			           GROUP BY A.STR_CD
+			                  , A.SALE_DT
+			                  , A.POS_NO
+			       ) A, DPS.PC_POSMST B
+			     WHERE A.POS_NO = B.POS_NO
+			       AND SALE_AMT1 <>0
+			   /* 수기매출 장비 */
+			   UNION ALL
+			 SELECT A.STR_CD
+			 	  , A.SALE_DT
+			 	  , A.POS_NO
+			 	  , MIN(C.POS_NAME)
+			 	  , A.PUMBUN_CD BRAND_CD
+			 	  , (SELECT PUMBUN_NAME FROM DPS.PC_STRPBN WHERE STR_CD = A.STR_CD AND PUMBUN_CD = A.PUMBUN_CD) PUMBUN_NAME
+			 	  , SUM(DECODE(B.TRAN_FLAG,0,1,-1) * SALE_AMT) TOT_AMT
+			 	  , SUM( CASE WHEN PAY_TYPE IN ('00')   THEN  DECODE(B.TRAN_FLAG,0,1,-1) * A.SALE_AMT ELSE 0 END )  --현금
+			 	  , SUM( CASE WHEN PAY_TYPE IN ('10','11','12','13')   THEN  DECODE(B.TRAN_FLAG,0,1,-1) * A.SALE_AMT ELSE 0 END )   -- 카드
+			 	  , 0   -- 자사
+			 	  , 0   -- 타사
+			 	  , SUM( CASE WHEN PAY_TYPE IS  NULL THEN  DECODE(B.TRAN_FLAG,0,1,-1) * A.SALE_AMT ELSE 0 END ) ETC_AMT
+			             , 1 ORD
+			 FROM DPS.PS_DISITEM A, DPS.PS_DISHEADER B, DPS.PC_POSMST C  , DPS.PS_SALEETC D
+			 WHERE 1=1
+			   AND A.STR_CD = B.STR_CD
+			   AND A.SALE_DT = B.SALE_DT
+			   AND A.POS_NO = B.POS_NO
+			   AND A.POS_NO = C.POS_NO
+			   AND A.TRAN_NO = B.TRAN_NO
+               AND A.STR_CD = D.STR_CD
+			   AND A.SALE_DT = D.SALE_DT
+			   AND A.POS_NO = D.POS_NO
+			   AND A.TRAN_NO = D.TRAN_NO			   
+			   AND A.STR_CD = ?
+			   AND A.SALE_DT BETWEEN ? AND ? 
+			   AND A.POS_NO BETWEEN '9000' AND '9999'
+			   AND A.POS_NO LIKE ?||'%'
+			   GROUP BY A.STR_CD, A.SALE_DT,A.POS_NO, A.PUMBUN_CD
+			   ORDER BY STR_CD,SALE_DT,ORD,BRAND_CD,POS_NO
+        ]]>
+    </query>
+    
+    <!-- 무인정산자료 비교표 HEADER -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"         colType="TB_STRING"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NAME"       colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BRAND_CD"   	 colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BRAND_NAME"     colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"        colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CASH_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INGIFT_AMT"     colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUTGIFT_AMT"    colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETC_AMT1"    	 colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORD"    		 colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ARTSKGWN"    	 colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETC_AMT2"    	 colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETC_AMT3"    	 colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 무인정산자료 비교표 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT A.STR_CD
+			     , A.SALE_DT
+			     , A.POS_NO 
+			     , B.POS_NAME 
+			     , B.RSPNS_NAME AS BRAND_CD
+			     , NVL((SELECT PUMBUN_NAME FROM DPS.PC_STRPBN WHERE PUMBUN_CD = B.RSPNS_NAME),B.RSPNS_NAME) AS BRAND_NAME 
+			     , SALE_AMT1 AS TOT_AMT
+			     , SALE_AMT101 - SALE_AMT102  AS CASH_AMT     
+			     , SALE_AMT105 + SALE_AMT109 - (SALE_AMT106 + SALE_AMT110) AS CARD_AMT  -- 은련카드 포함
+			     , SALE_AMT111 - (SALE_AMT112+SALE_AMT113) AS INGIFT_AMT
+			     --, SALE_AMT114 - (SALE_AMT115+SALE_AMT116) AS OUTGIFT_AMT     
+                 , SALE_AMT114 - (SALE_AMT115+SALE_AMT116+SALE_AMT2002) AS OUTGIFT_AMT     
+			     , SALE_AMT601 - SALE_AMT602 AS ETC_AMT1
+			     , 0 ORD
+                 , SALE_AMT2002 AS ARTSKGWN
+                 , SALE_AMT611 - SALE_AMT612 AS ETC_AMT2
+                 , SALE_AMT621 - SALE_AMT622 AS ETC_AMT3
+			  FROM (
+			        SELECT A.STR_CD
+			             , A.SALE_DT
+			             , A.POS_NO
+			             --, SUM(DECODE(A.BALANCE_FLAG, '1'  , A.NORM_TRAN_AMT, 0)) AS SALE_AMT1       -- 총매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '3'  , A.NORM_TRAN_AMT, 0)) AS SALE_AMT1       -- 총매출 (할인 적용된 금액)
+			             , SUM(DECODE(A.BALANCE_FLAG, '101', A.NORM_TRAN_AMT, 0)) AS SALE_AMT101     -- 현금매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '102', A.NORM_TRAN_AMT, 0)) AS SALE_AMT102     -- 현금반품
+			             , SUM(DECODE(A.BALANCE_FLAG, '105', A.NORM_TRAN_AMT, 0)) AS SALE_AMT105     -- 카드매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '106', A.NORM_TRAN_AMT, 0)) AS SALE_AMT106     -- 카드반품
+			             , SUM(DECODE(A.BALANCE_FLAG, '109', A.NORM_TRAN_AMT, 0)) AS SALE_AMT109     -- 은련카드매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '110', A.NORM_TRAN_AMT, 0)) AS SALE_AMT110     -- 은련카드반품             
+			             , SUM(DECODE(A.BALANCE_FLAG, '111', A.NORM_TRAN_AMT, 0)) AS SALE_AMT111     -- 자사상품권회수
+			             , SUM(DECODE(A.BALANCE_FLAG, '112', A.NORM_TRAN_AMT, 0)) AS SALE_AMT112     -- 상품권환불(자상)
+			             , SUM(DECODE(A.BALANCE_FLAG, '113', A.NORM_TRAN_AMT, 0)) AS SALE_AMT113     -- 거스름(자상)
+			             , SUM(DECODE(A.BALANCE_FLAG, '114', A.NORM_TRAN_AMT, 0)) AS SALE_AMT114     -- 제휴상품권회수
+			             , SUM(DECODE(A.BALANCE_FLAG, '115', A.NORM_TRAN_AMT, 0)) AS SALE_AMT115     -- 상품권환불(제상)
+			             , SUM(DECODE(A.BALANCE_FLAG, '116', A.NORM_TRAN_AMT, 0)) AS SALE_AMT116     -- 거스름(제상)
+			             , SUM(DECODE(A.BALANCE_FLAG, '601', A.NORM_TRAN_AMT, 0)) AS SALE_AMT601     -- 외상매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '602', A.NORM_TRAN_AMT, 0)) AS SALE_AMT602     -- 외상반품
+                         , SUM(DECODE(A.BALANCE_FLAG, '611', A.NORM_TRAN_AMT, 0)) AS SALE_AMT611     -- 온라인매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '612', A.NORM_TRAN_AMT, 0)) AS SALE_AMT612     -- 온라인반품
+                         , SUM(DECODE(A.BALANCE_FLAG, '621', A.NORM_TRAN_AMT, 0)) AS SALE_AMT621     -- 기타매출
+			             , SUM(DECODE(A.BALANCE_FLAG, '622', A.NORM_TRAN_AMT, 0)) AS SALE_AMT622     -- 기타반품
+                         , SUM(DECODE(A.BALANCE_FLAG, '2002', A.NORM_TRAN_AMT, 0)) AS SALE_AMT2002     -- 아트몰링 식권
+			          FROM (
+			                SELECT  X.STR_CD
+			                      , X.SALE_DT
+			                      , X.POS_NO
+			                      , X.INQR_ORDER
+			                      , X.BALANCE_FLAG
+			                      , X.COMM_NAME1
+			                      , X.NORM_TRAN_CNT
+			                      , X.NORM_TRAN_AMT
+			                   FROM (
+			                       SELECT  A.STR_CD
+			                             , A.SALE_DT
+			                             , A.POS_NO
+			                             , C.INQR_ORDER
+			                             , A.BALANCE_FLAG
+			                             , C.COMM_NAME1
+			                             , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_CNT END AS NORM_TRAN_CNT
+			                             , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_AMT END AS NORM_TRAN_AMT
+			                          FROM DPS.PS_TRTOTAL A
+			                             , DPS.PC_POSMST     B
+			                             , (
+			                                SELECT COMM_CODE
+			                                     , COMM_NAME1
+			                                     , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+			                                  FROM COM.TC_COMMCODE
+			                                 WHERE COMM_PART = 'P606'
+			                                   AND SYS_PART  = 'D'
+			                                   AND USE_YN    = 'Y'
+			                                   AND COMM_CODE <> '170'
+			                               ) C
+			                         WHERE A.STR_CD       = B.STR_CD
+			                           AND A.POS_NO       = B.POS_NO
+			                           AND A.BALANCE_FLAG = C.COMM_CODE
+			                           AND A.TOTAL_FLAG   = '01'
+			                           AND A.STR_CD       LIKE ? || '%'
+			                           AND B.FLOR_CD      LIKE '%' || '%'
+			                           AND B.POS_FLAG     LIKE '%' || '%'
+			                           AND B.HALL_CD      LIKE '%' || '%'
+			                           AND A.POS_NO       >= '1001'
+			                           AND A.POS_NO       <= '8999'
+			                           AND A.POS_NO LIKE ?||'%'
+			                           AND A.SALE_DT      BETWEEN ? AND ?
+			                           AND EXISTS ( SELECT MYORG.USER_ID
+			                                          FROM COM.V_MYORG MYORG
+			                                         WHERE MYORG.STR_CD      = A.STR_CD
+			                                           AND MYORG.USER_ID     = 'fkl'
+			                                       )
+			                        UNION ALL
+                                    SELECT A.STR_CD
+			                             , A.SALE_DT
+			                             , A.POS_NO
+			                             , '999' INQR_ORDER
+			                             , '2002' BALANCE_FLAG
+			                             , '아트몰링식권' COMM_NAME1
+			                             , GIFT_CNT AS NORM_TRAN_CNT
+			                             , GIFT_AMT AS NORM_TRAN_AMT 
+                                      FROM DPS.PS_DISGIFT A
+                                         , DPS.PC_POSMST  B
+                                     WHERE  A.STR_CD       = B.STR_CD
+			                           AND A.POS_NO       = B.POS_NO
+			                           AND A.STR_CD       LIKE ? || '%'
+			                           AND B.FLOR_CD      LIKE '%' || '%'
+			                           AND B.POS_FLAG     LIKE '%' || '%'
+			                           AND B.HALL_CD      LIKE '%' || '%'
+			                           AND A.POS_NO       >= '1001'
+			                           AND A.POS_NO       <= '8999'
+			                           AND A.POS_NO LIKE ?||'%'
+			                           AND A.SALE_DT      BETWEEN ? AND ?
+			                           AND EXISTS ( SELECT MYORG.USER_ID
+			                                          FROM COM.V_MYORG MYORG
+			                                         WHERE MYORG.STR_CD      = A.STR_CD
+			                                           AND MYORG.USER_ID     = 'fkl'
+			                                       )
+                                       AND A.TYPE_CD ='2002'  -- 아트몰링 식권
+                                       AND GIFT_AMT <>0
+                                     ORDER BY SALE_DT, POS_NO
+			                        
+			                        ) X
+			                    WHERE X.BALANCE_FLAG IN ('3' --'1'
+			                                            , '101'
+			                                            , '102'
+			                                            , '105'
+			                                            , '106'
+			                                            , '109'
+			                                            , '110'
+			                                            , '111'
+			                                            , '112'
+			                                            , '113'
+			                                            , '114'
+			                                            , '115'
+			                                            , '116'
+			                                            , '601'
+			                                            , '602'
+                                                        , '611'
+                                                        , '612'
+                                                        , '621'
+                                                        , '622'
+                                                        , '2002' --아트몰링식권
+			                                            )
+			               ) A
+			           GROUP BY A.STR_CD
+			                  , A.SALE_DT
+			                  , A.POS_NO
+			       ) A, DPS.PC_POSMST B
+			     WHERE A.POS_NO = B.POS_NO
+			       AND SALE_AMT1 <>0
+			   /* 수기매출 장비 */
+			   UNION ALL
+			 SELECT A.STR_CD
+			 	  , A.SALE_DT
+			 	  , A.POS_NO
+			 	  , MIN(C.POS_NAME)
+			 	  , A.PUMBUN_CD BRAND_CD
+			 	  , (SELECT PUMBUN_NAME FROM DPS.PC_STRPBN WHERE STR_CD = A.STR_CD AND PUMBUN_CD = A.PUMBUN_CD) PUMBUN_NAME
+			 	  , SUM(DECODE(B.TRAN_FLAG,0,1,-1) * A.SALE_AMT) TOT_AMT
+			 	  , SUM( CASE WHEN D.PAY_TYPE IN ('00')   THEN  DECODE(B.TRAN_FLAG,0,1,-1) * A.SALE_AMT ELSE 0 END )  --현금
+			 	  , SUM( CASE WHEN D.PAY_TYPE IN ('10','11','12','13')   THEN  DECODE(B.TRAN_FLAG,0,1,-1) * A.SALE_AMT ELSE 0 END )   -- 카드
+			 	  , 0   -- 자사
+			 	  , 0   -- 타사
+			 	  , SUM( CASE WHEN PAY_TYPE IS NULL THEN  DECODE(B.TRAN_FLAG,0,1,-1) * A.SALE_AMT ELSE 0 END ) ETC_AMT
+			             , 1 ORD
+                         , 0
+                  , 0 
+                  , 0
+			 FROM DPS.PS_DISITEM A, DPS.PS_DISHEADER B, DPS.PC_POSMST C , DPS.PS_SALEETC D
+			 WHERE 1=1
+			   AND A.STR_CD = B.STR_CD
+			   AND A.SALE_DT = B.SALE_DT
+			   AND A.POS_NO = B.POS_NO
+			   AND A.POS_NO = C.POS_NO
+			   AND A.TRAN_NO = B.TRAN_NO
+               AND A.STR_CD = D.STR_CD
+			   AND A.SALE_DT = D.SALE_DT
+			   AND A.POS_NO = D.POS_NO
+			   AND A.TRAN_NO = D.TRAN_NO			   
+			   AND A.STR_CD = ?
+			   AND A.SALE_DT BETWEEN ? AND ? 
+			   AND A.POS_NO BETWEEN '9000' AND '9999'
+			   AND A.POS_NO LIKE ?||'%'
+			   GROUP BY A.STR_CD, A.SALE_DT,A.POS_NO, A.PUMBUN_CD
+			   ORDER BY STR_CD,SALE_DT,ORD,BRAND_CD,POS_NO
+        ]]>
+    </query>
+       <!-- 무인정산자료 비교표 조회 -->
+    <query name="SEL_MASTER_TEST">
+        <![CDATA[ 
+    	WITH SALE_LIST AS
+			(
+			/*실적*/
+			SELECT A.STR_CD
+			     --, DPS.FN_GET_PART_NM(STR_CD,'CD',A.PUMBUN_CD) PRT_CD
+			     --, DPS.FN_GET_PART_NM(STR_CD,'NM',A.PUMBUN_CD) PRT_NM
+                 , N.COMM_CODE PRT_CD
+                 , N.COMM_NAME1 PRT_NM
+			     , A.PUMBUN_CD
+			     , A.SALE_DT
+			     , A.EVENT_FLAG
+			     , A.NORM_SALE_AMT
+			     , DECODE(B.TAX_FLAG,1,A.SALE_PROF_AMT/1.1,A.SALE_PROF_AMT) SALE_PROF_AMT
+			     , DECODE(B.TAX_FLAG,1,A.NORM_SALE_AMT/1.1,A.NORM_SALE_AMT)  PURE_AMT
+			     , 0 PRO_AMT
+			     , 0 BF_AMT
+			     , A.CUST_CNT
+			     , 0 BF_CUST_CNT
+			     , 0 BF_SALE_PROF_AMT
+			     , 0 BF_PURE_AMT			     
+			  FROM DPS.PS_DAYMGPBN A
+			     , DPS.PC_PBNMST B
+                 , DPS.PC_STRPBN C --
+                 , (SELECT COMM_CODE, COMM_NAME1 FROM COM.TC_COMMCODE WHERE SYS_PART='D' AND COMM_PART ='D217' AND USE_YN='Y') F --
+                 , (SELECT COMM_CODE, COMM_NAME1 FROM COM.TC_COMMCODE WHERE SYS_PART='D' AND COMM_PART ='D216' AND USE_YN='Y') N --
+			WHERE A.STR_CD= '01'
+			  AND A.SALE_DT BETWEEN '20170801' AND '20170804'
+			  AND A.PUMBUN_CD LIKE ''||'%'
+			  AND A.PUMBUN_CD = B.PUMBUN_CD 
+              AND A.PUMBUN_CD = C.PUMBUN_CD --
+              AND F.COMM_CODE = DECODE(A.PUMBUN_CD,'300165','19'
+                               ,'300166','19'
+                               ,'300160','20'
+                               ,'300161','20'
+                               ,'300162','20', C.FLOR_CD) --
+              AND F.COMM_NAME1 = N.COMM_CODE--
+			  --AND DPS.FN_GET_PART_NM(A.STR_CD,'CD',A.PUMBUN_CD)  LIKE '%'||'%'
+              AND N.COMM_CODE LIKE '%'||'%'--
+			UNION ALL
+			/*전일*/
+			SELECT A.STR_CD
+			     --, DPS.FN_GET_PART_NM(STR_CD,'CD',A.PUMBUN_CD) PRT_CD
+			     --, DPS.FN_GET_PART_NM(STR_CD,'NM',A.PUMBUN_CD) PRT_NM
+                 , N.COMM_CODE PRT_CD
+                 , N.COMM_NAME1 PRT_NM
+			     , A.PUMBUN_CD
+			     , A.SALE_DT
+			     , A.EVENT_FLAG
+			     , 0 NORM_SALE_AMT
+			     , 0 SALE_PROF_AMT
+			     , 0 PURE_AMT
+			     , 0 PRO_AMT
+			     , A.NORM_SALE_AMT BF_AMT
+			     , 0 CUST_CNT
+			     , A.CUST_CNT BF_CUST_CNT
+			     , DECODE(B.TAX_FLAG,1,A.SALE_PROF_AMT/1.1,A.SALE_PROF_AMT) BF_SALE_PROF_AMT
+			     , DECODE(B.TAX_FLAG,1,A.NORM_SALE_AMT/1.1,A.NORM_SALE_AMT) BF_PURE_AMT					     
+			  FROM DPS.PS_DAYMGPBN A
+			     , DPS.PC_PBNMST B
+                 , DPS.PC_STRPBN C --
+                 , (SELECT COMM_CODE, COMM_NAME1 FROM COM.TC_COMMCODE WHERE SYS_PART='D' AND COMM_PART ='D217' AND USE_YN='Y') F --
+                 , (SELECT COMM_CODE, COMM_NAME1 FROM COM.TC_COMMCODE WHERE SYS_PART='D' AND COMM_PART ='D216' AND USE_YN='Y') N --                 
+			WHERE A.STR_CD= '01'
+			  AND A.SALE_DT BETWEEN '20160726' AND '20160729'
+			  AND A.PUMBUN_CD LIKE ''||'%'
+			  AND A.PUMBUN_CD = B.PUMBUN_CD
+              AND A.PUMBUN_CD = C.PUMBUN_CD --
+              AND F.COMM_CODE = DECODE(A.PUMBUN_CD,'300165','19'
+                               ,'300166','19'
+                               ,'300160','20'
+                               ,'300161','20'
+                               ,'300162','20', C.FLOR_CD) --
+              AND F.COMM_NAME1 = N.COMM_CODE--
+			  --AND DPS.FN_GET_PART_NM(A.STR_CD,'CD',A.PUMBUN_CD)  LIKE '%'||'%'
+              AND N.COMM_CODE LIKE '%'||'%'--
+			UNION ALL
+			/*목표*/
+			SELECT A.STR_CD
+			     --, DPS.FN_GET_PART_NM(STR_CD,'CD',A.PUMBUN_CD) PRT_CD
+			     --, DPS.FN_GET_PART_NM(STR_CD,'NM',A.PUMBUN_CD) PRT_NM
+                 , MIN(N.COMM_CODE) PRT_CD
+                 , MIN(N.COMM_NAME1) PRT_NM
+			     , A.PUMBUN_CD
+			     , A.EXE_DT
+			     , 'TT' EVENT_FLAG
+			     , 0
+			     , 0
+			     , 0
+			     , SUM(A.ORIGIN_NORM_SAMT) PRO_AMT
+			     , 0 BF_AMT
+			     , 0 CUST_CNT
+			     , 0 BF_CUST_CNT
+			     , 0 BF_SALE_PROF_AMT
+			     , 0 BF_PURE_AMT			     
+			  FROM DPS.PS_ACTPUMBUN A
+                 , DPS.PC_STRPBN C --
+                 , (SELECT COMM_CODE, COMM_NAME1 FROM COM.TC_COMMCODE WHERE SYS_PART='D' AND COMM_PART ='D217' AND USE_YN='Y') F --
+                 , (SELECT COMM_CODE, COMM_NAME1 FROM COM.TC_COMMCODE WHERE SYS_PART='D' AND COMM_PART ='D216' AND USE_YN='Y') N --   
+			WHERE A.STR_CD= '01'
+			  AND A.EXE_DT BETWEEN '20170801' AND '20170804'
+			  AND A.PUMBUN_CD LIKE ''||'%'
+			  AND A.PUMBUN_CD = C.PUMBUN_CD --
+              AND F.COMM_CODE = DECODE(A.PUMBUN_CD,'300165','19'
+                               ,'300166','19'
+                               ,'300160','20'
+                               ,'300161','20'
+                               ,'300162','20', C.FLOR_CD) --
+              AND F.COMM_NAME1 = N.COMM_CODE--
+			  --AND DPS.FN_GET_PART_NM(A.STR_CD,'CD',A.PUMBUN_CD)  LIKE '%'||'%'
+              AND N.COMM_CODE LIKE '%'||'%'--
+			  GROUP BY A.STR_CD, A.EXE_DT, A.PUMBUN_CD
+			  
+			)
+						
+			SELECT STR_CD
+			     , MIN(PRT_NM) PRT_NM
+			     , SUM(PRO_AMT) PRO_AMT
+			     , SUM(NORM_SALE_AMT) SALE_AMT
+			     , DECODE(SUM(PRO_AMT),0,0,(SUM(NORM_SALE_AMT)/SUM(PRO_AMT))*100) SALE_RATIO
+			     , SUM(SALE_PROF_AMT) PROF_AMT
+			     , DECODE(SUM(PURE_AMT),0,0,(SUM(SALE_PROF_AMT)/SUM(PURE_AMT))*100) PROF_RATIO
+			     , SUM(BF_AMT) BF_AMT
+			     , DECODE(SUM(BF_AMT),0,0,((SUM(NORM_SALE_AMT)-SUM(BF_AMT))/SUM(BF_AMT))*100) BF_RATIO
+			     , PRT_CD
+			     , SUM(BF_SALE_PROF_AMT) BF_PROF_AMT
+			     , DECODE(SUM(BF_PURE_AMT),0,0,(SUM(BF_SALE_PROF_AMT)/SUM(BF_PURE_AMT))*100) BF_PROF_RATIO
+			     , DECODE(SUM(BF_SALE_PROF_AMT),0,0,((SUM(SALE_PROF_AMT)-SUM(BF_SALE_PROF_AMT))/SUM(BF_SALE_PROF_AMT))*100) BF_PROF_ACHIV_RATIO
+			     , SUM(CUST_CNT)  CUST_CNT
+			     , SUM(BF_CUST_CNT) BF_CUST_CNT
+			     , DECODE(SUM(BF_CUST_CNT),0,0,((SUM(CUST_CNT)-SUM(BF_CUST_CNT))/SUM(BF_CUST_CNT))*100) BF_CUST_RATIO
+			     , DECODE(SUM(CUST_CNT),0,0,(SUM(NORM_SALE_AMT)/SUM(CUST_CNT))) CUST_DANGA
+			     , DECODE(SUM(BF_CUST_CNT),0,0,(SUM(BF_AMT)/SUM(BF_CUST_CNT))) BF_CUST_DANGA			     
+			 FROM SALE_LIST
+			GROUP BY STR_CD, PRT_CD
+			UNION ALL
+			/* 계 */
+			SELECT STR_CD
+			     , '파트 계' PRT_NM
+			     , SUM(PRO_AMT) PRO_AMT
+			     , SUM(NORM_SALE_AMT) SALE_AMT
+			     , DECODE(SUM(PRO_AMT),0,0,(SUM(NORM_SALE_AMT)/SUM(PRO_AMT))*100) SALE_RATIO
+			     , SUM(SALE_PROF_AMT) PROF_AMT
+			     , DECODE(SUM(PURE_AMT),0,0,(SUM(SALE_PROF_AMT)/SUM(PURE_AMT))*100) PROF_RATIO
+			     , SUM(BF_AMT) BF_AMT
+			     , DECODE(SUM(BF_AMT),0,0,((SUM(NORM_SALE_AMT)-SUM(BF_AMT))/SUM(BF_AMT))*100) BF_RATIO
+			     , '%'PRT_CD
+			     , SUM(BF_SALE_PROF_AMT) BF_PROF_AMT
+			     , DECODE(SUM(BF_PURE_AMT),0,0,(SUM(BF_SALE_PROF_AMT)/SUM(BF_PURE_AMT))*100) BF_PROF_RATIO
+			     , DECODE(SUM(BF_SALE_PROF_AMT),0,0,((SUM(SALE_PROF_AMT)-SUM(BF_SALE_PROF_AMT))/SUM(BF_SALE_PROF_AMT))*100) BF_PROF_ACHIV_RATIO
+			     , SUM(CUST_CNT)  CUST_CNT
+			     , SUM(BF_CUST_CNT) BF_CUST_CNT
+			     , DECODE(SUM(BF_CUST_CNT),0,0,((SUM(CUST_CNT)-SUM(BF_CUST_CNT))/SUM(BF_CUST_CNT))*100) BF_CUST_RATIO
+			     , DECODE(SUM(CUST_CNT),0,0,(SUM(NORM_SALE_AMT)/SUM(CUST_CNT))) CUST_DANGA
+			     , DECODE(SUM(BF_CUST_CNT),0,0,(SUM(BF_AMT)/SUM(BF_CUST_CNT))) BF_CUST_DANGA			     
+			 FROM SALE_LIST
+			GROUP BY STR_CD
+			ORDER BY STR_CD, PRT_CD
+            ]]>
+    </query>
+    
+    
+    <!-- 무인정산자료 비교표 조회 상세 DETAIL -->
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"      colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"    colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 무인정산자료 비교표 조회 상세 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+			SELECT A.STR_CD
+			     , A.SALE_DT
+			     , A.POS_NO
+			     , C.PUMBUN_CD
+			     , D.PUMBUN_NAME
+			     , SUM(A.PAY_AMT * DECODE(B.TRAN_FLAG, '0', 1, -1)) AS SALE_AMT
+			  FROM DPS.PS_TRPAID   A
+			     , DPS.PS_TRHEADER B
+			     , DPS.PS_TRITEM   C
+			     , DPS.PC_STRPBN   D
+			 WHERE A.STR_CD    = B.STR_CD
+			   AND A.SALE_DT   = B.SALE_DT
+			   AND A.POS_NO    = B.POS_NO
+			   AND A.TRAN_NO   = B.TRAN_NO
+			   AND A.STR_CD    = C.STR_CD
+			   AND A.SALE_DT   = C.SALE_DT
+			   AND A.POS_NO    = C.POS_NO
+			   AND A.TRAN_NO   = C.TRAN_NO
+			   AND A.SEQ_NO    = C.SEQ_NO
+			   AND C.STR_CD    = D.STR_CD
+			   AND C.PUMBUN_CD = D.PUMBUN_CD
+			   AND A.STR_CD    = ?
+			   AND A.SALE_DT   BETWEEN ? AND ?
+			   AND A.POS_NO    = ?
+			   AND A.PAY_TYPE  = '00'	-- 현금
+			 GROUP BY A.STR_CD
+			        , A.SALE_DT
+			        , A.POS_NO
+			        , C.PUMBUN_CD
+			        , D.PUMBUN_NAME
+			 ORDER BY A.SALE_DT
+			        , C.PUMBUN_CD
+        ]]>
+    </query>
+    
+    
+</service>

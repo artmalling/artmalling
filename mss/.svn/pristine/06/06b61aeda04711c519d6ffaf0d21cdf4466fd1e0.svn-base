@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 오형규
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.16
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  협력사 EDI 
+ -->
+<service name="/medi101.md">
+
+    <!-- 협력사 EDI 비밀번호 마스터  -->
+    <gauce name="H_MASTER">
+        <column colName="GB" colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_CD" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STRNM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GUBUN" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USER_GUBN" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USER_ID" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHAR_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HPONE" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UPD_ID" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UPD_DATE" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PWD_NO" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NOTICE_FLAG" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                
+    </gauce> 
+    
+    <!-- 협력사 EDI 구분 : 협력사 -->
+     <query name="SEL_VEN">
+        <![CDATA[
+			SELECT A.USER_GUBN  AS GB
+			     , A.STR_CD AS STR_CD                                                       
+			     , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM                                                    
+			     , A.USER_GUBN AS GUBUN
+			     , DECODE(A.USER_GUBN, '1', '협력사', '브랜드' ) AS USER_GUBN
+			     , A.USER_ID AS USER_ID
+			     , B.VEN_NAME AS VEN_NAME 
+			     , C.CHAR_NAME AS CHAR_NAME
+			     , C.HP1_NO || C.HP2_NO || C.HP3_NO AS HPONE
+			     , A.MOD_ID AS UPD_ID
+			     , TO_CHAR( A.MOD_DATE, 'YYYYMMDD') AS UPD_DATE
+			     , ''  AS PWD_NO
+			     , '01' AS NOTICE_FLAG 
+			  FROM MSS.EM_EDIUSER   A
+			     , DPS.PC_STRVENMST B
+			     , (SELECT SA.VEN_CD, SA.CHAR_NAME, SA.HP1_NO, SA.HP2_NO, SA.HP3_NO
+			          FROM DPS.PC_VENEMP    SA 
+			             , (SELECT VEN_CD, MAX(SEQ_NO) AS SEQ_NO
+			                  FROM DPS.PC_VENEMP
+			                 GROUP BY VEN_CD ) SB
+			         WHERE SA.VEN_CD = SB.VEN_CD
+			           AND SA.SEQ_NO = SB.SEQ_NO) C
+			 WHERE A.STR_CD = B.STR_CD(+)
+			   AND A.USER_ID = B.VEN_CD(+)
+			   AND A.USER_ID = C.VEN_CD(+)
+			   AND A.USER_ID LIKE ?|| '%'
+			   AND A.USER_GUBN LIKE ?||'%'
+			   AND A.STR_CD = ?
+        ]]>
+    </query>
+    
+     <query name="SEL_VEN_OLD">
+        <![CDATA[
+        SELECT GB
+             , STR_CD
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STRNM
+             , GUBUN
+             , USER_GUBN
+             , USER_ID
+             , VEN_NAME
+             , CHAR_NAME
+             , HPONE
+             , UPD_ID
+             , UPD_DATE
+             , PWD_NO
+             , NOTICE_FLAG
+          FROM (   
+                SELECT '1'  AS GB
+                     , A.STR_CD AS STR_CD                                                       
+                     , A.USER_GUBN AS GUBUN
+                     , DECODE(A.USER_GUBN, '1', '협력사', '2', '브랜드' ) AS USER_GUBN
+                     , A.USER_ID AS USER_ID
+                     , B.VEN_NAME AS VEN_NAME 
+                     , D.CHAR_NAME AS CHAR_NAME
+                     , D.HP1_NO || D.HP2_NO || D.HP3_NO AS HPONE
+                     , A.MOD_ID AS UPD_ID
+                     , TO_CHAR( A.MOD_DATE, 'YYYYMMDD') AS UPD_DATE
+                     , ''  AS PWD_NO
+                     , '01' AS NOTICE_FLAG 
+                  FROM MSS.EM_EDIUSER A
+                     , DPS.PC_STRVENMST B
+                     , DPS.PC_VENMST C
+                     , DPS.PC_VENEMP D 
+                     , (
+                        SELECT VEN_CD, MAX(SEQ_NO) AS SEQ_NO
+                          FROM DPS.PC_VENEMP
+                      GROUP BY VEN_CD   
+                       ) E
+                 WHERE A.STR_CD = B.STR_CD
+                   AND A.USER_ID = B.VEN_CD
+                   AND B.VEN_CD = C.VEN_CD
+                   AND C.VEN_CD = D.VEN_CD
+                   AND D.VEN_CD = E.VEN_CD
+                   AND D.SEQ_NO = E.SEQ_NO
+                   AND A.STR_CD = ?
+                   AND A.USER_ID LIKE ? || '%'
+                   AND A.USER_GUBN = '1'
+             UNION ALL
+                SELECT '2' AS GB
+                     , A.STR_CD AS STR_CD                                       
+                     , A.USER_GUBN AS GUBUN                   
+                     , DECODE(A.USER_GUBN, '1', '협력사', '2', '브랜드' ) AS USER_GUBN
+                     , A.USER_ID AS USER_ID
+                     , B.PUMBUN_NAME AS VEN_NAME
+                     , E.CHAR_NAME AS CHAR_NAME
+                     , E.HP1_NO || E.HP2_NO || E.HP3_NO AS HPONE
+                     , A.MOD_ID AS UPD_ID
+                     , TO_CHAR( A.MOD_DATE, 'YYYYMMDD') AS UPD_DATE
+                     , '' AS PWD_NO
+                     , '01' AS NOTICE_FLAG 
+                  FROM MSS.EM_EDIUSER A 
+                     , DPS.PC_STRPBN B 
+                     , DPS.PC_PBNMST C 
+                     , DPS.PC_VENMST D
+                     , DPS.PC_VENEMP E
+                     , (
+                        SELECT VEN_CD 
+                             , MAX(SEQ_NO) AS SEQ_NO
+                          FROM DPS.PC_VENEMP
+                      GROUP BY VEN_CD 
+                       )  F
+                 WHERE A.STR_CD = B.STR_CD
+                   AND A.USER_ID = B.PUMBUN_CD
+                   AND B.PUMBUN_CD = C.PUMBUN_CD
+                   AND C.VEN_CD = D.VEN_CD
+                   AND D.VEN_CD = E.VEN_CD
+                   AND E.VEN_CD = F.VEN_CD
+                   AND E.SEQ_NO = F.SEQ_NO
+                   AND A.STR_CD = ?
+                   AND A.USER_ID LIKE ? || '%'
+                   AND A.USER_GUBN = '2'
+               ) A
+          WHERE GB LIKE ? || '%'
+       ORDER BY STR_CD 
+        ]]>
+    </query>
+        
+   
+    
+    <!-- 협력사 EDI 구분 : 수정 -->
+     <query name="UPT_EDIUSER">
+        <![CDATA[
+        UPDATE MSS.EM_EDIUSER 
+           SET PWD_NO =  DCS.SC_Crypto_FUN('ENC', ?)
+             , PWD_CNT = 0
+             , PWD_REQ_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+             , MOD_ID     =  ?
+             , MOD_DATE   =  SYSDATE
+         WHERE STR_CD             =  ? 
+           AND USER_ID            =  ?
+           AND USER_GUBN          =  ?
+        ]]>
+    </query>
+    
+    <!-- 협력사 EDI 구분 : HIT 히스토리  -->
+     <query name="INT_HIT">
+        <![CDATA[
+        INSERT INTO MSS.EM_EDIUSER_HIS              
+                                      (
+                                       STR_CD
+                                     , USER_ID
+                                     , USER_GUBN
+                                     , CHANGE_DATE
+                                     , SEQ
+                                     , NOTICE_FLAG
+                                     , REG_ID
+                                     , REG_DATE
+                                     , MOD_ID
+                                     , MOD_DATE
+                                     , REMARK
+                                      ) 
+                               VALUES
+                                     (
+                                       ?
+                                     , ?
+                                     , ?
+                                     , TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                      )
+        ]]>
+    </query>
+    <!-- 시퀀스 -->
+    <query name="SEL_HIT_SEQ">
+    SELECT NVL(MAX(SEQ), 0)+1 AS SEQ FROM MSS.EM_EDIUSER_HIS  
+    </query>
+   
+    
+</service>

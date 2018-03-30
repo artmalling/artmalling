@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  조직 조회를한다.
+ -->
+<service name="/pcod003.pc">
+
+  <gauce name="H_SEL_MASTER">   
+        <column colName="ORG_CD"         colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_CD"         colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="STR_NAME"       colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="DEPT_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="TEAM_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"          colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PC_NAME"        colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CORNER_CD"      colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="CORNER_NAME"    colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="ORG_FLAG_NAME"  colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SAP_ORG_CD"     colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SAP_ORG_NAME"   colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="BF_ORG_CD"      colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BF_ORG_NAME"    colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNG_ORG_YN"     colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="EMP_CNT"        colType="TB_DECIMAL" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AREA_SIZE"      colType="TB_DECIMAL" size="7"    dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+        <column colName="USE_YN"         colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="APP_S_DT"       colType="TB_STRING" size="8"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="APP_E_DT"       colType="TB_STRING" size="8"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_ORGMST">
+        <![CDATA[
+            SELECT OT.ORG_CD             , NM.STR_CD                 , NM.STR_ORG_NAME          ,NM.DEPT_CD                     , NM.DEPT_ORG_NAME         
+                 , NM.TEAM_CD            , NM.TEAM_ORG_NAME          , NM.PC_CD                 , NM.PC_ORG_NAME                , NM.CORNER_CD  
+                 , NM.CORNER_ORG_NAME    , FL.COMM_NAME1 ORG_FLAG    , SP.COMM_CODE SP_ORG_CD   , SP.COMM_NAME1 SP_ORG_NAME     , OT.BF_ORG_CD
+                 , BF.ORG_SHORT_NAME     ,  OT.MNG_ORG_YN            , OT.EMP_CNT               , OT.AREA_SIZE                  
+                 , OT.USE_YN             , OT.APP_S_DT               , OT.APP_E_DT            
+              FROM DPS.PC_ORGMST OT                    
+                 , DPS.PC_ORGMST BF
+                 , (
+                    SELECT COMM_CODE , COMM_NAME1
+                      FROM COM.TC_COMMCODE
+                     WHERE SYS_PART = 'D'
+                       AND COMM_PART = 'P047') FL
+                 , (
+                    SELECT COMM_CODE , COMM_NAME1
+                      FROM COM.TC_COMMCODE
+                     WHERE SYS_PART = 'D'
+                       AND COMM_PART = 'P043') SP
+                 , (
+                    SELECT OM.ORG_CD   
+                         , OM.STR_CD   
+                         , OM.STR_ORG_CD   
+                         , OST.ORG_SHORT_NAME AS STR_ORG_NAME
+                         , OM.DEPT_CD
+                         , OM.DEPT_ORG_CD
+                         , ODP.ORG_SHORT_NAME AS DEPT_ORG_NAME
+                         , OM.TEAM_CD
+                         , OM.TEAM_ORG_CD
+                         , OTM.ORG_SHORT_NAME AS TEAM_ORG_NAME
+                         , OM.PC_CD
+                         , OM.PC_ORG_CD
+                         , OPC.ORG_SHORT_NAME AS PC_ORG_NAME
+                         , OM.CORNER_CD
+                         , OM.CORNER_ORG_CD
+                         , OCN.ORG_SHORT_NAME AS CORNER_ORG_NAME
+                      FROM (SELECT OM.ORG_CD
+                                 , OM.STR_CD
+                                 , OM.STR_CD || '00000000' AS STR_ORG_CD
+                                 , OM.DEPT_CD
+                                 , OM.STR_CD || OM.DEPT_CD || '000000' AS DEPT_ORG_CD
+                                 , OM.TEAM_CD
+                                 , OM.STR_CD || OM.DEPT_CD || OM.TEAM_CD || '0000' AS TEAM_ORG_CD
+                                 , OM.PC_CD
+                                 , OM.STR_CD || OM.DEPT_CD || OM.TEAM_CD || OM.PC_CD || '00' AS PC_ORG_CD
+                                 , OM.CORNER_CD
+                                 , OM.STR_CD || OM.DEPT_CD || OM.TEAM_CD || OM.PC_CD || OM.CORNER_CD AS CORNER_ORG_CD
+                              FROM DPS.PC_ORGMST OM         
+                            ) OM
+                         , (SELECT A.ORG_CD
+                                 , A.ORG_SHORT_NAME
+                              FROM DPS.PC_ORGMST A
+                             WHERE A.ORG_LEVEL = '1'
+                            ) OST
+                         , (SELECT A.ORG_CD
+                                 , A.ORG_SHORT_NAME
+                              FROM DPS.PC_ORGMST A
+                             WHERE A.ORG_LEVEL = '2'
+                            ) ODP
+                         , (SELECT A.ORG_CD
+                                 , A.ORG_SHORT_NAME
+                              FROM DPS.PC_ORGMST A
+                             WHERE A.ORG_LEVEL = '3'
+                            ) OTM
+                         , (SELECT A.ORG_CD
+                                 , A.ORG_SHORT_NAME
+                              FROM DPS.PC_ORGMST A
+                             WHERE A.ORG_LEVEL = '4'
+                            ) OPC
+                         , (SELECT A.ORG_CD
+                                 , A.ORG_SHORT_NAME
+                              FROM DPS.PC_ORGMST A
+                             WHERE A.ORG_LEVEL = '5'
+                            ) OCN
+                     WHERE OM.STR_ORG_CD = OST.ORG_CD (+)
+                       AND OM.DEPT_ORG_CD = ODP.ORG_CD (+)
+                       AND OM.TEAM_ORG_CD = OTM.ORG_CD (+)
+                       AND OM.PC_ORG_CD = OPC.ORG_CD (+)    
+                       AND OM.CORNER_ORG_CD = OCN.ORG_CD (+) )NM
+             WHERE OT.ORG_FLAG = FL.COMM_CODE
+               AND OT.SAP_ORG_CD = SP.COMM_CODE(+)
+               AND OT.BF_ORG_CD = BF.ORG_CD(+)
+               AND OT.ORG_CD = NM.ORG_CD
+        ]]>    
+    </query> 
+    <query name="SEL_ORGMST_WHERE_STR_CD">
+        <![CDATA[ 
+               AND OT.STR_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_ORGMST_WHERE_ORG_FLAG">
+        <![CDATA[
+               AND OT.ORG_FLAG      = ?
+        ]]>    
+    </query>
+    <query name="SEL_ORGMST_WHERE_USE_YN">
+        <![CDATA[
+               AND OT.USE_YN      = ?
+        ]]>    
+    </query>
+    <query name="SEL_ORGMST_WHERE_DEPT_CD">
+        <![CDATA[
+               AND OT.DEPT_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_ORGMST_WHERE_TEAM_CD">
+        <![CDATA[
+               AND OT.TEAM_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_ORGMST_WHERE_PC_CD">
+        <![CDATA[
+               AND OT.PC_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_ORGMST_ORDER">
+        <![CDATA[
+            ORDER BY OT.ORG_CD           
+        ]]>    
+    </query>
+    
+</service>

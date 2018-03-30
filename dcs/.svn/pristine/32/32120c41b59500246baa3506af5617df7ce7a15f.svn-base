@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="euc-kr" ?> 
+<service url="${__URL}" transaction="${__TRANSACTION}">
+<%for(dataset in __DATASETS){%>
+	<dataset id="${dataset.DATASET_NAME}" io="<%=dataset.IO%>">
+		<head>
+<%	for(column in dataset.COLUMNS){	
+		if(column.KEY == ""){%>			<columntype id="${column.COLUMN_NAME}" type="${column.TYPE}" size="${column.SIZE}"/>
+<%		}else{%>			<columntype id="${column.COLUMN_NAME}" type="${column.TYPE}" size="${column.SIZE}" key="${column.KEY}"/>
+<%		}
+	}%>		</head>
+        	<data>
+<%	for(sample in dataset.SAMPLES){%>			<row>
+<%		for(value in sample){%>				<column><![CDATA[${value}]]></column>           
+<%		}%>			</row>
+<%	}%>
+		</data>
+	</dataset>
+<%}%>
+</service>

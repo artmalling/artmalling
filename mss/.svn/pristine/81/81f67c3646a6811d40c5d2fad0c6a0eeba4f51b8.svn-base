@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  임대보증금 입금관리
+ -->
+<service name="/mren203.mr">
+    <gauce name="H_SEL_MR_CNTRMST">
+        <column colName="CNTR_ID"         colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="STR_CD"          colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VEN_CD"          colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VEN_NM"          colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COMP_NO"         colType="TB_STRING"   size="10"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="REP_NAME"        colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CHAR_NAME"       colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PHONE1_NO"       colType="TB_STRING"   size="32"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PHONE2_NO"       colType="TB_STRING"   size="32"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PHONE3_NO"       colType="TB_STRING"   size="32"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CNTR_TYPE"       colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CNTR_S_DT"       colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CNTR_E_DT"       colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="RENT_TYPE"       colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="RENT_FLAG"       colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CNTR_AREA"       colType="TB_DECIMAL"  size="9"   dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="RENT_DEPOSIT"    colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_FLAG"    colType="TB_STRING"  size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_FLAG_NAME"    colType="TB_STRING"  size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+     </gauce>
+    
+    <gauce name="H_DETAIL">
+        <column colName="GUBUN"    colType="TB_STRING"  size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CNTR_ID"         colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_SEQ_NO"          colType="TB_STRING"   size="3"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_DT"          colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_AMT"       colType="TB_DECIMAL"  size="12"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_SLIP_NO"    colType="TB_STRING"  size="13"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="IF_FLAG"    colType="TB_STRING"  size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_FLAG"    colType="TB_STRING"  size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>         
+     </gauce>
+    <query name="SEL_MR_CNTRMST">
+       <![CDATA[   
+            SELECT CNT.CNTR_ID
+                 , CNT.STR_CD
+                 , CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , VEN.COMP_NO  AS COMP_NO  /*사업자 번호*/
+                 , VEN.REP_NAME AS REP_NAME /*대표자*/
+                 , CNT.CHAR_NAME         /*담당자명*/
+                 , CNT.PHONE1_NO         /*담당자연력처1*/
+                 , CNT.PHONE2_NO         /*담당자연력처1*/
+                 , CNT.PHONE3_NO         /*담당자연력처1*/
+                 , CNT.CNTR_TYPE         /*계약유형*/
+                 , CNT.CNTR_S_DT         /*계약기간[시작일]*/
+                 , CNT.CNTR_E_DT         /*계약기간[종료일]*/
+                 , CNT.RENT_TYPE         /*임대형태*/
+                 , CNT.RENT_FLAG         /*임대구분*/
+                 , CNT.CNTR_AREA         /*계약면전*/
+                 , CNT.RENT_DEPOSIT      /*임대보증금*/
+                 , CNT.PAY_FLAG          /*입금상태*/
+                 , COM.COMM_NAME1 AS PAY_FLAG_NAME
+              FROM MSS.MR_CNTRMST   CNT
+                 , DPS.PC_VENMST    VEN
+                 ,COM.TC_COMMCODE   COM
+             WHERE CNT.VEN_CD = VEN.VEN_CD
+               AND CNT.PAY_FLAG = COM.COMM_CODE
+               AND COM.SYS_PART = 'D'
+               AND COM.COMM_PART = 'M099'
+               AND CNT.VEN_CD LIKE ?||'%'   --협력사
+               AND CNT.RENT_TYPE LIKE ?||'%'--임대형태
+               AND CNT.RENT_FLAG LIKE ?||'%'--임대구분
+               AND CNT.CNTR_TYPE LIKE ?||'%'--계약유형
+               AND CNT.STR_CD = ?           --점코드
+               AND CNT.PAY_FLAG LIKE ?||'%' --입금상태
+        ]]> 
+    </query>
+    
+    <!-- 조회(계약시작일 기준) Query  -->
+    <query name="SEL_MR_CNTRMST_WHERE_SDT"> 
+        <![CDATA[   
+               AND CNT.CNTR_S_DT BETWEEN ? AND ?
+        ]]>        
+    </query>
+    
+     <!-- 조회(계약종료일 기준) Query  -->
+    <query name="SEL_MR_CNTRMST_WHERE_EDT"> 
+        <![CDATA[   
+               AND CNT.CNTR_E_DT BETWEEN ? AND ?
+        ]]>        
+    </query>
+    
+    <!--  Query  -->
+    <query name="SEL_MR_CNTRMST_ORDER_BY"> 
+        <![CDATA[   
+             ORDER BY CNT.VEN_CD
+        ]]>        
+    </query>
+    
+    <query name="SEL_MR_DEPOSPAY">
+       <![CDATA[   
+             SELECT 'T' AS GUBUN
+                   ,TA.CNTR_ID 
+                   ,TA.PAY_SEQ_NO
+                   ,TA.PAY_DT
+                   ,TA.PAY_AMT
+                   ,TA.PAY_SLIP_NO
+                   ,TA.IF_FLAG
+                   ,TB.PAY_FLAG
+               FROM MSS.MR_DEPOSPAY TA,
+                    MSS.MR_CNTRMST TB
+              WHERE TA.CNTR_ID = TB.CNTR_ID
+                AND TA.CNTR_ID = ?
+        ]]> 
+    </query>
+    
+    <!-- 임대보증금 입금 등록 Query  -->
+    <query name="INS_MR_DEPOSPAY"> 
+        <![CDATA[   
+            INSERT INTO MSS.MR_DEPOSPAY (
+	                                    CNTR_ID 
+								       ,PAY_SEQ_NO
+								       ,PAY_DT
+								       ,PAY_AMT
+								       ,MOD_ID
+								       ,MOD_DATE
+								       ,REG_ID
+								       ,REG_DATE
+								       ,IF_FLAG
+								       ,PAY_SLIP_NO
+								       )
+						        VALUES (
+								        ?
+								        ,?
+								        ,?
+								        ,?
+								        ,?
+                                        ,SYSDATE
+                                        ,?
+                                        ,SYSDATE
+                                        ,'0'
+                                        ,?
+                                        )
+        ]]>        
+    </query>
+    
+      <!-- 임대보증금 입금 수정 Query  -->
+    <query name="UPD_MR_DEPOSPAY"> 
+        <![CDATA[   
+           UPDATE MSS.MR_DEPOSPAY
+              SET PAY_AMT = ?
+                  ,PAY_DT = ?
+                  ,MOD_ID = ?
+                  ,MOD_DATE = SYSDATE
+           WHERE CNTR_ID = ?
+             AND PAY_SEQ_NO = ?
+        ]]>        
+    </query>
+    
+      <!-- 임대보증금 입금 삭제 Query  -->
+    <query name="DEL_MR_DEPOSPAY"> 
+        <![CDATA[   
+           DELETE MSS.MR_DEPOSPAY
+           WHERE CNTR_ID = ?
+             AND PAY_SEQ_NO = ?
+        ]]>        
+    </query>
+    
+    
+    <!-- 계약변경 (수정) Query  -->
+    <query name="UPD_MR_CNTRMST"> 
+        <![CDATA[   
+           UPDATE MSS.MR_CNTRMST
+              SET PAY_FLAG = ?
+                 ,MOD_ID = ?
+                 ,MOD_DATE = SYSDATE
+           WHERE CNTR_ID = ?
+        ]]>        
+    </query>
+    
+     <!-- 계약이력등록(수정) Query  -->
+    <query name="INS_MR_CNTRHST"> 
+        <![CDATA[   
+            INSERT 
+              INTO MSS.MR_CNTRHST
+                 ( CNTR_ID
+                 , SEQ_NO
+                 , STR_CD
+                 , VEN_CD
+                 , BELONG_STR_CD
+                 , CHAR_NAME
+                 , PHONE1_NO
+                 , PHONE2_NO
+                 , PHONE3_NO
+                 , CNTR_TYPE
+                 , SAP_CNTR_ID
+                 , CNTR_S_DT
+                 , CNTR_E_DT
+                 , RENT_TYPE
+                 , RENT_FLAG
+                 , CNTR_AREA
+                 , RENT_DEPOSIT
+                 , EXCL_AREA
+                 , MM_RENTFEE
+                 , SHR_AREA
+                 , DONG
+                 , FLOOR_FLAG
+                 , HO
+                 , FILE_PATH
+                 , MNTN_CAL_YN
+                 , PWR_KIND_CD
+                 , PWR_TYPE
+                 , PWR_SEL_CHARGE
+                 , PWR_CNTR_QTY
+                 , PWR_REVER_RATE
+                 , WWTR_KIND_CD
+                 , WWTR_QTY
+                 , WWTR_CHARGE_YN
+                 , STM_KIND_CD
+                 , STM_QTY
+                 , CWTR_KIND_CD
+                 , CWTR_QTY 
+                 , GAS_KIND_CD
+                 , GAS_REDU_TYPE
+                 , WTR_KIND_CD
+                 , DIV_RATE
+                 , TV_CNT
+                 , DANGI
+                 , PWR_DC_TYPE
+                 , PWR_REDU_TYPE
+                 , CHRG_YN
+                 , PAY_YN
+                 , CNTR_CAN_DT
+                 , CNTR_CAN_REAS_CD
+                 , RTRN_AMT
+                 , ADD_DED_AMT
+                 , ADD_DED_REASON
+                 , CNTR_CAN_SLIP_NO
+                 , REMARK
+                 , FCL_TYPE
+                 , REG_ID
+                 , REG_DATE
+                 , MOD_ID
+                 , MOD_DATE)
+                (SELECT CNTR_ID
+                     , (SELECT NVL((MAX(SEQ_NO)+1), 1) 
+                          FROM MSS.MR_CNTRHST
+                         WHERE CNTR_ID = ?) AS SEQ_NO
+                     , STR_CD
+                     , VEN_CD
+                     , BELONG_STR_CD
+                     , CHAR_NAME
+                     , PHONE1_NO
+                     , PHONE2_NO
+                     , PHONE3_NO
+                     , CNTR_TYPE 
+                     , SAP_CNTR_ID
+                     , CNTR_S_DT
+                     , CNTR_E_DT
+                     , RENT_TYPE
+                     , RENT_FLAG
+                     , CNTR_AREA
+                     , RENT_DEPOSIT
+                     , EXCL_AREA
+                     , MM_RENTFEE
+                     , SHR_AREA
+                     , DONG
+                     , FLOOR_FLAG
+                     , HO
+                     , FILE_PATH
+                     , MNTN_CAL_YN
+                     , PWR_KIND_CD
+                     , PWR_TYPE
+                     , PWR_SEL_CHARGE
+                     , PWR_CNTR_QTY
+                     , PWR_REVER_RATE
+                     , WWTR_KIND_CD
+                     , WWTR_QTY
+                     , WWTR_CHARGE_YN
+                     , STM_KIND_CD
+                     , STM_QTY
+                     , CWTR_KIND_CD
+                     , CWTR_QTY 
+                     , GAS_KIND_CD
+                     , GAS_REDU_TYPE
+                     , WTR_KIND_CD
+                     , DIV_RATE
+                     , TV_CNT
+                     , DANGI
+                     , PWR_DC_TYPE
+                     , PWR_REDU_TYPE
+                     , CHRG_YN
+                     , PAY_YN
+                     , CNTR_CAN_DT
+                     , CNTR_CAN_REAS_CD AS  CNTR_CAN_REAS_CD
+                     , RTRN_AMT
+                     , ADD_DED_AMT
+                     , ADD_DED_REASON
+                     , CNTR_CAN_SLIP_NO AS CNTR_CAN_SLIP_NO
+                     , REMARK
+                     , FCL_TYPE
+                     , ? AS REG_ID
+                     , SYSDATE AS REG_DATE
+                     , ? AS MOD_ID
+                     , SYSDATE AS MOD_DATE
+                  FROM MSS.MR_CNTRMST
+                 WHERE CNTR_ID = ?)
+        ]]>        
+    </query>
+    
+     
+
+</service>

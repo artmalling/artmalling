@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : KHJ
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2016.11.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  회원조회
+ -->
+<service name="/dctm502.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="CUST_NO"        colType="TB_STRING"  size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"      colType="TB_STRING"  size="40"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MSKD_NAME"      colType="TB_STRING"  size="40"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="HP"      		 colType="TB_STRING"  size="20"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MSKD_HP"  		 colType="TB_STRING"  size="20"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_SEX"       colType="TB_STRING"  size="32"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_AGE"       colType="TB_DECIMAL" size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SALE_AMT"       colType="TB_DECIMAL" size="13"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TOT_PT"         colType="TB_DECIMAL" size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DI"        	 colType="TB_STRING"  size="50"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SMS_YN"         colType="TB_STRING"  size="1"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DM_YN"          colType="TB_STRING"  size="1"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ADDR"         	 colType="TB_STRING"  size="200"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ENTR_GB"        colType="TB_STRING"  size="10"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="LAST_SALE_DT"   colType="TB_STRING"  size="10"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ROW_NUM"        colType="TB_DECIMAL" size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+
+    <!-- 회원 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+             SELECT Y.CUST_ID AS CUST_NO
+		           , Y.CUST_NAME
+		           , Y.MSKD_NAME
+		           , Y.HP
+		           , Y.MSKD_HP
+		           , Y.CUST_SEX
+		           , Y.CUST_AGE
+		           , Y.SALE_AMT
+		           , D.POINT AS TOT_PT
+		           , Y.DI
+		           , Y.SMS_YN
+		           , Y.DM_YN
+		           , Y.ADDR
+		           , Y.ENTR_GB
+		           , DPS.FN_GET_LASTSALE (Y.CUST_ID) AS LAST_SALE_DT
+		           , ROW_NUMBER() OVER(ORDER BY Y.SALE_AMT DESC) AS ROW_NUM
+		           FROM
+		      (      
+		      SELECT CUST_ID
+		           , MIN(CUST_NAME) AS CUST_NAME
+		           , DPS.FN_GET_MASKING_STR(TRIM(MIN(CUST_NAME))) AS MSKD_NAME     	-- 마스킹고객명
+		           , SUM(SALE_AMT) AS SALE_AMT
+		           , MIN(CUST_SEX) AS CUST_SEX
+		           , MIN(CUST_AGE) AS CUST_AGE
+				   , MIN(HP1)||MIN(HP2)||MIN(HP3) AS HP      						
+				   , MIN(HP1)||'****'||MIN(HP3) AS MSKD_HP 
+		           , DECODE(MIN(DI),'0','적립','1','할인','') AS DI
+				   , MIN(SMS_YN) AS SMS_YN
+				   , MIN(DM_YN) AS DM_YN
+				   , MIN(ADDR) AS ADDR
+				   , MIN(ENTR_GB) AS ENTR_GB
+		           
+		      FROM 
+		      (
+		      SELECT A.CUST_ID
+		           , A.CUST_NAME
+		           , NVL(B.NORM_SALE_AMT,0) SALE_AMT 
+		           , NVL(B.CUST_SEX, A.SEX_CD) CUST_SEX
+		           , NVL(B.CUST_AGE, (TO_NUMBER(TO_CHAR(SYSDATE,'YYYY')) - TO_NUMBER(SUBSTR(NVL(A.BIRTH_DT,'9999'),1,4) ) + 1) ) CUST_AGE
+		           , DCS.SC_CRYPTO_FUN('DEC',MOBILE_PH1) AS HP1
+				   , DCS.SC_CRYPTO_FUN('DEC',MOBILE_PH2) AS HP2
+				   , DCS.SC_CRYPTO_FUN('DEC',MOBILE_PH3) AS HP3
+		           , NVL(A.DI,'9') AS DI
+				   , A.SMS_YN AS SMS_YN
+				   , DECODE(A.POST_RCV_CD,'H','Y','N') AS DM_YN
+				   , CASE WHEN HNEW_ADDR1 = NULL THEN 
+		                  CASE WHEN HOME_ADDR1 = NULL THEN NULL
+		                  ELSE HOME_ADDR1||HOME_ADDR2 END
+		             ELSE HNEW_ADDR1||HNEW_ADDR2 END AS ADDR
+				   , DECODE(SUBSTR(A.CUST_ID,1,1),'M','모바일','매장') AS ENTR_GB
+		           , B.PUMBUN_CD
+		        FROM DCS.DM_CUSTOMER A
+		           , DPS.PS_DAYCUST B
+		         WHERE A.CUST_ID = B.CUST_NO(+)
+		           AND A.STR_CD = B.STR_CD(+) 
+		           AND A.ENTR_DT BETWEEN ? AND ?          -- 가입기간
+		           AND A.STR_CD = ?                       -- 점코드
+		           AND B.SALE_DT(+) BETWEEN ? AND ?       -- 매출기간 
+		           AND A.CUST_STAT_FLAG <> '1'                 	-- 탈퇴여부 (0 정상 1 탈퇴)
+				   AND B.CUST_SEX(+) LIKE ?||'%'              	-- 성별
+				   AND B.CUST_AGE(+) BETWEEN ? AND ?	        -- 나이구간
+		           ) Z
+		           , DPS.PC_STRPBN C
+		         WHERE Z.ADDR LIKE '%'||?||'%'
+		           AND Z.PUMBUN_CD = C.PUMBUN_CD(+)
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_OLD">   
+        <![CDATA[    
+            SELECT CUST_NO
+			     , CUST_NAME
+			     , DPS.FN_GET_MASKING_STR(TRIM(CUST_NAME)) AS MSKD_NAME     	-- 마스킹고객명
+			     , HP1||HP2||HP3 AS HP      						
+			     , HP1||'****'||HP3 AS MSKD_HP     						-- 마스킹 핸드폰번호
+			     , DECODE(CUST_SEX,'F','여','남') AS CUST_SEX
+			     , CUST_AGE
+			     , SALE_AMT
+			     , TOT_PT
+			     , DECODE(DI,'0','적립','1','할인','') AS DI
+			     , SMS_YN
+			     , DM_YN
+			     , ADDR
+			     , ENTR_GB
+			     , ROW_NUM
+			 FROM
+			(
+			SELECT 
+			      A.CUST_NO
+			     , MIN(C.CUST_NAME) AS CUST_NAME
+			     , MIN(DCS.SC_CRYPTO_FUN('DEC',MOBILE_PH1)) AS HP1
+			     , MIN(DCS.SC_CRYPTO_FUN('DEC',MOBILE_PH2)) AS HP2
+			     , MIN(DCS.SC_CRYPTO_FUN('DEC',MOBILE_PH3)) AS HP3
+			     , MIN(A.CUST_SEX) AS CUST_SEX
+			     , MIN(A.CUST_AGE) AS CUST_AGE
+			     , SUM(A.SALE_AMT) AS SALE_AMT
+			     , MIN(D.POINT) AS TOT_PT
+			     , MIN(NVL(C.DI,'9')) AS DI
+			     , MIN(C.SMS_YN) AS SMS_YN
+			     , MIN(DECODE(C.POST_RCV_CD,'H','Y','N')) AS DM_YN
+			     , MIN(NVL(HNEW_ADDR1||HNEW_ADDR2,HOME_ADDR1||HOME_ADDR2)) ADDR
+			     , DECODE(SUBSTR(A.CUST_NO,1,1),'M','모바일','매장') AS ENTR_GB
+			     , ROW_NUMBER() OVER(ORDER BY SUM(SALE_AMT) DESC) AS ROW_NUM
+			 FROM DPS.PS_DAYCUST A
+			    , DPS.PC_STRPBN B
+			    , DCS.DM_CUSTOMER C
+			    , DCS.DO_CUST_TPOINT D
+			WHERE A.STR_CD = ?
+			  --AND A.SALE_DT BETWEEN ||'01' AND ||'31'     -- 매출기간
+			  AND A.SALE_DT BETWEEN ? AND ?     -- 매출기간
+			  AND A.STR_CD = B.STR_CD
+			  AND A.PUMBUN_CD = B.PUMBUN_CD
+			  AND A.CUST_NO = C.CUST_ID
+			  AND A.CUST_NO = D.CUST_ID(+)
+			  AND C.CUST_STAT_FLAG <> '1'                 	-- 탈퇴여부 (0 정상 1 탈퇴)
+			  AND A.CUST_SEX LIKE ?||'%'              		-- 성별
+			  AND A.CUST_AGE BETWEEN ? AND ?            	-- 나이구간
+			  AND NVL(HNEW_ADDR1,HOME_ADDR1) LIKE '%'||?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 회원 리스트 조회(브랜드) -->
+    <query name="SEL_MASTER_PUMBUN">   
+        <![CDATA[
+        	AND C.PUMBUN_CD LIKE ?||'%'				-- 브랜드    
+        ]]>        
+    </query>           
+    
+    <!-- 회원 리스트 조회(층) -->
+    <query name="SEL_MASTER_FLOOR">   
+        <![CDATA[
+			AND C.FLOR_CD = ?                          	-- 층 CD    
+        ]]>        
+    </query>
+    
+    <!-- 회원 리스트 조회(조직코드) -->
+    <query name="SEL_MASTER_ORG">   
+        <![CDATA[
+			AND C.SALE_ORG_CD LIKE ?||'%'    	-- 팀PC파트    
+        ]]>        
+    </query>
+    
+    <!-- 회원 리스트 조회(문자수신거부자 제외) -->
+    <query name="SEL_MASTER_SMS_DENY">   
+        <![CDATA[
+			AND NVL(Z.SMS_YN,'N') <> 'N'               	-- 문자수신여부 ( Y 수신 N 거부)    
+        ]]>        
+    </query>
+    
+    <!-- 회원 리스트 조회(우편수신거부자 제외) -->
+    <query name="SEL_MASTER_DM_DENY">   
+        <![CDATA[
+			-- AND NVL(Z.POST_RCV_CD,'O') <> 'O'          	-- DM수신여부 ( H 수신 O 거부)
+			AND NVL(Z.DM_YN,'N') <> 'N'          	-- DM수신여부 ( Y 수신 N 거부)    
+        ]]>        
+    </query>
+    
+    <!-- 회원 리스트 조회(GROUP BY , ORDER BY) -->
+    <query name="SEL_MASTER_GRPORD">   
+        <![CDATA[
+    		  GROUP BY Z.CUST_ID
+	          HAVING SUM(Z.SALE_AMT) BETWEEN ? AND ?    -- 매출구간
+	        ) Y
+	        , DCS.DO_CUST_TPOINT D	
+	        WHERE Y.CUST_ID = D.CUST_ID
+	          AND D.POINT BETWEEN ? AND ?      -- 포인트 구간  
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_GRPORD_OLD">   
+        <![CDATA[
+    		GROUP BY A.CUST_NO
+			ORDER BY SALE_AMT DESC
+			)
+			WHERE SALE_AMT BETWEEN ? AND ?				-- 매출구간
+			ORDER BY ROW_NUM    
+        ]]>        
+    </query>
+
+</service>

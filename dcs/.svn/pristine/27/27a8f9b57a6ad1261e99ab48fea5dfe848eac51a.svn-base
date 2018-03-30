@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.06.05
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개          요 :  특별포인트적립기준
+ -->
+<service name="/dmbo632.do">
+    <!-- 특별포인트적립기준 List -->
+    <gauce name="H_MASTER"> 
+        <column colName="BRCH_ID"         	colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BRCH_NAME"       	colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POINT_PLUS_GB"     colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POINT_PLUS_GB_NM"  colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="START_DT"          colType="TB_STRING"  size="8"  	dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="END_DT"       		colType="TB_STRING"  size="8" 	dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PLUS_POINT"  		colType="TB_DECIMAL" size="9"  	dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_DATE"          colType="TB_STRING"  size="14"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_ID"          	colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+    </gauce>   
+
+    <!-- 특별포인트적립기준 상세 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="BRCH_ID"         	colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BRCH_NAME"       	colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POINT_PLUS_GB"     colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="START_DT"          colType="TB_STRING"  size="8"  	dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="END_DT"       		colType="TB_STRING"  size="8" 	dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PLUS_POINT"  		colType="TB_DECIMAL" size="9"  	dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />        
+    </gauce>
+
+    <!-- 특별포인트적립기준 리스트 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[            
+            SELECT BRCH_ID
+            	 , DCS.F_GET_BRCH_NAME(BRCH_ID) BRCH_NAME
+            	 , POINT_PLUS_GB 
+                 , COM.FN_GET_COMM_NAME('D', 'D116', POINT_PLUS_GB) POINT_PLUS_GB_NM
+                 , START_DT 
+                 , END_DT
+                 , PLUS_POINT    
+                 , TO_CHAR(REG_DATE,'YYYYMMDDhh24miss') REG_DATE             
+                 , REG_ID
+              FROM DCS.DO_PADD_PLUS_RULE
+             WHERE POINT_PLUS_GB LIKE ? ||'%'
+               AND START_DT <= ? 
+               AND END_DT >= ? 
+           ]]>        
+    </query>  
+    
+    <!-- 특별포인트적립기준 상세 조회 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT BRCH_ID
+            	 , DCS.F_GET_BRCH_NAME(BRCH_ID) BRCH_NAME
+            	 , POINT_PLUS_GB 
+                 , START_DT 
+                 , END_DT
+                 , PLUS_POINT             
+              FROM DCS.DO_PADD_PLUS_RULE
+             WHERE BRCH_ID		 = ?
+               AND POINT_PLUS_GB = ?
+               AND START_DT 	 = ? 
+           ]]>        
+    </query>  
+    
+    <!-- 특별포인트적립기준 등록  -->
+    <query name="INS_DO_PADD_PLUS_RULE">        
+        <![CDATA[                                  
+            INSERT INTO DCS.DO_PADD_PLUS_RULE (
+		                                   	   BRCH_ID      
+		                                 	 , POINT_PLUS_GB    
+			                                 , START_DT      
+			                                 , END_DT       
+			                                 , PLUS_POINT    
+			                                 , REG_DATE            
+			                                 , REG_ID 		                                    
+			                                  ) 
+			                           VALUES (
+			                                   ?
+			                                 , ?
+			                                 , ?
+			                                 , ?
+			                                 , ? 
+			                                 , SYSDATE
+			                                 , ? 		                                                 
+			                                 )                                      
+         ]]>   
+    </query>  
+    
+    <!-- 특별포인트적립기준 수정 -->
+    <query name="UPD_DO_PADD_PLUS_RULE">
+        <![CDATA[
+            UPDATE DCS.DO_PADD_PLUS_RULE
+               SET END_DT		 = ?
+                  ,PLUS_POINT	 = ?
+                  ,MOD_DATE		 = SYSDATE
+                  ,MOD_ID		 = ?   
+             WHERE BRCH_ID 		 = ?
+               AND POINT_PLUS_GB = ?
+               AND START_DT 	 = ?  
+        ]]>
+    </query>
+    
+    <!-- 특별포인트적립기준 기간 체크 -->
+    <query name="SEL_DO_PADD_PLUS_RULE">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT 
+              FROM DCS.DO_PADD_PLUS_RULE
+             WHERE BRCH_ID    	LIKE ? ||'%'
+               AND POINT_PLUS_GB = ?   
+               AND START_DT   	<= ? 
+               AND END_DT 		>= ?                    
+         ]]>
+    </query>       
+</service>

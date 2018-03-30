@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.06
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  위탁협력사 마스터 관리
+ -->
+<service name="/mgif105.mg">
+<!--  협력사 목록 조회-->
+    <gauce name="H_STRMST">
+      <column colName="STR_CD"              colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STR_NAME"            colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_CD"              colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_NAME"            colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BUY_SALE_FLAG"       colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BIZ_TYPE"            colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BIZ_TYPE_NM"         colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="COMP_NO"             colType="TB_STRING" size="10"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="COMP_NAME"           colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="REP_NAME"            colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BIZ_STAT"            colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BIZ_CAT"             colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ADDR"                colType="TB_STRING" size="180"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ADDR_DTL"            colType="TB_STRING" size="180"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PHONE_NO"            colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="FAX_NO"              colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PAY_DT_FLAG"         colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PAY_DT_FLAG_NM"      colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PAY_WAY"             colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PAY_WAY_NM"          colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_VEN_FLAG"       colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+
+    <!--  수수료 정보-->
+    <gauce name="H_VENFEEINFO">
+      <column colName="TODAY"              colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="APP_DT"              colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STR_CD"              colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_CD"              colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="END_DT"              colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="CNS_PAY_FEE_RATE"    colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    
+    <!--  협력사 목록 조회-->
+    <query name="SEL_STRMST">
+        <![CDATA[                                        
+        SELECT * 
+         FROM (SELECT B.STR_CD
+             , DPS.FN_GET_STORE_NAME(B.STR_CD) AS STR_NAME
+             , B.VEN_CD
+             , B.VEN_NAME
+             , A.BUY_SALE_FLAG
+             , A.BIZ_TYPE
+             , COM.FN_GET_COMM_NAME('D', 'P003', A.BIZ_TYPE) AS BIZ_TYPE_NM
+             , A.COMP_NO
+             , A.COMP_NAME
+             , A.REP_NAME
+             , A.BIZ_STAT
+             , A.BIZ_CAT
+             , SUBSTR(A.POST_NO,0,3) || '-' || SUBSTR(A.POST_NO,4,3) || ' ' || A.ADDR AS ADDR
+             , A.DTL_ADDR AS ADDR_DTL
+             , A.PHONE1_NO || A.PHONE2_NO || A.PHONE3_NO AS PHONE_NO
+             , A.FAX1_NO || A.FAX2_NO || A.FAX3_NO AS FAX_NO
+             , B.PAY_DT_FLAG
+             , COM.FN_GET_COMM_NAME('D', 'P051', B.PAY_DT_FLAG) AS PAY_DT_FLAG_NM
+             , B.PAY_WAY
+             , COM.FN_GET_COMM_NAME('D', 'P049', B.PAY_WAY) AS PAY_WAY_NM
+             , DECODE(C.GIFT_VEN_FLAG, '', '9', C.GIFT_VEN_FLAG) AS GIFT_VEN_FLAG
+          FROM DPS.PC_VENMST A
+             , DPS.PC_STRVENMST B
+               LEFT OUTER JOIN
+               MSS.MG_STRVENMST C
+            ON B.STR_CD = C.STR_CD
+           AND B.VEN_CD = C.VEN_CD
+           AND C.GIFT_VEN_FLAG IN ('3','2')
+         WHERE A.VEN_CD = B.VEN_CD
+           AND A.BIZ_FLAG = '92'
+           AND B.STR_CD LIKE ? || '%'
+           AND A.BUY_SALE_FLAG LIKE ? || '%'
+           AND A.VEN_CD LIKE ? || '%') 
+           WHERE GIFT_VEN_FLAG != 2
+        ]]>
+    </query>
+    
+     <!--  수수료 정보 조회-->
+    <query name="SEL_VENFEEINFO">
+        <![CDATA[                                        
+        SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') AS TODAY
+             , APP_DT
+             , STR_CD
+             , VEN_CD
+             , END_DT
+             , CNS_PAY_FEE_RATE
+          FROM MSS.MG_VENFEEMST
+        WHERE STR_CD = ?
+          AND VEN_CD = ?
+     ORDER BY APP_DT
+        ]]>
+    </query>
+    
+   <!--  협력사 수수료 정보 수정 OR 등록-->
+    <query name="UST_STRVENMST">
+        <![CDATA[                                        
+                 MERGE INTO MSS.MG_STRVENMST A
+                      USING (SELECT ? AS STR_CD
+                                  , ? AS VEN_CD
+                                  , ? AS GIFT_VEN_FLAG
+                                  , ? AS USER_ID
+                               FROM DUAL) B 
+                         ON (A.STR_CD = B.STR_CD
+                        AND A.VEN_CD = B.VEN_CD)
+          WHEN MATCHED THEN 
+                 UPDATE SET GIFT_VEN_FLAG = B.GIFT_VEN_FLAG
+                          , MOD_ID = B.USER_ID
+                          , MOD_DATE = SYSDATE
+      WHEN NOT MATCHED THEN
+               INSERT VALUES ( B.STR_CD
+                             , B.VEN_CD
+                             , B.GIFT_VEN_FLAG
+                             , B.USER_ID
+                             , SYSDATE
+                             , B.USER_ID
+                             , SYSDATE)
+        ]]>
+    </query>
+    
+    <!--  협력사 수수료 등록 &수정 -->
+    <query name="UST_VENFEEMST">
+        <![CDATA[                                        
+                 MERGE INTO MSS.MG_VENFEEMST A
+                      USING (SELECT ? AS APP_DT
+                                  , ? AS STR_CD
+                                  , ? AS VEN_CD
+                                  , ? AS END_DT
+                                  , ? AS CNS_PAY_FEE_RATE
+                                  , ? AS USER_ID
+                               FROM DUAL) B 
+                         ON (A.APP_DT = B.APP_DT
+                        AND A.STR_CD = B.STR_CD
+                        AND A.VEN_CD = B.VEN_CD)
+          WHEN MATCHED THEN 
+                 UPDATE SET CNS_PAY_FEE_RATE = CNS_PAY_FEE_RATE
+                          , MOD_ID = B.USER_ID
+                          , MOD_DATE = SYSDATE
+      WHEN NOT MATCHED THEN
+              INSERT VALUES ( B.APP_DT
+                            , B.STR_CD
+                            , B.VEN_CD
+                            , B.END_DT
+                            , 0
+                            , 0
+                            , 0
+                            , 0
+                            , B.CNS_PAY_FEE_RATE
+                            , B.USER_ID
+                            , SYSDATE
+                            , B.USER_ID
+                            , SYSDATE)
+        ]]>
+    </query>
+
+    <!--  협력사 수수료 삭제-->
+    <query name="DEL_VENFEEMST">
+        <![CDATA[                                        
+       DELETE MSS.MG_VENFEEMST
+       WHERE APP_DT = ?
+         AND STR_CD = ?
+         AND VEN_CD = ?
+        ]]>
+    </query>  
+</service>

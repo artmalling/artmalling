@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/psal102.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="CHK_FLAG"          colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"          colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLAN_YEAR"         colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_DT"           colType="TB_STRING"      size="8"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT"  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT"   colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT"  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT"  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="ORG_CD"            colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"          colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT"    colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT"      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT"    colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT"    colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE"   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE"   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT"  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT"   colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT"  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT"  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE" colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE" colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_IRATE" colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_IRATE" colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_CONF_FLAG"> 
+        <column colName="CONF_FLAG"          colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 당초팀별년매출계획 조회 쿼리  -->
+    <query name="SEL_PLANTEAMYY">        
+        <![CDATA[
+            SELECT (CASE WHEN NVL(A.CONF_FLAG, 'N') = 'Y' THEN 'T' ELSE 'F' END) AS CHK_FLAG
+                 , A.STR_CD
+                 , B.STR_NAME
+                 , A.PLAN_YEAR
+                 , NVL(A.CONF_DT,'') AS CONF_DT
+                 , SUM(A.ORIGIN_NORM_SAMT) AS ORIGIN_NORM_SAMT
+                 , SUM(A.ORIGIN_EVT_SAMT) AS ORIGIN_EVT_SAMT
+                 , SUM(A.ORIGIN_SALE_TAMT) AS ORIGIN_SALE_TAMT
+                 , SUM(A.ORIGIN_PROF_TAMT) AS ORIGIN_PROF_TAMT
+              FROM DPS.PS_PLANTEAMYY A
+                 , DPS.PC_STRMST     B
+                 , DPS.PC_ORGMST     C
+             WHERE A.STR_CD     = B.STR_CD
+               AND A.ORG_CD     = C.ORG_CD
+               AND C.ORG_FLAG   = ?
+               AND A.STR_CD     = ?
+               AND A.PLAN_YEAR  = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = C.STR_CD
+                                 AND MYORG.DEPT_CD     = C.DEPT_CD
+                                 AND MYORG.TEAM_CD     = C.TEAM_CD
+                                 AND MYORG.USER_ID     = ?
+                             )
+             GROUP BY
+                   NVL(A.CONF_FLAG, 'N')
+                 , A.STR_CD
+                 , B.STR_NAME
+                 , A.PLAN_YEAR
+                 , A.CONF_DT
+             ORDER BY 
+                   A.STR_CD
+                 , A.CONF_DT
+               
+            
+        ]]>        
+    </query>
+    <!-- 당초팀별년매출계획  조회 쿼리  -->
+    <query name="SEL_PLANTEAMYYDETAIL">        
+        <![CDATA[
+            SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME    AS ORG_NAME
+                 , A.BFYY_NORM_SAMT
+                 , A.BFYY_EVT_SAMT
+                 , A.BFYY_SALE_TAMT
+                 , A.BFYY_PROF_TAMT
+                 , A.BFYY_SALE_CRATE
+                 , A.BFYY_PROF_CRATE
+                 , A.ORIGIN_NORM_SAMT
+                 , A.ORIGIN_EVT_SAMT
+                 , A.ORIGIN_SALE_TAMT
+                 , A.ORIGIN_PROF_TAMT
+                 , A.ORIGIN_SALE_CRATE
+                 , A.ORIGIN_PROF_CRATE
+                 , A.ORIGIN_SALE_IRATE
+                 , A.ORIGIN_PROF_IRATE
+              FROM DPS.PS_PLANTEAMYY    A
+                 , DPS.PC_ORGMST        B
+             WHERE A.ORG_CD     = B.ORG_CD
+               AND B.ORG_FLAG   = ?
+               AND A.STR_CD     = ?
+               AND A.ORG_LEVEL  = '3'
+               AND A.PLAN_YEAR  = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.USER_ID     = ?
+                             )
+             ORDER BY
+                   A.ORG_CD
+        ]]>        
+    </query>
+    
+    
+    <!-- 당초팀별월매출계획  확정구분 조회 쿼리  -->
+    <query name="SEL_PLANTEAMCONFFLAG">        
+        <![CDATA[
+            SELECT CONF_FLAG
+              FROM DPS.PS_PLANTEAM    A
+                 , DPS.PC_ORGMST      B
+             WHERE A.ORG_CD     = B.ORG_CD
+               AND B.ORG_FLAG   = ?
+               AND A.STR_CD     = ?
+               AND A.ORG_LEVEL  = '3'
+               AND A.PLAN_YM    = ? || '01'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.USER_ID     = ?
+                             )
+             ORDER BY
+                   A.ORG_CD
+        ]]>        
+    </query>
+    
+    <!-- 당초팀별년매출계획 수정 -->    
+    <query name="UPD_PLANTEAMYY">
+        <![CDATA[
+            UPDATE DPS.PS_PLANTEAMYY
+               SET CONF_DT              = ?
+                 , CONF_ID              = ?
+                 , CONF_FLAG            = ?
+                 , MOD_DATE             = SYSDATE
+                 , MOD_ID               = ?
+             WHERE STR_CD               = ? 
+               AND ORG_LEVEL            = '3'
+               AND PLAN_YEAR            = ?
+               AND NVL(CONF_FLAG,'N')   = ?
+               
+        ]]>
+    </query>
+
+</service>

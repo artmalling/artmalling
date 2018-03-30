@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.04.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  실사재고조사표출력을 한다.
+ -->
+<service name="/pstk203.pt">
+
+  <gauce name="H_SEL_MASTER">
+        <column colName="SKU_CD"           colType="TB_STRING"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"         colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"           colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="BUY_SALE_PRC"     colType="TB_INT"     size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+
+        <column colName="STYLE_CD"         colType="TB_STRING"  size="54"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STYLE_NAME"       colType="TB_STRING"  size="54"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COLOR_CD"         colType="TB_STRING"  size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SIZE_CD"          colType="TB_STRING"  size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="INPUT_PLU_CD"     colType="TB_STRING"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_UNIT_CD"     colType="TB_STRING"  size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="CMP_SPEC_UNIT"    colType="TB_STRING"  size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 재고스케쥴에 있는 정보 쿼리 -->
+    <gauce name="H_SEL_PBNSTK">        
+        <column colName="SRVY_DT"         colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG"        colType="TB_STRING"  size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG_NAME"   colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_DT"        colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                      
+    </gauce>
+    
+    <!-- 품번정보조회 -->
+    <gauce name="H_SEL_PBNINF">        
+        <column colName="ORG_NAME"         colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COST_CAL_NAME"    colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_NAME"         colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                              
+    </gauce>
+   
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_STKSKU">
+        <![CDATA[
+            SELECT A.SKU_CD
+                 , A.SKU_NAME AS SKU_NAME
+                 , A.STR_CD                  
+                 , C.NORM_SALE_PRC AS BUY_SALE_PRC                 
+                 , B.STYLE_CD
+                 , (SELECT X.STYLE_NAME
+                      FROM DPS.PC_STYLEMST X
+                     WHERE X.PUMBUN_CD = B.PUMBUN_CD
+                       AND X.STYLE_CD  = B.STYLE_CD
+                    ) AS STYLE_NAME
+                 , A.COLOR_CD
+                 , A.SIZE_CD
+                 , B.INPUT_PLU_CD
+                 , B.SALE_UNIT_CD
+                 , B.CMP_SPEC_UNIT 
+              FROM DPS.PC_STRSKUMST    A
+                 , DPS.PC_SKUMST       B
+                 , DPS.PC_STRSKUPRCMST C
+             WHERE A.STR_CD    = ?
+               AND A.PUMBUN_CD = ?
+               AND A.USE_YN = 'Y'
+               AND B.SKU_CD = A.SKU_CD
+               AND C.STR_CD = A.STR_CD
+               AND C.SKU_CD = A.SKU_CD
+               AND C.EVENT_CD = '00000000000'
+               AND ? BETWEEN C.APP_S_DT AND C.APP_E_DT
+        ]]>    
+    </query> 
+    <query name="SEL_STKSKU_ORDER">
+        <![CDATA[
+            ORDER BY SKU_CD
+        ]]>    
+    </query>
+    
+    <query name="SEL_STKSKU_ORDER_STYLE">
+        <![CDATA[
+            ORDER BY B.STYLE_CD
+                   , A.COLOR_CD
+                   , A.SIZE_CD 
+        ]]>    
+    </query>    
+    
+    <!-- 재고스케쥴에 있는 정보 쿼리  -->
+    <query name="SEL_PBNSTK">
+        <![CDATA[
+            SELECT SCH.SRVY_DT 
+                 , SCH.STK_FLAG
+                 , (SELECT X.COMM_NAME1
+                     FROM COM.TC_COMMCODE X
+                    WHERE X.SYS_PART = 'D'
+                      AND X.COMM_PART = 'P801'
+                      AND X.COMM_CODE = SCH.STK_FLAG) AS STK_FLAG_NAME
+                 , CASE WHEN NVL(SCH.CLOSE_DT,NULL) IS NULL THEN '진행' ELSE '마감' END AS CLOSE_DT
+              FROM DPS.PT_SCHEDULE SCH
+             WHERE SCH.STR_CD = ?
+               AND SCH.STK_YM = ?
+        ]]>    
+    </query>
+    <!-- 품번정보조회  -->
+    <query name="SEL_PBNINF">
+        <![CDATA[
+            SELECT ORG.ORG_NAME
+                 , CCW.COMM_NAME1 AS COST_CAL_NAME
+                 , STR.STR_NAME
+              FROM DPS.PC_STRPBN STP
+                 , DPS.PC_ORGMST ORG
+                 , DPS.PC_STRMST STR
+                 , (
+                    SELECT COMM_CODE , COMM_NAME1
+                      FROM COM.TC_COMMCODE
+                     WHERE SYS_PART = 'D'
+                       AND COMM_PART = 'P039'
+                   ) CCW
+            WHERE STP.SALE_ORG_CD = ORG.ORG_CD 
+              AND STP.COST_CAL_WAY = CCW.COMM_CODE(+)
+              AND STP.STR_CD = STR.STR_CD
+              AND STP.STR_CD = ?
+              AND STP.PUMBUN_CD = ?
+        ]]>     
+    </query>
+</service>

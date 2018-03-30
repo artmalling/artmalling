@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : 
+ * 작 성 일 : 2010.06.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  실시간로그인현황
+ -->
+<service name="/tcom304.tc"> 
+    <gauce name="H_SEL_USER">   
+        <column colName="USER_ID"       colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" />       
+        <column colName="USER_NAME"     colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="MONTH_LOG_CNT" colType="TB_INT"    size="9"     dec="0" keyType="TB_NORMAL" Mode="" />  
+        <column colName="LOGIN_DATE"    colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="ORG_FLAG"      colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="ORG_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" Mode="" />          
+        <column colName="STR_CD"        colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" Mode="" />   
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="DEPT_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" Mode="" />   
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="TEAM_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="PC_CD"         colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="PC_NAME"       colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" Mode="" />  
+    </gauce> 
+        <!-- 사용자리스트 조회 -->
+    <query name="SEL_USER_LIST">        
+        <![CDATA[
+			SELECT A.USER_ID                                
+			     , A.USER_NAME                              
+			     , MONTH_LOG_CNT						 						-- 최근1개월 로그인횟수
+			     , TO_CHAR(TO_DATE(LOGIN_DATE,'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS')LOGIN_DATE	-- 로그인시간
+			     , ORG_FLAG                                                     -- 조직구분
+			     , COM.FN_GET_COMM_NAME('D','P047', ORG_FLAG)   AS ORG_NAME     -- 조직명 
+			     , A.STR_CD                                                     -- 점코드 
+			     , DPS.FN_GET_STORE_NAME(A.STR_CD)          AS STR_NAME         -- 점명
+			     , A.DEPT_CD                                                    -- 부문코드    
+			     , DPS.FN_GET_ORG_NAME(A.STR_CD
+			                         , A.DEPT_CD
+			                         , '00','00','00')      AS DEPT_NAME        -- 부문명
+			     , A.TEAM_CD                                                    -- 팀코드    
+			     , DPS.FN_GET_ORG_NAME(A.STR_CD
+			                         , A.DEPT_CD
+			                         , A.TEAM_CD
+			                         ,'00','00')            AS TEAM_NAME        -- 팀명 
+			     , A.PC_CD                                                      -- PC코드
+			     , DPS.FN_GET_ORG_NAME(A.STR_CD
+			                         , A.DEPT_CD
+			                         , A.TEAM_CD
+			                         , A.PC_CD
+			                         ,'00')                 AS PC_NAME          -- PC명 
+			  FROM COM.TC_USRMST A
+			     , (
+			        	SELECT USER_ID, SUBSTR(LOGIN_DATE,1,14) LOGIN_DATE, MONTH_LOG_CNT
+                          FROM (
+                                	SELECT COUNT(*) MONTH_LOG_CNT
+                                         , MAX(LOGIN_DATE|| NVL(LOGOUT_DATE,'99999999999999')) LOGIN_DATE
+                                         , USER_ID
+                                      FROM COM.TC_LOGHST
+                                     WHERE LOGIN_DATE BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, -1) ,'YYYYMMDD') || '0'  AND TO_CHAR(SYSDATE ,'YYYYMMDD') || '9'  
+                                     GROUP BY USER_ID
+                                )
+						  WHERE TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN SUBSTR(LOGIN_DATE,1,14) AND SUBSTR(LOGIN_DATE,15, 14)
+                            AND SUBSTR(LOGIN_DATE,1,8) = TO_CHAR(SYSDATE,'YYYYMMDD') 
+                                            
+--			            SELECT USER_ID, TO_CHAR(TO_DATE(LOGIN_DATE,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')LOGIN_DATE
+--                              , (   SELECT COUNT(*) 
+--                                      FROM COM.TC_LOGHST 
+--                                     WHERE USER_ID = A.USER_ID
+--                                       AND LOGIN_DATE BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, -1) ,'YYYYMMDD') || '0' 
+--                                                          AND TO_CHAR(SYSDATE ,'YYYYMMDD') || '9' ) MONTH_LOG_CNT
+--			              FROM (
+--			                        SELECT USER_ID , LOGOUT_DATE, LOGIN_DATE
+--			                             , ROW_NUMBER() OVER(PARTITION BY USER_ID ORDER BY LOGIN_DATE DESC) AS RN
+--			                          FROM COM.TC_LOGHST 
+--			                         WHERE LOGIN_DATE LIKE TO_CHAR(SYSDATE,'YYYYMMDD') || '%'
+--			                    ) A
+--			              WHERE RN = 1
+--			                AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN A.LOGIN_DATE AND NVL(LOGOUT_DATE,'99999999999999')
+			       )B
+			 WHERE A.USER_ID = B.USER_ID
+			   AND A.USE_YN  = 'Y' 
+        ]]>        
+    </query> 
+     
+    <query name="SEL_USER_WHERE_ORG_FLAG">
+        <![CDATA[ 
+               AND A.ORG_FLAG      = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_USER_WHERE_STR_CD">
+        <![CDATA[ 
+               AND A.STR_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_DEPT_CD">
+        <![CDATA[
+               AND A.DEPT_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_TEAM_CD">
+        <![CDATA[
+               AND A.TEAM_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_PC_CD">
+        <![CDATA[
+               AND A.PC_CD      = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_USER_ORDER">
+        <![CDATA[
+			 ORDER BY ORG_FLAG, STR_CD, DEPT_CD, TEAM_CD, PC_CD, USER_ID  
+        ]]>    
+    </query>
+    
+    <!-- 로그이력 팝업 -->
+    <gauce name="H_HISTORY">   
+        <column colName="USER_ID"       colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" />   
+        <column colName="LOGIN_DATE"    colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="LOGOUT_DATE"   colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+    </gauce> 
+    
+    <query name="SEL_LOG_HISTORY">
+        <![CDATA[
+			 
+			SELECT USER_ID
+			     , TO_CHAR(TO_DATE(LOGIN_DATE,'YYYYMMDDHH24MISS') , 'YYYY/MM/DD HH24:MI:SS')  AS LOGIN_DATE
+			     , TO_CHAR(TO_DATE(LOGOUT_DATE,'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS')  AS LOGOUT_DATE
+			  FROM COM.TC_LOGHST
+			 WHERE LOGIN_DATE BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, -1) ,'YYYYMMDD') || '0' 
+               AND TO_CHAR(SYSDATE ,'YYYYMMDD') || '9'
+               AND USER_ID = ?
+             ORDER BY LOGIN_DATE DESC
+        ]]>    
+    </query>
+    
+</service>

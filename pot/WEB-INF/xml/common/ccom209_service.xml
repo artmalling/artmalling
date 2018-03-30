@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.02.21
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 특판사원조회
+ -->
+<service name="/ccom209.cc">    
+
+    <!-- POPUP HEADER -->
+    <gauce name="H_SEL_CODE">
+        <column colName="CHK"           colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CODE"          colType="TB_STRING" size="13"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="NAME"          colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="ORG_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+
+    <!-- POPUP SEARCH DATE -->
+    <query name="SEL_CODE">
+        <![CDATA[
+			 SELECT 
+			        'F'             AS CHK
+			      , TUM.USER_ID     AS CODE
+			      , TUM.USER_NAME   AS NAME
+                  , ORG_NAME        AS ORG_NAME
+			   FROM COM.TC_USRMST TUM
+			      , DPS.PC_ORGMST  POR
+			  WHERE TUM.ORG_CD = POR.ORG_CD
+			    AND TUM.USER_ID LIKE ?||'%'
+			    AND TUM.USER_NAME LIKE '%'||?||'%'
+        ]]>
+    </query> 
+    
+    <!-- POPUP SEARCH ADD -->
+    <query name="SEL_CODE_W_ORG_CD">
+        <![CDATA[
+                AND TUM.ORG_CD LIKE ?||'%'
+        ]]>
+    </query> 
+    
+    <!-- POPUP SEARCH ADD -->
+    <query name="SEL_CODE_W_STR_CD">
+        <![CDATA[
+                AND TUM.STR_CD = ?
+        ]]>
+    </query> 
+    
+</service>
+

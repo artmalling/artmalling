@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.07.20
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal511.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"                  colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"                  colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"                 colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_USER_ID"            colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMP_NAME"                colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="R_CANCEL"                colType="TB_STRING"      size="20"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_SALE_DT"               colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_POS_NO"                colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_TRAN_NO"               colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TOT_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_TOT_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_SALE_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_TOT_AMT"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="SEQ_NO"                  colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"               colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"                  colType="TB_STRING"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"                colType="TB_DECIMAL"     size="7"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PRC"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_PRC"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_SALE_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_PRC"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_FLAG"                colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_HEADER">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , A.SALE_DT
+                 , A.POS_NO
+                 , A.TRAN_NO
+                 , A.SALE_USER_ID
+                 , B.EMP_NAME
+                 , D.COMM_NAME1                                    AS R_CANCEL
+                 , A.O_SALE_DT
+                 , A.O_POS_NO
+                 , A.O_TRAN_NO
+                 , A.SALE_TOT_AMT + A.REDU_TOT_AMT + A.DC_TOT_AMT  AS SALE_TOT_AMT
+                 , A.REDU_TOT_AMT
+                 , A.SALE_TOT_AMT + A.DC_TOT_AMT                   AS NORM_SALE_AMT
+                 , A.DC_TOT_AMT
+                 , A.SALE_TOT_AMT                                  AS NET_SALE_AMT
+              FROM DPS.PS_TRHEADER    A
+                 , DPS.PC_SALEUSERMST B
+                 , DPS.PC_POSMST      C
+                 , COM.TC_COMMCODE    D
+             WHERE A.SALE_USER_ID    = B.SALE_USER_ID
+               AND A.POS_NO          = C.POS_NO
+               AND A.STR_CD          = C.STR_CD
+               AND A.TRAN_FLAG       = '2'
+               AND D.COMM_PART       = 'P603'
+               AND NVL(A.CANCEL_RSN_CD, '99')   = D.COMM_CODE
+               AND A.STR_CD          = ?
+               AND C.POS_FLAG        LIKE ? || '%'
+               AND C.FLOR_CD         LIKE ? || '%'
+               AND A.SALE_DT         BETWEEN ? AND ?
+             ORDER BY
+                   A.STR_CD
+                 , A.SALE_DT
+                 , A.POS_NO
+                 , A.TRAN_NO
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_ITEM">        
+        <![CDATA[
+            SELECT A.SEQ_NO
+                 , A.PUMBUN_CD
+                 , B.PUMBUN_NAME
+                 , C.PUMMOK_CD
+                 , C.PUMMOK_NAME
+                 , NVL(D.SKU_CD, '') AS SKU_CD
+                 , NVL(D.SKU_NAME, '') AS SKU_NAME
+                 , A.SALE_QTY
+                 , A.SALE_AMT + A.SALE_QTY*A.REDU_PRC + A.SALE_QTY*A.DC_PRC  AS SALE_AMT
+                 , A.SALE_QTY*A.REDU_PRC                                     AS REDU_PRC
+                 , A.SALE_AMT + A.SALE_QTY*A.DC_PRC                          AS NORM_SALE_AMT
+                 , A.SALE_QTY*A.DC_PRC                                       AS DC_PRC
+                 , A.SALE_AMT                                                AS NET_SALE_AMT
+                 , B.SKU_FLAG
+              FROM DPS.PS_TRITEM       A
+                 , DPS.PC_STRPBN       B
+                 , DPS.PC_PMKMST       C
+                 , DPS.PC_STRSKUMST    D
+             WHERE A.STR_CD          = B.STR_CD
+               AND A.PUMBUN_CD       = B.PUMBUN_CD
+               AND A.PUMMOK_CD       = C.PUMMOK_SRT_CD
+               AND A.ITEM_CD         = D.SKU_CD(+)
+               AND A.STR_CD          = D.STR_CD(+)
+               AND A.STR_CD          = ?
+               AND A.SALE_DT         = ?
+               AND A.POS_NO          = ?
+               AND A.TRAN_NO         = ?
+             ORDER BY
+                   A.SEQ_NO
+        ]]>        
+    </query>
+    
+    
+</service>

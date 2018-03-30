@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  매입사별 POS 카드매출현황을 조회 한다.
+ -->
+<service name="/psal926.ps">
+    <!-- 매입사별 POS 카드매출현황 -->
+    <gauce name="H_MASTER">
+        <column colName="BCOMP_CD"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_NM"       colType="TB_STRING"  size="23"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CNT"       colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="APPR_CNT"       colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="APPR_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DIF_COUNT"      colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIF_AMT"        colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 매입사별 POS 카드매출현황 상세 -->
+    <gauce name="H_DETAIL">
+        <column colName="SALE_DT"      colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"       colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CNT"     colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"     colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_CNT"     colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_AMT"     colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIF_COUNT"    colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIF_AMT"      colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 매입사별 POS 카드매출현황  -->
+    <query name="SEL_MASTER">        
+        <![CDATA[       
+            SELECT BCOMP_CD
+                 , BCOMP_NM
+                 , SUM(SALE_CNT) SALE_CNT
+                 , SUM(SALE_AMT) SALE_AMT
+                 , SUM(APPR_CNT) APPR_CNT
+                 , SUM(APPR_AMT) APPR_AMT 
+                 , STR_CD
+                 , SUM(SALE_CNT) - SUM(APPR_CNT) AS DIF_COUNT
+                 , SUM(SALE_AMT) - SUM(APPR_AMT) AS DIF_AMT
+              FROM (
+                     SELECT BCOMP_CD
+                          , DPS.FN_GET_CCOMP_NM(BCOMP_CD) BCOMP_NM
+                          , 0 SALE_CNT
+                          , 0 SALE_AMT
+                          , COUNT(*) APPR_CNT
+                          , SUM(DECODE(WORK_FLAG, '12', -1, 1) * APPR_AMT) APPR_AMT
+                          , STR_CD
+                       FROM DPS.PD_BUYREQPREP
+                      WHERE STR_CD   =   ?                                   -- 점포코드
+                        AND SALE_DT  BETWEEN ? AND ?                         -- 매출일자
+                        AND POS_NO   BETWEEN ? AND ?                         -- POS 번호
+                        AND BCOMP_CD LIKE    ? || '%'                        -- 매입사코드
+                      GROUP BY BCOMP_CD, STR_CD
+                     UNION ALL
+                     SELECT A.ACQU_COMP_CD  AS BCOMP_CD
+                          , A.ACQU_COMP     AS BCOMP_NM
+                          , ABS(SUM(CNT))   AS SALE_CNT
+                          , SUM(SALE_AMT)   AS SALE_AMT
+                          , 0               AS APPR_CNT
+                          , 0               AS APPR_AMT
+                          , A.STR_CD
+                       FROM (
+                             SELECT C.CCOMP_NM        AS ACQU_COMP
+                                  , A.CARD_PURCHASE   AS ACQU_COMP_CD
+                                  , A.STR_CD
+                                  , A.SALE_DT
+                                  , A.POS_NO
+                                  , NVL(SUM(CASE WHEN D.TRAN_FLAG = '0' THEN 1 ELSE -1 END),0) AS CNT
+                                  , NVL(SUM(CASE WHEN D.TRAN_FLAG = '0' THEN A.PAY_AMT ELSE A.PAY_AMT * -1 END),0) AS SALE_AMT
+                               FROM (SELECT STR_CD
+                                          , SALE_DT
+                                          , POS_NO
+                                          , TRAN_NO
+                                          , TRAN_FLAG
+                                          , TRAN_MODE
+                                       FROM DPS.PS_TRHEADER
+                                      WHERE STR_CD = ?
+                                        AND SALE_DT BETWEEN ? AND ?
+                                        AND POS_NO  BETWEEN ? AND ?
+                                    ) D
+                                  , DPS.PS_DISCARD  A
+                                  , ( 
+                                      SELECT STR_CD,FLOR_CD, POS_FLAG, POS_NO
+                                        FROM DPS.PC_POSMST 
+                                       WHERE STR_CD = ?
+                                    ) B
+                                  , DPS.PD_CARDCOMP C
+                              WHERE A.STR_CD          =    D.STR_CD  
+                                AND A.SALE_DT         =    D.SALE_DT  
+                                AND A.POS_NO          =    D.POS_NO  
+                                AND A.TRAN_NO         =    D.TRAN_NO
+                                AND A.STR_CD          =    B.STR_CD(+)
+                                AND A.POS_NO          =    B.POS_NO(+)
+                                AND A.CARD_PURCHASE   =    C.CCOMP_CD(+)
+                                AND D.TRAN_MODE      <>    '92'
+                                AND A.STR_CD          =    ?                          -- 점포코드
+                                AND A.CARD_PURCHASE   LIKE ? || '%'                   -- 매입사코드
+                                AND A.SALE_DT      BETWEEN ?  AND ?                   -- 매출일자
+                                AND A.POS_NO       BETWEEN ?  AND ?                   -- POS 번호
+                              GROUP BY C.CCOMP_NM, A.CARD_PURCHASE, A.STR_CD, A.SALE_DT, A.POS_NO
+                            ) A
+                      GROUP BY A.ACQU_COMP_CD, A.ACQU_COMP, A.STR_CD
+                   )
+             GROUP BY BCOMP_CD, BCOMP_NM, STR_CD
+             ORDER BY BCOMP_CD, BCOMP_NM, STR_CD     
+        ]]>        
+    </query>
+    
+    <!-- 매입사별 POS 카드매출현황 상세조회 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT SALE_DT
+                 , POS_NO
+                 , SUM(SALE_CNT) SALE_CNT
+                 , SUM(SALE_AMT) SALE_AMT
+                 , SUM(APPR_CNT) APPR_CNT
+                 , SUM(APPR_AMT) APPR_AMT
+                 , SUM(SALE_CNT) - SUM(APPR_CNT) AS DIF_COUNT
+                 , SUM(SALE_AMT) - SUM(APPR_AMT) AS DIF_AMT 
+              FROM (
+                     SELECT SALE_DT
+                          , POS_NO
+                          , 0 SALE_CNT
+                          , 0 SALE_AMT
+                          , COUNT(*) APPR_CNT
+                          , SUM(DECODE(WORK_FLAG, '12', -1, 1) * APPR_AMT) APPR_AMT
+                       FROM DPS.PD_BUYREQPREP
+                      WHERE STR_CD   = ?                                -- 점포코드    
+                        AND SALE_DT  BETWEEN ? AND ?                    -- 매출일자    
+                        AND POS_NO   BETWEEN ? AND ?                    -- POS 번호    
+                        AND BCOMP_CD = ?                                -- 매입사코드  
+                      GROUP BY SALE_DT, POS_NO
+                     UNION ALL
+                     SELECT A.SALE_DT
+                          , A.POS_NO
+                          , ABS(SUM(CNT))  AS SALE_CNT
+                          , SUM(SALE_AMT) AS SALE_AMT
+                          , 0             AS APPR_CNT
+                          , 0             AS APPR_AMT
+                       FROM (
+                             SELECT A.SALE_DT
+                                  , A.POS_NO
+                                  , NVL(SUM(CASE WHEN D.TRAN_FLAG = '0' THEN 1 ELSE -1 END),0) AS CNT
+                                  , NVL(SUM(CASE WHEN D.TRAN_FLAG = '0' THEN A.PAY_AMT ELSE A.PAY_AMT * -1 END),0) AS SALE_AMT
+                               FROM (SELECT STR_CD
+                                          , SALE_DT
+                                          , POS_NO
+                                          , TRAN_NO
+                                          , TRAN_FLAG
+                                          , TRAN_MODE
+                                       FROM DPS.PS_TRHEADER
+                                      WHERE STR_CD = ?
+                                        AND SALE_DT BETWEEN ? AND ?
+                                        AND POS_NO  BETWEEN ? AND ?
+                                    ) D
+                                  , DPS.PS_DISCARD  A
+                                  , ( 
+                                      SELECT STR_CD,FLOR_CD, POS_FLAG, POS_NO
+                                        FROM DPS.PC_POSMST 
+                                       WHERE STR_CD = ?
+                                    ) B
+                                  , DPS.PD_CARDCOMP C
+                              WHERE A.STR_CD          =  D.STR_CD  
+                                AND A.SALE_DT         =  D.SALE_DT  
+                                AND A.POS_NO          =  D.POS_NO  
+                                AND A.TRAN_NO         =  D.TRAN_NO
+                                AND A.STR_CD          =  B.STR_CD(+)
+                                AND A.POS_NO          =  B.POS_NO(+)
+                                AND A.CARD_PURCHASE   =  C.CCOMP_CD(+)
+                                AND D.TRAN_MODE      <>  '92'
+                                AND A.STR_CD          =  ?                        -- 점포코드    
+                                AND A.CARD_PURCHASE   =  ?                        -- 매입사코드  
+                                AND A.SALE_DT   BETWEEN  ? AND ?                  -- 매출일자    
+                                AND A.POS_NO    BETWEEN  ? AND ?                  -- POS 번호    
+                              GROUP BY A.SALE_DT, A.POS_NO
+                            ) A
+                      GROUP BY A.SALE_DT, A.POS_NO
+                   )
+             GROUP BY SALE_DT, POS_NO           
+             ORDER BY SALE_DT, POS_NO           
+        ]]>        
+    </query>
+</service>

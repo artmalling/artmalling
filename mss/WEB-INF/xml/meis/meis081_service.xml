@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.06.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  주간 TREND 현황
+ -->
+<service name="/meis081.me">
+    
+    <gauce name="H_SEL_TREND">
+        <column colName="STR_CD"            colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"            colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"           colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_FLAG1"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT1" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVT_SALE_AMT1"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_SAL_AMT1"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT1"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RATIO11"           colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LST_SALE_AMT1"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RATIO21"           colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT1"              colType="TB_DECIMAL" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PRICE1"       colType="TB_DECIMAL" size="13" dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_FLAG2"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT2" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVT_SALE_AMT2"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_SAL_AMT2"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT2"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RATIO12"           colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LST_SALE_AMT2"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RATIO22"           colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT2"              colType="TB_DECIMAL" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PRICE2"       colType="TB_DECIMAL" size="13" dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <query name="SEL_WEEKLY_TREND">
+        <![CDATA[
+        SELECT STR_CD
+             , STR_NM
+             , ?                      AS SALE_DT
+             , MAX(DIV_FLAG1)         AS DIV_FLAG1
+             , SUM(ORIGIN_SALE_TAMT1) AS ORIGIN_SALE_TAMT1
+             , SUM(EVT_SALE_AMT1)     AS EVT_SALE_AMT1
+             , SUM(NORM_SAL_AMT1)     AS NORM_SAL_AMT1
+             , SUM(TOT_SALE_AMT1)     AS TOT_SALE_AMT1
+             , SUM(RATIO11)           AS RATIO11
+             , SUM(LST_SALE_AMT1)     AS LST_SALE_AMT1
+             , SUM(RATIO21)           AS RATIO21
+             , SUM(CNT1)              AS CNT1
+             , SUM(SALE_PRICE1)       AS SALE_PRICE1
+             , MAX(DIV_FLAG2)         AS DIV_FLAG2
+             , SUM(ORIGIN_SALE_TAMT2) AS ORIGIN_SALE_TAMT2
+             , SUM(EVT_SALE_AMT2)     AS EVT_SALE_AMT2
+             , SUM(NORM_SAL_AMT2)     AS NORM_SAL_AMT2
+             , SUM(TOT_SALE_AMT2)     AS TOT_SALE_AMT2
+             , SUM(RATIO12)           AS RATIO12
+             , SUM(LST_SALE_AMT2)     AS LST_SALE_AMT2
+             , SUM(RATIO22)           AS RATIO22
+             , SUM(CNT2)              AS CNT2
+             , SUM(SALE_PRICE2)       AS SALE_PRICE2
+          FROM ( SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , '기간계'                      AS DIV_FLAG1
+                      , SUM(ORIGIN_SALE_TAMT)         AS ORIGIN_SALE_TAMT1
+                      , SUM(EVT_SALE_AMT)             AS EVT_SALE_AMT1
+                      , SUM(NORM_SAL_AMT)             AS NORM_SAL_AMT1
+                      , SUM(TOT_SALE_AMT)             AS TOT_SALE_AMT1
+                      , DECODE(SUM(ORIGIN_SALE_TAMT),0,0, ROUND(SUM(TOT_SALE_AMT)/SUM(ORIGIN_SALE_TAMT)*100,2))                  AS RATIO11
+                      , SUM(LST_SALE_AMT)                                                                               AS LST_SALE_AMT1
+                      , DECODE(SUM(LST_SALE_AMT),0,0,ROUND((SUM(TOT_SALE_AMT) - SUM(LST_SALE_AMT)) / SUM(LST_SALE_AMT) * 100,2)) AS RATIO21
+                      , SUM(CNT)                      AS CNT1
+                      , SUM(TOT_SALE_AMT)/DECODE(SUM(CNT),0,1,SUM(CNT))                                                 AS SALE_PRICE1
+                      , ''                            AS DIV_FLAG2
+                      , 0                             AS ORIGIN_SALE_TAMT2
+                      , 0                             AS EVT_SALE_AMT2
+                      , 0                             AS NORM_SAL_AMT2
+                      , 0                             AS TOT_SALE_AMT2
+                      , 0                             AS RATIO12
+                      , 0                             AS LST_SALE_AMT2
+                      , 0                             AS RATIO22
+                      , 0                             AS CNT2
+                      , 0                             AS SALE_PRICE2
+                   FROM ( SELECT STR_CD
+                               , SUM(ORIGIN_SALE_TAMT) AS ORIGIN_SALE_TAMT
+                               , 0                     AS EVT_SALE_AMT
+                               , 0                     AS NORM_SAL_AMT
+                               , 0                     AS TOT_SALE_AMT
+                               , 0                     AS LST_SALE_AMT
+                               , 0                     AS CNT
+                            FROM DPS.PS_ACTPUMBUN 
+                           WHERE STR_CD LIKE ?||'%'
+                             AND EXE_DT BETWEEN ? AND ?
+                             AND CONF_FLAG = 'Y'
+                           GROUP BY STR_CD
+                           UNION ALL 
+                          SELECT STR_CD
+                               , 0                               AS ORIGIN_SALE_TAMT
+                               , SUM(EVT_SALE_AMT - EVT_REDU_AMT)               AS EVT_SALE_AMT
+                               , SUM(NORM_SALE_AMT - NORM_REDU_AMT)              AS NORM_SAL_AMT
+                               , SUM(EVT_SALE_AMT+NORM_SALE_AMT - (EVT_REDU_AMT + NORM_REDU_AMT) ) AS TOT_SALE_AMT
+                               , 0                               AS LST_SALE_AMT
+                               , 0                               AS CNT
+                            FROM DPS.PS_DAYNOREVT
+                           WHERE STR_CD LIKE ?||'%'
+                             AND SALE_DT BETWEEN ? AND ?
+                           GROUP BY STR_CD
+                           UNION ALL
+                          SELECT STR_CD
+                               , 0                               AS ORIGIN_SALE_TAMT
+                               , 0                               AS EVT_SALE_AMT
+                               , 0                               AS NORM_SAL_AMT
+                               , 0                               AS TOT_SALE_AMT
+                               , SUM(EVT_SALE_AMT+NORM_SALE_AMT - (EVT_REDU_AMT + NORM_REDU_AMT) ) AS LST_SALE_AMT
+                               , 0                               AS CNT
+                            FROM DPS.PS_DAYNOREVT     
+                           WHERE STR_CD LIKE ?||'%'
+                             AND SALE_DT BETWEEN ? AND ?
+                           GROUP BY STR_CD
+                          UNION ALL
+                           SELECT STR_CD
+                               , 0        AS ORIGIN_SALE_TAMT
+                               , 0        AS EVT_SALE_AMT
+                               , 0        AS NORM_SAL_AMT
+                               , 0        AS TOT_SALE_AMT
+                               , 0        AS LST_SALE_AMT
+                               , SUM(NVL(CUST_CNT,0))            AS CNT
+                           FROM DPS.PS_TIMEPBN 
+                           WHERE STR_CD LIKE ?||'%'
+                             AND SALE_DT BETWEEN ? AND ?
+                           GROUP BY STR_CD                            
+                           )
+                  GROUP BY STR_CD 
+                  UNION ALL 
+                 SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                      , ''                            AS DIV_FLAG1
+                      , 0                             AS ORIGIN_SALE_TAMT1
+                      , 0                             AS EVT_SALE_AMT1
+                      , 0                             AS NORM_SAL_AMT1
+                      , 0                             AS TOT_SALE_AMT1
+                      , 0                             AS RATIO11
+                      , 0                             LST_SALE_AMT1
+                      , 0                             AS RATIO21
+                      , 0                             AS CNT1
+                      , 0                             AS SALE_PRICE1
+                      , '월누계'                      AS DIV_FLAG2
+                      , SUM(ORIGIN_SALE_TAMT)         AS ORIGIN_SALE_TAMT2
+                      , SUM(EVT_SALE_AMT)             AS EVT_SALE_AMT2
+                      , SUM(NORM_SAL_AMT)             AS NORM_SAL_AMT2
+                      , SUM(TOT_SALE_AMT)             AS TOT_SALE_AMT2
+                      , DECODE(SUM(ORIGIN_SALE_TAMT),0,0, ROUND(SUM(TOT_SALE_AMT)/SUM(ORIGIN_SALE_TAMT)*100,2))                  AS RATIO12
+                      , SUM(LST_SALE_AMT)             AS LST_SALE_AMT2
+                      , DECODE(SUM(LST_SALE_AMT),0,0,ROUND((SUM(TOT_SALE_AMT) - SUM(LST_SALE_AMT)) / SUM(LST_SALE_AMT) * 100,2)) AS RATIO22
+                      , SUM(CNT)                      AS CNT2
+                      , SUM(TOT_SALE_AMT)/DECODE(SUM(CNT),0,1,SUM(CNT))                                                 AS SALE_PRICE2
+                   FROM ( SELECT STR_CD
+                               , SUM(ORIGIN_SALE_TAMT) AS ORIGIN_SALE_TAMT
+                               , 0                     AS EVT_SALE_AMT
+                               , 0                     AS NORM_SAL_AMT
+                               , 0                     AS TOT_SALE_AMT
+                               , 0                     AS LST_SALE_AMT
+                               , 0                     AS CNT
+                            FROM DPS.PS_ACTPUMBUN 
+                           WHERE STR_CD LIKE ?||'%'
+                             AND EXE_DT BETWEEN ? AND ?
+                             AND CONF_FLAG = 'Y'
+                           GROUP BY STR_CD
+                           UNION ALL 
+                          SELECT STR_CD
+                               , 0                                AS ORIGIN_SALE_TAMT
+                               , SUM(EVT_SALE_AMT - EVT_REDU_AMT)                AS EVT_SALE_AMT
+                               , SUM(NORM_SALE_AMT - NORM_REDU_AMT)               AS NORM_SAL_AMT
+                               , SUM(EVT_SALE_AMT+NORM_SALE_AMT - (EVT_REDU_AMT + NORM_REDU_AMT) )  AS TOT_SALE_AMT
+                               , 0                                AS LST_SALE_AMT
+                               , 0                                AS CNT
+                            FROM DPS.PS_DAYNOREVT
+                           WHERE STR_CD LIKE ?||'%'
+                             AND SALE_DT BETWEEN ? AND ?
+                           GROUP BY STR_CD
+                           UNION ALL
+                          SELECT STR_CD
+                               , 0                               AS ORIGIN_SALE_TAMT
+                               , 0                               AS EVT_SALE_AMT
+                               , 0                               AS NORM_SAL_AMT
+                               , 0                               AS TOT_SALE_AMT
+                               , SUM(EVT_SALE_AMT+NORM_SALE_AMT - (EVT_REDU_AMT + NORM_REDU_AMT) ) AS LST_SALE_AMT
+                               , 0                               AS CNT
+                            FROM DPS.PS_DAYNOREVT     
+                           WHERE STR_CD LIKE ?||'%'
+                             AND SALE_DT BETWEEN ? AND ?
+                           GROUP BY STR_CD
+                           UNION ALL
+                           SELECT STR_CD
+                               , 0        AS ORIGIN_SALE_TAMT
+                               , 0        AS EVT_SALE_AMT
+                               , 0        AS NORM_SAL_AMT
+                               , 0        AS TOT_SALE_AMT
+                               , 0        AS LST_SALE_AMT
+                               ,SUM(NVL(CUST_CNT,0))            AS CNT
+                           FROM DPS.PS_TIMEPBN 
+                           WHERE STR_CD LIKE ?||'%'
+                           AND SALE_DT BETWEEN ? AND ?
+                           GROUP BY STR_CD                            
+                           )  
+                  GROUP BY STR_CD ) X
+         GROUP BY STR_CD, STR_NM
+         ORDER BY STR_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_WEEKLY_SALE_TREND">
+        <![CDATA[
+        SELECT TO_CHAR(TO_DATE(A.SALE_DT), 'MM/DD')  AS SALE_DT
+             , NVL(B.TOT_SALE_AMT, 0)                AS TOT_SALE_AMT 
+             , NVL(B.ORIGIN_SALE_TAMT, 0)            AS ORIGIN_SALE_TAMT 
+             , NVL(B.LST_SALE_AMT, 0)                AS LST_SALE_AMT
+          FROM ( SELECT TO_CHAR(DATE_START + LEVEL - 1, 'YYYYMMDD') AS SALE_DT
+                   FROM ( SELECT TO_DATE(?,'YYYYMMDD')              AS DATE_START
+                               , TO_DATE(?,'YYYYMMDD')              AS DATE_END
+                            FROM DUAL ) A
+                CONNECT BY LEVEL <= (DATE_END-DATE_START+1)   
+               ) A 
+             , ( SELECT SALE_DT
+                      , TRUNC(SUM(TOT_SALE_AMT)/1000000)     AS TOT_SALE_AMT
+                      , TRUNC(SUM(ORIGIN_SALE_TAMT)/1000000) AS ORIGIN_SALE_TAMT
+                      , TRUNC(SUM(LST_SALE_AMT)/1000000)     AS LST_SALE_AMT
+                   FROM ( SELECT EXE_DT                AS SALE_DT
+                               , 0                     AS TOT_SALE_AMT
+                               , SUM(ORIGIN_SALE_TAMT) AS ORIGIN_SALE_TAMT
+                               , 0                     AS LST_SALE_AMT
+                            FROM DPS.PS_ACTPUMBUN 
+                           WHERE STR_CD LIKE ?||'%'
+                             AND EXE_DT BETWEEN ? AND ?
+                             AND CONF_FLAG = 'Y'
+                           GROUP BY EXE_DT
+                           UNION ALL                           
+                          SELECT SALE_DT
+                               , SUM(EVT_SALE_AMT+NORM_SALE_AMT - (EVT_REDU_AMT + NORM_REDU_AMT) ) AS TOT_SALE_AMT
+                               , 0                               AS ORIGIN_SALE_TAMT
+                               , 0                               AS LST_SALE_AMT
+                            FROM DPS.PS_DAYNOREVT
+                           WHERE STR_CD LIKE ?||'%'
+                             AND SALE_DT BETWEEN ? AND ?
+                           GROUP BY SALE_DT
+                           UNION ALL
+                          SELECT SALE_DT
+                               , 0 AS TOT_SALE_AMT
+                               , 0                               AS ORIGIN_SALE_TAMT
+                               , SUM(EVT_SALE_AMT+NORM_SALE_AMT - (EVT_REDU_AMT + NORM_REDU_AMT) ) AS LST_SALE_AMT
+                            FROM DPS.PS_DAYNOREVT     
+                           WHERE STR_CD LIKE ?||'%'
+                             AND SALE_DT BETWEEN ? AND ?
+                           GROUP BY SALE_DT
+                        ) 
+                  GROUP BY SALE_DT 
+               ) B
+         WHERE A.SALE_DT = B.SALE_DT(+)
+         ORDER BY A.SALE_DT
+        ]]>
+    </query>
+    
+    <query name="SEL_WEEKLY_CUSTOM_INFO">
+        <![CDATA[
+        SELECT TO_CHAR(TO_DATE(A.SALE_DT), 'MM/DD')  AS SALE_DT
+             , NVL(B.CNT, 0)/1000                         AS CNT 
+             , NVL(B.SALE_PRICE, 0)/1000             AS SALE_PRICE 
+          FROM ( SELECT TO_CHAR(DATE_START + LEVEL - 1, 'YYYYMMDD') AS SALE_DT
+                   FROM ( SELECT TO_DATE(?,'YYYYMMDD')              AS DATE_START
+                               , TO_DATE(?,'YYYYMMDD')              AS DATE_END
+                            FROM DUAL ) A
+                CONNECT BY LEVEL <= (DATE_END-DATE_START+1)   
+               ) A 
+             , ( SELECT SALE_DT
+                      , SUM(CNT) AS CNT
+                      , NVL(SUM(TOT_SALE_AMT),0)/DECODE(SUM(CNT),0,1,SUM(CNT)) AS SALE_PRICE
+                   FROM ( 
+                           SELECT SALE_DT
+                               , 0        AS TOT_SALE_AMT
+                               , SUM(NVL(CUST_CNT,0))            AS CNT
+                           FROM DPS.PS_TIMEPBN 
+                           WHERE STR_CD LIKE ?||'%'
+                           AND SALE_DT BETWEEN ? AND ?
+                           GROUP BY SALE_DT                   			
+                           UNION ALL                           
+                          SELECT SALE_DT
+                               , SUM(EVT_SALE_AMT+NORM_SALE_AMT - (EVT_REDU_AMT + NORM_REDU_AMT) ) AS TOT_SALE_AMT
+                               , 0                               AS CNT
+                            FROM DPS.PS_DAYNOREVT
+                           WHERE STR_CD LIKE ?||'%'
+                             AND SALE_DT BETWEEN ? AND ?
+                           GROUP BY SALE_DT
+                        ) 
+                  GROUP BY SALE_DT
+               ) B
+         WHERE A.SALE_DT = B.SALE_DT(+)
+         ORDER BY A.SALE_DT
+        ]]>
+    </query>
+    
+</service>

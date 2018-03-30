@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  관리비 정산
+ -->
+<service name="/mren502.mr">
+    <gauce name="H_SEL_MR_CALMST">
+	    <column colName="VEN_CD"            colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"            colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REP_NAME"          colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="COMP_NO"           colType="TB_STRING"   size="10"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_TYPE"         colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_FLAG"         colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_TYPE"         colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_DEPOSIT"      colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_CAN_DT"       colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_CAN_REAS_CD"  colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ADD_DED_AMT"       colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ADD_DED_REASON"    colType="TB_STRING"   size="200" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_YMD"           colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_DEPOSIT_S"    colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ADD_DED_AMT_S"     colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="BAL_AMT"           colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ARREAR_AMT"        colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_AMT"           colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_VAT_AMT"       colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="NTAX_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RTRN_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CLOSE_YN"          colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_YM"            colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_ID"           colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="STR_CD"            colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MR_CALMST">
+        <![CDATA[   
+            SELECT CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , VEN.REP_NAME
+                 , VEN.COMP_NO
+                 , CNT.RENT_TYPE
+                 , CNT.RENT_FLAG
+                 , CNT.CNTR_TYPE /*계약구분:계약유형*/
+                 , CNT.RENT_DEPOSIT /*임대보증금*/
+                 , CNT.CNTR_CAN_DT
+                 , CNT.CNTR_CAN_REAS_CD
+                 , CNT.ADD_DED_AMT
+                 , CNT.ADD_DED_REASON
+                 , TO_CHAR(CAL.MOD_DATE, 'YYYYMMDD') AS CAL_YMD
+                 , CAL.RENT_DEPOSIT AS RENT_DEPOSIT_S
+                 , CNT.ADD_DED_AMT AS ADD_DED_AMT_S
+                 , CAL.BAL_AMT
+                 , CAL.ARREAR_AMT
+                 , CAL.TAX_AMT
+                 , CAL.TAX_VAT_AMT
+                 , CAL.NTAX_AMT
+                 , CNT.RTRN_AMT
+                 , CASE WHEN CAL.CHRG_YN = 'Y' THEN 'T' 
+                        ELSE CASE WHEN DPS.FN_GET_CLOSECHECK( CNT.STR_CD , CAL.CAL_YM , 'MREN' , '48' , '0' , 'M' ) = 'TRUE' THEN 'T'
+                                  ELSE 'F' END
+                        END AS CLOSE_YN
+                 , CAL.CAL_YM
+                 , CNT.CNTR_ID
+                 , CNT.STR_CD
+              FROM MSS.MR_CNTRMST   CNT
+                 , DPS.PC_VENMST    VEN
+                 , MSS.MR_CALMST    CAL
+             WHERE CNT.VEN_CD = VEN.VEN_CD
+               AND CNT.CNTR_ID = CAL.CNTR_ID
+               AND CAL.CAL_YM = SUBSTR(CNT.CNTR_CAN_DT,1,6)
+               AND CAL.CAL_TYPE = '2' /*해지정산*/
+               AND CNT.CNTR_TYPE = '04' /*계약해지*/
+               AND CNT.CNTR_CAN_DT BETWEEN ? AND ?
+               AND CNT.CNTR_CAN_REAS_CD LIKE ?||'%'
+               AND CNT.VEN_CD   LIKE ?||'%'
+               AND CNT.STR_CD   = ?
+             ORDER BY CNT.VEN_CD
+        ]]>
+    </query>
+    
+    <!-- 해지기간조건 제외시 -->
+    <query name="SEL_MR_CALMST_NONDATE">
+        <![CDATA[   
+            SELECT CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , VEN.REP_NAME
+                 , VEN.COMP_NO
+                 , CNT.RENT_TYPE
+                 , CNT.RENT_FLAG
+                 , CNT.CNTR_TYPE /*계약구분:계약유형*/
+                 , CNT.RENT_DEPOSIT /*임대보증금*/
+                 , CNT.CNTR_CAN_DT
+                 , CNT.CNTR_CAN_REAS_CD
+                 , CNT.ADD_DED_AMT
+                 , CNT.ADD_DED_REASON
+                 , TO_CHAR(CAL.MOD_DATE, 'YYYYMMDD') AS CAL_YMD
+                 , CAL.RENT_DEPOSIT AS RENT_DEPOSIT_S
+                 , CNT.ADD_DED_AMT AS ADD_DED_AMT_S
+                 , CAL.BAL_AMT
+                 , CAL.ARREAR_AMT
+                 , CAL.TAX_AMT
+                 , CAL.TAX_VAT_AMT
+                 , CAL.NTAX_AMT
+                 , CNT.RTRN_AMT
+                 , CASE WHEN CAL.CHRG_YN = 'Y' THEN 'T' 
+                        ELSE CASE WHEN DPS.FN_GET_CLOSECHECK( CNT.STR_CD , CAL.CAL_YM , 'MREN' , '48' , '0' , 'M' ) = 'TRUE' THEN 'T'
+                                  ELSE 'F' END
+                        END AS CLOSE_YN
+                 , CAL.CAL_YM
+                 , CNT.CNTR_ID
+                 , CNT.STR_CD
+              FROM MSS.MR_CNTRMST   CNT
+                 , DPS.PC_VENMST    VEN
+                 , MSS.MR_CALMST    CAL
+             WHERE CNT.VEN_CD = VEN.VEN_CD
+               AND CNT.CNTR_ID = CNT.CNTR_ID
+               AND CAL.CAL_YM = SUBSTR(CNT.CNTR_CAN_DT,1,6)
+               AND CAL.CAL_TYPE = '2' /*해지정산`*/
+               AND CNT.CNTR_TYPE = '04' /*계약해지*/
+               AND CNT.CNTR_CAN_REAS_CD LIKE ?||'%'
+               AND CNT.VEN_CD   LIKE ?||'%'
+               AND CNT.STR_CD   = ?
+             ORDER BY CNT.VEN_CD
+        ]]>
+    </query>
+    
+    <query name="UPD_MR_CALMST">
+        <![CDATA[   
+            UPDATE MSS.MR_CALMST 
+               SET TAX_AMT  = ?
+                 , TAX_VAT_AMT   = ?
+                 , NTAX_AMT = ?
+                 , MOD_ID   = ?
+                 , MOD_DATE = SYSDATE
+             WHERE CAL_TYPE = '2' /*해지정산*/
+               AND CNTR_ID  = ?
+               AND CAL_YM   = ? 
+        ]]>
+    </query>
+    
+    <query name="UPD_MR_CNTRMST">
+        <![CDATA[   
+            UPDATE MSS.MR_CNTRMST
+               SET RTRN_AMT = ?
+                 , MOD_ID   = ?
+                 , MOD_DATE = SYSDATE
+             WHERE CNTR_ID  = ?
+        ]]>
+    </query>
+    
+    <query name="UPD_MR_CALITEM">
+        <![CDATA[   
+            UPDATE MSS.MR_CALITEM
+               SET USE_AMT  = ?
+                 , MOD_ID   = ?
+                 , MOD_DATE = SYSDATE
+             WHERE CAL_TYPE = '2' /*해지정산*/
+               AND STR_CD   = ?
+               AND CNTR_ID  = ?
+               AND CAL_YM   = ? 
+               AND MNTN_ITEM_CD = ?
+        ]]>
+    </query>
+    
+    <gauce name="H_SEL_MR_CALITEM">
+        <column colName="MNTN_ITEM_CD"  colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="MNTN_ITEM_NM"  colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="USE_QTY"       colType="TB_DECIMAL"  size="7"   dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="USE_AMT"       colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TAX_INV_FLAG"  colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CAL_YM"        colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="STR_CD"        colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CNTR_ID"       colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MR_CALITEM">
+       <![CDATA[   
+            SELECT CAL.MNTN_ITEM_CD
+                 , MNT.MNTN_ITEM_NM
+                 , CAL.USE_QTY
+                 , CAL.USE_AMT
+                 , MNT.TAX_INV_FLAG
+                 , CAL.CAL_YM
+                 , CAL.STR_CD
+                 , CAL.CNTR_ID
+              FROM MSS.MR_CALITEM    CAL
+                 , MSS.MR_MNTNITEM   MNT
+             WHERE CAL.STR_CD = MNT.STR_CD
+               AND CAL.MNTN_ITEM_CD = MNT.MNTN_ITEM_CD
+               AND CAL.CAL_TYPE = '2' /*해지정산*/
+               AND CAL.CNTR_ID = ?
+               AND CAL.STR_CD = ?
+               AND CAL.CAL_YM = ?
+             ORDER BY CAL.MNTN_ITEM_CD
+        ]]>
+    </query>
+    
+</service>

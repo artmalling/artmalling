@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.29
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  탈퇴 회원명 조회
+ -->
+<service name="/dctm411.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="CUST_ID"        colType="TB_STRING"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"      colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SS_NO"          colType="TB_STRING"  size="32"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SCED_DT"        colType="TB_STRING"  size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_DATE"       colType="TB_STRING"  size="14"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_ID"         colType="TB_STRING"  size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="USER_NAME"      colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+
+    <!-- 회원탈퇴등록 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT A.CUST_ID
+                 , A.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', A.SS_NO) AS SS_NO
+                 , A.SCED_DT
+                 , TO_CHAR(A.REG_DATE, 'YYYYMMDDHH24MISS') REG_DATE
+                 , A.REG_ID
+                 , B.USER_NAME
+              FROM DCS.DM_SCED_CUST A
+                 , COM.TC_USRMST B
+             WHERE A.REG_ID = B.USER_ID
+               --AND A.CUST_ID LIKE X || '%'
+               AND A.CUST_NAME LIKE ? || '%'
+               AND A.SCED_DT BETWEEN ? AND ?
+             ORDER BY A.SCED_DT DESC, A.CUST_NAME                 
+        ]]>        
+    </query>      
+</service>

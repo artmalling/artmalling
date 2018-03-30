@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개     요 :  지점출고 신청
+ -->
+<service name="/mgif201.mg">
+    <!-- 지점출고 신청 마스터  -->
+    <gauce name="H_CODE"> 
+        <column colName="CODE"           colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"           colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"            colType="TB_DECIMAL" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISSUE_TYPE"     colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 지점출고 신청 마스터  -->
+    <gauce name="H_MASTER"> 
+        <column colName="REQ_DT"            colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_STR"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_SLIP_NO"       colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HSTR_CD"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_QTY"           colType="TB_DECIMAL" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_FLAG"         colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 지점출고신청 디테일  -->
+    <gauce name="H_DETAIL"> 
+        <column colName="REQ_DT"            colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_STR"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_SLIP_NO"       colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_SEQ_NO"        colType="TB_STRING" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HSTR_CD"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISSUE_TYPE"        colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_QTY"           colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_QTY"           colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_FLAG"         colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_FLAG_NAME"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권종류 콤보 -->
+    <query name="SEL_GIFT_TYPE_CD">
+        <![CDATA[
+		SELECT GIFT_TYPE_CD AS CODE
+		     , GIFT_TYPE_NAME AS NAME
+		     , 0 AS AMT
+		     , '' AS ISSUE_TYPE
+		  FROM MSS.MG_GIFTTPMST
+		WHERE GIFT_TYPE_FLAG = '01'
+		  AND USE_YN = 'Y'
+	 ORDER BY GIFT_TYPE_CD  
+        ]]>
+    </query>  
+    
+    <!-- 지점출고신청 마스터 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+        SELECT REQ_DT
+             , REQ_STR
+             , REQ_SLIP_NO
+             , HSTR_CD
+             , SUM(REQ_QTY) AS TOT_QTY
+             , SUM(TOT_AMT) AS TOT_AMT
+             , MAX(STAT_FLAG) AS STAT_FLAG
+             , MAX(GIFT_TYPE_CD) AS GIFT_TYPE_CD
+          FROM (SELECT REQ_DT
+                     , REQ_STR
+                     , REQ_SLIP_NO
+                     , HSTR_CD 
+                     , REQ_QTY
+                     , REQ_QTY * GIFTCERT_AMT AS TOT_AMT
+                     , STAT_FLAG
+                     , A.GIFT_TYPE_CD
+                  FROM MSS.MG_OUTREQ A
+                     , MSS.MG_GIFTAMTMST B
+                 WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+                   AND A.ISSUE_TYPE = B.ISSUE_TYPE
+                   AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE) M
+           WHERE M.REQ_STR = ?
+             AND M.REQ_DT BETWEEN ? AND ?
+		GROUP BY REQ_DT, REQ_STR, REQ_SLIP_NO, HSTR_CD
+		ORDER BY REQ_DT, REQ_SLIP_NO
+        ]]>
+    </query>  
+    
+    <!-- 지점출고신청 상세 조회 -->
+    <query name="SEL_DETAIL_O">
+        <![CDATA[
+          WITH  REQ AS (SELECT A.REQ_DT
+                             , A.REQ_STR
+                             , A.REQ_SLIP_NO
+                             , A.REQ_SEQ_NO
+                             , HSTR_CD
+                             , A.GIFT_TYPE_CD
+                             , A.ISSUE_TYPE
+                             , A.GIFT_AMT_TYPE 
+                             , REQ_QTY
+                             , NVL(D.OUT_QTY,0) AS OUT_QTY
+                             , A.STAT_FLAG
+                             , DECODE(A.STAT_FLAG , '01', '신청', '02', '출고') AS STAT_FLAG_NAME
+                          FROM MSS.MG_OUTREQ A
+                               LEFT OUTER JOIN 
+                               (SELECT REQ_STR
+                                     , REQ_DT
+                                     , REQ_SLIP_NO
+                                     , REQ_SEQ_NO
+                                     , NVL(SUM(OUT_QTY),0) AS OUT_QTY 
+                                  FROM MSS.MG_OUTREQCONF
+                              GROUP BY REQ_STR, REQ_DT, REQ_SLIP_NO, REQ_SEQ_NO) D
+                            ON A.REQ_DT = D.REQ_DT
+                           AND A.REQ_STR = D.REQ_STR
+                           AND A.REQ_SLIP_NO = D.REQ_SLIP_NO
+                           AND A.REQ_SEQ_NO = D.REQ_SEQ_NO
+                         WHERE  A.REQ_DT = ?
+                           AND A.REQ_STR = ? 
+                           AND A.REQ_SLIP_NO = ?
+                      ORDER BY REQ_SEQ_NO, A.GIFT_TYPE_CD, A.GIFT_AMT_TYPE),
+              MST AS (  SELECT A.GIFT_TYPE_CD
+                             , B.GIFT_TYPE_NAME
+                             , A.GIFT_AMT_TYPE
+                             , A.GIFT_AMT_NAME
+                             , A.ISSUE_TYPE
+                             , A.GIFTCERT_AMT
+                          FROM MSS.MG_GIFTAMTMST A
+                             , MSS.MG_GIFTTPMST B
+                          WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+                            AND A.GIFT_TYPE_CD= ?)
+        SELECT ? AS REQ_DT
+             , ? AS REQ_STR
+             , ? AS REQ_SLIP_NO
+             , REQ.REQ_SEQ_NO
+             , REQ.HSTR_CD
+             , MST.GIFT_TYPE_CD
+             , MST.GIFT_TYPE_NAME
+             , MST.ISSUE_TYPE
+             , MST.GIFT_AMT_TYPE 
+             , MST.GIFT_AMT_NAME
+             , MST.GIFTCERT_AMT
+             , REQ.REQ_QTY
+             , REQ.REQ_QTY * MST.GIFTCERT_AMT AS TOT_AMT
+             , REQ.OUT_QTY
+             , NVL(REQ.STAT_FLAG,'01') AS STAT_FLAG
+             , NVL(REQ.STAT_FLAG_NAME,'신청') AS STAT_FLAG_NAME
+          FROM MST
+               LEFT OUTER JOIN 
+               REQ
+            ON MST.GIFT_TYPE_CD = REQ.GIFT_TYPE_CD
+            AND MST.GIFT_AMT_TYPE = REQ.GIFT_AMT_TYPE
+            AND MST.ISSUE_TYPE = REQ.ISSUE_TYPE
+       ORDER BY REQ.GIFT_AMT_TYPE
+        ]]>
+    </query>  
+    
+    <!-- 지점출고신청 상세 조회 -->
+    <query name="SEL_DETAIL_J">
+        <![CDATA[
+          WITH  REQ AS (SELECT A.REQ_DT
+                             , A.REQ_STR
+                             , A.REQ_SLIP_NO
+                             , A.REQ_SEQ_NO
+                             , HSTR_CD
+                             , A.GIFT_TYPE_CD
+                             , A.ISSUE_TYPE
+                             , A.GIFT_AMT_TYPE 
+                             , REQ_QTY
+                             , NVL(D.OUT_QTY,0) AS OUT_QTY
+                             , A.STAT_FLAG
+                             , DECODE(A.STAT_FLAG , '01', '신청', '02', '출고') AS STAT_FLAG_NAME
+                          FROM MSS.MG_OUTREQ A
+                               LEFT OUTER JOIN 
+                               (SELECT REQ_STR
+                                     , REQ_DT
+                                     , REQ_SLIP_NO
+                                     , REQ_SEQ_NO
+                                     , NVL(SUM(OUT_QTY),0) AS OUT_QTY 
+                                  FROM MSS.MG_OUTREQCONF
+                              GROUP BY REQ_STR, REQ_DT, REQ_SLIP_NO, REQ_SEQ_NO) D
+                            ON A.REQ_DT = D.REQ_DT
+                           AND A.REQ_STR = D.REQ_STR
+                           AND A.REQ_SLIP_NO = D.REQ_SLIP_NO
+                           AND A.REQ_SEQ_NO = D.REQ_SEQ_NO
+                         WHERE  A.REQ_DT = ?
+                           AND A.REQ_STR = ? 
+                           AND A.REQ_SLIP_NO = ?
+                      ORDER BY REQ_SEQ_NO, A.GIFT_TYPE_CD, A.GIFT_AMT_TYPE),
+              MST AS (  SELECT A.GIFT_TYPE_CD
+                             , B.GIFT_TYPE_NAME
+                             , A.GIFT_AMT_TYPE
+                             , A.GIFT_AMT_NAME
+                             , A.ISSUE_TYPE
+                             , A.GIFTCERT_AMT
+                          FROM MSS.MG_GIFTAMTMST A
+                             , MSS.MG_GIFTTPMST B
+                          WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+                            AND A.GIFT_TYPE_CD= ?)
+        SELECT ? AS REQ_DT
+             , ? AS REQ_STR
+             , ? AS REQ_SLIP_NO
+             , REQ.REQ_SEQ_NO
+             , REQ.HSTR_CD
+             , MST.GIFT_TYPE_CD
+             , MST.GIFT_TYPE_NAME
+             , MST.ISSUE_TYPE
+             , MST.GIFT_AMT_TYPE 
+             , MST.GIFT_AMT_NAME
+             , MST.GIFTCERT_AMT
+             , REQ.REQ_QTY
+             , REQ.REQ_QTY * MST.GIFTCERT_AMT AS TOT_AMT
+             , REQ.OUT_QTY
+             , NVL(REQ.STAT_FLAG,'01') AS STAT_FLAG
+             , NVL(REQ.STAT_FLAG_NAME,'신청') AS STAT_FLAG_NAME
+          FROM MST
+               ,
+               REQ
+         WHERE MST.GIFT_TYPE_CD = REQ.GIFT_TYPE_CD
+           AND MST.GIFT_AMT_TYPE = REQ.GIFT_AMT_TYPE
+           AND MST.ISSUE_TYPE = REQ.ISSUE_TYPE
+      ORDER BY REQ.GIFT_AMT_TYPE
+        ]]>
+    </query>  
+    
+     <!-- 지점출고신청 금종정보 조회-->
+    <query name="SEL_GIFT_TYPE_AMT">
+        <![CDATA[
+		SELECT ? AS REQ_DT
+		     , ? AS REQ_STR
+		     , '' AS REQ_SLIP_NO
+		     , '' AS REQ_SEQ_NO
+		     , ? AS HSTR_CD
+		     , A.GIFT_TYPE_CD
+		     , GIFT_TYPE_NAME
+		     , ISSUE_TYPE
+		     , GIFT_AMT_TYPE
+		     , GIFT_AMT_NAME
+		     , GIFTCERT_AMT
+		     , 0 AS REQ_QTY
+		     , 0 AS TOT_AMT
+		     , 0 AS OUT_QTY
+		     , '01' AS STAT_FLAG
+		     , '신청' AS STAT_FLAG_NAME
+		  FROM MSS.MG_GIFTAMTMST A, MSS.MG_GIFTTPMST B
+		WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+		  AND A.USE_YN = 'Y'
+		  AND A.GIFT_TYPE_CD= ?
+	 ORDER BY GIFT_AMT_TYPE
+        ]]>
+    </query>  
+    
+    <!-- 지점출고신청 전표번호 조회 -->
+    <query name="SEL_SLIP_NO">
+        <![CDATA[
+        SELECT LPAD(MSS.SQ_MG_OUTREQ.NEXTVAL,6,'0') AS SLIP_NO FROM DUAL
+        ]]>
+    </query>  
+    
+    <!-- 지점출고신청 전표번호 등록 -->
+    <query name="INS_OUTREQ">
+        <![CDATA[
+		INSERT INTO MSS.MG_OUTREQ( REQ_DT
+		                         , REQ_STR
+		                         , REQ_SLIP_NO
+		                         , REQ_SEQ_NO
+		                         , HSTR_CD
+		                         , GIFT_TYPE_CD
+		                         , ISSUE_TYPE
+		                         , GIFT_AMT_TYPE
+		                         , REQ_QTY
+		                         , REQ_EMP_ID
+		                         , STAT_FLAG
+		                         , REG_ID
+		                         , REG_DATE
+		                         , MOD_ID
+		                         , MOD_DATE)
+		                  VALUES ( ?
+		                         , ?
+		                         , ?
+		                         , (SELECT NVL(MAX(REQ_SEQ_NO),0) + 1 
+                                      FROM MSS.MG_OUTREQ 
+                                     WHERE REQ_DT = ? 
+                                       AND REQ_STR = ? 
+                                       AND REQ_SLIP_NO = ?)
+                                 , ?
+		                         , ?
+		                         , ?
+		                         , ?
+		                         , ?
+		                         , ?
+		                         , ?
+		                         , ?
+		                         , SYSDATE
+		                         , ?
+		                         , SYSDATE)
+        ]]>
+    </query> 
+    
+    <!-- 지점출고신청 전표번호 수정 -->
+    <query name="UPD_OUTREQ">
+        <![CDATA[
+        UPDATE MSS.MG_OUTREQ
+		   SET REQ_QTY = ?
+		     , MOD_ID = ?
+		     , MOD_DATE = SYSDATE
+		 WHERE REQ_DT = ?
+		   AND REQ_STR = ?
+		   AND REQ_SLIP_NO = ?
+		   AND REQ_SEQ_NO = ?
+        ]]>
+    </query>
+    
+    <!-- 지점출고신청 전표번호 삭제 -->
+    <query name="DEL_OUTREQ">
+        <![CDATA[
+		DELETE FROM MSS.MG_OUTREQ
+		 WHERE REQ_DT = ?
+		   AND REQ_STR = ? 
+		   AND REQ_SLIP_NO = ? 
+		   
+        ]]>
+    </query>  
+    
+    <!-- 지점출고신청 전표번호 삭제  순번 조건-->
+    <query name="DEL_OUTREQ_SEQ">
+        <![CDATA[
+        AND REQ_SEQ_NO = ?
+        ]]>
+    </query>  
+</service>

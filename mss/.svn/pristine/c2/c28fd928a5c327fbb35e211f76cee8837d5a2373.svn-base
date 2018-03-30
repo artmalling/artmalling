@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.01.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  사은행사 엑셀지급 등록 
+ -->
+<service name="/mcae427.mc">
+
+    <!-- 경품행사 응모자 내역 -->
+    <gauce name="H_SEL_PRMMENTY_MST">
+        <column colName="STR_CD"		colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"		colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"		colType="TB_STRING" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NM"		colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"	colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"	colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPL_NM"       colType="TB_STRING" size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPL_FLAG"     colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 경품행사 응모자 내역 -->
+    <gauce name="H_SEL_PRMMENTY_DTL">
+        <column colName="ENTY_NAME" 	colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO" 		colType="TB_STRING" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HP1_NO" 		colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HP2_NO" 		colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HP3_NO" 		colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE1_NO" 	colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE2_NO" 	colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE3_NO" 	colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADDR" 			colType="TB_STRING" size="80" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL" 		colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_NO" 		colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTY_PATH" 	colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+
+    <!-- 경품행사 응모자 마스터 내역조회 Query  -->
+    <query name="SEL_PRMMENTY_MST">
+        <![CDATA[   
+			SELECT 
+			       STR_CD
+			     , STR_NM
+			     , EVENT_CD
+			     , EVENT_NM
+			     , EVENT_S_DT
+			     , EVENT_E_DT
+			     , CASE WHEN CNT > 0 THEN '완료' ELSE '미완료' END AS CMPL_NM
+			     , CASE WHEN CNT > 0 THEN 'Y' ELSE 'N' END AS CMPL_FLAG
+			  FROM (
+			       SELECT 
+		                   SE.STR_CD        AS STR_CD
+		                 , SM.STR_NAME      AS STR_NM
+		                 , SE.EVENT_CD      AS EVENT_CD
+		                 , EM.EVENT_NAME    AS EVENT_NM
+		                 , SE.EVENT_S_DT    AS EVENT_S_DT
+		                 , SE.EVENT_E_DT    AS EVENT_E_DT
+		                 , (SELECT COUNT(1) AS CNT 
+		                      FROM MSS.MC_PRMMWIN PW
+		                     WHERE PW.STR_CD = SE.STR_CD
+		                       AND PW.EVENT_CD = SE.EVENT_CD ) AS CNT
+					  FROM DPS.PC_STREVT SE
+					     , DPS.PC_EVTMST EM
+					     , DPS.PC_STRMST SM
+					 WHERE SE.EVENT_CD = EM.EVENT_CD
+					   --AND EM.EVENT_TYPE = '5'
+					   AND EM.EVENT_TYPE <> '5'
+					   AND SE.EVENT_CD LIKE ?||'%'
+					   AND SE.STR_CD = ?
+					   AND SE.STR_CD = SM.STR_CD
+                       AND ((? >= SE.EVENT_S_DT AND ? <= SE.EVENT_E_DT) OR
+                            (? >= SE.EVENT_S_DT AND ? <= SE.EVENT_E_DT) OR
+                            (SE.EVENT_S_DT >= ? AND SE.EVENT_S_DT <= ?) OR
+                            (SE.EVENT_E_DT >= ? AND SE.EVENT_E_DT <= ?) 
+                            )
+		            )
+        ]]>        
+    </query>
+    
+    <!-- 경품행사 응모자 디테일 내역조회 Query(미사용) -->
+    <query name="SEL_PRMMENTY_DTL">
+        <![CDATA[           
+            SELECT 	 
+				   ENTY_NAME
+				 , SS_NO     
+				 , PHONE1_NO
+				 , PHONE2_NO
+				 , PHONE3_NO
+				 , HP1_NO   
+				 , HP2_NO   
+				 , HP3_NO   
+				 , ADDR     
+				 , EMAIL   
+				 , RECP_NO  
+				 , ENTY_PATH
+              FROM MSS.MC_PRMMENTY  
+             WHERE STR_CD = ?
+               AND EVENT_CD = ?       
+        ]]>        
+    </query>
+    
+    <!-- 경품행사 응모자 등록(신규) -->
+    <query name="INS_PRMMENTY_DTL">
+        <![CDATA[   
+			INSERT INTO MSS.MC_PRMMENTY
+			(
+				STR_CD,		EVENT_CD,	ENTRY_DT,	SEQ_NO,     
+				ENTY_NAME,	SS_NO,		PHONE1_NO,	PHONE3_NO,     
+				PHONE2_NO,	HP1_NO,		HP2_NO,		HP3_NO,       
+				ADDR,		EMAIL,		RECP_NO,	ENTY_PATH,   
+				REG_DATE,	REG_ID,		MOD_DATE,	MOD_ID
+			)
+			VALUES
+			(
+				?, 			
+				?,	
+				?, 			
+				(SELECT NVL(MAX(SEQ_NO),0)+1 
+					FROM MSS.MC_PRMMENTY 
+					WHERE STR_CD = ?
+					AND	EVENT_CD = ?
+				    AND ENTRY_DT = ?),
+				?, 		
+				?,	
+				DCS.SC_Crypto_FUN('ENC', ?),			
+				DCS.SC_Crypto_FUN('ENC', ?),
+				DCS.SC_Crypto_FUN('ENC', ?), 			
+				DCS.SC_Crypto_FUN('ENC', ?),	
+				DCS.SC_Crypto_FUN('ENC', ?),			
+				DCS.SC_Crypto_FUN('ENC', ?),
+				DCS.SC_Crypto_FUN('ENC', ?), 			
+				?,	
+				DCS.SC_Crypto_FUN('ENC', ?),			
+				?,
+				SYSDATE,	
+				?,	
+				SYSDATE,	
+				?
+			)
+        ]]>        
+    </query>
+
+</service>

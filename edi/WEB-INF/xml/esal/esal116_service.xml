@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : jyk
+ * 회 사 명 : 
+ * 작 성 일 : 2018.03.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  edi 협력사원관리 
+ -->
+<service name="/esal116.es">
+    
+   
+    <!-- 협력사 사원 리스트 조회 -->
+     <query name="SEL_EMPLIST">
+        <![CDATA[
+			SELECT A.STR_CD
+			     , A.PUMBUN_CD
+			     , DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD) PUMBUN_NAME
+			     , A.EMP_SEQ
+			     , B.COMM_NAME1 AS EMP_FLAG
+			     , A.EMP_NAME
+			     , DCS.SC_CRYPTO_FUN('DEC',A.HP_NO)  HP_NO
+			     , A.ENTR_DT
+			     , A.RETR_DT
+			     , NVL(A.ISU_YN,'N') ISU_YN
+			     , NVL(A.DEL_YN,'N') DEL_YN
+			     , A.ISU_DATE
+			 FROM  MSS.MC_EDIEMPMST A
+			    , (SELECT COMM_CODE, COMM_NAME1
+			         FROM COM.TC_COMMCODE
+			        WHERE SYS_PART='D'
+			          AND COMM_PART='D222'
+			          AND USE_YN='Y'
+			        ) B
+			WHERE STR_CD = ?
+			  AND PUMBUN_CD LIKE ?||'%'
+			  AND EMP_NAME LIKE '%'||?||'%'
+			  AND EMP_FLAG LIKE ?||'%'
+			  AND DCS.SC_CRYPTO_FUN('DEC',HP_NO) LIKE '%'||?||'%'
+			  AND ISU_YN LIKE ?||'%'
+			  AND DEL_YN LIKE ?||'%'
+			  AND A.EMP_FLAG = B.COMM_CODE
+        ]]>
+    </query>
+    
+    <!-- 협력사 사원 리스트 조회조건1 -->   
+    <query name="SEL_EMPLIST_OPT1">
+        <![CDATA[
+			  AND ENTR_DT BETWEEN  ? AND ?					-- OPTION 1
+			  ORDER BY EMP_SEQ
+        ]]>
+    </query>
+    
+    <!-- 협력사 사원 리스트 조회조건2 -->    
+    <query name="SEL_EMPLIST_OPT2">
+        <![CDATA[
+			  AND ENTR_DT = ?                   -- OPTION 2
+        ]]>
+    </query>
+    
+    <!-- 협력사 사원 리스트 조회조건3 -->
+    <query name="SEL_EMPLIST_OPT3">
+        <![CDATA[
+			  AND RETR_DT = ?                   -- OPTION 3
+        ]]>
+    </query>
+    
+    
+    <!--  협력사 사원 리스트 수정 -->
+     <query name="UPD_EMPLIST">
+        <![CDATA[
+        UPDATE MSS.MC_EDIEMPMST
+           SET EMP_NAME =  ?
+             , EMP_FLAG = ?
+             , HP_NO 	= DCS.SC_Crypto_FUN('ENC', ?)
+             , ENTR_DT 	= ?
+             , RETR_DT 	= ?
+             , MOD_ID   =  ?
+             , MOD_DATE =  SYSDATE
+             , DEL_YN	=  ?
+         WHERE STR_CD       =  LPAD(?,2,'0') 
+           AND PUMBUN_CD	=  ?
+           AND EMP_SEQ      =  LPAD(?,3,'0')
+        ]]>
+    </query>
+    
+    <!-- 협력사 사원 리스트 신규 추가  -->
+     <query name="INS_EMPLIST">
+        <![CDATA[
+		INSERT INTO MSS.MC_EDIEMPMST ( STR_CD
+		                             , PUMBUN_CD
+		                             , EMP_SEQ
+		                             , EMP_FLAG
+		                             , EMP_NAME
+		                             , HP_NO
+		                             , ENTR_DT
+		                             , RETR_DT
+		                             , REG_ID
+		                             , MOD_ID
+		                             ) 
+                               VALUES
+                                     (
+                                       LPAD(?,2,'0')
+                                     , ?
+                                     , LPAD(?,3,'0')
+                                     , ?
+                                     , ?
+                                     , DCS.SC_CRYPTO_FUN('ENC',?)
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                      )
+        ]]>
+    </query>
+    
+    
+    <!--  협력사 사원 리스트 수정 -->
+     <query name="DEL_EMPLIST">
+        <![CDATA[
+        UPDATE MSS.MC_EDIEMPMST
+           SET DEL_YN = 'Y'
+             , MOD_ID   =  ?
+             , MOD_DATE =  SYSDATE
+         WHERE STR_CD       =  LPAD(?,2,'0') 
+           AND PUMBUN_CD	=  ?
+           AND EMP_SEQ      =  LPAD(?,3,'0')
+        ]]>
+    </query>
+    
+    <!-- 시퀀스 -->
+    <query name="SEL_EMPSEQ">
+    	SELECT LPAD(NVL(MAX(EMP_SEQ), 0)+1,3,'0') AS SEQ
+    	  FROM MSS.MC_EDIEMPMST
+    	 WHERE STR_CD = ?
+    	   AND PUMBUN_CD = ?  
+    </query>  
+    
+    
+    <!-- 협력사 사원 조회 -->
+     <query name="SEL_EMP">
+        <![CDATA[
+			SELECT A.STR_CD
+				 , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM
+			     , A.PUMBUN_CD
+			     , DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD) AS PUMBUN_NAME
+			     , A.EMP_SEQ
+			     --, B.COMM_NAME1 AS EMP_FLAG
+			     , A.EMP_FLAG
+			     , A.EMP_NAME
+			     , DCS.SC_CRYPTO_FUN('DEC',A.HP_NO) AS HP_NO
+			     , A.ENTR_DT
+			     , A.RETR_DT
+			     , NVL(A.ISU_YN,'N') ISU_YN
+			     , NVL(A.DEL_YN,'N') DEL_YN
+			     , A.ISU_DATE
+			 FROM  MSS.MC_EDIEMPMST A
+			   -- , (SELECT COMM_CODE, COMM_NAME1
+			   --      FROM COM.TC_COMMCODE
+			   --     WHERE SYS_PART='D'
+			   --       AND COMM_PART='D222'
+			   --       AND USE_YN='Y'
+			   --     ) B
+			WHERE STR_CD = LPAD(?,2,'0')
+			  AND PUMBUN_CD = ?
+			  AND EMP_SEQ = LPAD(?,3,'0')
+			  -- AND A.EMP_FLAG = B.COMM_CODE
+        ]]>
+    </query>
+
+</service>

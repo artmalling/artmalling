@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.01.31
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  점별 행사장을 관리한다.
+ -->
+<service name="/pcod702.pc">
+
+  <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_CD"    colType="TB_STRING" size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_NAME"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_POSITION"    colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AREA_SIZE"         colType="TB_DECIMAL" size="7"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLOR_CD"           colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"            colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_EVTMST">
+        <![CDATA[
+            SELECT STR_CD    , EVENT_PLACE_CD    , EVENT_PLACE_NAME    , EVENT_POSITION    , AREA_SIZE    , FLOR_CD    , USE_YN            
+              FROM DPS.PC_EVTPLACMST 
+        ]]>    
+    </query> 
+    <query name="SEL_EVTMST_WHERE_STR_CD">
+        <![CDATA[
+             WHERE STR_CD      = ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_ORDER">
+        <![CDATA[
+            ORDER BY STR_CD
+                   , EVENT_PLACE_CD
+         ]]>
+    </query>
+    <!-- 점별 행사장 신규 입력  -->    
+    <query name="INS_EVTMST">    
+        <![CDATA[
+            INSERT INTO DPS.PC_EVTPLACMST(STR_CD       
+                                        , EVENT_PLACE_CD     
+                                        , EVENT_PLACE_NAME   
+                                        , EVENT_POSITION      
+                                        , AREA_SIZE
+                                        , FLOR_CD    
+                                        , USE_YN         
+                                        , REG_DATE           
+                                        , REG_ID              
+                                        , MOD_DATE
+                                        , MOD_ID
+                                         )
+                                   VALUES(?         
+                                        , (SELECT LPAD( NVL( MAX( TO_NUMBER( EVENT_PLACE_CD ) ) +1, 1 ) ,  4, '0')
+                                             FROM DPS.PC_EVTPLACMST
+                                            WHERE STR_CD = ? )
+                                        , ?         
+                                        , ?        
+                                        , ?        
+                                        , ?       
+                                        , ?      
+                                        , SYSDATE   
+                                        , ?        
+                                        , SYSDATE  
+                                        , ?                                 
+                                         )  
+        ]]>                                
+    </query>
+
+    <!-- 점별 행사장 수정 입력  -->
+    <query name="UPD_EVTMST">
+        <![CDATA[
+            UPDATE DPS.PC_EVTPLACMST
+		       SET EVENT_PLACE_NAME    = ?    
+		         , EVENT_POSITION      = ?   
+		         , AREA_SIZE           = ?     
+		         , FLOR_CD             = ?  
+		         , USE_YN              = ?    
+		         , MOD_DATE            = SYSDATE  
+		         , MOD_ID              = ?           
+             WHERE STR_CD              = ?
+               AND EVENT_PLACE_CD      = ?
+        ]]>
+    </query> 
+    
+</service>

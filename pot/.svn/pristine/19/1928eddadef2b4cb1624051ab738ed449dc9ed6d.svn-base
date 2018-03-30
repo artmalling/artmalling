@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : 
+ * 작 성 일 : 2010.07.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  SMS발송
+ -->
+<service name="/tcom008.tc"> 
+  <gauce name="H_SEL_MASTER">   
+    <column colName="USER_ID"       colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />
+    <column colName="OLD_PASS_WD"   colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL" roundMode="" />     
+    <column colName="NEW_PASS_WD"   colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+  </gauce>
+
+
+  <!--비밀번호체크   -->   
+  <query name="SEL_USER_PWD">
+    <![CDATA[
+      SELECT COUNT(*) AS COUNT
+        FROM COM.TC_USRMST 
+       WHERE USER_ID = ?
+         AND PWD_NO  = DCS.SC_Crypto_FUN('ENC', ?) 
+    ]]>
+  </query>
+  
+  <!--비밀번호 변경  -->   
+  <query name="UPT_USER_PWD">
+    <![CDATA[
+      UPDATE COM.TC_USRMST
+         SET PWD_NO       = DCS.SC_Crypto_FUN('ENC', ?) 
+           , MOD_DATE     = SYSDATE
+           , MOD_ID       = ?
+       WHERE USER_ID      = ? 
+    ]]>
+  </query>
+</service>

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : 
+ * 작 성 일 : 2010.06.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  프로그램사용로그
+ -->
+<service name="/tcom302.tc"> 
+    <gauce name="H_SEL_CODE">   
+        <column colName="CODE"     colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" />       
+        <column colName="NAME"     colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" />
+    </gauce> 
+     
+    <query name="SEL_LCODE">
+        <![CDATA[ 
+               SELECT LCODE AS CODE
+                    , LNAME AS NAME
+                 FROM COM.TC_PGMLMENU
+                WHERE SUB_SYSTEM = ?
+                ORDER BY NVL(SEQ,0), LCODE
+        ]]>    
+    </query>
+    <query name="SEL_MCODE">
+        <![CDATA[ 
+               SELECT MCODE AS CODE
+                    , MNAME AS NAME
+                 FROM COM.TC_PGMMMENU
+                WHERE LCODE   = ? 
+                ORDER BY NVL(SEQ,0), MCODE
+        ]]>    
+    </query>
+    <query name="SEL_SCODE">
+        <![CDATA[ 
+               SELECT SCODE AS CODE
+                    , SNAME AS NAME
+                 FROM COM.TC_PGMSMENU
+                WHERE LCODE   = ? 
+                  AND MCODE   = ?
+                ORDER BY NVL(SEQ,0), SCODE
+        ]]>    
+    </query> 
+    
+    <gauce name="H_SEL_LIST">   
+        <column colName="SUB_SYSTEM"	colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" />       
+        <column colName="LNAME"     	colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="MNAME"     	colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="PID"     		colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="PNAME1"     	colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="USER_ID"     	colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="USER_NAME"     colType="TB_STRING" size="300"   dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="VISIT_DATE"    colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="USER_IP"    colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+    </gauce> 
+    
+	<!-- 로그리스트조회 -->
+    <query name="SEL_VISIT_LIST">        
+        <![CDATA[
+			SELECT COM.FN_GET_COMM_NAME('D','TC01', C.SUB_SYSTEM) SUB_SYSTEM
+			     , C.LNAME
+			     , C.MNAME
+			     , A.PID
+			     , B.PNAME1 
+			     , A.USER_ID
+			     , D.USER_NAME  
+			       || '(' 
+			       || CASE WHEN D.ORG_LEVEL = '1' THEN D.STR_NAME
+			               WHEN D.ORG_LEVEL = '2' THEN D.STR_NAME || '/' || D.DEPT_NAME  
+			               WHEN D.ORG_LEVEL = '3' THEN D.STR_NAME || '/' || D.DEPT_NAME || '/' || D.TEAM_NAME 
+			               WHEN D.ORG_LEVEL = '4' THEN D.STR_NAME || '/' || D.DEPT_NAME || '/' || D.TEAM_NAME || '/' || D.PC_NAME
+			           END
+			       ||')'  AS USER_NAME
+			     , TO_CHAR(TO_DATE(A.VISIT_DATE,'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS') AS VISIT_DATE
+			     , A.USER_IP
+			  FROM COM.TC_USRLOG A
+			     , COM.TC_PGMMST B
+			     , (
+			           SELECT A.LCODE, C.LNAME , C.SUB_SYSTEM
+			                , A.MCODE, B.MNAME
+			                , A.SCODE, A.SNAME
+			             FROM COM.TC_PGMSMENU A
+			                , COM.TC_PGMMMENU B
+			                , COM.TC_PGMLMENU C
+			            WHERE A.LCODE = C.LCODE
+			              AND A.LCODE = B.LCODE
+			              AND A.MCODE = B.MCODE
+			        )C 
+			     , (
+			            SELECT USER_ID 
+			                 , USER_NAME
+			                 , ORG_LEVEL
+			                 , DPS.FN_GET_STORE_NAME(A.STR_CD)          AS STR_NAME         -- 점명   
+			                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+			                                     , A.DEPT_CD
+			                                     , '00','00','00')      AS DEPT_NAME        -- 부문명 
+			                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+			                                     , A.DEPT_CD
+			                                     , A.TEAM_CD
+			                                     ,'00','00')            AS TEAM_NAME        -- 팀명 
+			                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+			                                     , A.DEPT_CD
+			                                     , A.TEAM_CD
+			                                     , A.PC_CD
+			                                     ,'00')                 AS PC_NAME          -- PC명 
+			             FROM COM.TC_USRMST A 
+			        )D
+			 WHERE A.PID        = B.PID
+			   AND B.SCODE      = C.SCODE
+			   AND A.USER_ID    = D.USER_ID
+        ]]>        
+    </query> 
+     
+    <query name="SEL_VISIT_WHERE_SUB_SYSTEM">
+        <![CDATA[ 
+               AND C.SUB_SYSTEM      = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_VISIT_WHERE_LCODE">
+        <![CDATA[ 
+               AND C.LCODE      = ?
+        ]]>    
+    </query>
+    <query name="SEL_VISIT_WHERE_MCODE">
+        <![CDATA[
+               AND C.MCODE      = ?
+        ]]>    
+    </query>
+    <query name="SEL_VISIT_WHERE_SCODE">
+        <![CDATA[
+               AND C.SCODE      = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_VISIT_WHERE_VISIT_DATE">
+        <![CDATA[
+               AND A.VISIT_DATE BETWEEN ? ||'0' AND ? ||'9'
+        ]]>    
+    </query>
+    
+    <query name="SEL_VISIT_WHERE_USER_CD">
+        <![CDATA[
+               AND ( A.USER_ID LIKE ? || '%' OR D.USER_NAME LIKE '%' || ? || '%') 
+        ]]>    
+    </query>
+    
+    <query name="SEL_VISIT_ORDER">
+        <![CDATA[
+			 ORDER BY C.SUB_SYSTEM, C.LCODE, C.MCODE, B.PID, A.USER_ID, A.VISIT_DATE 
+        ]]>    
+    </query>
+    
+    <!-- 로그이력 팝업 -->
+    <gauce name="H_HISTORY">   
+        <column colName="USER_ID"       colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" />   
+        <column colName="LOGIN_DATE"    colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="LOGOUT_DATE"   colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+    </gauce> 
+    
+    <query name="SEL_LOG_HISTORY">
+        <![CDATA[
+			 
+			SELECT USER_ID
+			     , TO_CHAR(TO_DATE(LOGIN_DATE,'YYYYMMDDHH24MISS') , 'YYYY/MM/DD HH24:MI:SS')  AS LOGIN_DATE
+			     , TO_CHAR(TO_DATE(LOGOUT_DATE,'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS')  AS LOGOUT_DATE
+			  FROM COM.TC_LOGHST
+			 WHERE LOGIN_DATE BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, -1) ,'YYYYMMDD') || '0' 
+               AND TO_CHAR(SYSDATE ,'YYYYMMDD') || '9'
+               AND USER_ID = ?
+             ORDER BY LOGIN_DATE DESC
+        ]]>    
+    </query>
+    
+</service>

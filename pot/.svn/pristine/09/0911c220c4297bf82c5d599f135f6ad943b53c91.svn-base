@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작  성  자  : 김영진
+ * 회  사  명  : 
+ * 작  성  일  : 2010.02.28
+ * 변  경  일  :
+ * 변경내용 :
+ * 개         요  : 회원명 찾기 xml
+ -->
+<service name="/ccom410.cc">    
+
+    <!-- 헤더 정의  -->
+    <gauce name="H_CUSTINFO">
+        <column colName="CUST_ID"        colType="TB_STRING" size="9"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="CUST_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="MOBILE_PH1"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="MOBILE_PH2"     colType="TB_STRING" size="4"    dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="MOBILE_PH3"     colType="TB_STRING" size="4"    dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="HOME_PH1"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="HOME_PH2"       colType="TB_STRING" size="4"    dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="HOME_PH3"       colType="TB_STRING" size="4"    dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="EMAIL1"         colType="TB_STRING" size="80"   dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="EMAIL2"         colType="TB_STRING" size="80"   dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="HOME_ADDR"      colType="TB_STRING" size="300"  dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="CARD_NO"        colType="TB_STRING" size="64"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="SS_NO"          colType="TB_STRING" size="64"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    
+    <!-- Pop-Up  조회 SQL -->
+    <query name="SEL_CUSTOMER">
+        <![CDATA[
+            SELECT DISTINCT A.CUST_ID
+                 , A.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1) AS MOBILE_PH1
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2) AS MOBILE_PH2
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3) AS MOBILE_PH3
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH1) AS HOME_PH1
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH2) AS HOME_PH2
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH3) AS HOME_PH3
+                 , DCS.SC_Crypto_FUN('DEC', A.EMAIL1) AS EMAIL1
+                 , DCS.SC_Crypto_FUN('DEC', A.EMAIL2) AS EMAIL2
+                 , (A.HOME_ZIP_CD1 || '-' || A.HOME_ZIP_CD2 || ' ' || A.HOME_ADDR1 || ' ' || A.HOME_ADDR2) AS HOME_ADDR
+                 , DCS.SC_Crypto_FUN('DEC', B.CARD_NO) AS CARD_NO
+                 , DCS.SC_Crypto_FUN('DEC', A.SS_NO) AS SS_NO
+              FROM DCS.DM_CUSTOMER A
+                 , DCS.DM_CARD B
+             WHERE A.COMP_PERS_FLAG(+) LIKE ?
+               AND A.CUST_ID(+) = B.CUST_ID
+               AND B.CARD_STAT_CD IN ('0', '1')  -- 0:정상, 1:분실
+        ]]>
+    </query>
+</service>
+

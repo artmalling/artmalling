@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 배임주
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.07.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal452.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"				colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_CD"				colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_NM" 				colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"				colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"				colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_ORG_NAME"			colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"					colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_ORG_NAME"			colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"	    		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_RATE"		colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT"			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT2"			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT2"	    		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT2"			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_RATE2" 		colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT2"		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="INC_RATE"				colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_BRAND">        
+        <![CDATA[
+             SELECT Y.STR_CD
+                  , Y.BRAND_CD
+                  , Y.BRAND_NM
+                  , Y.DEPT_CD
+                  , Y.TEAM_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(Y.ORG_CD, 1, 6) || '0000') AS TEAM_ORG_NAME
+                  , Y.PC_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(Y.ORG_CD, 1, 8) || '00') AS PC_ORG_NAME
+                  , Y.TOT_SALE_AMT
+                  , Y.DC_AMT
+                  , Y.NET_SALE_AMT
+                  , CASE WHEN Y.NET_SALE_AMT  = 0 THEN 0 ELSE ROUND(Y.SALE_PROF_AMT / Y.NET_SALE_AMT * 100, 2) END SALE_PROF_RATE
+                  , Y.SALE_PROF_AMT
+                  , Y.TOT_SALE_AMT2
+                  , Y.DC_AMT2
+                  , Y.NET_SALE_AMT2
+                  , CASE WHEN Y.NET_SALE_AMT2 = 0 THEN 0 ELSE ROUND(Y.SALE_PROF_AMT2 / Y.NET_SALE_AMT2 * 100, 2) END SALE_PROF_RATE2
+                  , Y.SALE_PROF_AMT2
+                  , CASE WHEN Y.TOT_SALE_AMT2 = 0 THEN 0 ELSE ROUND((Y.TOT_SALE_AMT - Y.TOT_SALE_AMT2) / Y.TOT_SALE_AMT2 * 100, 2) END AS INC_RATE
+               FROM (
+                     SELECT STR_CD
+                          , BRAND_CD
+                          , BRAND_NM
+                          , DEPT_CD
+                          , TEAM_CD
+                          , PC_CD
+                          , ORG_CD
+                          , SUM(TOT_SALE_AMT)   AS TOT_SALE_AMT
+                          , SUM(DC_AMT)         AS DC_AMT
+                          , SUM(NET_SALE_AMT)   AS NET_SALE_AMT
+                          , SUM(SALE_PROF_AMT)  AS SALE_PROF_AMT
+                          , SUM(TOT_SALE_AMT2)  AS TOT_SALE_AMT2
+                          , SUM(DC_AMT2)        AS DC_AMT2
+                          , SUM(NET_SALE_AMT2)  AS NET_SALE_AMT2
+                          , SUM(SALE_PROF_AMT2) AS SALE_PROF_AMT2
+                       FROM (
+                             SELECT STR_CD
+                                  , PUMBUN_CD
+                                  --, PUMMOK_CD
+                                  --, EVENT_FLAG
+                                  , EVENT_RATE
+                                  , BRAND_CD
+                                  , BRAND_NM
+                                  , DEPT_CD
+                                  , TEAM_CD
+                                  , ORG_CD
+                                  , PC_CD
+                                  , TAX_FLAG
+                                  , SUM(TOT_SALE_AMT)                   AS TOT_SALE_AMT
+                                  , SUM(DC_AMT)                         AS DC_AMT
+                                  , SUM(NET_SALE_AMT_NOTAX)             AS NET_SALE_AMT
+                                  , CEIL(CEIL(SUM(TOT_SALE_AMT  * MG_RATE  / 100)) / (CASE WHEN TAX_FLAG = '1' THEN  1.1 ELSE 1 END)) AS SALE_PROF_AMT
+                                  , SUM(TOT_SALE_AMT2)                  AS TOT_SALE_AMT2
+                                  , SUM(DC_AMT2)                        AS DC_AMT2
+                                  , SUM(NET_SALE_AMT2_NOTAX)            AS NET_SALE_AMT2
+                                  , CEIL(CEIL(SUM(TOT_SALE_AMT2 * MG_RATE2 / 100)) / (CASE WHEN TAX_FLAG = '1' THEN  1.1 ELSE 1 END)) AS SALE_PROF_AMT2
+                               FROM (SELECT B.STR_CD
+                                          --, A.SALE_DT
+                                          , A.PUMBUN_CD
+                                          --, A.PUMMOK_CD
+                                          --, A.EVENT_FLAG
+                                          , A.EVENT_RATE
+                                          , BRD.BRAND_CD
+                                          , BRD.BRAND_NM
+                                          , B.DEPT_CD
+                                          , B.TEAM_CD
+                                          , SUBSTR(F.SALE_ORG_CD, 1, 8) AS ORG_CD
+                                          , B.PC_CD
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.NORM_SALE_AMT,0)                     ELSE 0 END AS TOT_SALE_AMT
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.DC_AMT,0)                            ELSE 0 END AS DC_AMT
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.NET_SALE_AMT,0) - NVL(A.VAT_AMT,0)   ELSE 0 END AS NET_SALE_AMT_NOTAX
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.MG_RATE                                  ELSE 0 END AS MG_RATE
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.NORM_SALE_AMT,0)                     ELSE 0 END AS TOT_SALE_AMT2
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.DC_AMT,0)                            ELSE 0 END AS DC_AMT2
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.NET_SALE_AMT,0) - NVL(A.VAT_AMT,0)   ELSE 0 END AS NET_SALE_AMT2_NOTAX
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.MG_RATE                                  ELSE 0 END AS MG_RATE2
+                                          , PBN.TAX_FLAG
+                                       FROM DPS.PS_DAYMGPBN    A
+                                          , DPS.PC_ORGMST      B
+                                          , DPS.PC_STRPBN      F
+                                          , DPS.PC_PBNMST      PBN
+                                          , DPS.PC_BRDMST      BRD
+                                      WHERE B.ORG_CD     = F.SALE_ORG_CD
+                                        AND A.STR_CD     = F.STR_CD
+                                        AND A.PUMBUN_CD  = F.PUMBUN_CD
+                                        AND PBN.PUMBUN_CD = F.PUMBUN_CD
+                                        AND BRD.BRAND_CD  = PBN.BRAND_CD
+                                        AND B.STR_CD     = ?
+                                        AND B.DEPT_CD    = ?
+                                        AND B.TEAM_CD    LIKE ? || '%'
+                                        AND B.PC_CD      LIKE ? || '%'
+                                        AND ((A.SALE_DT    >= ?  AND A.SALE_DT    <= ?)
+                                        OR   (A.SALE_DT    >= ?  AND A.SALE_DT    <= ?))
+                                        AND EXISTS ( SELECT MYORG.USER_ID
+                                                       FROM COM.V_MYORG MYORG
+                                                      WHERE MYORG.STR_CD      = B.STR_CD
+                                                        AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                        AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                        AND MYORG.PC_CD       = B.PC_CD
+                                                        AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                                        AND MYORG.USER_ID     = ?
+                                                   )
+                                    ) X
+                              GROUP BY
+                                    X.STR_CD
+                                  --, X.SALE_DT
+                                  , X.PUMBUN_CD
+                                  --, X.PUMMOK_CD
+                                  , X.BRAND_CD
+                                  , X.BRAND_NM
+                                  , X.DEPT_CD
+                                  , X.TEAM_CD
+                                  , X.ORG_CD
+                                  , X.PC_CD
+                                  --, X.EVENT_FLAG
+                                  , X.EVENT_RATE
+                                  , X.TAX_FLAG
+                            ) Z
+                      GROUP BY
+                            STR_CD
+                          , BRAND_CD
+                          , BRAND_NM
+                          , DEPT_CD
+                          , TEAM_CD
+                          , PC_CD  
+                          , ORG_CD   
+                    ) Y
+              ORDER BY
+                    Y.STR_CD
+                  , Y.DEPT_CD
+                  , Y.TEAM_CD
+                  , Y.PC_CD
+                  , Y.BRAND_CD
+                  , Y.BRAND_NM           
+        ]]>        
+    </query>
+     <query name="SEL_SALE_BRAND2">        
+        <![CDATA[
+             SELECT Y.STR_CD
+                  , Y.BRAND_CD
+                  , Y.BRAND_NM
+                  , Y.DEPT_CD
+                  , Y.TEAM_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(Y.ORG_CD, 1, 6) || '0000') AS TEAM_ORG_NAME
+                  , Y.PC_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(Y.ORG_CD, 1, 8) || '00') AS PC_ORG_NAME
+                  , Y.TOT_SALE_AMT
+                  , Y.DC_AMT
+                  , Y.NET_SALE_AMT
+                  , CASE WHEN Y.NET_SALE_AMT  = 0 THEN 0 ELSE ROUND(Y.SALE_PROF_AMT / Y.NET_SALE_AMT * 100, 2) END SALE_PROF_RATE
+                  , Y.SALE_PROF_AMT
+                  , Y.TOT_SALE_AMT2
+                  , Y.DC_AMT2
+                  , Y.NET_SALE_AMT2
+                  , CASE WHEN Y.NET_SALE_AMT2 = 0 THEN 0 ELSE ROUND(Y.SALE_PROF_AMT2 / Y.NET_SALE_AMT2 * 100, 2) END SALE_PROF_RATE2
+                  , Y.SALE_PROF_AMT2
+                  , CASE WHEN Y.TOT_SALE_AMT2 = 0 THEN 0 ELSE ROUND((Y.TOT_SALE_AMT - Y.TOT_SALE_AMT2) / Y.TOT_SALE_AMT2 * 100, 2) END AS INC_RATE
+               FROM (
+                     SELECT STR_CD
+                          , BRAND_CD
+                          , BRAND_NM
+                          , DEPT_CD
+                          , TEAM_CD
+                          , PC_CD
+                          , ORG_CD
+                          , SUM(TOT_SALE_AMT)   AS TOT_SALE_AMT
+                          , SUM(DC_AMT)         AS DC_AMT
+                          , SUM(NET_SALE_AMT)   AS NET_SALE_AMT
+                          , SUM(SALE_PROF_AMT)  AS SALE_PROF_AMT
+                          , SUM(TOT_SALE_AMT2)  AS TOT_SALE_AMT2
+                          , SUM(DC_AMT2)        AS DC_AMT2
+                          , SUM(NET_SALE_AMT2)  AS NET_SALE_AMT2
+                          , SUM(SALE_PROF_AMT2) AS SALE_PROF_AMT2
+                       FROM (
+                             SELECT STR_CD
+                                  , PUMBUN_CD
+                                  --, PUMMOK_CD
+                                  --, EVENT_FLAG
+                                  , EVENT_RATE
+                                  , BRAND_CD
+                                  , BRAND_NM
+                                  , DEPT_CD
+                                  , TEAM_CD
+                                  , ORG_CD
+                                  , PC_CD
+                                  , TAX_FLAG
+                                  , SUM(TOT_SALE_AMT)                   AS TOT_SALE_AMT
+                                  , SUM(DC_AMT)                         AS DC_AMT
+                                  , SUM(NET_SALE_AMT_NOTAX)             AS NET_SALE_AMT
+                                  , CEIL(CEIL(SUM(TOT_SALE_AMT  * MG_RATE  / 100)) / (CASE WHEN TAX_FLAG = '1' THEN  1.1 ELSE 1 END)) AS SALE_PROF_AMT
+                                  , SUM(TOT_SALE_AMT2)                  AS TOT_SALE_AMT2
+                                  , SUM(DC_AMT2)                        AS DC_AMT2
+                                  , SUM(NET_SALE_AMT2_NOTAX)            AS NET_SALE_AMT2
+                                  , CEIL(CEIL(SUM(TOT_SALE_AMT2 * MG_RATE2 / 100)) / (CASE WHEN TAX_FLAG = '1' THEN  1.1 ELSE 1 END)) AS SALE_PROF_AMT2
+                               FROM (SELECT B.STR_CD
+                                          --, A.SALE_DT
+                                          , A.PUMBUN_CD
+                                          --, A.PUMMOK_CD
+                                          --, A.EVENT_FLAG
+                                          , A.EVENT_RATE
+                                          , BRD.BRAND_CD
+                                          , BRD.BRAND_NM
+                                          , B.DEPT_CD
+                                          , B.TEAM_CD
+                                          , SUBSTR(F.BUY_ORG_CD, 1, 8) AS ORG_CD
+                                          , B.PC_CD
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.NORM_SALE_AMT,0)                     ELSE 0 END AS TOT_SALE_AMT
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.DC_AMT,0)                            ELSE 0 END AS DC_AMT
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.NET_SALE_AMT,0) - NVL(A.VAT_AMT,0)   ELSE 0 END AS NET_SALE_AMT_NOTAX
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.MG_RATE                                  ELSE 0 END AS MG_RATE
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.NORM_SALE_AMT,0)                     ELSE 0 END AS TOT_SALE_AMT2
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.DC_AMT,0)                            ELSE 0 END AS DC_AMT2
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN NVL(A.NET_SALE_AMT,0) - NVL(A.VAT_AMT,0)   ELSE 0 END AS NET_SALE_AMT2_NOTAX
+                                          , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.MG_RATE                                  ELSE 0 END AS MG_RATE2
+                                          , PBN.TAX_FLAG
+                                       FROM DPS.PS_DAYMGPBN    A
+                                          , DPS.PC_ORGMST      B
+                                          , DPS.PC_STRPBN      F
+                                          , DPS.PC_PBNMST      PBN
+                                          , DPS.PC_BRDMST      BRD
+                                      WHERE B.ORG_CD     = F.BUY_ORG_CD
+                                        AND A.STR_CD     = F.STR_CD
+                                        AND A.PUMBUN_CD  = F.PUMBUN_CD
+                                        AND PBN.PUMBUN_CD = F.PUMBUN_CD
+                                        AND BRD.BRAND_CD  = PBN.BRAND_CD
+                                        AND B.STR_CD     = ?
+                                        AND B.DEPT_CD    = ?
+                                        AND B.TEAM_CD    LIKE ? || '%'
+                                        AND B.PC_CD      LIKE ? || '%'
+                                        AND ((A.SALE_DT    >= ?  AND A.SALE_DT    <= ?)
+                                        OR   (A.SALE_DT    >= ?  AND A.SALE_DT    <= ?))
+                                        AND EXISTS ( SELECT MYORG.USER_ID
+                                                       FROM COM.V_MYORG MYORG
+                                                      WHERE MYORG.STR_CD      = B.STR_CD
+                                                        AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                        AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                        AND MYORG.PC_CD       = B.PC_CD
+                                                        AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                                        AND MYORG.USER_ID     = ?
+                                                   )
+                                    ) X
+                              GROUP BY
+                                    X.STR_CD
+                                  --, X.SALE_DT
+                                  , X.PUMBUN_CD
+                                  --, X.PUMMOK_CD
+                                  , X.BRAND_CD
+                                  , X.BRAND_NM
+                                  , X.DEPT_CD
+                                  , X.TEAM_CD
+                                  , X.ORG_CD
+                                  , X.PC_CD
+                                  --, X.EVENT_FLAG
+                                  , X.EVENT_RATE
+                                  , X.TAX_FLAG
+                            ) Z
+                      GROUP BY
+                            STR_CD
+                          , BRAND_CD
+                          , BRAND_NM
+                          , DEPT_CD
+                          , TEAM_CD
+                          , PC_CD  
+                          , ORG_CD   
+                    ) Y
+              ORDER BY
+                    Y.STR_CD
+                  , Y.DEPT_CD
+                  , Y.TEAM_CD
+                  , Y.PC_CD
+                  , Y.BRAND_CD
+                  , Y.BRAND_NM           
+        ]]>        
+    </query>
+    
+</service>

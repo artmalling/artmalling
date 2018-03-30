@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<beaver>
+	<!-- 
+		release date : 2009.01.27 InnoXync/GAUCE 호환 모드 옵션 
+	    @usage : type : GAUCE - 가우스 모드로 동작 
+	             type : InnoXync - 이노싱크 모드로 동작 -->
+	<beaver-mode type="GAUCE"/>
+	
+	
+	<!-- 
+		release date : 2009.05.24
+	   	ActiveUpdate4에서 사용할 컴포넌트 설치 정보가 들어있는 XML의 위치를 지정해 줍니다.
+	   	XML의 위치는 브라우져에서 URL로 입력할때 사용한 경로를 넣어 주시면 됩니다.
+	   	※ context명이 /가 아닌 경우에는 context명을 제외하고 XML파일의 위치를 넣어 주면 됩니다.
+	   	ex) http://localhost:7001/beaver/au4/install.xml [beaver가 context라면]
+	   	     ☞ <activeupdate url="/au4/install.xml" />
+	-->
+	<!-- <activeupdate url="/au4/install.xml" /> -->
+	
+	
+	<!-- 
+	    release date : 2009.05.20
+	    CharacterEncoding관련된 부분을 InnoXync&GAUCE 서비스와 HTTP서비스로 분리 하였으며, 
+	        서비스별로 GET/POST방식에 따른 각기 다른 인코딩 설정이 가능 하도록 기능을 개선 [beaver.xml 업데이트 필수]
+	        
+		release date : 2009.02.12
+	   	request-encoding을 사용하여 인코딩 처리시에 글씨가 깨어질 경우에 character-encoding을 처리하기 위한 부분
+	   	HttpServletRequest.setCharacterEncoding("euc-kr")과 동일한 기능을 수행한다 
+	   	※ encodeURIComponent를 사용한 경우라면 아래 설정 값은 UTF-8로 해주어야 합니다.
+	   	※ encodeURIComponent를 사용하는 경우 Tomcat인 경우에는 srver.xml의 Connector 부분에 아래와 같이
+	   	  URIEncoding="UTF-8" 로 설정해 주어야 정상적으로 동작 합니다. 
+	   	    <Connector port="8080" protocol="HTTP/1.1" connectionTimeout="20000" redirectPort="8443" URIEncoding="UTF-8" /> 
+	-->
+	<character-encoding>
+		<innoxync use="false">
+			<method type="POST" encoding="UTF-8"/>
+		    <method type="GET" encoding="UTF-8"/>
+		</innoxync>
+		<http use="false">
+			<method type="POST" encoding="euc-kr"/>
+		    <method type="GET" encoding="euc-kr"/>
+		</http>		
+	</character-encoding>
+	
+    <!-- 
+	  ※ reloadable  : ActionConfig파일 reloadable설정 [true:동적 리로드, false:WAS기동시 리로드]
+	   - 개발시에만 reloadable을 true로 설정해야 하며, 운영시에는 반드시 성능상의 이슈로 인해
+	     reloadable을 false로 설정해 주어야 합니다.
+
+	  ※ actionFullUri : ActionUri 맵핑을 Context명까지 맵핑하는지를 결정하는 프로퍼티 
+	   @usage : true:context명까지 맵핑, false:context명을 제외하고 맵핑
+       @notice 
+	    - beaver1114이전 버전으로 개발된 경우에는 true로 설정해야 하위 호환성을 보장한다.
+		- beaver1115버전 이후에는 actionFullUri값을 false로 설정해주고, /action명을 부여 하면 됩니다.
+	-->
+	<action-config reloadable="true" actionFullUri="false" />
+
+
+	<!-- 
+	  ※ web-controller의 tag기능
+	      - sessionCheck : 웹컨트롤러에서 세션 체크 기능 사용 여부 [ true:사용/false:미사용 ]
+		  - sessionKey : 세션 체크시 세션에 있는 attribute명을 지정한다 (String)타입만 지원함 
+	  
+	  ※ session-ignore-action
+          - sessionCheck기능 사용시에 세션 체크하지 않고 실행할 Action의 명칭을 넣어준다.
+		     ex) action-config의 action name에 있는 값을 넣어 주면 됩니다.
+	-->
+	<web-controller sessionCheck="false" sessionKey="SESSION_SAMPLE">
+		<session-ignore-action>
+			<action name="/study"/>
+		</session-ignore-action>
+		<!-- 
+		   HTTP방식에서 세션이 만료된 경우(페이지 포워딩 포함)에 
+		      로그인 페이지로 포워딩 하는 URL을 설정  
+		-->
+		<session-expired use="true" url="/index.bf" />
+	</web-controller>
+	
+	<!-- 2009.02.24 Gforms에서 세션으로 사용 할 속성을 지정해 줍니다. 
+	     attribute에 지정될 값은 세션에 등록되어져 있어야 하며,객체의 속성은 문자형 이어야 합니다.
+	     session.setAttribute("KEY", "Value")로 설정한 세션값의 KEY를 아래의 session-attribute에
+	          등록해 주면 됩니다. -->
+	<session>
+		<session-attribute id="ID"/>
+		<session-attribute id="USER"/>
+		<session-attribute id="NAME"/>
+	</session>
+	
+	<!-- 
+	    2008.10.14 - 기능추가.
+		프레임윅에서 제공하는  getParameter()/getParameter(boolean) 메소드의 default HttpRequest 인코딩 설정
+		☞ 한글 파라미터가 깨질 경우에 사용하시면 됩니다. (WAS설정에 따라 설정이 다름)
+		- use : true(인코딩 사용), false(인코딩 미사용)
+		- sourceEncoding : HttpRequest로 넘어오는 인코딩 타입
+		- targetEncoding : 변환할 인코딩 타입
+		- debug : HttpRequest로 넘어온 파라미터 올바르게 출력되는지 확인하기 위한 속성 (true:콘솔에 출력, false:콘솔에 미 출력) 
+	-->
+	<request-encoding use="false" sourceEncoding="8859_1" targetEncoding="euc-kr" debug="true"/>
+
+    <!-- 
+		iBATIS SqlMapConfig.xml을 지정하여 DefaultIbatisBean을 사용할 경우 설정을 해주어야 합니다.
+		DefaultIbatisBean은  /common/retrieveDefault.bf에서 내부적으로 사용되는 클래스 이며, JavaScript Object인
+		SelectProcess를 통해 데이터를 조회하는 경우에 반드시 설정이 되어야 합니다.
+		※ iBATIS의 SqlMap reloadable기능은 미구현
+	-->
+	<ibatis-config reloadable="true"> 
+		<sqlMapConfig id="default" src="config/SqlMapConfig.xml"/>
+	</ibatis-config>
+	
+	<!-- 
+	    2009.04.23 - 기능추가.
+		프레임윅에서 메일을 보내기 위한 설정 
+	-->
+	<mail-config>
+		<mail id="default" send-type="text/html" encoding="UTF-8">
+			<smtp host="SMTP서버IP or URL" port="465" auth="true" starttls-enable="false" debug="true">
+				<smtp-auth userid="SMTP서버 로그인 계정" password="SMTP서버 로그인 암호"/>
+				<socket-factory class="javax.net.ssl.SSLSocketFactory" port="465" fallback="false" />
+				<attach-file path="첨부파일 임시 저장될 디렉토리 ex) c:/upload"/>
+			</smtp>
+		</mail>
+	</mail-config>
+	
+	<!--
+	  ※ 사용자 정의 값을 설정하는 부분입니다. 프레임윅에서 공통적으로 사용해야 될 속성값 업로드 폴더의 위치등을
+	  common테그를 통해 등록하여 사용이 가능합니다.
+	  @usage : BeaverConfigManager.getUserProperty("ID값")
+	-->
+	<common id="IMAGE_PATH" value="D:/InnoXync/workspace/BeaverProject/uni_sample/image/"/>
+</beaver>

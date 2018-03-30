@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.06.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  저장품출고등록
+ -->
+<service name="/pstk403.pt">
+
+    <gauce name="H_SEL_MASTER">        
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"            colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_SEQ_NO"        colType="TB_STRING"   size="5"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_FLAG"          colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"             colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_STATUS"        colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_DT"            colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_TOT_QTY"        colType="TB_INT"      size="7"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_TOT_AMT"        colType="TB_DECIMAL"  size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce> 
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"            colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_SEQ_NO"        colType="TB_STRING"   size="5"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"             colType="TB_INT"      size="5"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"          colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"        colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"          colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"            colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"            colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"              colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"             colType="TB_STRING"   size="13"   dec="0"  keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="SKU_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT_CD"            colType="TB_STRING"   size="3"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_QTY"            colType="TB_INT"      size="7"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_PRC"            colType="TB_INT"      size="9"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_AMT"            colType="TB_DECIMAL"  size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+  
+    <query name="SEL_OUTSTOREHD">
+        <![CDATA[
+            SELECT ISH.STR_CD
+                 , ISH.SLIP_NO
+                 , ISH.SLIP_SEQ_NO
+                 , ISH.SLIP_FLAG
+                 , ISH.VEN_CD
+                 , SVM.VEN_NAME
+                 , ISH.SLIP_STATUS
+                 , ISH.CONF_DT
+                 , ISH.OUT_TOT_QTY
+                 , ISH.OUT_TOT_AMT
+              FROM DPS.PT_OUTSTOREHD ISH
+                 , DPS.PC_STRVENMST  SVM
+             WHERE ISH.STR_CD    = SVM.STR_CD
+               AND ISH.VEN_CD    = SVM.VEN_CD
+               AND ISH.STR_CD    = ?
+               AND ISH.SLIP_NO   BETWEEN ? AND ?
+        ]]>
+    </query>
+    <query name="SEL_OUTSTOREHD_WHERE_VEN_CD">
+        <![CDATA[
+               AND ISH.VEN_CD    = ?        
+        ]]>
+    </query>
+    <query name="SEL_OUTSTOREHD_WHERE_SLIP_FLAG">
+        <![CDATA[
+               AND ISH.SLIP_FLAG = ?        
+        ]]>
+    </query>
+    <query name="SEL_OUTSTOREHD_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND ISH.VEN_CD    = (SELECT VEN_CD FROM DPS.PC_STRPBN WHERE STR_CD = ISH.STR_CD AND PUMBUN_CD = ? )
+        ]]>
+    </query>
+    <query name="SEL_OUTSTOREHD_ORDER">
+        <![CDATA[
+             ORDER BY ISH.SLIP_NO, ISH.SLIP_SEQ_NO
+        ]]>
+    </query>
+    <query name="SEL_OUTSTOREDT">
+        <![CDATA[
+            SELECT STR_CD
+                 , SLIP_NO
+                 , SLIP_SEQ_NO
+                 , SEQ_NO
+                 , PUMBUN_CD
+                 , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NAME
+                 , PUMMOK_CD
+                 , DEPT_CD
+                 , TEAM_CD
+                 , PC_CD   
+                 , SKU_CD
+                 , DPS.FN_GET_SKU_NAME(SKU_CD) AS SKU_NAME
+                 , UNIT_CD
+                 , OUT_QTY
+                 , OUT_PRC
+                 , OUT_AMT
+              FROM DPS.PT_OUTSTOREDT
+             WHERE STR_CD      = ?
+               AND SLIP_NO     = ?
+               AND SLIP_SEQ_NO = ?
+        ]]>
+    </query>
+    <query name="SEL_OUTSTOREDT_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND PUMBUN_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_OUTSTOREDT_ORDER">
+        <![CDATA[
+             ORDER BY SEQ_NO
+        ]]>
+    </query>
+    <query name="SEL_OUTSTOREHD_CONF_FLAG">
+        <![CDATA[
+            SELECT SLIP_STATUS  AS CONF_FLAG
+              FROM DPS.PT_OUTSTOREHD
+             WHERE STR_CD      = ?
+               AND SLIP_NO     = ?
+               AND SLIP_SEQ_NO = ?
+        ]]>
+    </query>
+    <query name="SEL_OUTSTOREHD_NEXT_SLIP_SEQ_NO">
+        <![CDATA[
+            SELECT LPAD( NVL( MAX(SLIP_SEQ_NO)+1,1), 5,'0') AS NEXT_SLIP_SEQ_NO
+              FROM DPS.PT_OUTSTOREHD
+             WHERE STR_CD      = ?
+               AND SLIP_NO     = ?
+        ]]>
+    </query>
+    <query name="SEL_OUTSTOREDT_SKU_CD_CNT">
+        <![CDATA[
+            SELECT COUNT(*)  AS CNT
+              FROM DPS.PT_OUTSTOREDT
+             WHERE STR_CD      = ?
+               AND SLIP_NO     = ?
+               AND SLIP_SEQ_NO = ?
+               AND SKU_CD      = ?
+        ]]>
+    </query>
+    <query name="INS_OUTSTOREHD">
+        <![CDATA[
+            INSERT INTO DPS.PT_OUTSTOREHD(STR_CD     
+                                       , SLIP_NO    
+                                       , SLIP_SEQ_NO
+                                       , SLIP_FLAG  
+                                       , SLIP_STATUS
+                                       , VEN_CD     
+                                       , CONF_DT    
+                                       , OUT_TOT_QTY 
+                                       , OUT_TOT_AMT
+                                       , REG_DATE
+                                       , REG_ID
+                                       , MOD_DATE
+                                       , MOD_ID 
+                                        )
+                                  VALUES(?     
+                                       , ?    
+                                       , ?
+                                       , ?   
+                                       , ?   
+                                       , ?  
+                                       , ?    
+                                       , ? 
+                                       , ?
+                                       , SYSDATE
+                                       , ?
+                                       , SYSDATE
+                                       , ? 
+                                        )
+        ]]>
+    </query>
+    <query name="UPD_OUTSTOREHD">
+        <![CDATA[
+            UPDATE DPS.PT_OUTSTOREHD
+               SET OUT_TOT_QTY   = ?
+                 , OUT_TOT_AMT   = ?
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE STR_CD       = ?
+               AND SLIP_NO      = ?
+               AND SLIP_SEQ_NO  = ?
+        ]]>
+    </query>
+    <query name="DEL_OUTSTOREHD">
+        <![CDATA[
+            DELETE
+              FROM DPS.PT_OUTSTOREHD
+             WHERE STR_CD      = ?
+               AND SLIP_NO     = ?
+               AND SLIP_SEQ_NO = ?
+        ]]>
+    </query>
+    <query name="DEL_OUTSTOREHD_TO_OUTSTOREDT">
+        <![CDATA[
+            DELETE
+              FROM DPS.PT_OUTSTOREDT
+             WHERE STR_CD      = ?
+               AND SLIP_NO     = ?
+               AND SLIP_SEQ_NO = ?
+        ]]>
+    </query>
+    <query name="INS_OUTSTOREDT">
+        <![CDATA[
+            INSERT INTO DPS.PT_OUTSTOREDT(STR_CD      
+                                       , SLIP_NO     
+                                       , SLIP_SEQ_NO 
+                                       , SEQ_NO      
+                                       , PUMBUN_CD 
+                                       , PUMMOK_CD
+                                       , DEPT_CD
+                                       , TEAM_CD
+                                       , PC_CD   
+                                       , SKU_CD       
+                                       , UNIT_CD     
+                                       , OUT_QTY      
+                                       , OUT_PRC      
+                                       , OUT_AMT
+                                       , REG_DATE
+                                       , REG_ID
+                                       , MOD_DATE
+                                       , MOD_ID 
+                                        )
+                                  VALUES(?      
+                                       , ?     
+                                       , ? 
+                                       , (SELECT NVL( MAX(SEQ_NO)+1,1) FROM DPS.PT_OUTSTOREDT WHERE STR_CD = ? AND SLIP_NO = ? AND SLIP_SEQ_NO = ?)
+                                       , ?    
+                                       , ?     
+                                       , ?      
+                                       , ?     
+                                       , ?   
+                                       , ?      
+                                       , ?     
+                                       , ?      
+                                       , ?      
+                                       , ?
+                                       , SYSDATE
+                                       , ?
+                                       , SYSDATE
+                                       , ? 
+                                        )
+        ]]>
+    </query>
+    <query name="UPD_OUTSTOREDT">
+        <![CDATA[
+            UPDATE DPS.PT_OUTSTOREDT
+               SET OUT_QTY     = ?
+                 , OUT_PRC     = ?
+                 , OUT_AMT     = ?
+                 , MOD_DATE    = SYSDATE
+                 , MOD_ID      = ?
+             WHERE STR_CD      = ?
+               AND SLIP_NO     = ?
+               AND SLIP_SEQ_NO = ?
+               AND SEQ_NO      = ?
+        ]]>
+    </query>
+    <query name="DEL_OUTSTOREDT">
+        <![CDATA[
+            DELETE
+              FROM DPS.PT_OUTSTOREDT
+             WHERE STR_CD      = ?
+               AND SLIP_NO     = ?
+               AND SLIP_SEQ_NO = ?
+               AND SEQ_NO      = ?
+        ]]>
+    </query>
+</service>

@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : kjy
+ * 회 사 명    : 
+ * 작 성 일    : 2017.05.18
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  지역별 회원 매출 현황
+ -->
+<service name="/dbri331.db">
+    <!-- 지역별 회원 매출 현황_GRIDHEADER  -->
+    <gauce name="H_MASTER"> 
+        <column colName="GUBUN1" 				colType="TB_STRING"      size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GUBUN2" 				colType="TB_STRING"      size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE" 		      		colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_RATIO"	 	     	colType="TB_DECIMAL"     size="13"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POST" 		 			colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POST_RATIO" 	     	colType="TB_DECIMAL"     size="13"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT"			     	colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_RATIO" 	     	colType="TB_DECIMAL"     size="13"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="INCR"			     	colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+		<column colName="INCR2" 				colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+   <!-- 지역별 회원 매출 현황_header -->
+    <query name="SEL_MASTER_NEW">        
+        <![CDATA[
+        WITH AMTCNT AS
+			(
+			SELECT SUM(DECODE(GUBUN,'POST',0,MEMB_AMT)) MEMB_AMT
+			     , SUM(DECODE(GUBUN,'POST',0,MEMB_CNT)) MEMB_CNT
+			     , SUM(DECODE(GUBUN,'POST',0,NORM_AMT)) 
+			      - SUM(DECODE(GUBUN,'POST',0,MEMB_AMT)) NORM_AMT 
+			     , SUM(DECODE(GUBUN,'POST',0,NORM_CNT))
+			      - SUM(DECODE(GUBUN,'POST',0,MEMB_CNT)) NORM_CNT    
+			     , SUM(DECODE(GUBUN,'PRE',0,BF_MEMB_AMT)) BF_MEMB_AMT
+			     , SUM(DECODE(GUBUN,'PRE',0,BF_MEMB_CNT)) BF_MEMB_CNT
+			     , SUM(DECODE(GUBUN,'PRE',0,BF_NORM_AMT))
+			      - SUM(DECODE(GUBUN,'PRE',0,BF_MEMB_AMT)) BF_NORM_AMT
+			     , SUM(DECODE(GUBUN,'PRE',0,BF_NORM_CNT)) 
+			      - SUM(DECODE(GUBUN,'PRE',0,BF_MEMB_CNT))  BF_NORM_CNT
+			     , SUM(DECODE(GUBUN,'POST',0,NORM_AMT)) TOT_AMT
+			     , SUM(DECODE(GUBUN,'POST',0,NORM_CNT)) TOT_CNT
+			     , SUM(DECODE(GUBUN,'PRE',0,BF_NORM_AMT)) TOT_BF_AMT
+			     , SUM(DECODE(GUBUN,'PRE',0,BF_NORM_CNT)) TOT_BF_CNT
+			  FROM
+				    (
+				    SELECT SALE_DT
+				         , 'PRE' GUBUN
+				         , SUM(NORM_SALE_AMT) MEMB_AMT
+				         , COUNT(CUST_NO) MEMB_CNT 
+				         , 0 NORM_AMT
+				         , 0 NORM_CNT
+				         , 0 BF_MEMB_AMT
+				         , 0 BF_MEMB_CNT
+				         , 0 BF_NORM_AMT
+				         , 0 BF_NORM_CNT
+				     FROM DPS.PS_DAYCUST A
+				    WHERE 1=1
+				      AND STR_CD = ?
+				      AND SALE_DT BETWEEN ? AND ?
+				    GROUP BY SALE_DT
+				    UNION ALL
+				    SELECT SALE_DT
+				         , 'PRE' GUBUN
+				         , 0 MEMB_AMT
+				         , 0 MEMB_CNT 
+				         , SUM(NORM_SALE_AMT) NORM_AMT 
+				         , SUM(CUST_CNT) NORM_CNT
+				         , 0 BF_MEMB_AMT
+				         , 0 BF_MEMB_CNT
+				         , 0 BF_NORM_AMT
+				         , 0 BF_NORM_CNT
+				     FROM DPS.PS_DAYPBN A
+				    WHERE 1=1
+				      AND STR_CD = ?
+				      AND SALE_DT BETWEEN ? AND ?
+				    GROUP BY SALE_DT
+				    UNION ALL
+				    SELECT SALE_DT
+				         , 'POST' GUBUN
+				         , 0 MEMB_AMT
+				         , 0 MEMB_CNT 
+				         , 0 NORM_AMT
+				         , 0 NORM_CNT
+				         , SUM(NORM_SALE_AMT) BF_MEMB_AMT
+				         , COUNT(CUST_NO) BF_MEMB_CNT
+				         , 0 BF_NORM_AMT
+				         , 0 BF_NORM_CNT
+				     FROM DPS.PS_DAYCUST A
+				    WHERE 1=1
+				      AND STR_CD = ?
+				      AND SALE_DT BETWEEN ? AND ?
+				    GROUP BY SALE_DT
+				    UNION ALL
+				    SELECT SALE_DT
+				         , 'POST' GUBUN
+				         , 0 MEMB_AMT
+				         , 0 MEMB_CNT 
+				         , 0 NORM_AMT
+				         , 0 NORM_CNT
+				         , 0 NORM_AMT
+				         , 0 NORM_CNT
+				         , SUM(NORM_SALE_AMT) BF_MEMB_AMT
+				         , SUM(CUST_CNT) BF_MEMB_CNT
+				     FROM DPS.PS_DAYPBN A
+				    WHERE 1=1
+				      AND STR_CD = ?
+				      AND SALE_DT BETWEEN ? AND ?
+				    GROUP BY SALE_DT
+			    )
+		)
+		SELECT GUBUN1, GUBUN2, PRE, PRE_RATIO, POST, POST_RATIO, TOT , TOT_RATIO, INCR,
+		       CASE WHEN INCR > 0 THEN '▲'
+		            WHEN INCR < 0 THEN '▼'
+		            ELSE ' - '
+		        END INCR2
+		  FROM
+		(
+			/* 매출 */
+			SELECT '매출' GUBUN1
+			     , '맴버쉽고객' GUBUN2
+			     , BF_MEMB_AMT PRE
+			     , DECODE(TOT_BF_AMT,0,0,(BF_MEMB_AMT/TOT_BF_AMT)*100) PRE_RATIO 
+			     , MEMB_AMT POST
+			     , DECODE(TOT_AMT,0,0,(MEMB_AMT/TOT_AMT)*100) POST_RATIO 
+			     , MEMB_AMT + BF_MEMB_AMT TOT
+			     , DECODE((TOT_AMT + TOT_BF_AMT),0,0,((MEMB_AMT + BF_MEMB_AMT)/(TOT_AMT + TOT_BF_AMT))*100) TOT_RATIO
+			     , MEMB_AMT - BF_MEMB_AMT INCR
+			FROM AMTCNT
+			UNION ALL 
+			SELECT '매출' GUBUN1
+			     , '일반고객' GUBUN2
+			     , BF_NORM_AMT
+			     , DECODE(TOT_BF_AMT,0,0,(BF_NORM_AMT/TOT_BF_AMT)*100) BF_RATIO 
+			     , NORM_AMT
+			     , DECODE(TOT_AMT,0,0,(NORM_AMT/TOT_AMT)*100) RATIO 
+			     , NORM_AMT + BF_NORM_AMT AMT
+			     , DECODE((TOT_AMT + TOT_BF_AMT),0,0,((NORM_AMT + BF_NORM_AMT)/(TOT_AMT + TOT_BF_AMT))*100) TOT_RATIO
+			     , NORM_AMT - BF_NORM_AMT INCR
+			FROM AMTCNT
+			UNION ALL
+			SELECT '매출' GUBUN1
+			     , '매출 합계' GUBUN2
+			     , TOT_BF_AMT
+			     , DECODE(TOT_BF_AMT,0,0,(TOT_BF_AMT/TOT_BF_AMT)*100) BF_RATIO 
+			     , TOT_AMT
+			     , DECODE(TOT_AMT,0,0,(TOT_AMT/TOT_AMT)*100) RATIO 
+			     , TOT_AMT + TOT_BF_AMT AMT
+			     , DECODE((TOT_AMT + TOT_BF_AMT),0,0,((TOT_AMT + TOT_BF_AMT)/(TOT_AMT + TOT_BF_AMT))*100) TOT_RATIO
+			     , TOT_AMT - TOT_BF_AMT INCR
+			FROM AMTCNT
+			UNION ALL
+			/* 객수 */
+			SELECT '객수' GUBUN1
+			     , '맴버쉽고객' GUBUN2
+			     , BF_MEMB_CNT PRE
+			     , DECODE(TOT_BF_CNT,0,0,(BF_MEMB_CNT/TOT_BF_CNT)*100) BF_RATIO 
+			     , MEMB_CNT POST
+			     , DECODE(TOT_CNT,0,0,(MEMB_CNT/TOT_CNT)*100) POST_RATIO 
+			     , MEMB_CNT + BF_MEMB_CNT CNT
+			     , DECODE((TOT_CNT + TOT_BF_CNT),0,0,((MEMB_CNT + BF_MEMB_CNT)/(TOT_CNT + TOT_BF_CNT))*100) TOT_RATIO
+			     , MEMB_CNT - BF_MEMB_CNT INCR
+			FROM AMTCNT
+			UNION ALL 
+			SELECT '객수' GUBUN1
+			     , '일반고객' GUBUN2
+			     , BF_NORM_CNT
+			     , DECODE(TOT_BF_CNT,0,0,(BF_NORM_CNT/TOT_BF_CNT)*100) BF_RATIO 
+			     , NORM_CNT
+			     , DECODE(TOT_CNT,0,0,(NORM_CNT/TOT_CNT)*100) RATIO 
+			     , NORM_CNT + BF_NORM_CNT AMT
+			     , DECODE((TOT_CNT + TOT_BF_CNT),0,0,((NORM_CNT + BF_NORM_CNT)/(TOT_CNT + TOT_BF_CNT))*100 )TOT_RATIO
+			     , NORM_CNT - BF_NORM_CNT INCR
+			FROM AMTCNT
+			UNION ALL
+			SELECT '객수' GUBUN1
+			     , '객수 합계' GUBUN2
+			     , TOT_BF_CNT
+			     , DECODE(TOT_BF_CNT,0,0,(TOT_BF_CNT/TOT_BF_CNT)*100) BF_RATIO 
+			     , TOT_CNT
+			     , DECODE(TOT_CNT,0,0,(TOT_CNT/TOT_CNT)*100) RATIO 
+			     , TOT_CNT + TOT_BF_CNT AMT
+			     , DECODE((TOT_CNT + TOT_BF_CNT),0,0,((TOT_CNT + TOT_BF_CNT)/(TOT_CNT + TOT_BF_CNT))*100) TOT_RATIO
+			     , TOT_CNT - TOT_BF_CNT INCR
+			FROM AMTCNT
+			UNION ALL
+			/* 객단가 */
+			SELECT '객단가' GUBUN1
+			     , '맴버쉽고객' GUBUN2
+			     , BF_MEMB_AMT / BF_MEMB_CNT PRE
+			     , NULL
+			     , MEMB_AMT / MEMB_CNT POST
+			     , NULL POST_RATIO 
+			     , (MEMB_AMT + BF_MEMB_AMT) / (MEMB_CNT + BF_MEMB_CNT) CNT
+			     , NULL TOT_RATIO
+			     , (MEMB_AMT / MEMB_CNT) - (BF_MEMB_AMT / BF_MEMB_CNT) INCR
+			FROM AMTCNT
+			UNION ALL 
+			SELECT '객단가' GUBUN1
+			     , '일반고객' GUBUN2
+			     , BF_NORM_AMT / BF_NORM_CNT PRE
+			     , NULL
+			     , NORM_AMT / NORM_CNT POST
+			     , NULL POST_RATIO 
+			     , (NORM_AMT + BF_NORM_AMT) / (NORM_CNT + BF_NORM_CNT) CNT
+			     , NULL TOT_RATIO
+			     , (NORM_AMT / NORM_CNT) - (BF_NORM_AMT / BF_NORM_CNT) INCR
+			FROM AMTCNT
+			UNION ALL 
+			SELECT '객단가' GUBUN1
+			     , '객단가 평균' GUBUN2
+			     , TOT_BF_AMT / TOT_BF_CNT PRE
+			     , NULL
+			     , TOT_AMT / TOT_CNT POST
+			     , NULL POST_RATIO 
+			     , (TOT_AMT + TOT_BF_AMT) / (TOT_CNT + TOT_BF_CNT) CNT
+			     , NULL TOT_RATIO
+			     , (TOT_AMT / TOT_CNT) - (TOT_BF_AMT / TOT_BF_CNT) INCR
+			FROM AMTCNT
+		)
+
+              ]]>        
+    </query>
+    
+    <!-- 지역별 회원 매출 현황_GRIDDETAIL  -->
+    <gauce name="H_DETAIL"> 
+        <column colName="SALE_DT" 				colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GUBUN" 				colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"       		colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MEMB_AMT"	 	     	colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MEMB_AMT_RATIO"  		colType="TB_DECIMAL"     size="13"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT"		     	colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT_RATIO"		colType="TB_DECIMAL"     size="13"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_CNT" 				colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT_CNT" 			colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MEMB_CNT" 				colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MEMB_AMT_CNT" 			colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_CNT"				colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT_CNT"			colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ENTR_CNT"       		colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 지역별 회원 매출 현황_detail -->
+    <query name="SEL_DETAIL_PRE">        
+        <![CDATA[
+	   SELECT SALE_DT
+             , GUBUN
+             , TOT_AMT
+             , MEMB_AMT
+             , DECODE(TOT_AMT,0,0,(MEMB_AMT/TOT_AMT)*100) MEMB_AMT_RATIO
+             , NORM_AMT
+             , DECODE(TOT_AMT,0,0,(NORM_AMT/TOT_AMT)*100) NORM_AMT_RATIO
+             , TOT_CNT
+             , DECODE(TOT_CNT,0,0,(TOT_AMT/TOT_CNT)) TOT_AMT_CNT
+             , MEMB_CNT
+             , DECODE(MEMB_CNT,0,0,(MEMB_AMT/MEMB_CNT)) MEMB_AMT_CNT
+             , NORM_CNT
+             , DECODE(NORM_CNT,0,0,(NORM_AMT/NORM_CNT)) NORM_AMT_CNT
+             , ENTR_CNT
+        FROM
+        (		  
+		  SELECT  SALE_DT
+                 , GUBUN
+                 , SUM(DECODE(GUBUN,'POST',BF_MEMB_AMT,MEMB_AMT)) MEMB_AMT
+			     , SUM(DECODE(GUBUN,'POST',BF_MEMB_CNT,MEMB_CNT)) MEMB_CNT
+			     , SUM(DECODE(GUBUN,'POST',BF_NORM_AMT,NORM_AMT)) 
+			      - SUM(DECODE(GUBUN,'POST',BF_MEMB_AMT,MEMB_AMT)) NORM_AMT 
+			     , SUM(DECODE(GUBUN,'POST',BF_NORM_CNT,NORM_CNT))
+			      - SUM(DECODE(GUBUN,'POST',BF_MEMB_CNT,MEMB_CNT)) NORM_CNT    
+			     , SUM(DECODE(GUBUN,'POST',BF_NORM_AMT,NORM_AMT)) TOT_AMT
+			     , SUM(DECODE(GUBUN,'POST',BF_NORM_CNT,NORM_CNT)) TOT_CNT
+                 , MIN((SELECT COUNT(CUST_ID) FROM DCS.DM_CUSTOMER WHERE ENTR_DT = A.SALE_DT)) ENTR_CNT
+			  FROM
+				    (
+				    SELECT SALE_DT
+				         , 'PRE' GUBUN
+				         , SUM(NORM_SALE_AMT) MEMB_AMT
+				         , COUNT(CUST_NO) MEMB_CNT 
+				         , 0 NORM_AMT
+				         , 0 NORM_CNT
+				         , 0 BF_MEMB_AMT
+				         , 0 BF_MEMB_CNT
+				         , 0 BF_NORM_AMT
+				         , 0 BF_NORM_CNT
+				     FROM DPS.PS_DAYCUST A
+				    WHERE 1=1
+				      AND STR_CD = ?
+				      AND SALE_DT BETWEEN ? AND ?
+				    GROUP BY SALE_DT
+				    UNION ALL
+				    SELECT SALE_DT
+				         , 'PRE' GUBUN
+				         , 0 MEMB_AMT
+				         , 0 MEMB_CNT 
+				         , SUM(NORM_SALE_AMT) NORM_AMT 
+				         , SUM(CUST_CNT) NORM_CNT
+				         , 0 BF_MEMB_AMT
+				         , 0 BF_MEMB_CNT
+				         , 0 BF_NORM_AMT
+				         , 0 BF_NORM_CNT
+				     FROM DPS.PS_DAYPBN A
+				    WHERE 1=1
+				      AND STR_CD = ?
+				      AND SALE_DT BETWEEN ? AND ?
+				    GROUP BY SALE_DT
+        ]]>        
+    </query>
+    
+    <query name="SEL_DETAIL_POST">        
+        <![CDATA[
+						    UNION ALL
+				    SELECT SALE_DT
+				         , 'POST' GUBUN
+				         , 0 MEMB_AMT
+				         , 0 MEMB_CNT 
+				         , 0 NORM_AMT
+				         , 0 NORM_CNT
+				         , SUM(NORM_SALE_AMT) BF_MEMB_AMT
+				         , COUNT(CUST_NO) BF_MEMB_CNT
+				         , 0 BF_NORM_AMT
+				         , 0 BF_NORM_CNT
+				     FROM DPS.PS_DAYCUST A
+				    WHERE 1=1
+				      AND STR_CD = ?
+				      AND SALE_DT BETWEEN ? AND ?
+				    GROUP BY SALE_DT
+				    UNION ALL
+				    SELECT SALE_DT
+				         , 'POST' GUBUN
+				         , 0 MEMB_AMT
+				         , 0 MEMB_CNT 
+				         , 0 NORM_AMT
+				         , 0 NORM_CNT
+				         , 0 NORM_AMT
+				         , 0 NORM_CNT
+				         , SUM(NORM_SALE_AMT) BF_MEMB_AMT
+				         , SUM(CUST_CNT) BF_MEMB_CNT
+				     FROM DPS.PS_DAYPBN A
+				    WHERE 1=1
+				      AND STR_CD = ?
+				      AND SALE_DT BETWEEN ? AND ?
+				    GROUP BY SALE_DT
+        ]]>        
+    </query> 
+    
+     <query name="SEL_DETAIL_END">        
+        <![CDATA[
+			    ) A
+                GROUP BY SALE_DT, GUBUN
+             )
+           ORDER BY GUBUN DESC, SALE_DT
+        ]]>        
+    </query>    
+</service>

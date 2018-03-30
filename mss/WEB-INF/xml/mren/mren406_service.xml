@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.26
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  관리비 미수금 및 연체 내역 조회
+ -->
+<service name="/mren406.mr">
+    <gauce name="H_SEL_MASTER">
+	    <column colName="VEN_CD"               colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NAME"             colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REAL_TOT_CHAREG_AMT"  colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_TOT_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ARR_RATE"             colType="TB_DECIMAL"  size="5"   dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="BAL_AMT"              colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ARREAR_AMT"           colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REAL_CHAREG_AMT"      colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_AMT"              colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_ARR_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_AMT_JAN"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_ARR_AMT_JAN"      colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_TOT_JAN"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT CR.VEN_CD
+     			 , DPS.FN_GET_VENDOR_NAME(CR.VEN_CD)             			AS VEN_NAME
+     			 --, CM.REAL_CHAREG_AMT + CM.MOD_TOT_BAL_AMT     			AS REAL_TOT_CHAREG_AMT
+     			 , NVL(CM.REAL_CHAREG_AMT, 0) + NVL(CM.BAL_AMT, 0) + NVL(CM.ARREAR_AMT, 0) + NVL(CM.MOD_ARREAR_AMT, 0)   AS REAL_TOT_CHAREG_AMT   -- 총부과액
+     			 , NVL(TE.PAY_AMT,0) + NVL(TE.PAY_ARR_AMT,0)                AS PAY_TOT_AMT   --총입금액
+     			 , CM.ARR_RATE                                       						 --연체율
+     			 , NVL(CM.BAL_AMT, 0)      									AS BAL_AMT		 --연체(미수금)
+     			 , NVL(CM.ARREAR_AMT, 0) + NVL(CM.MOD_ARREAR_AMT, 0)        AS ARREAR_AMT    --미수연체이자
+     			 , NVL(CM.REAL_CHAREG_AMT, 0) 								AS REAL_CHAREG_AMT --청구액  
+     			 , NVL(TE.PAY_AMT, 0)  										AS PAY_AMT       --당월 입금   청구/연체액
+     			 , NVL(TE.PAY_ARR_AMT, 0) 									AS PAY_ARR_AMT   --당월 입금   미수연체이자  
+	          	 , NVL(CM.REAL_CHAREG_AMT, 0) + NVL(CM.BAL_AMT, 0) -(NVL(TE.PAY_AMT, 0))    AS PAY_AMT_JAN       --당월미수잔액   청구/연체액
+	          	 , NVL(CM.ARREAR_AMT, 0) + NVL(CM.MOD_ARREAR_AMT, 0) - (NVL(TE.PAY_ARR_AMT, 0))      AS PAY_ARR_AMT_JAN   --당월미수잔액   미수연체이자 
+	          	 , NVL(CM.REAL_CHAREG_AMT, 0) + NVL(CM.BAL_AMT, 0) + NVL(CM.ARREAR_AMT, 0) + NVL(CM.MOD_ARREAR_AMT, 0) - (NVL(TE.PAY_AMT,0) + NVL(TE.PAY_ARR_AMT,0))AS PAY_TOT_JAN       --당월미수잔액   합계 
+  		 	  FROM MSS.MR_CALMST CM
+     			 , MSS.MR_CNTRMST CR
+     			 , (SELECT TA.CAL_YM
+                         , TA.CNTR_ID
+                         , TA.CAL_TYPE
+                         , TA.MNTN_RENT_GB
+                         , SUM(TA.PAY_AMT) AS PAY_AMT
+                         , SUM(TA.PAY_ARR_AMT) AS PAY_ARR_AMT 
+                      FROM MSS.MR_CALPAY TA
+                     WHERE TA.CAL_YM = ?
+                       AND TA.MNTN_RENT_GB = ?
+                     GROUP BY TA.CAL_YM,
+                              TA.CNTR_ID,
+                              TA.CAL_TYPE,
+                              TA.MNTN_RENT_GB) TE
+ 			  WHERE CM.CAL_YM       = TE.CAL_YM(+)
+   				AND CM.CNTR_ID      = TE.CNTR_ID(+)
+   				AND CM.CAL_TYPE     = TE.CAL_TYPE(+)
+   				AND CM.CNTR_ID      = CR.CNTR_ID
+   				AND CR.STR_CD = ?
+                AND CM.CAL_YM = ?
+                AND CR.VEN_CD LIKE ?||'%'
+                AND CR.RENT_TYPE LIKE ?||'%'
+			   
+        ]]>
+    </query>
+    
+    <query name="SEL_MASTER_back">
+        <![CDATA[
+			SELECT CR.VEN_CD
+     			 , DPS.FN_GET_VENDOR_NAME(CR.VEN_CD)           AS VEN_NAME
+     			 , CM.REAL_CHAREG_AMT + CM.MOD_TOT_BAL_AMT     AS REAL_TOT_CHAREG_AMT
+     			 , TE.PAY_AMT + TE.PAY_ARR_AMT                 AS PAY_TOT_AMT
+     			 , CM.ARR_RATE
+     			 , CM.BAL_AMT   
+     			 , CM.REAL_CHAREG_AMT
+     			 , CM.ARREAR_AMT			--미수연체이자
+     			 , TE.PAY_AMT
+     			 , TE.PAY_ARR_AMT
+  		 	  FROM MSS.MR_CALMST CM
+     			 , MSS.MR_CALBAL CB
+     			 , MSS.MR_CNTRMST CR
+     			 , (SELECT TA.CAL_YM
+                         , TA.CNTR_ID
+                         , TA.CAL_TYPE
+                         , TA.MNTN_RENT_GB
+                         , SUM(TA.PAY_AMT) AS PAY_AMT
+                         , SUM(TA.PAY_ARR_AMT) AS PAY_ARR_AMT 
+                      FROM MSS.MR_CALPAY TA
+                     WHERE TA.CAL_YM = ?
+                       AND TA.MNTN_RENT_GB = ?
+                     GROUP BY TA.CAL_YM,
+                              TA.CNTR_ID,
+                              TA.CAL_TYPE,
+                              TA.MNTN_RENT_GB) TE
+ 			  WHERE CM.CAL_YM       = CB.CAL_YM
+   				AND CM.CNTR_ID      = CB.CNTR_ID
+   				AND CM.CAL_TYPE     = CB.CAL_TYPE
+   				AND CB.CAL_YM       = TE.CAL_YM
+   				AND CB.CNTR_ID      = TE.CNTR_ID
+   				AND CB.MNTN_RENT_GB = TE.MNTN_RENT_GB
+   				AND CB.CAL_TYPE     = TE.CAL_TYPE
+   				AND CM.CNTR_ID      = CR.CNTR_ID
+   				AND CB.MNTN_RENT_GB = ?
+   				AND CR.STR_CD = ?
+                AND CM.CAL_YM = ?
+                AND CR.VEN_CD LIKE ?||'%'
+                AND CR.RENT_TYPE LIKE ?||'%'
+			   
+        ]]>
+    </query>
+    
+    <query name="SEL_MASTER_RENT">
+        <![CDATA[
+			SELECT CR.VEN_CD
+                 , DPS.FN_GET_VENDOR_NAME(CR.VEN_CD)                     AS VEN_NAME
+                 , CM.RENT_REAL_CHAREG_AMT + CM.MOD_RENT_TOT_BAL_AMT     AS REAL_TOT_CHAREG_AMT
+                 , TE.PAY_AMT + TE.PAY_ARR_AMT                           AS PAY_TOT_AMT
+                 , CM.RENT_ARR_RATE                                      AS ARR_RATE
+                 , CM.MOD_RENT_TOT_BAL_AMT                               AS BAL_AMT
+                 , CM.RENT_ARREAR_AMT                                    AS ARREAR_AMT
+                 , CM.RENT_REAL_CHAREG_AMT                               AS REAL_CHAREG_AMT
+                 , TE.PAY_AMT
+                 , TE.PAY_ARR_AMT
+              FROM MSS.MR_CALMST CM
+                 , MSS.MR_CALBAL CB
+                 , MSS.MR_CNTRMST CR
+                 , (SELECT TA.CAL_YM
+                         , TA.CNTR_ID
+                         , TA.CAL_TYPE
+                         , TA.MNTN_RENT_GB
+                         , SUM(TA.PAY_AMT) AS PAY_AMT
+                         , SUM(TA.PAY_ARR_AMT) AS PAY_ARR_AMT 
+                      FROM MSS.MR_CALPAY TA
+                     WHERE TA.CAL_YM = ?
+                       AND TA.MNTN_RENT_GB = ?
+                     GROUP BY TA.CAL_YM,
+                              TA.CNTR_ID,
+                              TA.CAL_TYPE,
+                              TA.MNTN_RENT_GB) TE
+               WHERE CM.CAL_YM       = CB.CAL_YM
+                 AND CM.CNTR_ID      = CB.CNTR_ID
+                 AND CM.CAL_TYPE     = CB.CAL_TYPE
+                 AND CB.CAL_YM       = TE.CAL_YM
+                 AND CB.CNTR_ID      = TE.CNTR_ID
+                 AND CB.MNTN_RENT_GB = TE.MNTN_RENT_GB
+                 AND CB.CAL_TYPE     = TE.CAL_TYPE
+                 AND CM.CNTR_ID      = CR.CNTR_ID
+   				 AND CB.MNTN_RENT_GB = ?
+   				 AND CR.STR_CD = ?
+                 AND CM.CAL_YM = ?
+                 AND CR.VEN_CD LIKE ?||'%'
+                 AND CR.RENT_TYPE LIKE ?||'%'
+			   
+        ]]>
+    </query>
+    
+</service>

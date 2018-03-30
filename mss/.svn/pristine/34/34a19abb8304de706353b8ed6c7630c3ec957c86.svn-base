@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.04.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  제휴쿠폰 정산관리
+ -->
+<service name="/mgif610.mg">
+    <!-- 결제내역 헤더  -->
+   <gauce name="H_SEL_PAY_DTL">
+        <column colName="PAY_TYPE_NM"             colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_TYPE"             colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="STR_CD"             colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VEN_CD"             colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CHECK_FLAG"         colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CAL_YM"             colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="STR_NAME"           colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VEN_NAME"           colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="MONTH_PAY_AMT"           colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="REAL_PAY_AMT"           colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FEE_RATE"           colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FEE_SUP_AMT"        colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FEE_VAT_AMT"        colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FEE_TOT_AMT"        colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CAL_AMT"            colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CONT_AMT"            colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TAX_SUP_DT"           colType="TB_STRING"  size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="BOND_AMT"           colType="TB_DECIMAL"  size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 정산내역 헤더  -->
+   <gauce name="H_SEL_CAL_DTL">
+        <column colName="CAL_YM"            colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="STR_NAME"          colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VEN_NAME"          colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CAL_FLAG"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="BASIC_BOND_AMT"    colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="BOND_AMT"          colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="MONTH_PAY_AMT"     colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="REAL_PAY_AMT"      colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FEE_RATE"          colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FEE_SUP_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FEE_VAT_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FEE_TOT_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CAL_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FEE_PAY_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TOT_PAY_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CONT_AMT"          colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FINAL_BOND_AMT"    colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TAX_SUP_DT"        colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 결제내역 조회쿼리-->
+    <query name="SEL_PAY_DTL">
+        <![CDATA[
+        SELECT DECODE(DRW.PAY_TYPE ,'1','상품권','2','쿠폰') AS PAY_TYPE_NM
+             , DRW.PAY_TYPE AS PAY_TYPE
+             , DRW.STR_CD
+             , DRW.VEN_CD
+             , 'F'                                               AS CHECK_FLAG
+             , ?                                                 AS CAL_YM
+             , DPS.FN_GET_STORE_NAME(DRW.STR_CD)                 AS STR_NAME
+             , DPS.FN_GET_VENDOR_NAME(DRW.VEN_CD)                AS VEN_NAME
+             , DRW.GIFT_AMT                                      AS MONTH_PAY_AMT
+             , DRW.GIFT_AMT                                      AS REAL_PAY_AMT
+             , FEE.JCPN_REC_FEE_RATE                             AS FEE_RATE
+             , ROUND(DRW.GIFT_AMT * NVL(FEE.JCPN_REC_FEE_RATE,0) /100) AS FEE_SUP_AMT
+             , ROUND(ROUND(DRW.GIFT_AMT * NVL(FEE.JCPN_REC_FEE_RATE,0) /100)/10) AS FEE_VAT_AMT
+             , ROUND(DRW.GIFT_AMT * NVL(FEE.JCPN_REC_FEE_RATE,0) /100) + 
+               ROUND(ROUND(DRW.GIFT_AMT * NVL(FEE.JCPN_REC_FEE_RATE,0) /100)/10) AS FEE_TOT_AMT
+             , DRW.GIFT_AMT - (ROUND(DRW.GIFT_AMT * NVL(FEE.JCPN_REC_FEE_RATE,0) /100) + 
+               ROUND(ROUND(DRW.GIFT_AMT * NVL(FEE.JCPN_REC_FEE_RATE,0) /100)/10)) AS CAL_AMT
+             , 0  AS CONT_AMT
+             , '' AS TAX_SUP_DT
+             , BOND_AMT AS BOND_AMT
+          FROM (
+                SELECT 2 AS PAY_TYPE
+                      , A.STR_CD
+                      , A.VEN_CD
+                      , SUM(A.BOND_AMT) AS GIFT_AMT
+                      , SUM(A.BOND_AMT) AS CAL_AMT
+                      , 0 AS BOND_AMT
+                 FROM MSS.MG_VENCAL A
+                WHERE A.STR_CD = ?
+                  AND A.CAL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(?, 'YYYYMM'), -1), 'YYYYMM')
+                  AND VEN_CD LIKE ? || '%'
+                  AND CAL_TYPE = '1'            -- 정산유형(1:제휴/2:가맹점/3:위탁판매)
+                  AND PAYREC_FLAG = '2'         -- 지급수취구분(1:지급/2:수취)
+                  AND CAL_FLAG = '2'            -- 정산구분(1:상품권/2:쿠폰)
+                GROUP BY A.STR_CD, A.VEN_CD 
+               UNION ALL 
+                SELECT 2 AS PAY_TYPE
+                      , COU.STR_CD
+                      , TPM.VEN_CD
+                      , 0 AS GIFT_AMT
+                      , 0 AS CAL_AMT
+                      , SUM(COUPON_AMT) AS BOND_AMT
+                   FROM DPS.PS_DISCOUPON  COU
+                      , MSS.MG_GIFTTPMST  TPM
+                   WHERE COU.COUPON_CD = TPM.GIFT_TYPE_CD      
+                    AND TPM.PAYREC_FLAG = '2'                   -- 1:지급 2:수취
+                    AND TPM.GIFT_TYPE_FLAG = '04'               -- 상품권 종루구분 => '04' : 제휴쿠폰
+                    AND COU.COUPON_TYPE = '30'                  -- 결제수단 => 30:제휴쿠폰
+                    AND COU.STR_CD = ?
+                    AND TPM.VEN_CD LIKE ? || '%'
+                    AND COU.SALE_DT BETWEEN ? AND ?
+               GROUP BY COU.STR_CD, TPM.VEN_CD)DRW
+              
+              LEFT OUTER JOIN      
+           
+		         (SELECT STR_CD
+		             , VEN_CD
+		             , JCPN_REC_FEE_RATE
+		             FROM MSS.MG_VENFEEMST FEE
+		           WHERE FEE.APP_DT = ( SELECT MAX(APP_DT) 
+		                                FROM MSS.MG_VENFEEMST
+		                               WHERE STR_CD = FEE.STR_CD
+		                                 AND VEN_CD = FEE.VEN_CD
+		                                 AND APP_DT <= ?
+		                                 AND APP_DT <= TO_CHAR(SYSDATE,'YYYYMMDD') )) FEE          
+		            ON FEE.STR_CD = DRW.STR_CD
+		           AND FEE.VEN_CD = DRW.VEN_CD
+		ORDER BY PAY_TYPE, DRW.VEN_CD       
+        ]]>
+    </query>
+    
+    <!-- 정산내역 조회쿼리-->
+    <query name="SEL_CAL_DTL">
+        <![CDATA[
+        SELECT CAL_YM         
+             , DPS.FN_GET_STORE_NAME(STR_CD)                 AS STR_NAME
+             , DPS.FN_GET_VENDOR_NAME(VEN_CD)                AS VEN_NAME   
+             , DECODE(CAL_FLAG ,'1','상품권','2','쿠폰')    AS CAL_FLAG   
+             , BASIC_BOND_AMT 
+             , BOND_AMT       
+             , MONTH_PAY_AMT  
+             , REAL_PAY_AMT   
+             , FEE_RATE       
+             , FEE_SUP_AMT    
+             , FEE_VAT_AMT    
+             , FEE_TOT_AMT    
+             , CAL_AMT        
+             , PAY_AMT        
+             , FEE_PAY_AMT    
+             , PAY_AMT + FEE_PAY_AMT TOT_PAY_AMT    
+             , CONT_AMT       
+             , FINAL_BOND_AMT 
+             , TAX_SUP_DT      
+          FROM MSS.MG_VENCAL
+         WHERE CAL_TYPE = '1'
+           AND PAYREC_FLAG = '2'
+           AND CAL_FLAG = '2'
+           AND CAL_YM = ?
+           AND STR_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_CAL_DTL_WHERE_VEN_CD">
+        <![CDATA[
+           AND VEN_CD   = ?
+        ]]>
+    </query>
+    
+    <!-- 정산내역 수정 or 신규등록-->
+    <query name="UST_JOIN_CAL">
+        <![CDATA[
+        MERGE INTO MSS.MG_VENCAL A
+                USING ( SELECT ? AS CAL_YM
+                             , ? AS STR_CD
+                             , ? AS CAL_TYPE
+                             , ? AS VEN_CD
+                             , ? AS PAYREC_FLAG
+                             , ? AS CAL_FLAG
+                             , ? AS BOND_AMT
+                             , ? AS MONTH_PAY_AMT
+                             , ? AS REAL_PAY_AMT
+                             , ? AS FEE_RATE
+                             , ? AS FEE_SUP_AMT
+                             , ? AS FEE_VAT_AMT
+                             , ? AS FEE_TOT_AMT
+                             , ? AS CAL_AMT
+                             , ? AS TAX_SUP_DT
+                             , ? AS CONT_AMT
+                             , ? AS USER_ID
+                          FROM DUAL ) B 
+                   ON (        A.CAL_YM = B.CAL_YM
+                           AND A.STR_CD = B.STR_CD
+                           AND A.CAL_TYPE = B.CAL_TYPE
+                           AND A.VEN_CD = B.VEN_CD 
+                           AND A.PAYREC_FLAG = B.PAYREC_FLAG
+                           AND A.CAL_FLAG = B.CAL_FLAG )
+                 WHEN MATCHED THEN 
+                      UPDATE SET BASIC_BOND_AMT =  NVL((SELECT FINAL_BOND_AMT 
+                                  FROM MSS.MG_VENCAL
+                                 WHERE CAL_YM = TO_CHAR(ADD_MONTHS(B.CAL_YM || '01',-1),'YYYYMM')
+                                   AND STR_CD = B.STR_CD
+                                   AND CAL_TYPE = B.CAL_TYPE
+                                   AND VEN_CD = B.VEN_CD
+                                   AND PAYREC_FLAG = B.PAYREC_FLAG
+                                   AND CAL_FLAG = B.CAL_FLAG),0)
+                               , BOND_AMT     = B.BOND_AMT
+                               , MONTH_PAY_AMT = B.MONTH_PAY_AMT
+                               , REAL_PAY_AMT     = B.REAL_PAY_AMT
+                               , FEE_RATE = B.FEE_RATE
+                               , FEE_SUP_AMT     = B.FEE_SUP_AMT
+                               , FEE_VAT_AMT = B.FEE_VAT_AMT
+                               , FEE_TOT_AMT = B.FEE_TOT_AMT
+                               , CAL_AMT = B.CAL_AMT
+                               , CONT_AMT = B.CONT_AMT
+                               , FINAL_BOND_AMT = NVL((SELECT FINAL_BOND_AMT 
+                                  FROM MSS.MG_VENCAL
+                                 WHERE CAL_YM = TO_CHAR(ADD_MONTHS(B.CAL_YM || '01',-1),'YYYYMM')
+                                   AND STR_CD = B.STR_CD
+                                   AND CAL_TYPE = B.CAL_TYPE
+                                   AND VEN_CD = B.VEN_CD
+                                   AND PAYREC_FLAG = B.PAYREC_FLAG
+                                   AND CAL_FLAG = B.CAL_FLAG),0) + B.BOND_AMT - B.CONT_AMT
+                               , TAX_SUP_DT = B.TAX_SUP_DT
+                               , MOD_ID          = B.USER_ID
+                               , MOD_DATE        = SYSDATE
+                 WHEN NOT MATCHED THEN
+                      INSERT ( CAL_YM
+                             , STR_CD
+                             , CAL_TYPE
+                             , VEN_CD
+                             , PAYREC_FLAG
+                             , CAL_FLAG
+                             , BASIC_BOND_AMT
+                             , BOND_AMT
+                             , MONTH_PAY_AMT
+                             , REAL_PAY_AMT
+                             , FEE_RATE
+                             , FEE_SUP_AMT
+                             , FEE_VAT_AMT
+                             , FEE_TOT_AMT
+                             , CAL_AMT
+                             , CONT_AMT
+                             , FINAL_BOND_AMT
+                             , TAX_SUP_DT
+                             , REG_ID
+                             , REG_DATE
+                             , MOD_ID
+                             , MOD_DATE )
+                      VALUES ( B.CAL_YM
+                             , B.STR_CD
+                             , B.CAL_TYPE
+                             , B.VEN_CD
+                             , B.PAYREC_FLAG
+                             , B.CAL_FLAG
+                             , NVL((SELECT FINAL_BOND_AMT 
+                                  FROM MSS.MG_VENCAL
+                                 WHERE CAL_YM = TO_CHAR(ADD_MONTHS(B.CAL_YM || '01',-1),'YYYYMM')
+                                   AND STR_CD = B.STR_CD
+                                   AND CAL_TYPE = B.CAL_TYPE
+                                   AND VEN_CD = B.VEN_CD
+                                   AND PAYREC_FLAG = B.PAYREC_FLAG
+                                   AND CAL_FLAG = B.CAL_FLAG),0)
+                             
+                             , B.BOND_AMT
+                             , B.MONTH_PAY_AMT
+                             , B.REAL_PAY_AMT
+                             , B.FEE_RATE
+                             , B.FEE_SUP_AMT
+                             , B.FEE_VAT_AMT
+                             , B.FEE_TOT_AMT
+                             , B.CAL_AMT
+                             , B.CONT_AMT
+                             , NVL((SELECT FINAL_BOND_AMT 
+                                  FROM MSS.MG_VENCAL
+                                 WHERE CAL_YM = TO_CHAR(ADD_MONTHS(B.CAL_YM || '01',-1),'YYYYMM')
+                                   AND STR_CD = B.STR_CD
+                                   AND CAL_TYPE = B.CAL_TYPE
+                                   AND VEN_CD = B.VEN_CD
+                                   AND PAYREC_FLAG = B.PAYREC_FLAG
+                                   AND CAL_FLAG = B.CAL_FLAG),0) + B.BOND_AMT - B.CONT_AMT
+                             , B.TAX_SUP_DT
+                             , B.USER_ID
+                             , SYSDATE
+                             , B.USER_ID
+                             , SYSDATE )  
+        ]]>
+    </query>
+    
+</service>

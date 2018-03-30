@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  회원탈퇴요청이력
+ -->
+<service name="/dctm111.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="CUST_ID"        colType="TB_STRING"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"      colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="SS_NO"          colType="TB_STRING"  size="32"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CARD_NO"        colType="TB_STRING"  size="64"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SCED_REQ_DT"    colType="TB_STRING"  size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REASON_CD"      colType="TB_STRING"  size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REASON_NM"      colType="TB_STRING"  size="30"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PROC_FLAG"      colType="TB_STRING"  size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PROC_NM"        colType="TB_STRING"  size="30"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POINT"          colType="TB_DECIMAL" size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="REMARK"   		 colType="TB_STRING"  size="200"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SCED_REQ_TYPE"      	colType="TB_STRING"  size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SCED_REQ_TYPE_NM"      colType="TB_STRING"  size="30"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />     
+        <column colName="REMARK_SCED_REQ_TYPE"	colType="TB_STRING"  size="200"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+
+    <!-- 회원탈퇴등록 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT A.CUST_ID
+                 , B.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', B.SS_NO) AS SS_NO
+                 , (SELECT MAX(DCS.SC_Crypto_FUN('DEC', CARD_NO)) 
+                      FROM DCS.DM_CARD 
+                     WHERE CUST_ID = A.CUST_ID) AS CARD_NO
+                 , A.SCED_REQ_DT
+                 , A.REASON_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D019', A.REASON_CD)  AS REASON_NM
+                 , A.PROC_FLAG
+                 , COM.FN_GET_COMM_NAME('D', 'D023', A.PROC_FLAG)  AS PROC_NM
+                 , A.POINT
+                 , A.REMARK
+                 , A.SCED_REQ_TYPE
+                 , COM.FN_GET_COMM_NAME('D', 'D117', A.SCED_REQ_TYPE)  AS SCED_REQ_TYPE_NM
+                 , A.REMARK_SCED_REQ_TYPE
+              FROM DCS.DM_SCED_HIST A
+                 , DCS.DM_CUSTOMER B
+             WHERE A.CUST_ID   = B.CUST_ID
+               AND A.REG_DATE  > ?
+               AND A.REG_DATE  < ?
+               AND A.CUST_ID IN ( SELECT M.CUST_ID 
+                                    FROM DCS.DM_CARD M
+                                       , DCS.DM_CUSTOMER N  
+                                   WHERE M.CUST_ID = N.CUST_ID
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_CARD_NO">   
+        <![CDATA[
+                                    AND M.CARD_NO    = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_CUST_ID">   
+        <![CDATA[
+                                    AND N.CUST_ID    = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_SS_NO">   
+        <![CDATA[
+                                    AND N.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>  
+    <query name="SEL_MASTER_END">   
+        <![CDATA[
+                               )
+        ]]>        
+    </query>      
+</service>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.02.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  사은행사 협력사 정보를 관리
+ -->
+<service name="/mcae101.mc">
+    <!-- 협력사 마스터 조회 -->
+    <gauce name="H_SEL_VEN_MST">
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"        colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_SALE_FLAG" colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_TYPE"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NO"       colType="TB_STRING" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_STAT"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CAT"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADDR"          colType="TB_STRING" size="120"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE_NO"      colType="TB_STRING" size="15"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_DT_FLAG"   colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_WAY"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FAX_NO"        colType="TB_STRING" size="15"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_VEN_CD"    colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_FLAG"      colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_COMP"     colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 협력사 마스터 조회 Query  -->
+    <query name="SEL_VEN_MST">
+        <![CDATA[   
+			SELECT 
+			       STR_CD
+			     , STR_NM
+			     , VEN_CD
+			     , VEN_NAME
+			     , BUY_SALE_FLAG
+			     , BIZ_TYPE
+			     , COMP_NO
+			     , COMP_NAME
+			     , REP_NAME
+			     , BIZ_STAT
+			     , BIZ_CAT
+			     , ADDR
+                 , CASE WHEN PHONE_NO = '--' THEN ''
+                        ELSE PHONE_NO END PHONE_NO
+                 , PAY_DT_FLAG
+                 , PAY_WAY
+                 , CASE WHEN FAX_NO = '--' THEN ''
+                        ELSE FAX_NO END FAX_NO
+			     , ACC_VEN_CD
+			     , VEN_FLAG
+			     , CARD_COMP
+			  FROM (
+			        SELECT
+			               DSM.STR_CD
+			             , SMT.STR_NAME AS STR_NM
+			             , DVM.VEN_CD
+			             , DVM.VEN_NAME
+			             , DVM.BUY_SALE_FLAG
+			             , COM.FN_GET_COMM_NAME('D','P002',DVM.BIZ_TYPE) AS BIZ_TYPE
+			             , DVM.COMP_NO
+			             , DVM.COMP_NAME
+			             , DVM.REP_NAME
+			             , DVM.BIZ_STAT
+			             , DVM.BIZ_CAT
+			             , DVM.ADDR ||' '|| DVM.DTL_ADDR AS ADDR
+			             , DVM.PHONE1_NO ||'-'|| DVM.PHONE2_NO ||'-'|| DVM.PHONE2_NO AS PHONE_NO
+			             , COM.FN_GET_COMM_NAME('D','P051',DSM.PAY_DT_FLAG) AS PAY_DT_FLAG 
+			             , COM.FN_GET_COMM_NAME('D','P049',DSM.PAY_WAY) AS PAY_WAY 
+			             , DVM.FAX1_NO ||'-'|| DVM.FAX2_NO ||'-'|| DVM.FAX3_NO AS FAX_NO
+			             , CASE WHEN DVM.BUY_SALE_FLAG = '1' THEN DVM.BUY_ACC_VEN_CD 
+			                    ELSE DVM.SALE_ACC_VEN_CD END AS ACC_VEN_CD
+			             , CASE WHEN (MVM.VEN_FLAG IS NULL OR MVM.VEN_FLAG = '') THEN '99'
+			                    ELSE MVM.VEN_FLAG END AS VEN_FLAG
+			             , MVM.CARD_COMP
+			          FROM DPS.PC_STRVENMST DSM
+			             , DPS.PC_VENMST    DVM     
+			             , MSS.MC_VENMST    MVM
+			             , DPS.PC_STRMST    SMT
+			         WHERE DSM.VEN_CD = DVM.VEN_CD
+			           AND DSM.STR_CD = MVM.STR_CD(+)
+			           AND DSM.VEN_CD = MVM.VEN_CD(+)
+			           AND DSM.STR_CD = SMT.STR_CD
+			           AND DVM.BIZ_FLAG = 93
+			           AND DSM.STR_CD LIKE ?||'%'
+			           AND DVM.BUY_SALE_FLAG LIKE ?||'%'
+			           AND DSM.VEN_CD LIKE ?||'%'
+			     ) TM
+			 WHERE TM.VEN_FLAG LIKE ?||'%'
+			 ORDER BY STR_CD, VEN_NAME
+        ]]>        
+    </query>
+    
+    <!-- 협력사 마스터 등록/수정 Query  -->
+    <query name="UPD_VEN_MST">
+        <![CDATA[   
+			MERGE INTO MSS.MC_VENMST
+			    USING ( SELECT COUNT(1) AS CNT FROM MSS.MC_VENMST WHERE STR_CD = ? AND VEN_CD = ?) TG
+			       ON ( TG.CNT > 0 )
+			     WHEN MATCHED THEN
+			        UPDATE 
+			           SET VEN_FLAG = ?
+			             , CARD_COMP= ?
+			             , MOD_DATE = SYSDATE
+			             , MOD_ID   = ? 
+			         WHERE STR_CD   = ?
+			           AND VEN_CD   = ?
+			     WHEN NOT MATCHED THEN
+			        INSERT 
+                         ( STR_CD
+			             , VEN_CD
+			             , VEN_FLAG
+			             , CARD_COMP
+			             , REG_DATE
+			             , REG_ID
+			             , MOD_DATE
+			             , MOD_ID)
+			        VALUES
+			             ( ?
+			             , ?
+			             , ?
+			             , ?
+			             , SYSDATE
+			             , ?
+			             , SYSDATE
+			             , ?)
+			 
+        ]]>        
+    </query>
+    
+</service>

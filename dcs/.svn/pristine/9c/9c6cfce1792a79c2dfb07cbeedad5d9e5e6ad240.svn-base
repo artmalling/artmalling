@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작   성   자 : 김영진
+ * 회   사   명 : 한국후지쯔
+ * 작   성   일 : 2010.05.02
+ * 변   경   일 : 
+ * 변경내용  : 
+ * 개          요  :  월별 포인트 잔액관리
+ -->
+<service name="/dmtc603.dc">
+    <!-- 월단위 포인트 현황  -->
+    <gauce name="H_MASTER"> 
+        <column colName="BRCH_ID"        colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PREV_POINT"     colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_POINT"      colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="USE_POINT"      colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CURR_POINT"     colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 월단위 포인트 현황 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.BRCH_ID
+                 , B.BRCH_NAME
+                 , SUM(A.PREV_POINT)  AS PREV_POINT
+                 , SUM(A.ADD_POINT)   AS ADD_POINT
+                 , SUM(A.USE_POINT)   AS USE_POINT
+                 , SUM(A.CURR_POINT)  AS CURR_POINT
+              FROM DCS.DC_POINT_RAP A
+                 , DCS.DB_BRANCH B
+             WHERE A.BRCH_ID = B.BRCH_ID
+               AND A.SUM_YM  LIKE  ? || '%'
+               AND A.BRCH_ID LIKE  ? || '%'
+             GROUP BY A.BRCH_ID, B.BRCH_NAME
+             ORDER BY A.BRCH_ID
+        ]]>        
+    </query>  
+</service>

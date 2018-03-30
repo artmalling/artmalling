@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 
+ * 작 성 일 : 2010.05.11
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  대금회계전표생성
+ -->
+<service name="/ppay313.pp">
+
+    <!-- 조회조건  리스트 -->
+    <gauce name="H_SEARCH"> 
+    <column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+    <column colName="SEND_FLAG"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PAY_YM"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PAY_CYC"        colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CNT"        colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PAY_DT"         colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 지불일자조회 (콤보) -->
+    <gauce name="H_PAY_DT">     
+    <column colName="NAME"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CODE"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--  지불일자조회(콤보)  -->
+    <query name="SEL_PAY_DT">
+        <![CDATA[
+		    SELECT DISTINCT REAL_PAY_DT       AS NAME
+                 , REAL_PAY_DT                AS CODE 
+              FROM DPS.PP_BILLMST
+             WHERE STR_CD  = ?
+               AND PAY_YM  = ?
+               AND PAY_CYC = ?
+               AND PAY_CNT = ?
+             ORDER BY CODE
+        ]]>
+    </query>
+  
+ </service>

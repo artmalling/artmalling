@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif502.mg">
+<!-- 상품권 폐기 마스터  조회  -->
+    <gauce name="H_MASTER"> 
+        <column colName="DRAWL_STR"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUSE_DT"           colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUSE_QTY_SUM"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUSE_AMT_SUM"             colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USER_NAME"             colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+    </gauce>
+   
+    
+    <gauce name="H_DETAIL"> 
+        <column colName="GIFT_TYPE_NAME"           colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"           colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"           colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_NO"      colType="TB_STRING" size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUSE_QTY"             colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUST_AMT"             colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+    </gauce>
+    
+     <!-- 상품권 폐기 마스터  조회 -->
+ <query name="SEL_GIFTDUSE_MST">
+     <![CDATA[
+         SELECT VA.DRAWL_STR,
+		        TC.STR_NAME,
+		        VA.DUSE_DT, 
+                SUM(VA.DUSE_QTY_SUM),
+                SUM(VA.DUSE_AMT_SUM),
+		        TD.USER_NAME
+		FROM (
+		  SELECT TA.DRAWL_STR,
+		         TA.DUSE_DT,
+		         SUM(NVL(TA.DUSE_QTY,0)) AS DUSE_QTY_SUM,
+		         SUM(NVL(TA.DUSE_QTY,0)) * NVL(TB.GIFTCERT_AMT,0) AS DUSE_AMT_SUM,
+		         TA.REG_ID 
+		   FROM MSS.MG_GIFTDUSE TA, 
+		        MSS.MG_GIFTAMTMST TB
+		   WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+		   AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE
+		   AND TA.ISSUE_TYPE = TB.ISSUE_TYPE
+		   AND TA.DRAWL_STR IN (SELECT STR_CD 
+		                          FROM COM.V_MYORG
+		                         WHERE USE_YN = 'Y'
+		                           AND USER_ID = ?
+		                           AND ORG_FLAG = '1'   
+		                           AND STR_CD LIKE ?||'%'
+		                           GROUP BY STR_CD )
+		  AND TA.DUSE_DT BETWEEN ? AND ?     
+		  GROUP BY TA.DRAWL_STR,
+		         TA.DUSE_DT,
+		         TB.GIFTCERT_AMT,
+		         TA.REG_ID        
+		 ) VA,
+		 DPS.PC_STRMST TC,
+		 COM.TC_USRMST TD
+		WHERE VA.DRAWL_STR = TC.STR_CD
+		  AND VA.REG_ID = TD.USER_ID
+     GROUP BY VA.DRAWL_STR
+            , TC.STR_NAME
+            , VA.DUSE_DT
+            , TD.USER_NAME
+     ORDER BY VA.DUSE_DT 
+     ]]>
+ </query>   
+ 
+ <!-- 상품권 폐기 디테일  조회 -->
+ <query name="SEL_GIFTDUSE_DTL">
+     <![CDATA[
+        SELECT TC.GIFT_TYPE_NAME,
+               TA.GIFT_AMT_TYPE,        
+		       TB.GIFT_AMT_NAME,
+		       TB.GIFTCERT_AMT,
+		       TA.GIFTCARD_NO,
+		       TA.DUSE_QTY,
+		       TA.DUSE_QTY * TB.GIFTCERT_AMT AS DUST_AMT
+		FROM MSS.MG_GIFTDUSE TA, 
+		     MSS.MG_GIFTAMTMST TB,
+		     MSS.MG_GIFTTPMST TC
+		WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+		  AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE
+		  AND TA.ISSUE_TYPE = TB.ISSUE_TYPE
+		  AND TA.GIFT_TYPE_CD = TC.GIFT_TYPE_CD
+		  AND TA.DRAWL_STR = ?
+		  AND TA.DUSE_DT = ?
+		 
+     ]]>
+ </query>   
+</service>

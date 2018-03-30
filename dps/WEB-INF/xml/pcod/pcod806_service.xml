@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  판매사원을 조회한다.
+ -->
+<service name="/pcod806.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMP_FLAG"           colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMP_FLAG_NAME"      colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_USER_ID"       colType="TB_STRING"   size="9"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMP_NAME"           colType="TB_STRING"   size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PWD_NO"             colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"             colType="TB_STRING"   size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"          colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"        colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_AUTH_FLAG"      colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_AUTH_FLAG_NAME" colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEL_NO"             colType="TB_STRING"   size="14"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEL_NO_1"           colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEL_NO_2"           colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEL_NO_3"           colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIRTH_DT"           colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LUNAR_FLAG"         colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LUNAR_FLAG_NAME"    colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PWD_MOD_DT"         colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 판매사원 마스터 조회 쿼리  -->
+    <query name="SEL_SALEUSERMST">
+        <![CDATA[
+            SELECT STR_CD        
+                 , EMP_FLAG  
+                 , COM.FN_GET_COMM_NAME('D','P025', EMP_FLAG)       AS EMP_FLAG_NAME
+                 , SALE_USER_ID  
+                 , EMP_NAME
+                 , PWD_NO        
+                 , ORG_CD
+                 , DPS.FN_GET_ORG_NAME(SUBSTR(ORG_CD,1,2)
+                                       , SUBSTR(ORG_CD,3,2)
+                                       , SUBSTR(ORG_CD,5,2)
+                                       , SUBSTR(ORG_CD,7,2)
+                                       , SUBSTR(ORG_CD,9,2))        AS ORG_NAME      
+                 , PUMBUN_CD     
+                 , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD)                AS PUMBUN_NAME   
+                 , POS_AUTH_FLAG 
+                 , COM.FN_GET_COMM_NAME('D','P083', POS_AUTH_FLAG)  AS POS_AUTH_FLAG_NAME
+                 , TEL_NO_1                     
+                   ||CASE WHEN TEL_NO_1 IS NOT NULL THEN '-' END 
+                   ||TEL_NO_2 
+                   ||CASE WHEN TEL_NO_2 IS NOT NULL THEN '-' END 
+                   ||TEL_NO_3                                      AS  TEL_NO   
+                 , TEL_NO_1      
+                 , TEL_NO_2      
+                 , TEL_NO_3      
+                 , BIRTH_DT      
+                 , LUNAR_FLAG
+                 , COM.FN_GET_COMM_NAME('D','P085', LUNAR_FLAG)     AS LUNAR_FLAG_NAME    
+                 , PWD_MOD_DT    
+                 , USE_YN
+              FROM DPS.PC_SALEUSERMST
+             WHERE STR_CD        = ?
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_ORG_CD">
+        <![CDATA[
+               AND ORG_CD        LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_ORG_NAME">
+        <![CDATA[
+               AND DPS.FN_GET_ORG_NAME(SUBSTR(ORG_CD,1,2)
+                                       , SUBSTR(ORG_CD,3,2)
+                                       , SUBSTR(ORG_CD,5,2)
+                                       , SUBSTR(ORG_CD,7,2)
+                                       , SUBSTR(ORG_CD,9,2))  LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND PUMBUN_CD        LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_PUMBUN_NAME">
+        <![CDATA[
+               AND DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD)  LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_SALE_USER_ID">
+        <![CDATA[
+               AND SALE_USER_ID  LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_EMP_NAME">
+        <![CDATA[
+               AND EMP_NAME      LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_POS_AUTH_FLAG">
+        <![CDATA[
+               AND POS_AUTH_FLAG = ?
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_EMP_FLAG">
+        <![CDATA[
+               AND EMP_FLAG      = ?
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_ORDER">
+        <![CDATA[
+             ORDER BY SALE_USER_ID
+        ]]>
+    </query>
+    
+</service>

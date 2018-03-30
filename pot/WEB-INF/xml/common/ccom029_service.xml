@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 조형욱
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.01.25
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : DPS 가맹점번호 콤보 코드 공통 XML
+ -->
+<service name="/ccom029.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_BRCH_COMBO">
+      <column colName="CODE"       colType="TB_STRING" size="15"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    
+    <!-- 가맹점번호 SQL -->
+    <query name="SEL_BRCH">
+        <![CDATA[                               
+            SELECT 
+			  A.JBRCH_ID AS CODE
+			, A.JBRCH_NM AS NAME
+			FROM  DPS.PD_BRANCH A
+			, DPS.PD_CARDCOMP B
+			WHERE A.DEL_YN = 'N' 
+			AND B.BCOMP_YN = 'Y'
+			AND A.BCOMP_CD = B.CCOMP_CD
+			AND A.BCOMP_CD LIKE ? || '%'
+			ORDER BY A.JBRCH_ID
+        ]]>
+    </query>    
+</service>

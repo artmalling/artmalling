@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2010.05.03
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 경영실적항목 분류조회 
+ -->
+<service name="/ccom221.cc">	
+
+    <!-- 분류콤보조회 -->
+    <gauce name="H_SEL_BIZ_CODE_LVL">
+        <column colName="BIZ_CD" colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="LVL"    colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CODE"   colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="NAME"   colType="TB_STRING" size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 배부기준콤보조회 -->
+    <gauce name="H_SEL_DIV">
+        <column colName="SEQ"    colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CODE"   colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="NAME"   colType="TB_STRING" size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 실적항목조회 -->
+    <gauce name="H_SEL_BIZ_LIST">
+        <column colName="CODE"    colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="NAME"    colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="RPT_YN"  colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRT_SEQ" colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"  colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 계정/예산항목조회 -->
+    <gauce name="H_SEL_ACC_LIST">
+        <column colName="CODE"    colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="NAME"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+
+    <!-- 분류콤보조회 조회쿼리 -->
+    <query name="SEL_BIZ_CODE_LVL">
+        <![CDATA[
+        SELECT BIZ_CD
+             , BIZ_CD_LEVEL AS LVL
+             , CASE BIZ_CD_LEVEL WHEN '2' THEN BIZ_M_CD
+                                 WHEN '3' THEN BIZ_S_CD
+                                 ELSE          BIZ_L_CD 
+               END          AS CODE        
+             , BIZ_CD_NM    AS NAME
+          FROM MSS.ME_BIZCDMST
+         WHERE BIZ_CD_LEVEL = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_CODE_LVL_WHERE_LCD">
+        <![CDATA[
+           AND BIZ_L_CD     = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_CODE_LVL_WHERE_MCD">
+        <![CDATA[
+           AND BIZ_M_CD     = ?
+        ]]>
+    </query>
+    
+    <!-- 전체 -->
+    <query name="SEL_ALL">
+        <![CDATA[
+         UNION ALL 
+        SELECT '000000' AS BIZ_CD
+             , ''       AS LVL
+             , '%'      AS CODE        
+             , '전체'   AS NAME
+          FROM DUAL
+         ORDER BY BIZ_CD
+        ]]>
+    </query>
+    
+    <!-- 전체 -->
+    <query name="SEL_ALL2">
+        <![CDATA[
+         UNION ALL 
+        SELECT '0'      AS SEQ
+             , '%'      AS CODE        
+             , '전체'   AS NAME
+          FROM DUAL
+         ORDER BY SEQ
+        ]]>
+    </query>
+    
+    <query name="SEL_DIV">
+        <![CDATA[
+        SELECT '1'           AS SEQ
+             , DIV.DIV_CD    AS CODE
+             , MST.DIV_CD_NM AS NAME
+          FROM MSS.ME_DIVMST   DIV
+             , MSS.ME_DIVCDMST MST
+         WHERE DIV.DIV_CD         = MST.DIV_CD
+           AND DIV.DIV_YM         = ?
+           AND DIV.DIV_SEQ_FLAG   = ?
+           AND DIV.PLAN_RSLT_FLAG = ?
+           AND DIV.STR_CD         LIKE ?||'%'
+           AND DIV.ORG_LEVEL      LIKE ?||'%'
+         GROUP BY DIV.DIV_CD
+             , MST.DIV_CD_NM
+        ]]>
+    </query>
+    
+    <query name="SEL_DIV_MST">
+        <![CDATA[
+        SELECT '1'           AS SEQ
+             , MST.DIV_CD    AS CODE
+             , MST.DIV_CD_NM AS NAME
+          FROM MSS.ME_DIVCDMST MST
+          WHERE MST.USE_YN = 'Y'  
+          
+        ]]>
+    </query>
+    
+    <!-- 실적항목리스트조회 -->
+    <query name="SEL_BIZ_LIST">
+        <![CDATA[
+        SELECT /*+ INDEX(MST PK_ME_BIZCDMST) */ BIZ_CD    AS CODE
+             , BIZ_CD_NM AS NAME
+             , RPT_YN
+             , PRT_SEQ
+             , USE_YN
+          FROM MSS.ME_BIZCDMST MST
+         WHERE 1 = 1
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_PLAN_LIST">
+        <![CDATA[
+        SELECT BIZ_CD     AS CODE
+             , BIZ_CD_NM  AS NAME
+          FROM MSS.ME_BIZPLANCDMST
+         WHERE BIZ_PLAN_YM = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_RSLT_LIST">
+        <![CDATA[
+        SELECT BIZ_CD     AS CODE
+             , BIZ_CD_NM  AS NAME
+          FROM MSS.ME_BIZRSLTCDMST 
+         WHERE BIZ_RSLT_YM = ?
+        ]]>
+    </query>
+    
+    <!-- 실적항목리스트조회 -->
+    <query name="SEL_BIZ_PLAN_LIST_WHERE_CD">
+        <![CDATA[
+           AND BIZ_CD    LIKE ? || '%'
+        ]]>
+    </query>
+    
+    <!-- 실적항목리스트조회 -->
+    <query name="SEL_BIZ_PLAN_LIST_WHERE_NM">
+        <![CDATA[
+           AND BIZ_CD_NM LIKE ? || '%'
+        ]]>
+    </query>    
+    
+    <!-- 실적항목리스트조회 -->
+    <query name="SEL_BIZ_LIST_WHERE_CD">
+        <![CDATA[
+           AND BIZ_CD    LIKE ? || '%'
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_PLAN_LIST_ORDER_BY">
+        <![CDATA[
+         ORDER BY CODE
+        ]]>
+    </query>
+    
+    <!-- 실적항목리스트조회 -->
+    <query name="SEL_BIZ_LIST_WHERE_NM">
+        <![CDATA[
+           AND BIZ_CD_NM LIKE ? || '%'
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_LIST_WHERE_LVL">
+        <![CDATA[
+           AND BIZ_CD_LEVEL = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_LIST_WHERE_PBIZ">
+        <![CDATA[
+           AND P_BIZ_CD     = ?
+        ]]>
+    </query>
+    
+    <!-- 실적항목단건정보 -->
+    <query name="SEL_BIZ_CD_NM">
+        <![CDATA[
+        SELECT BIZ_CD    AS CODE
+             , BIZ_CD_NM AS NAME
+             , RPT_YN
+             , PRT_SEQ
+             , USE_YN
+          FROM MSS.ME_BIZCDMST
+         WHERE BIZ_CD  = ?
+        ]]>
+    </query>
+    
+    <!-- 실적항목단건정보 -->
+    <query name="SEL_BIZ_PLAN_CD_NM">
+        <![CDATA[
+        SELECT BIZ_CD    AS CODE
+             , BIZ_CD_NM AS NAME
+          FROM MSS.ME_BIZPLANCDMST
+         WHERE BIZ_PLAN_YM = ?
+           AND BIZ_CD  = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_RSLT_CD_NM">
+        <![CDATA[
+        SELECT BIZ_CD    AS CODE
+             , BIZ_CD_NM AS NAME
+          FROM MSS.ME_BIZRSLTCDMST
+         WHERE BIZ_RSLT_YM = ?
+           AND BIZ_CD  = ?
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목리스트조회 -->
+    <query name="SEL_ACC_LIST">
+        <![CDATA[
+        SELECT DISTINCT ACC_CD    AS CODE
+             , ACC_CD_NM AS NAME
+          FROM MSS.ME_BIZCDDTL
+         WHERE ACC_FLAG = ?
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목리스트조회 -->
+    <query name="SEL_ACC_LIST2">
+        <![CDATA[
+        SELECT DISTINCT ACC_CD    AS CODE
+             , ACC_CD_NM          AS NAME
+          FROM MSS.ME_BIZPLANCDDTL
+         WHERE BIZ_PLAN_YM BETWEEN ? AND ?
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목리스트조회 -->
+    <query name="SEL_ACC_LIST3">
+        <![CDATA[
+        SELECT DISTINCT ACC_CD    AS CODE
+             , ACC_CD_NM          AS NAME
+          FROM MSS.ME_BIZRSLTCDDTL
+         WHERE BIZ_RSLT_YM = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_ACC_ORDER_BY">
+        <![CDATA[
+         ORDER BY ACC_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_ACC_LIST_WHERE_CD">
+        <![CDATA[
+           AND ACC_CD    LIKE ? || '%'
+        ]]>
+    </query>
+    
+    <query name="SEL_ACC_LIST_WHERE_NM">
+        <![CDATA[
+           AND ACC_CD_NM LIKE ? || '%'
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목단건정보 -->
+    <query name="SEL_ACC_CD_NM">
+        <![CDATA[
+        SELECT ACC_CD    AS CODE
+             , ACC_CD_NM AS NAME
+          FROM MSS.ME_BIZCDDTL
+         WHERE ACC_FLAG = ?
+           AND ACC_CD   = ?
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목단건정보 -->
+    <query name="SEL_ACC_CD_NM2">
+        <![CDATA[
+        SELECT ACC_CD    AS CODE
+             , ACC_CD_NM AS NAME
+          FROM MSS.ME_BIZPLANCDDTL
+         WHERE BIZ_PLAN_YM BETWEEN ? AND ?
+           AND ACC_CD   = ?
+         GROUP BY
+               ACC_CD
+             , ACC_CD_NM
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목단건정보 -->
+    <query name="SEL_ACC_CD_NM3">
+        <![CDATA[
+        SELECT ACC_CD    AS CODE
+             , ACC_CD_NM AS NAME
+          FROM MSS.ME_BIZRSLTCDDTL
+         WHERE BIZ_RSLT_YM = ?
+           AND ACC_CD      = ?
+         GROUP BY
+               ACC_CD
+             , ACC_CD_NM
+        ]]>
+    </query>
+    
+</service>
+

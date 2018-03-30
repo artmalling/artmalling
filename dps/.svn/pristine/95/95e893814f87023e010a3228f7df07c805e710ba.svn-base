@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>:::: 서비스 없이 공통 기능으로 조회 ::::</title>
+  <meta http-equiv="Content-Type" content="text/html" charset="euc-kr">
+ </head>
+
+<!-- 공통 자바 스크립트 include -->
+<script src="/js/common.js"></script>
+
+
+<script>
+/**
+ * 조회 조건 누를때 조회 처리.[공통기능 사용]
+ **/
+function fcSearch() {
+	DS.dataid ="/retrieveEmpList.bf?1=1" + getParameter(PARAM);
+	DS.reset();
+	
+	
+}
+
+/**
+ * 저장
+ **/
+function fcSave() {
+    alert(DS.text);
+	SAVE.action = "/saveEmpList.bf";
+	SAVE.post();
+}
+</script>
+
+<!-- 데이터셋 컴포넌트 -->
+<object classid=CLSID:2506B38B-0FF7-4249-BA3E-8BC1DC399FBB id=DS>
+  <param name="SyncLoad" value="false">
+  <param name="UseFilter" value="true">
+</object>
+
+<script for="DS" event="OnFilter(row)">
+    if (KeyWord.value == "") return true;
+    var str = DS.NameValue(row, "emp_nm");
+    var keyword = KeyWord.value;
+	if (str.toUpperCase().indexOf(keyword.toUpperCase()) != -1) {
+		return true;
+	} else {
+	    return false; //filter buffer
+	}
+</script>
+<script for="DS" event="OnLoadCompleted(row)">
+	alert(this.text);
+</script>
+<!-- 트랜젝션 컴포넌트 -->
+<object classid=CLSID:78E24950-4295-43d8-9B1A-1F41CD7130E5 id=SAVE>
+		<param name=KeyName		value="toinb_dataid4">
+		<param name=KeyValue	value="servlet(I:EMP=DS)">
+</object>
+ <body>
+
+  <!-- 조회 조건으로 사용할 파라미터 정의 -->
+  <span id=PARAM>
+	EMP_NO : <input type=text id=EMP_NO>
+	EMP_NM : <input type=text id=EMP_NM>
+  </span>
+  
+  <!-- 버튼 -->
+  <input type=button value="조회" onclick="fcSearch()">
+  <input type=button value="저장" onclick="fcSave()">
+  <input type=button value="추가" onclick="DS.addrow()">
+  <input type=button value="삭제" onclick="DS.deleteRow(DS.RowPosition)">
+  <hr>
+  EMP_NM : <input type=text id="KeyWord">
+  <input type=button value="Do Filter" onclick="DS.filter()">
+  <hr>
+  EMP NM : <input type="text" id="EMP_NM"><br>
+  EMP NO : <input type="text" id="TEST" readonly style="border:0"><br>
+  EMP NO : <span id=TEST2></span><br>
+  <input type=button value="Change Color" onclick="fcChangeColor()"><br>
+  <script>
+  	function fcChangeColor() {
+  		GRID.ColumnProp('emp_no','bgcolor') = "{decode(level_cd, 'Y', 'green', 'y','blue', 'N', 'yellow', 'n', 'white', 'navy')}";
+  	}
+  </script>
+  
+  <object id=GRID classid="clsid:EA8B6EE6-3DD8-4534-B4BB-27148CF0042B" width=500 height=500 class="style1"> 
+  	<param name="DataID" value="DS">
+  	<param name="editable" value="true">
+  	<param name="Format" value="
+  	    <G> id=aaaa title='개인정보'
+	  		<C> id=emp_no  title='사번' width=100 align={decode(level_cd, 'N', 'left', 'Y', 'right', 'center')} </C>
+	  		<C> id=emp_nm  title='사원명' width=100</c>
+	  		<C> id=birth_date title='생년월일' width=100</c>
+	  	</G>
+  		<C> id=dept_cd    title='부서코드' width=100</c>
+  		<C> id=level_cd   title='등급코드' width=100 align=center</c>
+  	">
+  </object>
+  
+ </body>
+</html>
+<object classid="clsid:4A35BB2C-B831-4199-A486-FEA332D085D9" id=BIND>
+	<param name=DataID		value=DS>           
+	<param name=BindInfo	value='
+			<C>Col=emp_nm	Ctrl=EMP_NM	Param=value	</C>
+			<c>col=emp_no ctrl=TEST  param=value</c>
+			<c>col=emp_no ctrl=TEST2 param=innerText</c>
+	 '>
+</object>
+<!-- 디버깅 기능을 사용할려면 아래 주석을 제거 하세요 -->
+<!-- script src="/js/debug.js"></script -->

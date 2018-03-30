@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/ppay110.pp">
+    
+    <!-- 세금계산서 생성 마스터  리스트 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_NM"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TAX_ISSUE_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TAX_ISSUE_SEQ_NO"   colType="TB_INT"     size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_CD"             colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EDI_SEQ_NO"         colType="TB_STRING"  size="24"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NO"            colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_COST_TAMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_VAT_TAMT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_TOT_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUP_AMT"            colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAT_AMT"            colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"            colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_AMT"            colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_VAT"            colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_TAMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETAX_STAT"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 세금계산서 생성 디테일  리스트 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SLIP_NO"            colType="TB_STRING"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SLIP_FLAG_NM"       colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHK_DT"             colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TAX_ISSUE_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TAX_ISSUE_SEQ_NO"   colType="TB_INT"     size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHK_COST_TAMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_VAT_TAMT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_TOT_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"             colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--  세금계산서 생성 마스터  리스트  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT 
+			       A.STR_CD                                   /*점코드*/
+			     , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM  /*점코드*/
+			     , A.TAX_ISSUE_DT                             /*세금계산서발행일자*/
+			     , A.TAX_ISSUE_SEQ_NO                         /*세금계산서발행순번*/
+			     , A.VEN_CD                                   /*협력사코드*/
+			     , DPS.FN_GET_VENDOR_NAME(A.VEN_CD) AS VEN_NM /*협력사명*/
+			     , A.EDI_SEQ_NO                               /*전자세금계산서ID*/
+			     , DPS.FN_GET_COMP_NO(A.VEN_CD)   AS COMP_NO  /*사업자번호*/
+			     , A.CHK_COST_TAMT                            /*매입 공급가*/
+			     , A.CHK_VAT_TAMT                             /*매입 부가세*/
+			     , A.CHK_TOT_AMT                              /*매입 합계금액*/
+			     , A.SUP_AMT                                  /*공급액*/
+			     , A.VAT_AMT                                  /*부가세액*/
+			     , A.TOT_AMT                                  /*합계금액*/
+			     , A.CHK_COST_TAMT   - A.SUP_AMT AS GAP_AMT   /*차익 공급액*/
+			     , A.CHK_VAT_TAMT    - A.VAT_AMT AS GAP_VAT   /*차익 부가세*/
+			     , A.CHK_TOT_AMT     - A.TOT_AMT AS GAP_TAMT  /*차익 합계금액*/           
+			     , A.ETAX_STAT
+			    FROM (
+			        SELECT SLM.STR_CD
+			             , SLM.TAX_ISSUE_DT
+			             , SLM.TAX_ISSUE_SEQ_NO
+			             , SLM.VEN_CD
+			             , MAX(NVL(TAX.EDI_SEQ_NO,' '))    AS EDI_SEQ_NO
+			             , SUM(DECODE(SLM.SLIP_FLAG, 'A', 1, -1)*SLM.CHK_COST_TAMT) AS CHK_COST_TAMT
+			             , SUM(DECODE(SLM.SLIP_FLAG, 'A', 1, -1)*SLM.CHK_VAT_TAMT)  AS CHK_VAT_TAMT
+			             , SUM(DECODE(SLM.SLIP_FLAG, 'A', 1, -1)*SLM.CHK_COST_TAMT) 
+			               + SUM(DECODE(SLM.SLIP_FLAG, 'A', 1, -1)*SLM.CHK_VAT_TAMT) AS CHK_TOT_AMT
+			             , MAX(NVL(TAX.SUP_AMT,0))   AS SUP_AMT
+			             , MAX(NVL(TAX.VAT_AMT,0))   AS VAT_AMT
+			             , MAX(NVL(TAX.SUP_AMT,0)) + MAX(NVL(TAX.VAT_AMT,0)) AS TOT_AMT
+			             , MAX(NVL(TAX.ETAX_STAT,' '))       AS ETAX_STAT
+			          FROM DPS.PO_SLPMST    SLM
+			             , DPS.PC_STRVENMST SVM
+			             , (
+			                SELECT TAX.STR_CD
+			                     , TAX.TAX_ISSUE_DT
+			                     , TAX.TAX_ISSUE_SEQ_NO
+			                     , TAX.EDI_SEQ_NO
+			                     , TAX.VEN_CD
+			                     , TAX.SUP_AMT
+			                     , TAX.VAT_AMT
+			                     , TAX.TOT_AMT
+			                     , TAX.ETAX_STAT
+			                  FROM DPS.PP_TAXMST    TAX
+			                     , DPS.PC_STRVENMST SVM
+			                 WHERE TAX.STR_CD  = ?
+			                   AND TAX.PAY_YM  = ?
+			                   AND TAX.PAY_CYC = ?
+			                   AND TAX.PAY_CNT = ?
+			                   AND SVM.STR_CD  = TAX.STR_CD
+			                   AND SVM.VEN_CD  = TAX.VEN_CD
+			                   AND SVM.PAY_CYC = TAX.PAY_CYC
+			                   
+			               ) TAX
+			         WHERE SLM.STR_CD = ?
+			           AND SLM.CHK_DT BETWEEN ? AND ?
+			           AND SLM.BIZ_TYPE LIKE ? || '%'
+			           AND SLM.TAX_FLAG LIKE ? || '%'
+			           AND SLM.SLIP_FLAG IN ('A','B')
+			           AND SLM.SLIP_PROC_STAT = '09'
+			           AND SLM.DEL_FLAG       = 'N'
+			           AND SVM.STR_CD         = SLM.STR_CD
+			           AND SVM.VEN_CD         = SLM.VEN_CD
+			           AND SVM.PAY_CYC        = ?
+			           AND TAX.STR_CD           (+)= SLM.STR_CD
+			           AND TAX.TAX_ISSUE_DT     (+)= SLM.TAX_ISSUE_DT
+			           AND TAX.TAX_ISSUE_SEQ_NO (+)= SLM.TAX_ISSUE_SEQ_NO
+			        GROUP BY SLM.STR_CD
+			               , SLM.TAX_ISSUE_DT
+			               , SLM.TAX_ISSUE_SEQ_NO
+			               , SLM.VEN_CD
+			       ) A
+        ]]>
+    </query>  
+    
+    <query name ="ORDER_BY"> 
+        <![CDATA[   
+          ORDER BY A.STR_CD, A.VEN_CD, A.TAX_ISSUE_DT DESC, A.TAX_ISSUE_SEQ_NO DESC  
+        ]]>
+    </query>
+    
+     <query name="SEL_DETAIL">
+        <![CDATA[
+            SELECT A.STR_CD
+                 , A.SLIP_NO
+                 , COM.FN_GET_COMM_NAME('D', 'P201', A.SLIP_FLAG)           AS SLIP_FLAG_NM      
+                 , A.CHK_DT
+                 , A.TAX_ISSUE_DT
+                 , A.TAX_ISSUE_SEQ_NO
+                 , SUM(DECODE(A.SLIP_FLAG,   'A', 1, -1) * A.CHK_COST_TAMT) AS CHK_COST_TAMT
+                 , SUM(DECODE(A.SLIP_FLAG,   'A', 1, -1) * A.CHK_VAT_TAMT)  AS CHK_VAT_TAMT
+                 , SUM(DECODE(A.SLIP_FLAG,   'A', 1, -1) * A.CHK_COST_TAMT)
+                   + SUM(DECODE(A.SLIP_FLAG, 'A', 1, -1) * A.CHK_VAT_TAMT)  AS CHK_TOT_AMT 
+                 , A.REMARK
+              FROM (  
+                    SELECT MST.STR_CD
+                         , MST.SLIP_NO
+                         , MST.SLIP_FLAG
+                         , MST.CHK_DT
+                         , MST.TAX_ISSUE_DT
+                         , MST.TAX_ISSUE_SEQ_NO
+                         , MST.CHK_COST_TAMT
+                         , MST.CHK_VAT_TAMT
+                         , DPS.FN_GET_ROUND_FLAG(MST.STR_CD, MST.VEN_CD)    AS ROUND_FLAG
+                         , MST.REMARK
+                    FROM DPS.PO_SLPMST MST
+                   WHERE MST.STR_CD           = ?
+                     AND MST.TAX_ISSUE_DT     = ?
+                     AND MST.TAX_ISSUE_SEQ_NO = ?
+                     AND SLIP_PROC_STAT       = '09'
+                   ) A
+            GROUP BY A.STR_CD
+                   , A.SLIP_NO
+                   , COM.FN_GET_COMM_NAME('D', 'P201', A.SLIP_FLAG)
+                   , A.CHK_DT
+                   , A.TAX_ISSUE_DT
+                   , A.TAX_ISSUE_SEQ_NO
+                   , A.REMARK
+        ]]>
+    </query> 
+ </service>

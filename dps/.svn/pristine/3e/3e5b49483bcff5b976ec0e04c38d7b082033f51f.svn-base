@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal446.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"                  colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"                 colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NAME"            	  colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="TEAM_CD"                 colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_NAME"          	  colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"                   colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PC_NAME"             	  colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"                  colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_PUMBUN_CD"           colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_PUMBUN_NAME"         colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="EVENT_FLAG"              colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"              colType="TB_STRING"      size="2"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MG_RATE"                 colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROFRATE"                colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT"    	              colType="TB_DECIMAL"     size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 행사구분 헤더 -->
+    <gauce name="H_SEL_HS_MG"> 
+        <column colName="CODE"      colType="TB_STRING"   size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"      colType="TB_STRING"   size="50" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_MG_PUMBUN">        
+        <![CDATA[
+             
+             SELECT A.STR_CD
+                  , C.DEPT_CD
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, C.TEAM_CD, '00','00')    AS TEAM_ORG_NAME
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, C.TEAM_CD, C.PC_CD,'00') AS PC_ORG_NAME
+                  , G.VEN_CD
+                  , G.VEN_NAME
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , A.EVENT_FLAG
+                  , A.EVENT_RATE
+                  , A.MG_RATE
+                  , A.TOT_SALE_AMT
+                  , A.REDU_AMT
+                  , A.NORM_SALE_AMT        AS SALE_AMT
+                  , A.DC_AMT
+                  , A.NET_SALE_AMT
+                  , A.SALE_PROF_AMT
+                  , (CASE WHEN NVL(A.NORM_SALE_AMT,0) = 0 THEN 0 
+                     ELSE 
+                          NVL(A.SALE_PROF_AMT,0)/NVL(A.NORM_SALE_AMT,0)*100
+                     END)     AS PROFRATE
+               FROM (
+                     SELECT STR_CD
+                          , DPS.FN_GET_PBNORGCD('5', STR_CD, PUMBUN_CD, ?)                    AS ORG_CD
+                          , PUMBUN_CD
+                          , EVENT_FLAG
+                          , EVENT_RATE
+                          , MG_RATE
+                          , SUM(NVL(TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                          , SUM(NVL(REDU_AMT,0))                                            AS REDU_AMT
+                          , SUM(NVL(NORM_SALE_AMT,0))                                       AS NORM_SALE_AMT
+                          , SUM(NVL(DC_AMT,0))                                              AS DC_AMT
+                          , SUM(NVL(NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+                          , SUM(NVL(SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+                       FROM DPS.PS_DAYMGPBN
+                      WHERE STR_CD    = ?
+                        AND SALE_DT    BETWEEN ? AND ?
+                        AND PUMBUN_CD  LIKE ? || '%'
+                        AND EVENT_FLAG LIKE ? || '%'
+                        AND EVENT_RATE LIKE ? || '%'
+                      GROUP BY
+                            STR_CD
+                          , PUMBUN_CD
+                          , EVENT_FLAG
+                          , EVENT_RATE
+                          , MG_RATE
+                    ) A
+                  , DPS.PC_STRPBN      F
+                  , (
+                     SELECT DISTINCT STR_CD
+                          , DEPT_CD
+                          , TEAM_CD
+                          , PC_CD
+                          , ORG_CD
+                          , PUMBUN_CD
+                          , USER_ID
+                       FROM COM.V_MYORG MYORG
+                      WHERE MYORG.STR_CD    = ?
+                        AND MYORG.DEPT_CD     LIKE ?  || '%'
+                        AND MYORG.TEAM_CD     LIKE ?  || '%'
+                        AND MYORG.PC_CD       LIKE ?  || '%'
+                        AND MYORG.USER_ID     = ?
+                    )       C
+                  , DPS.PC_VENMST  G
+              WHERE A.ORG_CD     = C.ORG_CD
+                AND A.PUMBUN_CD  = C.PUMBUN_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND F.VEN_CD     = G.VEN_CD
+				AND G.VEN_CD     LIKE ? ||'%'
+				/* AND H.PUMBUN_CD <> '210003'				 2013.02.06 이승섭 대리요청 마리오 상품권 매출 제외 */
+  
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_MG_PUMBUN2">        
+        <![CDATA[
+    	     SELECT A.STR_CD
+                  , C.DEPT_CD
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, '00', '00','00')    AS TEAM_ORG_NAME
+                  , C.TEAM_CD
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, C.TEAM_CD, '00','00')    AS TEAM_ORG_NAME
+                  , C.PC_CD
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, C.TEAM_CD, C.PC_CD,'00') AS PC_ORG_NAME
+                  , G.VEN_CD
+                  , MAX(G.VEN_NAME)                                                   AS VEN_NAME
+                  , H.REP_PUMBUN_CD
+                  , DPS.FN_GET_PUMBUN_NAME(H.REP_PUMBUN_CD)                           AS REP_PUMBUN_NAME  
+                  , ''                                                                AS PUMBUN_CD           --> 그리드에서 숨김
+                  , ''                                                                AS PUMBUN_NAME         --> 그리드에서 숨김
+                  , ''                                                                AS PUMMOK_CD           --> 그리드에서 숨김
+                  , ''                                                                AS PUMMOK_NAME         --> 그리드에서 숨김
+                  , A.EVENT_FLAG
+                  , A.EVENT_RATE
+                  , A.MG_RATE
+                  , SUM(A.TOT_SALE_AMT )        AS TOT_SALE_AMT 
+                  , SUM(A.REDU_AMT     )        AS REDU_AMT     
+                  , SUM(A.NORM_SALE_AMT)        AS SALE_AMT
+                  , SUM(A.DC_AMT       )        AS DC_AMT       
+                  , SUM(A.NET_SALE_AMT )        AS NET_SALE_AMT 
+                  , SUM(A.SALE_PROF_AMT)        AS SALE_PROF_AMT
+                  , (CASE WHEN SUM(NVL(A.NORM_SALE_AMT,0)) = 0 THEN 0 
+                     ELSE 
+                          SUM(NVL(A.SALE_PROF_AMT,0))/SUM(NVL(A.NORM_SALE_AMT,0))*100
+                     END)     AS PROFRATE
+                  , ? AS UNIT
+               FROM (
+                     SELECT STR_CD
+                          , DPS.FN_GET_PBNORGCD('5', STR_CD, PUMBUN_CD, '1')                    AS ORG_CD
+                          , PUMBUN_CD
+                          , EVENT_FLAG
+                          , EVENT_RATE
+                          , MG_RATE
+                          , SUM(NVL(TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                          , SUM(NVL(REDU_AMT,0))                                            AS REDU_AMT
+                          , SUM(NVL(NORM_SALE_AMT,0))                                       AS NORM_SALE_AMT
+                          , SUM(NVL(DC_AMT,0))                                              AS DC_AMT
+                          , SUM(NVL(NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+                          , SUM(NVL(SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+                       FROM DPS.PS_DAYMGPBN
+                      WHERE STR_CD    = ?
+                        AND SALE_DT    BETWEEN ? AND ?
+                        AND PUMBUN_CD LIKE ? || '%'
+                        AND EVENT_FLAG LIKE ? || '%'
+                        AND EVENT_RATE LIKE ? || '%'
+                      GROUP BY
+                            STR_CD
+                          , PUMBUN_CD
+                          , EVENT_FLAG
+                          , EVENT_RATE
+                          , MG_RATE
+                    ) A
+                  , DPS.PC_STRPBN      F
+                  , DPS.PC_PBNMST      H
+                  , (
+                     SELECT DISTINCT STR_CD
+                          , DEPT_CD
+                          , TEAM_CD
+                          , PC_CD
+                          , ORG_CD
+                          , PUMBUN_CD
+                          , USER_ID
+                       FROM COM.V_MYORG MYORG
+                      WHERE MYORG.STR_CD    = ?
+                        AND MYORG.DEPT_CD     LIKE ?  || '%'
+                        AND MYORG.TEAM_CD     LIKE ?  || '%'
+                        AND MYORG.PC_CD       LIKE ?  || '%'
+                        AND MYORG.USER_ID     = ?
+                    )       C
+                  , DPS.PC_VENMST  G
+              WHERE A.ORG_CD     = C.ORG_CD
+                AND A.PUMBUN_CD  = C.PUMBUN_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND H.PUMBUN_CD  = F.PUMBUN_CD
+                AND F.VEN_CD     = G.VEN_CD
+				AND G.VEN_CD     LIKE ? ||'%'
+				/* AND H.PUMBUN_CD <> '210003'				 2013.02.06 이승섭 대리요청 마리오 상품권 매출 제외 */
+              GROUP BY
+                    A.STR_CD
+                  , C.DEPT_CD
+                  , C.TEAM_CD
+                  , C.PC_CD
+                  , G.VEN_CD
+                  , H.REP_PUMBUN_CD
+                  , A.EVENT_FLAG
+                  , A.EVENT_RATE
+                  , A.MG_RATE
+    ]]>        
+    </query>
+    
+    <query name="SEL_SALE_MG_PUMBUN3">        
+        <![CDATA[
+    		 SELECT A.STR_CD
+                  , C.DEPT_CD
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, '00', '00','00')    AS TEAM_ORG_NAME
+                  , C.TEAM_CD
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, C.TEAM_CD, '00','00')    AS TEAM_ORG_NAME
+                  , C.PC_CD
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, C.TEAM_CD, C.PC_CD,'00') AS PC_ORG_NAME
+                  , G.VEN_CD
+                  , MAX(G.VEN_NAME)                                                   AS VEN_NAME
+                  , ''                                                                AS REP_PUMBUN_CD       --> 그리드에서 숨김
+                  , ''                                                                AS REP_PUMBUN_NAME     --> 그리드에서 숨김
+                  , A.PUMBUN_CD                                                       AS PUMBUN_CD           
+                  , DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD)                               AS PUMBUN_NAME         
+                  , ''                                                                AS PUMMOK_CD           --> 그리드에서 숨김
+                  , ''                                                                AS PUMMOK_NAME         --> 그리드에서 숨김
+                  , A.EVENT_FLAG
+                  , A.EVENT_RATE
+                  , A.MG_RATE
+                  , SUM(A.TOT_SALE_AMT )        AS TOT_SALE_AMT 
+                  , SUM(A.REDU_AMT     )        AS REDU_AMT     
+                  , SUM(A.NORM_SALE_AMT)        AS SALE_AMT
+                  , SUM(A.DC_AMT       )        AS DC_AMT       
+                  , SUM(A.NET_SALE_AMT )        AS NET_SALE_AMT 
+                  , SUM(A.SALE_PROF_AMT)        AS SALE_PROF_AMT
+                  , (CASE WHEN SUM(NVL(A.NORM_SALE_AMT,0)) = 0 THEN 0 
+                     ELSE 
+                          SUM(NVL(A.SALE_PROF_AMT,0))/SUM(NVL(A.NORM_SALE_AMT,0))*100
+                     END)     AS PROFRATE
+                  , ? AS UNIT
+               FROM (
+                     SELECT STR_CD
+                          , DPS.FN_GET_PBNORGCD('5', STR_CD, PUMBUN_CD, '1')                    AS ORG_CD
+                          , PUMBUN_CD
+                          , EVENT_FLAG
+                          , EVENT_RATE
+                          , MG_RATE
+                          , SUM(NVL(TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                          , SUM(NVL(REDU_AMT,0))                                            AS REDU_AMT
+                          , SUM(NVL(NORM_SALE_AMT,0))                                       AS NORM_SALE_AMT
+                          , SUM(NVL(DC_AMT,0))                                              AS DC_AMT
+                          , SUM(NVL(NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+                          , SUM(NVL(SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+                       FROM DPS.PS_DAYMGPBN
+                      WHERE STR_CD    = ?
+                        AND SALE_DT    BETWEEN ? AND ?
+                        AND PUMBUN_CD  LIKE ? || '%'
+                        AND EVENT_FLAG LIKE ? || '%'
+                        AND EVENT_RATE LIKE ? || '%'
+                      GROUP BY
+                            STR_CD
+                          , PUMBUN_CD
+                          , EVENT_FLAG
+                          , EVENT_RATE
+                          , MG_RATE
+                    ) A
+                  , DPS.PC_STRPBN      F
+                  , DPS.PC_PBNMST      H
+                  , (
+                     SELECT DISTINCT STR_CD
+                          , DEPT_CD
+                          , TEAM_CD
+                          , PC_CD
+                          , ORG_CD
+                          , PUMBUN_CD
+                          , USER_ID
+                       FROM COM.V_MYORG MYORG
+                      WHERE MYORG.STR_CD    = ?
+                        AND MYORG.DEPT_CD     LIKE ?  || '%'
+                        AND MYORG.TEAM_CD     LIKE ?  || '%'
+                        AND MYORG.PC_CD       LIKE ?  || '%'
+                        AND MYORG.USER_ID     = ?
+                    )       C
+                  , DPS.PC_VENMST  G
+              WHERE A.ORG_CD     = C.ORG_CD
+                AND A.PUMBUN_CD  = C.PUMBUN_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND H.PUMBUN_CD  = F.PUMBUN_CD
+                AND F.VEN_CD     = G.VEN_CD
+				AND G.VEN_CD     LIKE ? ||'%'
+				/* AND H.PUMBUN_CD <> '210003'				 2013.02.06 이승섭 대리요청 마리오 상품권 매출 제외 */
+              GROUP BY
+                    A.STR_CD
+                  , C.DEPT_CD
+                  , C.TEAM_CD
+                  , C.PC_CD
+                  , G.VEN_CD
+                  , A.PUMBUN_CD
+                  , A.EVENT_FLAG
+                  , A.EVENT_RATE
+                  , A.MG_RATE
+    ]]>        
+    </query>
+    
+    <query name="SEL_SALE_MG_PUMBUN4">        
+        <![CDATA[
+    		 SELECT A.STR_CD
+                  , C.DEPT_CD
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, '00', '00','00')    AS TEAM_ORG_NAME
+                  , C.TEAM_CD
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, C.TEAM_CD, '00','00')    AS TEAM_ORG_NAME
+                  , C.PC_CD
+                  , DPS.FN_GET_ORG_NAME(A.STR_CD, C.DEPT_CD, C.TEAM_CD, C.PC_CD,'00') AS PC_ORG_NAME
+                  , G.VEN_CD
+                  , MAX(G.VEN_NAME)                                                   AS VEN_NAME
+                  , ''                                                                AS REP_PUMBUN_CD     --> 그리드 숨기기
+                  , ''                                                                AS REP_PUMBUN_NAME   --> 그리드 숨기기
+                  , A.PUMBUN_CD                                                       AS PUMBUN_CD  
+                  , DPS.FN_GET_PUMBUN_NAME(H.REP_PUMBUN_CD)                           AS PUMBUN_NAME
+                  , A.PUMMOK_CD                                                       AS PUMMOK_CD
+                  , DPS.FN_GET_PUMMOK_NAME(A.PUMMOK_CD)                               AS PUMMOK_NAME
+                  , A.EVENT_FLAG
+                  , A.EVENT_RATE
+                  , A.MG_RATE
+                  , SUM(A.TOT_SALE_AMT )        AS TOT_SALE_AMT 
+                  , SUM(A.REDU_AMT     )        AS REDU_AMT     
+                  , SUM(A.NORM_SALE_AMT)        AS SALE_AMT
+                  , SUM(A.DC_AMT       )        AS DC_AMT       
+                  , SUM(A.NET_SALE_AMT )        AS NET_SALE_AMT 
+                  , SUM(A.SALE_PROF_AMT)        AS SALE_PROF_AMT
+                  , (CASE WHEN SUM(NVL(A.NORM_SALE_AMT,0)) = 0 THEN 0 
+                     ELSE 
+                          SUM(NVL(A.SALE_PROF_AMT,0))/SUM(NVL(A.NORM_SALE_AMT,0))*100
+                     END)     AS PROFRATE
+                  , ? AS UNIT
+               FROM (
+                     SELECT STR_CD
+                          , DPS.FN_GET_PBNORGCD('5', STR_CD, PUMBUN_CD, '1')                    AS ORG_CD
+                          , PUMBUN_CD
+                          , PUMMOK_CD
+                          , EVENT_FLAG
+                          , EVENT_RATE
+                          , MG_RATE
+                          , SUM(NVL(TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                          , SUM(NVL(REDU_AMT,0))                                            AS REDU_AMT
+                          , SUM(NVL(NORM_SALE_AMT,0))                                       AS NORM_SALE_AMT
+                          , SUM(NVL(DC_AMT,0))                                              AS DC_AMT
+                          , SUM(NVL(NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+                          , SUM(NVL(SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+                       FROM DPS.PS_DAYMGPBN
+                      WHERE STR_CD    = ?
+                        AND SALE_DT    BETWEEN ? AND ?
+                        AND PUMBUN_CD  LIKE ? || '%'
+                        AND EVENT_FLAG LIKE ? || '%'
+                        AND EVENT_RATE LIKE ? || '%'
+                      GROUP BY
+                            STR_CD
+                          , PUMBUN_CD
+                          , PUMMOK_CD
+                          , EVENT_FLAG
+                          , EVENT_RATE
+                          , MG_RATE
+                    ) A
+                  , DPS.PC_STRPBN      F
+                  , DPS.PC_PBNMST      H
+                  , (
+                     SELECT DISTINCT STR_CD
+                          , DEPT_CD
+                          , TEAM_CD
+                          , PC_CD
+                          , ORG_CD
+                          , PUMBUN_CD
+                          , USER_ID
+                       FROM COM.V_MYORG MYORG
+                      WHERE MYORG.STR_CD    = ?
+                        AND MYORG.DEPT_CD     LIKE ?  || '%'
+                        AND MYORG.TEAM_CD     LIKE ?  || '%'
+                        AND MYORG.PC_CD       LIKE ?  || '%'
+                        AND MYORG.USER_ID     = ?
+                    )       C
+                  , DPS.PC_VENMST  G
+              WHERE A.ORG_CD     = C.ORG_CD
+                AND A.PUMBUN_CD  = C.PUMBUN_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND H.PUMBUN_CD  = F.PUMBUN_CD
+                AND F.VEN_CD     = G.VEN_CD
+				AND G.VEN_CD     LIKE ? ||'%'
+				/* AND H.PUMBUN_CD <> '210003'				 2013.02.06 이승섭 대리요청 마리오 상품권 매출 제외 */
+              GROUP BY
+                    A.STR_CD
+                  , C.DEPT_CD
+                  , C.TEAM_CD
+                  , C.PC_CD
+                  , G.VEN_CD
+                  , H.REP_PUMBUN_CD
+                  , A.PUMBUN_CD
+                  , A.PUMMOK_CD
+                  , A.EVENT_FLAG
+                  , A.EVENT_RATE
+                  , A.MG_RATE
+    ]]>        
+    </query>
+   <!--  
+    <query name="SEL_SALE_MG_WHERE_VEN_CD">
+        <![CDATA[
+                AND G.VEN_CD   LIKE ? || '%'             
+        ]]>    
+    </query>
+     -->
+    <query name="SEL_SALE_MG_ORDER">
+        <![CDATA[
+          ORDER BY
+                A.STR_CD
+              , C.DEPT_CD
+              , C.TEAM_CD
+              , C.PC_CD
+              , G.VEN_CD
+              , H.REP_PUMBUN_CD
+              , A.EVENT_FLAG
+              , A.EVENT_RATE
+              , A.MG_RATE     
+        ]]>    
+    </query> 
+    <query name="SEL_SALE_MG_ORDER2">
+        <![CDATA[
+         ORDER BY
+                A.STR_CD
+              , C.DEPT_CD
+              , C.TEAM_CD
+              , C.PC_CD
+              , G.VEN_CD
+              , A.PUMBUN_CD
+              , A.EVENT_FLAG
+              , A.EVENT_RATE
+              , A.MG_RATE     
+        ]]>    
+    </query>      
+    
+    <!-- 행사구분 -->
+    <query name="SEL_HS_MG">        
+        <![CDATA[
+            SELECT '%'    AS CODE
+                 , '전체'  AS NAME  
+              FROM DUAL
+               
+            UNION ALL
+           
+			SELECT A.EVENT_FLAG || A.EVENT_RATE AS CODE
+			    ,  A.EVENT_FLAG || A.EVENT_RATE AS NAME
+			  FROM DPS.PC_MARGINMST A
+			 WHERE A.STR_CD     = ?
+			   AND A.PUMBUN_CD  = ?
+			   --AND A.EVENT_FLAG = '00'
+			   AND A.MG_FLAG    = '0'
+			   --AND A.EVENT_RATE = '00'
+			   --AND A.EVENT_CD   = '00000000000'
+               AND A.APP_E_DT   >= ?
+               AND A.APP_S_DT   <= ? 
+        ]]>        
+    </query>   
+</service>

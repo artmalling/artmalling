@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.16
+ * 변 경 일 :
+ * 변경내용 :
+ * 개    요 : 품목코드 공통 XML
+ -->
+<service name="/ccom009.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_PMKMST">
+      <column colName="SEL"           colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMMOK_CD"     colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMMOK_NAME"   colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="RECP_NAME"     colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMMOK_LEVEL"  colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="L_CD"          colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="M_CD"          colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="S_CD"          colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="D_CD"          colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="UNIT_CD"       colType="TB_STRING" size="3"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="TAG_FLAG"      colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMMOK_SRT_CD" colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 품목코드조회 SQL -->
+    <query name="SEL_PMKMST">
+        <![CDATA[                                        
+            SELECT 'F'        AS SEL
+                 , PUMMOK_CD
+                 , PUMMOK_NAME
+                 , RECP_NAME
+                 , PUMMOK_LEVEL
+                 , L_CD
+                 , M_CD
+                 , S_CD
+                 , D_CD
+                 , UNIT_CD
+                 , TAG_FLAG
+                 , PUMMOK_SRT_CD
+              FROM DPS.PC_PMKMST
+             WHERE 1 = 1
+        ]]>
+    </query>
+
+    <query name="SEL_PMKMST_WHERE_PUMMOK_CD">
+        <![CDATA[
+               AND PUMMOK_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_PMKMST_WHERE_LIKE_PUMMOK_CD">
+        <![CDATA[
+               AND PUMMOK_CD   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_PMKMST_WHERE_PUMMOK_NM">
+        <![CDATA[
+               AND PUMMOK_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_PMKMST_WHERE_FRESH_YN">
+        <![CDATA[
+               AND FRESH_YN    = ?
+        ]]>
+    </query>
+    <query name="SEL_PMKMST_WHERE_USE_YN">
+        <![CDATA[
+               AND USE_YN      = ?
+        ]]>
+    </query>
+    <query name="SEL_PMKMST_WHERE_PUMMOK_LEVEL">
+        <![CDATA[
+               AND PUMMOK_LEVEL  = ?
+        ]]>
+    </query>
+    <query name="SEL_PMKMST_START_WITH">
+        <![CDATA[
+             START WITH P_PUMMOK_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_PMKMST_CONNECT_BY">
+        <![CDATA[
+           CONNECT BY PRIOR P_PUMMOK_CD = PUMMOK_CD
+        ]]>
+    </query>
+    <query name="SEL_PMKMST_ORDER">
+        <![CDATA[
+             ORDER BY PUMMOK_CD
+        ]]>
+    </query>
+</service>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 감성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.08.29
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  사은품 예외지급 현황 조회
+ -->
+<service name="/mcae410.mc">
+
+<!-- 사은행사 MASTER 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"          colType="TB_STRING"     size="11"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_S_DT"        colType="TB_STRING"     size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_E_DT"        colType="TB_STRING"     size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_DT"          colType="TB_STRING"     size="30"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLU_FLAG"    colType="TB_STRING"     size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="USR_NAME"          colType="TB_STRING"     size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <gauce name="H_DETAIL">  
+        <column colName="PRSNT_DT"              colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_CD"                colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SKU_NAME"              colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BUY_COST_PRC"              colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EXCP_PRSNT_RSN"          colType="TB_STRING"    size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="RSN_NAME"                colType="TB_STRING"    size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EXCP_CONF_ID"             colType="TB_STRING"    size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="CONF_NAME"        colType="TB_STRING"    size="9"    dec="40" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+    
+    <query name="SEL_MASTER">
+        <![CDATA[   
+                SELECT A.STR_CD
+                     , A.EVENT_CD
+			         , B.EVENT_NAME
+			         , C.EVENT_S_DT
+			         , C.EVENT_E_DT
+			         , (C.EVENT_S_DT||C.EVENT_E_DT) AS EVENT_DT
+			         , COM.FN_GET_COMM_NAME('D','M002',A.EVENT_TYPE) AS EVENT_PLU_FLAG
+			         , COM.FN_GET_USER_NAME(A.CHAR_ID) AS USR_NAME
+			      FROM MSS.MC_EVTMST A, DPS.PC_EVTMST B, DPS.PC_STREVT C
+			     WHERE A.EVENT_CD = B.EVENT_CD
+			       AND A.STR_CD   = C.STR_CD
+                   AND A.EVENT_CD = C.EVENT_CD
+			       AND A.STR_CD = ?
+			       AND ((? >= C.EVENT_S_DT AND ? <= C.EVENT_E_DT) OR
+			                    (? >= C.EVENT_S_DT AND ? <= C.EVENT_E_DT) OR
+			                    (C.EVENT_S_DT >= ? AND C.EVENT_S_DT <= ?) OR
+			                    (C.EVENT_E_DT >= ? AND C.EVENT_E_DT <= ?))
+			       AND A.EVENT_CD LIKE ? || '%'
+			  ORDER BY A.STR_CD
+			         , A.EVENT_CD
+        ]]>        
+    </query>
+    
+    <query name="SEL_DETAIL">
+        <![CDATA[   
+          SELECT PRSNT_DT
+	           , A.SKU_CD
+	           , SKU_NAME
+	           , C.BUY_COST_PRC
+	           , EXCP_PRSNT_RSN
+	           , COM.FN_GET_COMM_NAME('D','M073', EXCP_PRSNT_RSN) AS RSN_NAME
+	           , EXCP_CONF_ID
+	           , COM.FN_GET_USER_NAME(EXCP_CONF_ID) AS CONF_NAME
+	      FROM MSS.MC_EVTSKUPRSNT A, DPS.PC_STRSKUMST B , MSS.MC_EVTSKUMST C
+	      WHERE A.STR_CD = B.STR_CD
+	        AND A.SKU_CD = B.SKU_CD
+	        AND A.STR_CD = C.STR_CD
+	        AND A.EVENT_CD = C.EVENT_CD
+	        AND A.SKU_CD = C.SKU_CD
+	        AND PRSNT_FLAG = '2' AND CANCEL_GB = '1'
+	        AND A.STR_CD = ?
+	        AND A.EVENT_CD = ?
+	      ORDER BY PRSNT_DT, A.SKU_CD
+        ]]>        
+    </query>
+</service>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.09
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  세금계산서비교 조회
+ -->
+<service name="/ppay115.pp">
+    <!-- 세금계산서비교  리스트 -->
+    <gauce name="H_MASTER"> 
+    <column colName="VEN_CD"             colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="VEN_NAME"             colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="COMP_NO"            colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="TAX_FLAG"            colType="TB_STRING"  size="100"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="COMP_FLAG"         colType="TB_STRING"  size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="DPS_SUP_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="DPS_VAT_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="DPS_TOT_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="ACC_SUP_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="ACC_VAT_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="ACC_TOT_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="SUP_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VAT_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="TOT_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="B_FLAG"            colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+   
+    
+    <!--  세금계산서비교 리스트  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+        SELECT VEN_CD       AS VEN_CD
+                              ,VEN_NAME     AS VEN_NAME
+                              ,COMP_NO      AS COMP_NO 
+                              ,TAX_FLAG     AS TAX_FLAG
+                              ,COM.FN_GET_COMM_NAME('D', 'P024', COMP_FLAG) AS COMP_FLAG
+                              ,SUM(DPS_SUP_AMT) AS DPS_SUP_AMT
+                              ,SUM(DPS_VAT_AMT) AS DPS_VAT_AMT
+                              ,SUM(DPS_TOT_AMT) AS DPS_TOT_AMT
+                              ,SUM(ACC_SUP_AMT) AS ACC_SUP_AMT
+                              ,SUM(ACC_VAT_AMT) AS ACC_VAT_AMT
+                              ,SUM(ACC_TOT_AMT) AS ACC_TOT_AMT
+                              ,SUM(DPS_SUP_AMT) - SUM(ACC_SUP_AMT) AS SUP_AMT
+                              ,SUM(DPS_VAT_AMT) - SUM(ACC_VAT_AMT) AS VAT_AMT
+                              ,SUM(DPS_TOT_AMT) - SUM(ACC_TOT_AMT) AS TOT_AMT
+                              ,CASE WHEN SUM(DPS_SUP_AMT) != SUM(ACC_SUP_AMT) 
+                                    OR SUM(DPS_VAT_AMT) != SUM(ACC_VAT_AMT)
+                                    OR SUM(DPS_TOT_AMT) != SUM(ACC_TOT_AMT) 
+                                    THEN 'N'
+                                    ELSE 'Y' END AS B_FLAG
+                         FROM (     
+                           SELECT   A.VEN_CD        AS VEN_CD     
+                                  , B.VEN_NAME      AS VEN_NAME
+                                  , DECODE(A.TAX_FLAG,'1','과세','면세')      AS TAX_FLAG
+                                  , B.COMP_NO       AS COMP_NO
+                                  , B.COMP_FLAG     AS COMP_FLAG
+                                  , SUM(NVL(A.SUP_AMT,0))  AS DPS_SUP_AMT
+                                  , SUM(NVL(A.VAT_AMT,0))  AS DPS_VAT_AMT
+                                  , SUM(NVL(A.TOT_AMT,0))  AS DPS_TOT_AMT
+                                  , 0               AS ACC_SUP_AMT
+                                  , 0               AS ACC_VAT_AMT
+                                  , 0               AS ACC_TOT_AMT
+                            FROM DPS.PP_TAXMST A
+                                 ,DPS.PC_VENMST B
+                            WHERE A.VEN_CD = B.VEN_CD
+                            AND A.STR_CD = ?
+                            AND A.TAX_INV_FLAG = '1'
+                            AND A.TAX_ISSUE_DT BETWEEN ? AND ?
+                            GROUP BY A.VEN_CD, B.VEN_NAME, A.TAX_FLAG, B.COMP_NO, B.COMP_FLAG
+                         UNION ALL  
+                            SELECT  A.ACUSTCD           AS VEN_CD
+                                  , B.VEN_NAME          AS VEN_NAME
+                                  , CASE WHEN SUBSTR(A.EVDTYPE,0,2) ='01' OR SUBSTR(A.EVDTYPE,0,2) ='02'
+                                         THEN '과세' 
+                                    ELSE CASE WHEN SUBSTR(A.EVDTYPE,0,2) ='03' OR SUBSTR(A.EVDTYPE,0,2) ='04' 
+                                         THEN '면세'  END END           AS TAX_FLAG
+                                  , B.COMP_NO           AS COMP_NO
+                                  , B.COMP_FLAG     AS COMP_FLAG
+                                  , 0                   AS DPS_SUP_AMT
+                                  , 0                   AS DPS_VAT_AMT
+                                  , 0                   AS DPS_TOT_AMT
+                                  , SUM(NVL(A.SUPPLYAMT,0))    AS ACC_SUP_AMT
+                                  , SUM(NVL(A.VAT,0))          AS ACC_VAT_AMT
+                                  , SUM(NVL(A.SUPPLYAMT,0))+SUM(NVL(A.VAT,0))           AS ACC_TOT_AMT
+                            FROM  ACC.ATACC04 A
+                                 ,DPS.PC_VENMST B
+                            WHERE A.ACUSTCD = B.VEN_CD
+                            AND A.ACCTUT = ?
+                            AND A.TAX_INV_FLAG = '2'
+                            AND A.BUYTYPE = '01'
+                            AND A.EVD_DT BETWEEN ? AND ?
+                            GROUP BY A.ACUSTCD, B.VEN_NAME, A.EVDTYPE, B.COMP_NO, B.COMP_FLAG
+                          )  
+                          GROUP BY VEN_CD, VEN_NAME, TAX_FLAG, COMP_NO, COMP_FLAG
+                          ORDER BY VEN_CD, VEN_NAME, COMP_NO, COMP_FLAG, TAX_FLAG  
+        ]]>
+    </query> 
+    
+    
+ </service>

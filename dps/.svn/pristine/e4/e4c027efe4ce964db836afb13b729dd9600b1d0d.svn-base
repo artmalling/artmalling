@@ -1,0 +1,211 @@
+<!-- 
+/*******************************************************************************
+ * 시스템명 : 매출현황 > 매출실적 > 무인정산자료 비교표 상세
+ * 작 성 일 : 2016.10.27
+ * 작 성 자 : 박래형
+ * 수 정 자 : 
+ * 파 일 명 : psal6101.jsp
+ * 버    전 : 1.0 (버전은 1.0부터 시작하며 0.1씩 증가)
+ * 개    요 : 무인정산자료 비교표조회 한다.
+ * 이    력 :
+ *        2016.10.27 (박래형) 신규작성
+ ******************************************************************************/
+-->
+<%@ page language="java" contentType="text/html;charset=utf-8" %>
+<%@ page import="common.util.Util, common.vo.SessionInfo, kr.fujitsu.ffw.base.BaseProperty" %>
+<%@ taglib uri="/WEB-INF/tld/c-rt.tld" prefix="c" %>
+<%@ taglib uri="/WEB-INF/tld/gauce40.tld"         prefix="gauce" %>  
+<%@ taglib uri="/WEB-INF/tld/app.tld"             prefix="loginChk" %>
+<%@ taglib uri="/WEB-INF/tld/button.tld"         prefix="button" %>
+
+<!--*************************************************************************-->
+<!--* A. 로그인 유무, 기본설정                                                *-->
+<!--*************************************************************************-->
+<loginChk:islogin />
+<%String dir = BaseProperty.get("context.common.dir");%>
+<html>
+<head>
+<title>무인정산기 상세조회</title>
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="/<%=dir%>/css/mds.css" rel="stylesheet" type="text/css">
+<script language="javascript" src="/<%=dir%>/js/common.js"  type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/gauce.js"   type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/global.js"  type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/message.js" type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/popup.js"   type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/popup_dps.js"   type="text/javascript"></script>
+
+<!--*************************************************************************-->
+<!--* B. 스크립트 시작 
+<!--*************************************************************************-->
+<script language="javascript" type="text/javascript">
+
+/*************************************************************************
+ * 1. 초기설정
+ *************************************************************************/
+
+ var strStrCd = dialogArguments[0];
+ var strStrDt = dialogArguments[1];
+ var strEndDt = dialogArguments[2];
+ var strPosNo = dialogArguments[3];
+ 
+/**
+ * doInit() 
+ * 작 성 자 : FKL
+ * 작 성 일 : 2010.03.25
+ * 개    요 : 해당 페이지 LOAD 시  
+ * return값 : void
+ */
+
+function doInit(){
+	 gridCreate();
+	 btn_Search();
+}
+
+/**
+ * gridCreate()
+ * 작 성 자 : 박래형
+ * 작 성 일 : 2016-10-27
+ * 개    요 : 그리드 초기화 
+ * return값 : void
+ */
+function gridCreate(){
+
+	var hdrProperies = '<FC>id={currow}           name="NO"           width=40      align=center            </FC>'
+	                 + '<FC> id=STR_CD            name="점"           width=80      align=left   show=false </FC>'
+	                 + '<FC> id=SALE_DT           name="매출일자"     width=90      align=center show=true  suppress=1 mask="XXXX/XX/XX" </FC>'                      
+	                 + '<FC> id=PUMBUN_CD         name="브랜드코드"   width=80      align=center show=true  </FC>'                
+	                 + '<FC> id=PUMBUN_NAME       name="브랜드명"     width=120     align=left   show=true  sumtext="합  계" </FC>'
+	                 + '<FC> id=SALE_AMT          name="현금"         width=120     align=right  show=true  sumtext=@sum     </FC>'
+	                 ;
+	                 
+    initGridStyle(GD_DETAIL, "common", hdrProperies, false);
+    GD_DETAIL.Editable	  =	false;
+    GD_DETAIL.ViewSummary =	"1";	//합계 보이기
+}
+
+/*************************************************************************
+  * 2. 공통버튼
+     (1) 조회       - btn_Search(), subQuery()
+     (2) 신규       - btn_New()
+     (3) 삭제       - btn_Delete()
+     (4) 저장       - btn_Save()
+     (5) 엑셀       - btn_Excel()
+     (6) 출력       - btn_Print()
+     (7) 확정       - btn_Conf()
+ *************************************************************************/
+
+/*************************************************************************
+ * 3. 함수
+ *************************************************************************/
+ /**
+  * btn_Search()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2010.04.19
+  * 개    요 : 조회시 호출
+  * return값 : void
+  */
+function btn_Search() {
+    
+    var goTo         = "searchDetail";    
+    var action       = "O";  
+    var parameters   = "&strStrCd=" + encodeURIComponent(strStrCd)
+				     + "&strStrDt=" + encodeURIComponent(strStrDt)
+				     + "&strEndDt=" + encodeURIComponent(strEndDt)
+				     + "&strPosNo=" + encodeURIComponent(strPosNo)
+				     ;
+    TR_MAIN.Action   ="/dps/psal610.ps?goTo="+goTo+parameters;  
+    TR_MAIN.KeyValue ="SERVLET("+action+":DS_DETAIL=DS_DETAIL)";
+    TR_MAIN.Post();
+
+}
+  
+</script>
+</head>
+<!--*************************************************************************-->
+<!--* B. 스크립트 끝
+<!--*************************************************************************-->
+
+<!--*************************************************************************-->
+<!--* C. 가우스 이벤트 처리
+<!--*    1. TR Success 메세지 처리
+<!--*    2. TR Fail 메세지 처리
+<!--*    3. DataSet Success 메세지 처리
+<!--*    4. DataSet Fail 메세지 처리
+<!--*    5. DataSet 이벤트 처리
+<!--*************************************************************************-->
+<!--------------------- 1. TR Success 메세지 처리  ---------------------------->
+<script language=JavaScript for=TR_MAIN event=onSuccess>
+    for(i=0;i<TR_MAIN.SrvErrCount('UserMsg');i++) {
+        showMessage(INFORMATION, OK, "USER-1000", TR_MAIN.SrvErrMsg('UserMsg',i));
+    }
+</script>
+<!--------------------- 2. TR Fail 메세지 처리  ------------------------------->
+<script language=JavaScript for=TR_MAIN event=onFail>
+    trFailed(TR_MAIN.ErrorMsg);
+</script>
+<!--------------------- 3. DataSet Success 메세지 처리  ----------------------->
+<!--------------------- 4. DataSet Fail 메세지 처리  -------------------------->
+<!--------------------- 5. DataSet 이벤트 처리  ------------------------------->  
+<script language=JavaScript for=DS_DETAIL event=OnRowPosChanged(row)>
+</script>
+
+<!--------------------- 6. 컴포넌트 이벤트 처리  -------------------------------->
+<!--*************************************************************************-->
+<!--* C. 가우스 이벤트 처리 끝 
+<!--*************************************************************************-->
+
+<!--*************************************************************************-->
+<!--* D. 가우스 DataSet & Transaction 정의 
+<!--*    1. DataSet
+<!--*    2. Transaction
+<!--*************************************************************************-->
+
+<!--------------------- 1. DataSet  ------------------------------------------->
+<!-- =============== Input용 -->
+<comment id="_NSID_"><object id="DS_DETAIL"  classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+
+<!-- =============== 공통함수용 -->
+<comment id="_NSID_"><object id="DS_I_COMMON"           classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="DS_I_CONDITION"        classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="DS_O_RESULT"           classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+<!--------------------- 2. Transaction  --------------------------------------->
+<comment id="_NSID_">
+<object id="TR_MAIN" classid=<%=Util.CLSID_TRANSACTION%>>
+	<param name="KeyName" value="Toinb_dataid4">
+</object>
+</comment>
+<script>_ws_(_NSID_);</script>
+
+<!--*************************************************************************-->
+<!--* D. 가우스 DataSet & Transaction 정의 끝 
+<!--*************************************************************************-->
+
+<!--*************************************************************************-->
+<!--* E. 본문시작 
+<!--*************************************************************************-->
+
+<body  onload="doInit();" class="PL10 PT15">
+
+<div id="testdiv" class="testdiv">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+        <td class="PT01 PB03">
+			<table width="100%" border="0" cellspacing="0" cellpadding="0" class="BD4A" >
+				<tr>
+					<td width="100%" >
+						<comment id="_NSID_"><object id=GD_DETAIL width="100%" height=350px classid=<%=Util.CLSID_GRID%>>
+							<param name="DataID" value="DS_DETAIL">
+						</object></comment><script>_ws_(_NSID_);</script>
+					</td>
+				</tr>
+			</table>
+        
+        </td>
+    </tr>
+
+</table>
+</body>
+</html>
+

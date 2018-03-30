@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.06.04
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  SMS 회원 조회(브랜드)
+ -->
+<service name="/dbri320.db">
+    <!-- SMS 회원 조회(브랜드)  -->
+    <gauce name="H_MASTER"> 
+        <column colName="RANK"    		colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"       colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH"     colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL"    		colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_POINT"     colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"  	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH1"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL1"    	colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL2"    	colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_ADDR"    	colType="TB_STRING"  size="400" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CNT"  	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VISIT_CNT"  	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_GRADE"    colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_TYPE"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- SMS 회원 조회(브랜드) -->
+    <query name="SEL_MASTER_BAK">        
+        <![CDATA[
+			SELECT
+			    RANK
+			    , CUST_ID
+			    , CUST_NAME
+			    , '' AS MOBILE_PH
+			    , '' AS EMAIL
+			    , (SELECT SUM(ADD_POINT)
+			         FROM DCS.DM_CARD A
+			                 , DCS.DO_POINT_ADD B
+			        WHERE A.CUST_ID = Z.CUST_ID
+			          AND A.CARD_NO = B.CARD_NO
+			          AND B.SALE_DT >= ? AND B.SALE_DT <= ?
+			       ) ADD_POINT
+			
+			    , SALE_AMT
+			    , MOBILE_PH1
+			    , MOBILE_PH2
+			    , MOBILE_PH3
+			    , EMAIL1
+			    , EMAIL2
+			    , DECODE(HOME_ZIP_CD1,'','',HOME_ZIP_CD1||'-') || HOME_ZIP_CD2 || ' ' || HOME_ADDR1 || ' ' || HOME_ADDR1 AS HOME_ADDR 
+			FROM
+			(
+			   SELECT
+			        X.CUST_ID
+			        , X.CUST_NAME
+			        , X.MOBILE_PH1
+			        , X.MOBILE_PH2
+			        , X.MOBILE_PH3
+			        , Y.SALE_AMT
+			        , CASE WHEN EMAIL_YN = 'Y' THEN EMAIL1
+			           ELSE ''
+			           END EMAIL1
+			        , CASE WHEN EMAIL_YN = 'Y' THEN EMAIL2
+			           ELSE ''
+			           END EMAIL2
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ZIP_CD1
+			           ELSE ''
+			           END HOME_ZIP_CD1
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ZIP_CD2
+			           ELSE ''
+			           END HOME_ZIP_CD2
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ADDR1
+			           ELSE ''
+			           END HOME_ADDR1
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ADDR2
+			           ELSE ''
+			           END HOME_ADDR2
+			        , RANK() OVER (ORDER BY SALE_AMT DESC ) RANK
+			    FROM
+			        (
+			            SELECT  CUST_ID, CUST_NAME, MOBILE_PH1, MOBILE_PH2, MOBILE_PH3
+			                 ,  HOME_ZIP_CD1, HOME_ZIP_CD2
+			                 , HOME_ADDR1, HOME_ADDR2
+			                 , EMAIL1, EMAIL2
+			                 , EMAIL_YN, POST_RCV_CD
+			             FROM DCS.DM_CUSTOMER A
+			                , DCS.BUSI_AREA_POSTNO3 B
+			            WHERE ( A.SEX_CD = ? OR A.SEX_CD = ? )
+			              AND A.BIRTH_DT >= ?||'0101'
+			              AND A.BIRTH_DT <= ?||'1231'
+			              AND A.HOME_ZIP_CD1 BETWEEN B.POST_ZIP_MIN AND B.POST_ZIP_MAX
+			              AND (B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ?)
+			              AND A.EMAIL_YN LIKE DECODE(?,'Y','Y','%')
+						  AND NVL2(A.EMAIL1,'Y','N') LIKE DECODE(?,'Y','Y','%')
+					      AND NVL2(A.EMAIL2,'Y','N') LIKE DECODE(?,'Y','Y','%')
+			              AND A.POST_RCV_CD LIKE DECODE(?,'Y','H','%')
+			        ) X,
+			        (
+			            SELECT CUST_NO CUST_ID, SUM(SALE_AMT) SALE_AMT
+			              FROM DPS.PS_DAYCUST
+			             WHERE SALE_DT >= ? AND SALE_DT <= ?
+			               AND ( CUST_SEX = ? OR CUST_SEX = ? )
+			               AND PUMBUN_CD LIKE  ? || '%'
+			             GROUP BY CUST_NO
+			        ) Y
+			    WHERE X.CUST_ID = Y.CUST_ID
+			) Z
+			WHERE RANK >= ?
+			  AND RANK <= ?
+        ]]>        
+    </query>  
+    
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT
+			    RANK
+			    , CUST_ID
+			    , CUST_NAME
+			    , '' AS MOBILE_PH
+			    , '' AS EMAIL
+			    , '0' ADD_POINT
+			    , SALE_AMT
+			    , DCS.SC_Crypto_FUN('DEC', MOBILE_PH1) AS MOBILE_PH1
+			    , DCS.SC_Crypto_FUN('DEC', MOBILE_PH2) AS MOBILE_PH2
+			    , DCS.SC_Crypto_FUN('DEC', MOBILE_PH3) AS MOBILE_PH3
+			    , DCS.SC_Crypto_FUN('DEC', EMAIL1) AS EMAIL1
+			    , DCS.SC_Crypto_FUN('DEC', EMAIL2) AS EMAIL2
+			    , DECODE(HOME_ZIP_CD1,'','',HOME_ZIP_CD1||'-') || HOME_ZIP_CD2 || ' ' || HOME_ADDR1 || ' ' || HOME_ADDR2 AS HOME_ADDR
+			    , SALE_CNT
+			    , VISIT_CNT
+			    , CUST_GRADE -- 회원등급
+                , CUST_TYPE -- 회원유형
+			FROM
+			(
+			   SELECT
+			        X.CUST_ID
+			        , X.CUST_NAME
+			        , X.MOBILE_PH1
+			        , X.MOBILE_PH2
+			        , X.MOBILE_PH3
+			        , Y.SALE_AMT
+			        , CASE WHEN EMAIL_YN = 'Y' THEN EMAIL1
+			           ELSE ''
+			           END EMAIL1
+			        , CASE WHEN EMAIL_YN = 'Y' THEN EMAIL2
+			           ELSE ''
+			           END EMAIL2
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ZIP_CD1
+			           ELSE ''
+			           END HOME_ZIP_CD1
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ZIP_CD2
+			           ELSE ''
+			           END HOME_ZIP_CD2
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ADDR1
+			           ELSE ''
+			           END HOME_ADDR1
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ADDR2
+			           ELSE ''
+			           END HOME_ADDR2
+			        , RANK() OVER (ORDER BY SALE_AMT DESC ) RANK
+			        , Y.SALE_CNT
+			        , Y.VISIT_CNT
+			        , ZZ.CUST_GRADE
+			        , ZZ.CUST_TYPE
+			    FROM
+			        (
+			            SELECT  CUST_ID, CUST_NAME, MOBILE_PH1, MOBILE_PH2, MOBILE_PH3
+			                 ,  HOME_ZIP_CD1, HOME_ZIP_CD2
+			                 , HOME_ADDR1, HOME_ADDR2
+			                 , EMAIL1, EMAIL2
+			                 , EMAIL_YN, POST_RCV_CD
+			             FROM DCS.DM_CUSTOMER A
+			                , DCS.BUSI_AREA_POSTNO3 B
+			            WHERE A.CUST_STAT_FLAG = '0' -- 검색조건 추가
+			              AND ( A.SEX_CD = ? OR A.SEX_CD = ? )
+			              AND A.BIRTH_DT >= ?||'0101'
+			              AND A.BIRTH_DT <= ?||'1231'
+			              AND NVL(A.HOME_ZIP_CD1,'999') BETWEEN B.POST_ZIP_MIN AND B.POST_ZIP_MAX
+			              AND (B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ?)
+			              AND A.EMAIL_YN LIKE DECODE(?,'Y','Y','%')
+						  AND NVL2(A.EMAIL1,'Y','N') LIKE DECODE(?,'Y','Y','%')
+					      AND NVL2(A.EMAIL2,'Y','N') LIKE DECODE(?,'Y','Y','%')
+			              AND A.POST_RCV_CD LIKE DECODE(?,'Y','H','%')
+			              AND ( A.SMS_YN = ? OR A.SMS_YN = ? )
+			              AND A.SCED_TAKE_FLAG IS NULL
+			        ) X,
+			        (
+			         SELECT CUST_ID, SUM(SALE_AMT) SALE_AMT, SUM(SALE_CNT) SALE_CNT, COUNT(CUST_ID) VISIT_CNT -- 방문횟수 추가
+                         FROM (
+                                               SELECT CUST_NO CUST_ID, SUM(NORM_SALE_AMT) SALE_AMT, COUNT(CUST_NO) SALE_CNT
+                                                  FROM DPS.PS_DAYCUST
+                                                WHERE SALE_DT >= ? AND SALE_DT <= ?
+                                                      AND ( CUST_SEX = ? OR CUST_SEX = ? )
+                                                      AND PUMBUN_CD IN (
+                                                                     SELECT DISTINCT PUMBUN_CD FROM DPS.PC_STRPBN
+                                                                     WHERE  SALE_ORG_CD LIKE ?||?||?||?||'%'
+                                                                     )
+                                                 GROUP BY CUST_NO, SALE_DT
+                        )
+                        GROUP BY CUST_ID    
+			        ) Y,
+			        (	
+                        SELECT A.CUST_ID
+                             , COM.FN_GET_COMM_NAME('D', 'D011', B.CUST_GRADE) CUST_GRADE
+                             , COM.FN_GET_COMM_NAME('D', 'D115', D.CUST_TYPE) CUST_TYPE
+	                      FROM DCS.DM_CUSTOMER A
+	                             , DCS.V_DO_CUST_GRADE_CURR B
+	                             , DCS.V_DO_CUST_TYPE_CURR D
+	                     WHERE A.CUST_STAT_FLAG = '0' -- 검색조건 추가
+	                       AND A.CUST_ID = B.CUST_ID
+                           AND A.CUST_ID = D.CUST_ID
+                           AND B.BRCH_ID = D.BRCH_ID
+			        ) ZZ
+			    WHERE X.CUST_ID = Y.CUST_ID
+			      AND Y.CUST_ID = ZZ.CUST_ID
+			      AND Y.SALE_AMT BETWEEN ? AND ? -- 검색조건 추가 2014.07.24
+			) Z
+			WHERE RANK >= ?
+			  AND RANK <= ?
+        ]]>        
+    </query> 
+    
+    <query name="SEL_MASTER1">        
+        <![CDATA[
+			SELECT
+			    RANK
+			    , CUST_ID
+			    , CUST_NAME
+			    , '' AS MOBILE_PH
+			    , '' AS EMAIL
+			    , '0' ADD_POINT
+			    , SALE_AMT
+			    , DCS.SC_Crypto_FUN('DEC', MOBILE_PH1) AS MOBILE_PH1
+			    , DCS.SC_Crypto_FUN('DEC', MOBILE_PH2) AS MOBILE_PH2
+			    , DCS.SC_Crypto_FUN('DEC', MOBILE_PH3) AS MOBILE_PH3
+			    , DCS.SC_Crypto_FUN('DEC', EMAIL1) AS EMAIL1
+			    , DCS.SC_Crypto_FUN('DEC', EMAIL2) AS EMAIL2
+			    , DECODE(HOME_ZIP_CD1,'','',HOME_ZIP_CD1||'-') || HOME_ZIP_CD2 || ' ' || HOME_ADDR1 || ' ' || HOME_ADDR2 AS HOME_ADDR
+			    , SALE_CNT
+			    , VISIT_CNT
+			    , CUST_GRADE -- 회원등급
+                , CUST_TYPE -- 회원유형
+			FROM
+			(
+			   SELECT
+			        X.CUST_ID
+			        , X.CUST_NAME
+			        , X.MOBILE_PH1
+			        , X.MOBILE_PH2
+			        , X.MOBILE_PH3
+			        , Y.SALE_AMT
+			        , CASE WHEN EMAIL_YN = 'Y' THEN EMAIL1
+			           ELSE ''
+			           END EMAIL1
+			        , CASE WHEN EMAIL_YN = 'Y' THEN EMAIL2
+			           ELSE ''
+			           END EMAIL2
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ZIP_CD1
+			           ELSE ''
+			           END HOME_ZIP_CD1
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ZIP_CD2
+			           ELSE ''
+			           END HOME_ZIP_CD2
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ADDR1
+			           ELSE ''
+			           END HOME_ADDR1
+			        , CASE WHEN POST_RCV_CD = 'H' THEN HOME_ADDR2
+			           ELSE ''
+			           END HOME_ADDR2
+			        , RANK() OVER (ORDER BY SALE_AMT DESC ) RANK
+			        , Y.SALE_CNT
+			        , Y.VISIT_CNT
+			        , ZZ.CUST_GRADE
+			        , ZZ.CUST_TYPE
+			    FROM
+			        (
+			            SELECT  CUST_ID, CUST_NAME, MOBILE_PH1, MOBILE_PH2, MOBILE_PH3
+			                 ,  HOME_ZIP_CD1, HOME_ZIP_CD2
+			                 , HOME_ADDR1, HOME_ADDR2
+			                 , EMAIL1, EMAIL2
+			                 , EMAIL_YN, POST_RCV_CD
+			             FROM DCS.DM_CUSTOMER A
+			                , DCS.BUSI_AREA_POSTNO3 B
+			            WHERE A.CUST_STAT_FLAG = '0' -- 검색조건 추가
+			              AND ( A.SEX_CD = ? OR A.SEX_CD = ? )
+			              AND A.BIRTH_DT >= ?||'0101'
+			              AND A.BIRTH_DT <= ?||'1231'
+			              AND NVL(A.HOME_ZIP_CD1,'999') BETWEEN B.POST_ZIP_MIN AND B.POST_ZIP_MAX
+			              AND (B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ? OR B.BUSI_AREA = ?)
+			              AND A.EMAIL_YN LIKE DECODE(?,'Y','Y','%')
+						  AND NVL2(A.EMAIL1,'Y','N') LIKE DECODE(?,'Y','Y','%')
+					      AND NVL2(A.EMAIL2,'Y','N') LIKE DECODE(?,'Y','Y','%')
+			              AND A.POST_RCV_CD LIKE DECODE(?,'Y','H','%')
+			              AND ( A.SMS_YN = ? OR A.SMS_YN = ? )
+			              AND A.SCED_TAKE_FLAG IS NULL
+			        ) X,
+			        (
+			        SELECT CUST_ID, SUM(SALE_AMT) SALE_AMT, SUM(SALE_CNT) SALE_CNT, COUNT(CUST_ID) VISIT_CNT -- 방문횟수 추가
+                         FROM (
+                                               SELECT CUST_NO CUST_ID, SUM(NORM_SALE_AMT) SALE_AMT, COUNT(CUST_NO) SALE_CNT
+                                                  FROM DPS.PS_DAYCUST
+                                                WHERE SALE_DT >= ? AND SALE_DT <= ?
+                                                      AND ( CUST_SEX = ? OR CUST_SEX = ? )
+                                                      AND PUMBUN_CD IN (
+                                                                     SELECT DISTINCT PUMBUN_CD FROM DPS.PC_STRPBN
+                                                                     WHERE  SALE_ORG_CD LIKE ?||?||?||?||'%'
+                                                                     )
+                                                 GROUP BY CUST_NO, SALE_DT
+                        )
+                        GROUP BY CUST_ID
+			        ) Y,
+			        (	
+                        SELECT A.CUST_ID
+                             , COM.FN_GET_COMM_NAME('D', 'D011', B.CUST_GRADE) CUST_GRADE
+                             , COM.FN_GET_COMM_NAME('D', 'D115', D.CUST_TYPE) CUST_TYPE
+	                      FROM DCS.DM_CUSTOMER A
+	                             , DCS.V_DO_CUST_GRADE_CURR B
+	                             , DCS.V_DO_CUST_TYPE_CURR D
+	                     WHERE A.CUST_STAT_FLAG = '0' -- 검색조건 추가
+	                       AND A.CUST_ID = B.CUST_ID
+                           AND A.CUST_ID = D.CUST_ID
+                           AND B.BRCH_ID = D.BRCH_ID
+			        ) ZZ
+			    WHERE X.CUST_ID = Y.CUST_ID
+			      AND Y.CUST_ID = ZZ.CUST_ID
+			      AND Y.SALE_AMT BETWEEN ? AND ? -- 검색조건 추가 2014.07.24
+			) Z
+			WHERE RANK >= ?
+			  AND RANK <= ?
+        ]]>        
+    </query> 
+</service>			               

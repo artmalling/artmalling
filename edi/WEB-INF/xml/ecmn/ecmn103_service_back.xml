@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/ecmn103.em">
+        
+    
+    <!-- 조회 (협력사edi 법률자문q&a리스트 ) -->
+    <query name="SEL_MASTER">
+        <![CDATA[   
+        SELECT STR_CD                                 /* 점코드 */
+	         , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM       /* 점명*/
+	         , PUMBUNCD                                        /* 브랜드코드 */
+	         , PUMBUN_NM                                       /* 브랜드 명 */
+	         , VEN_CD                                          /* 협력사코드 */
+	         , SEQ_NO                                          /* 순번 */
+	         , REG_DT                                          /* 등록일자 */
+	         , TITLE                                           /* 제목 */
+	         , BUYER_CD                                        /* 담당바이어 */
+	         , BUYERNAME                                       /* 담당바이어명 */
+	         , TIME                                            /* 시간 */
+          FROM (            
+	            SELECT A.STR_CD AS STR_CD
+                     , A.PUMBUN_CD AS PUMBUNCD
+                     , B.PUMBUN_NAME AS PUMBUN_NM
+                     , A.VEN_CD AS VEN_CD
+                     , LPAD(A.SEQ_NO, 3, 0) AS SEQ_NO 
+                     , A.REG_DT AS REG_DT
+                     , A.TITLE  || (CASE WHEN A.ANS_CONTENT IS NULL THEN ' ' ELSE '[답변]' END) AS TITLE
+                     , B.CHAR_BUYER_CD AS BUYER_CD
+                     , ( SELECT BUYER_NAME  FROM DPS.PC_BUYERMST WHERE STR_CD = A.STR_CD AND BUYER_CD = B.CHAR_BUYER_CD ) AS BUYERNAME
+                     , SUBSTR(A.TIME, 1,2) || ':' || SUBSTR(A.TIME, 3,2) AS TIME
+	              FROM MSS.ET_LAWQNA A
+	                 , DPS.PC_STRPBN B
+	            WHERE A.STR_CD = B.STR_CD
+	              AND A.PUMBUN_CD = B.PUMBUN_CD
+	              AND A.STR_CD = ?
+	              AND A.VEN_CD = ?
+	              AND A.PUMBUN_CD LIKE ? || '%'
+	              AND A.TITLE LIKE '%' || ? || '%'
+	              AND A.REG_DT >= ?
+                  AND A.REG_DT <= ?
+	           ) A
+          
+        ]]>        
+    </query>
+    
+     <!-- 협력사 EDI 법률자문Q&A 관리 (ROWNUM )  -->
+     <query name="SEL_ROWNUM">
+        <![CDATA[
+        WHERE ROWNUM <= ?
+        ]]>
+    </query>  
+    
+     <!-- 협력사 EDI 법률자문Q&A 관리  -->
+     <query name="SEL_ORDERBY">
+        <![CDATA[
+        ORDER BY STR_CD, REG_DT DESC, SEQ_NO DESC
+        ]]>
+    </query>    
+    
+    <!-- 협력사 EDI 법률자문Q&A 등록   -->
+     <query name="INS_ET_LAWQNA">
+        <![CDATA[
+        INSERT INTO MSS.ET_LAWQNA (
+                                   STR_CD
+                                  ,REG_DT
+                                  ,SEQ_NO                                   
+                                  ,TITLE
+                                  ,CONTENT
+                                  ,TIME
+                                  ,VEN_CD
+                                  ,PUMBUN_CD
+                                  ,REG_ID
+                                  ,REG_DATE
+                                  ,MOD_ID
+                                  ,MOD_DATE
+                                  )
+                             VALUES 
+                                  (
+                                   ?
+                                  ,TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                  ,MSS.SQ_ET_LAWQNA.NEXTVAL
+                                  ,?
+                                  ,?
+                                  ,TO_CHAR(SYSDATE, 'HH24MISS')
+                                  ,?
+                                  ,?
+                                  ,?
+                                  ,SYSDATE
+                                  ,?
+                                  ,SYSDATE
+                                  )
+        ]]>
+    </query>  
+    
+    <!-- 협력사 EDI 법률자문Q&A 상세조회  -->
+     <query name="SEL_DETAIL">
+        <![CDATA[
+        SELECT A.STR_CD AS STR_CD
+             , A.SEQ_NO AS SEQ_NO
+             , A.REG_DT AS REG_DT
+             , A.TITLE AS TITLE
+             , A.CONTENT AS CONTEN
+             , A.ANS_CONTENT AS ANS_CONTENT
+             , B.PUMBUN_CD AS PUMBUNCD
+             , B.PUMBUN_NAME AS PUMBUNNM
+             , CASE WHEN A.ANS_CONTENT IS NULL THEN 'N' ELSE 'Y' END REPLY_YN
+             , A.VEN_CD AS VEN_CD  
+          FROM MSS.ET_LAWQNA A, DPS.PC_STRPBN B
+         WHERE A.STR_CD = B.STR_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD               
+           AND A.STR_CD = ?
+           AND A.SEQ_NO = ?
+           AND A.REG_DT = ?
+        ]]>
+    </query> 
+    
+    <!-- 협력사 EDI 법률자문Q&A 수정  -->
+     <query name="UPD_LAWQNA">
+        <![CDATA[
+        UPDATE MSS.ET_LAWQNA 
+           SET TITLE = ?
+             , CONTENT = ?
+             , MOD_ID = ?
+             , MOD_DATE = SYSDATE
+         WHERE STR_CD = ?
+           AND SEQ_NO = ?
+           AND REG_DT = ?
+        ]]>
+    </query> 
+    
+    <!-- 협력사 EDI 법률자문Q&A 수정  -->
+     <query name="DEL_LAWQNA">
+        <![CDATA[
+        DELETE FROM MSS.ET_LAWQNA WHERE STR_CD = ? AND SEQ_NO = ? AND REG_DT = ?
+        ]]>
+    </query> 
+    
+    
+
+</service>

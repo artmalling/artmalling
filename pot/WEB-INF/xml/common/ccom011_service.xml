@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.16
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 대표 품번코드 공통 XML
+ -->
+<service name="/ccom011.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_STRPBN">
+      <column colName="SEL"            colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMBUN_CD"      colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMBUN_NAME"    colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="RECP_NAME"      colType="TB_STRING" size="20"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SKU_FLAG"       colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="REP_PUMBUN_CD"  colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 품번코드조회 SQL -->
+    <query name="SEL_STRPBN">
+        <![CDATA[                                        
+            SELECT 'F'        AS SEL
+                 , PBN.PUMBUN_CD
+                 , PBN.PUMBUN_NAME
+                 , PBN.RECP_NAME
+                 , PBN.SKU_FLAG
+                 , PBN.REP_PUMBUN_CD
+              FROM DPS.PC_PBNMST   PBN
+             WHERE 1=1 --PBN.REP_PUMBUN_CD = PBN.PUMBUN_CD
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND PBN.PUMBUN_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_LIKE_PUMBUN_CD">
+        <![CDATA[
+               AND PBN.PUMBUN_CD   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_PUMBUN_NM">
+        <![CDATA[
+               AND PBN.PUMBUN_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_AUTHORITY">
+        <![CDATA[
+               AND '1' IN ('1', ?)
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_STR_CD_S">
+        <![CDATA[
+               AND EXISTS ( SELECT SPN.STR_CD
+                              FROM DPS.PC_STRPBN   SPN
+                             WHERE SPN.STR_CD    = ?
+                               AND SPN.PUMBUN_CD = PBN.PUMBUN_CD
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_ORG_CD">
+        <![CDATA[
+                               AND (SPN.BUY_ORG_CD  IN (
+                                                        SELECT ORG_CD
+                                                          FROM DPS.PC_ORGMST
+                                                         START WITH ORG_CD     = ?
+                                                       CONNECT BY PRIOR ORG_CD = P_ORG_CD
+                                                       )
+                                  OR SPN.SALE_ORG_CD IN (
+                                                         SELECT ORG_CD
+                                                           FROM DPS.PC_ORGMST
+                                                          START WITH ORG_CD     = ?
+                                                        CONNECT BY PRIOR ORG_CD = P_ORG_CD
+                                                        )
+                                   )
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_BUYER_CD">
+        <![CDATA[
+                               AND (SPN.CHAR_BUYER_CD = ? OR SPN.CHAR_SM_CD = ? ) 
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_BUY_SALE_FLAG">
+        <![CDATA[
+                               AND SPN.SALE_BUY_FLAG      = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_STR_CD_E">
+        <![CDATA[
+                          )
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_VEN_CD">
+        <![CDATA[
+               AND PBN.VEN_CD    = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_PUMBUN_TYPE">
+        <![CDATA[
+               AND PBN.PUMBUN_TYPE    = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_USE_YN">
+        <![CDATA[
+               AND PBN.USE_YN      = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_BIZ_TYPE">
+        <![CDATA[
+               AND PBN.BIZ_TYPE      = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_ORDER">
+        <![CDATA[
+             ORDER BY PBN.PUMBUN_CD
+        ]]>
+    </query>
+</service>

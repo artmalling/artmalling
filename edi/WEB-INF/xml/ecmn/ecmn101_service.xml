@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/ecmn101.em">
+    
+    <!-- 협력사 EDI 공지사항조회 -->
+    <query name="SEL_NOTICE_MAIN">
+        <![CDATA[         
+        SELECT GB 
+             , STR_CD 
+             , STR_NAME
+             , REG_DT 
+             , SEQ_NO 
+             , PUMBUN_CD 
+             , PUMBUN_NAME 
+             , TIMES
+             , TITLE 
+             , BUYER_NAME 
+             , READ_CNT
+          FROM (
+                SELECT GB 
+                     , STR_CD 
+                     , STR_NAME
+                     , REG_DT 
+                     , SEQ_NO 
+                     , PUMBUN_CD 
+                     , PUMBUN_NAME 
+                     , TIMES
+                     , TITLE 
+                     , BUYER_NAME 
+                     , READ_CNT
+                  FROM (               
+                        SELECT '1' AS GB
+                             , A.STR_CD AS STR_CD
+                             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NAME
+                             , A.REG_DT AS REG_DT 
+                             , A.SEQ_NO AS SEQ_NO
+                             , '000000' AS PUMBUN_CD
+                             , '전체' AS PUMBUN_NAME
+                             , SUBSTR(A.TIME, 1,2) || ':' || SUBSTR(A.TIME, 3,2) AS TIMES                                      
+                             , A.TITLE AS TITLE
+                             , CASE WHEN A.BUYER_CD = '000000' THEN '마리오' ELSE ( SELECT BUYER_NAME  FROM DPS.PC_BUYERMST WHERE BUYER_CD = A.BUYER_CD  ) END BUYER_NAME
+                             -- , ( SELECT BUYER_NAME  FROM DPS.PC_BUYERMST WHERE BUYER_CD = A.BUYER_CD  )  AS BUYER_NAME
+                             , A.READ_CNT AS READ_CNT             
+                          FROM MSS.ET_EDINOTICE A  
+                         WHERE A.STR_CD = ?
+	                       AND A.TITLE LIKE  '%' || ? || '%'
+	                       AND A.AUTH_FLAG = '1'          
+                     UNION ALL
+                        SELECT '2' AS GB
+                             , A.STR_CD AS STR_CD
+                             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NAME
+                             , A.REG_DT AS REG_DT
+                             , A.SEQ_NO AS SEQ_NO
+                             , B.PUMBUN_CD AS PUMBUN_CD
+                             , B.PUMBUN_NAME AS PUMBUN_NAME
+                             , SUBSTR(A.TIME, 1,2) || ':' || SUBSTR(A.TIME, 3,2) AS TIMES                                       
+                             , A.TITLE AS TITLE
+                             , CASE WHEN A.BUYER_CD = '000000' THEN '마리오' ELSE ( SELECT BUYER_NAME  FROM DPS.PC_BUYERMST WHERE BUYER_CD = A.BUYER_CD  ) END BUYER_NAME
+                             --, ( SELECT BUYER_NAME  FROM DPS.PC_BUYERMST WHERE BUYER_CD = A.BUYER_CD  )   AS BUYER_NAME
+                             , A.READ_CNT AS READ_CNT             
+                          FROM MSS.ET_EDINOTICE A, DPS.PC_STRPBN B 
+                         WHERE A.STR_CD = B.STR_CD
+                           AND A.BUYER_CD = B.CHAR_BUYER_CD
+                           AND B.STR_CD = ?
+                           AND B.VEN_CD = ?
+                           AND B.PUMBUN_CD LIKE '%' || ? || '%' 
+                           AND A.TITLE LIKE '%' || ? || '%'
+                           AND A.AUTH_FLAG = '2'
+                           AND B.PUMBUN_TYPE IN ('0', '4', 'B')
+                        ) A
+                ORDER BY STR_CD ASC, REG_DT DESC, SEQ_NO DESC
+                )
+        ]]>        
+    </query>
+    
+    
+     <!-- 협력사 EDI 공지사항조회 -->
+    <query name="SEL_NOTICE">
+        <![CDATA[         
+        SELECT GB 
+             , STR_CD 
+             , STR_NAME
+             , REG_DT 
+             , SEQ_NO 
+             , PUMBUN_CD 
+             , PUMBUN_NAME 
+             , TIMES
+             , TITLE 
+             , BUYER_NAME 
+             , READ_CNT
+          FROM (
+                SELECT GB 
+                     , STR_CD 
+                     , STR_NAME
+                     , REG_DT 
+                     , SEQ_NO 
+                     , PUMBUN_CD 
+                     , PUMBUN_NAME 
+                     , TIMES
+                     , TITLE 
+                     , BUYER_NAME 
+                     , READ_CNT
+                  FROM (               
+                        SELECT '1' AS GB
+                             , A.STR_CD AS STR_CD
+                             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NAME
+                             , A.REG_DT AS REG_DT 
+                             , A.SEQ_NO AS SEQ_NO
+                             , '000000' AS PUMBUN_CD
+                             , '전체' AS PUMBUN_NAME
+                             , SUBSTR(A.TIME, 1,2) || ':' || SUBSTR(A.TIME, 3,2) AS TIMES                                      
+                             , A.TITLE AS TITLE
+                             , CASE WHEN A.BUYER_CD = '000000' THEN '마리오' ELSE ( SELECT BUYER_NAME  FROM DPS.PC_BUYERMST WHERE BUYER_CD = A.BUYER_CD  ) END BUYER_NAME
+                             --, ( SELECT BUYER_NAME  FROM DPS.PC_BUYERMST WHERE BUYER_CD = A.BUYER_CD  )  AS BUYER_NAME
+                             , A.READ_CNT AS READ_CNT             
+                          FROM MSS.ET_EDINOTICE A  
+                         WHERE A.STR_CD = ?
+                           AND A.TITLE LIKE  '%' || ? || '%'
+                           AND A.AUTH_FLAG = '1'
+                           AND A.REG_DT >= ? AND A.REG_DT <= ?              
+                     UNION ALL
+                        SELECT '2' AS GB
+                             , A.STR_CD AS STR_CD
+                             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NAME
+                             , A.REG_DT AS REG_DT
+                             , A.SEQ_NO AS SEQ_NO
+                             , B.PUMBUN_CD AS PUMBUN_CD
+                             , B.PUMBUN_NAME AS PUMBUN_NAME
+                             , SUBSTR(A.TIME, 1,2) || ':' || SUBSTR(A.TIME, 3,2) AS TIMES                                       
+                             , A.TITLE AS TITLE
+                             , CASE WHEN A.BUYER_CD = '000000' THEN '마리오' ELSE ( SELECT BUYER_NAME  FROM DPS.PC_BUYERMST WHERE BUYER_CD = A.BUYER_CD  ) END BUYER_NAME
+                             --, ( SELECT BUYER_NAME  FROM DPS.PC_BUYERMST WHERE BUYER_CD = A.BUYER_CD  )   AS BUYER_NAME
+                             , A.READ_CNT AS READ_CNT             
+                          FROM MSS.ET_EDINOTICE A, DPS.PC_STRPBN B 
+                         WHERE A.STR_CD = B.STR_CD
+                           AND A.BUYER_CD = B.CHAR_BUYER_CD
+                           AND B.STR_CD = ?
+                           AND B.VEN_CD = ?
+                           AND B.PUMBUN_CD LIKE '%' || ? || '%' 
+                           AND A.TITLE LIKE '%' || ? || '%'
+                           AND A.AUTH_FLAG = '2'
+                           AND A.REG_DT >= ? AND A.REG_DT <= ?
+                           AND B.PUMBUN_TYPE IN ('0', '4', 'B')
+                        ) A
+                ORDER BY STR_CD ASC, REG_DT DESC, SEQ_NO DESC
+                )
+        ]]>        
+    </query>
+    
+    <!-- 조회 건수 -->
+    <query name="SEL_ROWNUM">
+        <![CDATA[   
+         WHERE ROWNUM <= ?    
+        ]]>        
+    </query>
+    <!-- 정렬 -->
+    <query name="SEL_ORDERBY">
+        <![CDATA[   
+      ORDER BY STR_CD ASC, REG_DT DESC, SEQ_NO DESC    
+        ]]>        
+    </query>
+    
+     <!-- 상세조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[ 
+		SELECT A.TITLE AS TITLE
+             , A.CONTENT AS CONTNE
+             , CASE WHEN A.BUYER_CD = '000000' THEN '마리오' ELSE (
+                SELECT BUYER_NAME
+                  FROM DPS.PC_BUYERMST
+                 WHERE STR_CD = A.STR_CD
+                   AND BUYER_CD = A.BUYER_CD
+               ) END BUYER_NAME
+            , A.FILE_NAME
+         FROM MSS.ET_EDINOTICE A
+        WHERE A.STR_CD = ?
+          AND A.SEQ_NO = ?
+          AND A.REG_DT = ?
+        ]]>        
+    </query>
+    <!-- READ_CNT 1 증가 -->
+    <query name="INT_CNT">
+      <![CDATA[   
+      UPDATE MSS.ET_EDINOTICE 
+         SET READ_CNT = READ_CNT +1
+       WHERE STR_CD = ?
+         AND SEQ_NO = ?
+         AND REG_DT = ?    
+      ]]>        
+    </query>        
+    
+
+</service>

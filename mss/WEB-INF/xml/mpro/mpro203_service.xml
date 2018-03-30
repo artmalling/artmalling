@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 오형규
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.09
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  일자별 약속 현황
+ -->
+<service name="/mpro203.mp">
+    <!-- 일자별 HEAD -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STRNM" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAKE_DT" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROM_REPAIR" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROM_ORDERS" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROM_DELIVER" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROM_OTHER" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DELI_FROM" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DELI_RECEIVE" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT1" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_STAT" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_STAT_MI" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT2" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />              
+    </gauce>
+    
+    <!-- 일자별 약속 조회  -->
+    <query name="SEL_DAY_PROMISS">
+        <![CDATA[
+        SELECT STR_CD 
+	         , DPS.FN_GET_STORE_NAME(STR_CD) STRNM
+	         , TAKE_DT
+	         , SUM(PROM_REPAIR) PROM_REPAIR
+	         , SUM(PROM_ORDERS) PROM_ORDERS
+	         , SUM(PROM_DELIVER) PROM_DELIVER
+	         , SUM(PROM_OTHER) PROM_OTHER          
+	         , SUM(DELI_FROM) DELI_FROM
+	         , SUM(DELI_RECEIVE) DELI_RECEIVE
+	         , SUM( DELI_FROM + DELI_RECEIVE ) CNT1
+	         , SUM(PROC_STAT) PROC_STAT
+	         , SUM(PROC_STAT_MI) PROC_STAT_MI
+	         , SUM(PROC_STAT + PROC_STAT_MI) CNT2
+          FROM (
+        SELECT STR_CD STR_CD
+             , TAKE_DT TAKE_DT                       
+             , SUM(
+                   CASE PROM_TYPE WHEN '01' THEN 1 ELSE 0 END
+                  )  PROM_REPAIR
+             , SUM (
+                    CASE PROM_TYPE WHEN '02' THEN 1 ELSE 0 END
+                   )  PROM_ORDERS 
+             , SUM(
+                    CASE PROM_TYPE WHEN '03' THEN 1 ELSE 0 END
+                   ) PROM_DELIVER
+             , SUM(
+                    CASE PROM_TYPE  WHEN '04' THEN 1 ELSE 0 END
+               )  PROM_OTHER
+             , SUM(
+                    CASE DELI_TYPE WHEN '01' THEN 1 ELSE 0 END 
+               )  DELI_FROM
+             , SUM(
+                    CASE DELI_TYPE WHEN '02' THEN 1 ELSE 0 END
+               )  DELI_RECEIVE
+             , 0 AS PROC_STAT
+             , 0  AS PROC_STAT_MI
+          FROM MSS.MP_PROMISECERT 
+         WHERE STR_CD LIKE ? || '%'
+           AND TAKE_DT  >= ? AND TAKE_DT <= ?
+           AND STR_CD IN (SELECT DISTINCT STR_CD FROM COM.V_MYORG 
+                   WHERE USER_ID = ? AND ORG_FLAG = '1')
+      GROUP BY    STR_CD,  TAKE_DT
+     UNION ALL
+        SELECT STR_CD STR_CD 
+             , TAKE_DT TAKE_DT
+             , 0
+             , 0
+             , 0
+             , 0
+             , 0
+             , 0                   
+             , SUM(CASE WHEN PROC_STAT = '3' THEN 1 ELSE 0 END) PROC_STAT
+             , SUM(CASE WHEN PROC_STAT <> '3' THEN 1 ELSE 0 END) PROC_STAT_MI
+          FROM MSS.MP_PROMISECERT
+         WHERE PROC_STAT <> '4'  
+           AND STR_CD LIKE ? || '%'
+           AND LAST_PROM_DT >= ? AND  LAST_PROM_DT <= ?
+           AND STR_CD IN (SELECT DISTINCT STR_CD FROM COM.V_MYORG 
+                                        WHERE USER_ID = ? AND ORG_FLAG = '1')
+      GROUP BY    TAKE_DT, STR_CD
+            ) A
+   GROUP BY STR_CD, TAKE_DT
+   ORDER BY STR_CD   
+        ]]>
+    </query>  
+    
+</service>

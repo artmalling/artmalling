@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  관리비 정산
+ -->
+<service name="/mren303.mr">
+	<gauce name="H_SEL_MR_CALMST">
+	    <column colName="VEN_CD"                colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"                colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_TYPE"             colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_FLAG"             colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_DEPOSIT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MM_RENTFEE"            colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_S_DT"             colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_E_DT"             colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_NOVAT_AMT"      	colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_VAT_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_AMT"              colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_NOVAT_AMT"         colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_VAT_AMT"           colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_AMT"               colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="NTAX_AMT"              colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="BAL_AMT"               colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ARREAR_AMT"            colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MOD_REASON"            colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MOD_AMT"               colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REAL_CHAREG_AMT"       colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CHRG_YN"               colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CLOSE_YN"              colType="TB_STRING"   size="10"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_TYPE"              colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_ID"               colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_YM"                colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="STR_CD"                colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	    
+	    <column colName="MOD_ARREAR_AMT"        colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MOD_TOT_BAL_AMT"       colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_BAL_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_ARREAR_AMT"       colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_TOT_BAL_AMT"      colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MOD_RENT_ARREAR_AMT"   colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MOD_RENT_TOT_BAL_AMT"  colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_REAL_CHAREG_AMT"  colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	</gauce>
+	
+	<query name="SEL_MR_CALMST">
+        <![CDATA[   
+            SELECT CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , CNT.RENT_TYPE
+                 , CNT.RENT_FLAG
+                 , CNT.RENT_DEPOSIT
+                 , CNT.MM_RENTFEE
+                 , CNT.CNTR_S_DT
+                 , CNT.CNTR_E_DT
+                 , CAL.RENT_NOVAT_AMT											/*추가 부가세 제외*/
+                 , CAL.RENT_VAT_AMT
+                 , CAL.RENT_AMT
+				 , CAL.TAX_NOVAT_AMT
+                 , CAL.TAX_VAT_AMT
+                 , CAL.TAX_AMT
+                 , CAL.NTAX_AMT
+                 , CAL.BAL_AMT
+                 , CAL.ARREAR_AMT
+                 , CAL.MOD_REASON
+                 , CAL.MOD_AMT
+                 --, CAL.REAL_CHAREG_AMT + CAL.MOD_TOT_BAL_AMT            AS REAL_CHAREG_AMT    -- 관리비청구액
+                 , CAL.REAL_CHAREG_AMT          AS REAL_CHAREG_AMT    -- 관리비청구액
+                 , CAL.CHRG_YN  /*청구생성여부 Y,N*/
+                 , CLS.CLOSE_YN
+                 , CAL.CAL_TYPE /*1.정상,2.해지정산*/
+                 , CAL.CNTR_ID
+                 , CAL.CAL_YM
+                 , CNT.STR_CD 
+                 , CAL.MOD_ARREAR_AMT
+                 , CAL.MOD_TOT_BAL_AMT
+                 , CAL.RENT_BAL_AMT
+                 , CAL.RENT_ARREAR_AMT
+                 , CAL.RENT_TOT_BAL_AMT
+                 , CAL.MOD_RENT_ARREAR_AMT
+                 , CAL.MOD_RENT_TOT_BAL_AMT
+                 , CAL.RENT_REAL_CHAREG_AMT + CAL.MOD_RENT_TOT_BAL_AMT   AS RENT_REAL_CHAREG_AMT
+              FROM MSS.MR_CNTRMST CNT
+                 , MSS.MR_CALMST  CAL
+                 , DPS.PC_VENMST  VEN
+                 , (SELECT DPS.FN_GET_CLOSECHECK( ? , ? , 'MREN' , '48' , '0' , 'M' ) AS CLOSE_YN
+                      FROM DUAL)  CLS
+             WHERE CNT.CNTR_ID  = CAL.CNTR_ID
+               AND CNT.VEN_CD   = VEN.VEN_CD
+			   AND CNT.VEN_CD   LIKE ?||'%'
+			   AND CNT.STR_CD   = ?
+			   AND CAL.CAL_YM   = ?
+			 ORDER BY VEN_CD
+        ]]>
+	</query>
+	
+	<query name="UPD_MR_CALMST">
+        <![CDATA[   
+			UPDATE MSS.MR_CALMST 
+               SET MOD_REAS_DT          = TO_CHAR(SYSDATE, 'YYYYMMDD')
+                 , MOD_EMP_NO           = ?
+                 , MOD_REASON           = ?
+                 , MOD_ARREAR_AMT       = ?
+                 , MOD_RENT_ARREAR_AMT  = ?
+                 , MOD_TOT_BAL_AMT      = ?
+                 , MOD_RENT_TOT_BAL_AMT = ? 
+                 , MOD_ID               = ?
+                 , MOD_DATE             = SYSDATE
+             WHERE CAL_TYPE             = ?
+               AND CNTR_ID              = ?
+               AND CAL_YM               = ? 
+        ]]>
+	</query>
+	
+	<gauce name="H_SEL_MR_CALITEM">
+	    <column colName="MNTN_ITEM_CD"  colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MNTN_ITEM_NM"  colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="USE_QTY"       colType="TB_DECIMAL"  size="7"   dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="USE_AMT"       colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MOD_USE_AMT"   colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_YM"        colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="STR_CD"        colType="TB_STRING"   size="2"   dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_ID"       colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_TYPE"      colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	</gauce>
+	<query name="SEL_MR_CALITEM">
+       <![CDATA[   
+	        SELECT CAL.MNTN_ITEM_CD
+	             , MNT.MNTN_ITEM_NM
+	             , CAL.USE_QTY
+	             , CAL.USE_AMT
+	             , CAL.MOD_USE_AMT
+	             , CAL.CAL_YM
+                 , CAL.STR_CD
+                 , CAL.CNTR_ID
+                 , CAL.CAL_TYPE
+	          FROM MSS.MR_CALITEM    CAL
+	             , MSS.MR_MNTNITEM   MNT
+	         WHERE CAL.STR_CD = MNT.STR_CD
+	           AND CAL.MNTN_ITEM_CD = MNT.MNTN_ITEM_CD
+	           AND CAL.CAL_TYPE = ?
+	           AND CAL.CNTR_ID = ?
+	           AND CAL.STR_CD = ?
+	           AND CAL.CAL_YM = ?
+               --AND MNT.USE_YN = 'Y'
+	         ORDER BY CAL.MNTN_ITEM_CD
+        ]]>
+	</query>
+	
+	<query name="UPD_MR_CALITEM">
+        <![CDATA[   
+			UPDATE MSS.MR_CALITEM
+               SET MOD_USE_AMT  = ?
+                 , MOD_ID       = ?
+                 , MOD_DATE     = SYSDATE
+             WHERE CAL_YM       = ?
+               AND STR_CD       = ?
+               AND CNTR_ID      = ?
+               AND CAL_TYPE     = ?
+               AND MNTN_ITEM_CD = ?  
+        ]]>
+	</query>
+	
+</service>

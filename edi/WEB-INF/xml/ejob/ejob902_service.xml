@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이윤희
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.20
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/ejob902.ej">
+
+	<!-- 협력사 EDI 구직리스트조회 총 카운트 : use PAGING -->
+    <query name="SEL_JOB_HUNT_COUNT">
+        <![CDATA[
+        
+        SELECT
+        		COUNT(*) AS CNT
+        	FROM
+	        	(
+		        	SELECT
+		        			STR_CD
+		            		,STR_NM
+		                    ,VEN_CD 
+		                    ,VEN_NM
+				            ,YMD
+				            ,SEQ
+				            ,TITLE
+				            ,AGE
+				            ,CAREER_YY
+				            ,CAREER_MM
+				            ,TEL_1
+				            ,TEL_2
+				            ,TEL_3
+				            ,HOPE_SALARY
+				            ,CONTENT
+				            ,CUST_ID
+				            ,HITS
+				            ,REG_DATE
+				            ,REG_ID
+				            ,MOD_DATE
+				            ,MOD_ID
+				            ,CUST_NAME
+		        		FROM
+		        			(        
+					            SELECT                          
+					            		A.STR_CD 
+					            		,(SELECT STR_NAME FROM DPS.PC_STRMST WHERE A.STR_CD = STR_CD) AS STR_NM
+					                    ,A.VEN_CD
+					                    ,(SELECT VEN_NAME FROM DPS.PC_STRVENMST WHERE VEN_CD = A.VEN_CD AND STR_CD = A.STR_CD) AS VEN_NM
+							            ,A.YMD
+							            ,A.SEQ
+							            ,A.TITLE
+							            ,A.AGE
+							            ,A.CAREER_YY
+							            ,A.CAREER_MM
+							            ,A.TEL_1
+							            ,A.TEL_2
+							            ,A.TEL_3
+							            ,A.HOPE_SALARY
+							            ,A.CONTENT
+							            ,A.CUST_ID
+							            ,A.HITS
+							            ,A.REG_DATE
+							            ,A.REG_ID
+							            ,A.MOD_DATE
+							            ,A.MOD_ID
+							            ,B.CUST_NAME
+					           		FROM                            
+					            		USS.OC_JOB_HUNT@DCP_LINK A,
+					            		DCS.DM_CUSTOMER B
+                                    WHERE A.CUST_ID = B.CUST_ID(+)
+					            )
+					       WHERE 1 = 1
+					       AND STR_CD IN (SELECT STR_CD FROM DPS.PC_STRMST WHERE STR_NAME LIKE ?)
+				)
+			WHERE 1 = 1
+					       
+        ]]>        
+    </query>
+    
+    
+    <!-- 협력사 EDI 구직리스트조회  TOP : use PAGING-->
+    <query name="SEL_JOB_HUNT_TOP">
+        <![CDATA[
+        SELECT
+        		*
+        	FROM
+        		(
+     ]]>        
+    </query>
+    
+    <!-- 협력사 EDI 구직리스트조회 -->
+    <query name="SEL_JOB_HUNT">
+        <![CDATA[
+	        	SELECT
+	        			ROWNUM RN
+	        			,HUNT_SEQ
+	        			,STR_CD 
+	            		,STR_NM
+	                    ,VEN_CD 
+	                    ,VEN_NM
+			            ,YMD
+			            ,SEQ
+			            ,TITLE
+			            ,CUST_NAME
+			            ,AGE
+			            ,CAREER_YY
+			            ,CAREER_MM
+			            ,TEL_1
+			            ,TEL_2
+			            ,TEL_3
+			            ,HOPE_SALARY
+			            ,CONTENT
+			            ,CUST_ID
+			            ,HITS
+			            ,TO_CHAR(REG_DATE, 'YYYY/MM/DD') AS REG_DATE 
+			            ,TO_CHAR(REG_DATE, 'YYYY/MM/DD') REG_CDATE
+			            ,REG_ID
+			            ,TO_CHAR(MOD_DATE, 'YYYY/MM/DD') MOD_DATE
+			            ,MOD_ID
+	        			,?
+	        			,?
+	        		FROM
+	        			(        
+				            SELECT
+				            		A.SEQ AS HUNT_SEQ                
+				            		,A.STR_CD 
+				            		,(SELECT STR_NAME FROM DPS.PC_STRMST WHERE A.STR_CD = STR_CD) AS STR_NM
+				                    ,A.VEN_CD 
+				                    ,(SELECT VEN_NAME FROM DPS.PC_STRVENMST WHERE VEN_CD = A.VEN_CD AND STR_CD = A.STR_CD) AS VEN_NM
+						            ,A.YMD
+						            ,A.SEQ
+						            ,A.TITLE
+						            ,B.CUST_NAME
+						            ,A.AGE
+						            ,A.CAREER_YY
+						            ,A.CAREER_MM
+						            ,A.TEL_1
+						            ,A.TEL_2
+						            ,A.TEL_3
+						            ,A.HOPE_SALARY
+						            ,A.CONTENT
+						            ,A.CUST_ID
+						            ,A.HITS
+						            ,TO_CHAR(A.REG_DATE,'YYYY/MM/DD') AS REG_CDATE
+						            ,A.REG_DATE
+						            ,A.REG_ID
+						            ,A.MOD_DATE
+						            ,A.MOD_ID
+				           		FROM                            
+				            		USS.OC_JOB_HUNT@DCP_LINK A,
+				            		DCS.DM_CUSTOMER B
+				            		WHERE A.CUST_ID = B.CUST_ID(+)
+				            		ORDER BY YMD||SEQ ASC
+				            )
+				       WHERE 1 = 1
+				       AND STR_CD IN (SELECT STR_CD FROM DPS.PC_STRMST WHERE STR_NAME LIKE ?)
+				   
+        ]]>        
+    </query>
+    
+    <!-- 협력사 EDI 구직리스트조회  BOTTOM : use PAGING-->
+    <query name="SEL_JOB_HUNT_END">
+        <![CDATA[
+        ) WHERE RN BETWEEN ? AND ?
+     ]]>        
+    </query>
+    
+    <query name="SEL_JOB_HUNT_SDATE">
+        <![CDATA[
+			       AND TO_CHAR(REG_DATE, 'YYYYMMDD') >= ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_JOB_HUNT_EDATE">
+        <![CDATA[
+			       AND TO_CHAR(REG_DATE, 'YYYYMMDD') <= ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_JOB_HUNT_SCAREER">
+        <![CDATA[
+			       AND CAREER_YY >= ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_JOB_HUNT_ECAREER">
+        <![CDATA[
+			       AND CAREER_YY <= ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_JOB_HUNT_SAGE">
+        <![CDATA[
+			       AND TO_NUMBER(AGE) >= TO_NUMBER(?)
+        ]]>        
+    </query>
+    
+    <query name="SEL_JOB_HUNT_EAGE">
+        <![CDATA[
+			       AND TO_NUMBER(AGE) <= TO_NUMBER(?)
+        ]]>        
+    </query>
+    
+    <query name="SEL_JOB_HUNT_STRNM">
+        <![CDATA[
+			       AND STR_CD IN (SELECT STR_CD FROM DPS.PC_STRMST WHERE STR_NAME LIKE ?)
+        ]]>        
+    </query>
+    <query name="SEL_JOB_HUNT_VENCD">
+        <![CDATA[
+			       AND VEN_CD LIKE ?
+        ]]>        
+    </query>
+    <query name="SEL_JOB_HUNT_VENNM">
+        <![CDATA[
+			       AND VEN_CD IN (SELECT VEN_CD FROM DPS.PC_STRVENMST WHERE VEN_NAME LIKE ?)
+        ]]>        
+    </query>
+    <query name="SEL_JOB_HUNT_CUSTNM">
+        <![CDATA[
+			       AND NVL(CUST_NAME,'A') LIKE ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_JOB_HUNT_ORDERBY">
+        <![CDATA[
+			       ORDER BY ROWNUM
+        ]]>        
+    </query>
+	    
+	    
+	    
+	    <!-- //협력사 EDI 구직리스트 상세 조회수 증가 -->
+    <query name="UP_JOB_HUNT_HIT">
+        <![CDATA[         
+        UPDATE 
+        		USS.OC_JOB_HUNT@DCP_LINK
+        	SET
+        		HITS = HITS + 1
+        	WHERE
+            	STR_CD 		= ?
+            	AND VEN_CD 	= ?
+            	AND YMD		= ?
+            	AND	SEQ 	= ?
+            								
+        ]]>        
+    </query>
+    
+	    
+	    
+	    
+	    
+    <!-- //협력사 EDI 구직리스트 상세 조회 -->
+    
+    <query name="SEL_JOB_HUNT_DETAIL">
+        <![CDATA[         
+        SELECT                          
+      				USS.FN_GET_SEQ_OC_JOB_HUNT@DCP_LINK(A.STR_CD, A.VEN_CD, A.YMD) AS HUNT_SEQ                
+            		,A.STR_CD
+            		,(SELECT STR_NAME FROM DPS.PC_STRMST WHERE A.STR_CD = STR_CD) AS STR_NM
+                    ,A.VEN_CD 
+                    ,(SELECT VEN_NAME FROM DPS.PC_STRVENMST WHERE VEN_CD = A.VEN_CD AND STR_CD = A.STR_CD) AS VEN_NM
+		            ,A.YMD
+		            ,A.SEQ
+		            ,A.TITLE
+		            ,B.CUST_NAME
+		            ,A.AGE
+		            ,A.CAREER_YY
+		            ,A.CAREER_MM
+		            ,A.TEL_1
+		            ,A.TEL_2
+		            ,A.TEL_3
+		            ,A.HOPE_SALARY
+                    ,A.CONTENT
+                    ,REPLACE(A.CONTENT, CHR(13)||CHR(10), '<br />') AS CONTENT_PRT
+		            ,A.CUST_ID
+		            ,A.HITS
+		            ,TO_CHAR(A.REG_DATE,'YYYY/MM/DD') AS REG_CDATE
+		            ,TO_CHAR(A.REG_DATE,'YYYY/MM/DD') AS REG_DATE
+		            ,A.REG_ID
+		            ,TO_CHAR(A.MOD_DATE,'YYYY/MM/DD') AS MOD_DATE
+		            ,A.MOD_ID
+            FROM                            
+					USS.OC_JOB_HUNT@DCP_LINK A,
+                    DCS.DM_CUSTOMER B
+            WHERE   A.CUST_ID    = B.CUST_ID(+)
+            		AND A.STR_CD = ?
+            		AND A.VEN_CD = ?
+            		AND A.YMD    = ?
+            		AND	A.SEQ    = ?
+            								
+        ]]>        
+    </query>
+    
+     <!-- //협력사 EDI 구직리스트 상세 조회 FILE-->
+    <query name="SEL_JOB_HUNT_DETAIL_FILE">
+        <![CDATA[         
+        SELECT                          
+      				FILE_SEQ,
+      				ATTATCH_FILE,
+      				ATTATCH_PATH
+            FROM                            
+					USS.OC_JOB_HUNT_FILE@DCP_LINK A
+            WHERE
+           			A.STR_CD 	= ?
+            		AND A.VEN_CD 	= ?
+            		AND A.YMD		= ?
+            		AND	A.SEQ 		= ?
+        ]]>        
+    </query>
+    
+    <query name="UP_JOB_HUNT">
+        <![CDATA[         
+            UPDATE USS.OC_JOB_HUNT@DCP_LINK
+                SET A.STR_CD		= ? 
+                    ,A.VEN_CD		= ?
+		            ,A.YMD			= ?
+		            ,A.SEQ			= ?
+		            ,A.TITLE			= ?
+		            ,A.AGE			= ?
+		            ,A.CAREER_YY		= ?
+		            ,A.CAREER_MM		= ?
+		            ,A.TEL_1			= ?
+		            ,A.TEL_2			= ?
+		            ,A.TEL_3			= ?
+		            ,A.HOPE_SALARY	= ?
+		            ,A.CONTENT		= ?
+		            ,A.CUST_ID		= ?
+		            ,A.HITS			= ?
+		            ,A.MOD_DATE		= ?
+		            ,A.MOD_ID		= ?
+		       WHERE SEQ = ?
+		       		AND STR_CD		= ?
+		       		AND VEN_CD		= ?
+		       		AND YMD			= ?
+        ]]>        
+    </query>
+    
+</service>

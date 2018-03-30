@@ -1,0 +1,151 @@
+<!-- 
+/*******************************************************************************
+ * 시스템명 : 온라인> 협력사관리> 협력사EDI관리> 구직상세보기 / 엑셀다운로드
+ * 작 성 일 : 2011.04.20
+ * 작 성 자 : 
+ * 수 정 자 : 
+ * 파 일 명 : ejob9021.jsp
+ * 버    전 : 1.0 (버전은 1.0부터 시작하며 0.1씩 증가)
+ * 개    요 : 공지사항 관리 
+ * 이    력 : 2011.04. (이윤희) 신규작성
+ ******************************************************************************/
+-->
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"  pageEncoding="UTF-8"
+ import="kr.fujitsu.ffw.base.BaseProperty,kr.fujitsu.ffw.util.String2,kr.fujitsu.ffw.control.ActionForm" %>
+<%@ page import="ecom.util.Util" %>
+<%@ page import="java.util.*" %>
+<%@ page import="sun.misc.FormattedFloatingDecimal.Form"%>
+<%@ page import="ecom.vo.SessionInfo2"%>
+<%@ page import="java.text.*" %>
+<%@ taglib uri="/WEB-INF/tld/c.tld" prefix="c"%>
+
+<%
+	DecimalFormat	dFormat	= new DecimalFormat("###,###,###,###,###,###,###,###,###,###");
+	String mode				= "U";		
+	String titleName 		= "구직정보 상세보기";
+	String strcd			= request.getParameter("strcd");
+	String vencd			= request.getParameter("vencd");
+		
+	Map infoMap 	= (Map)request.getAttribute("infoMap");
+		String  hunt_seq		= String.valueOf(infoMap.get("hunt_seq")) == "null" ? "" : String.valueOf(infoMap.get("hunt_seq"));
+		String  strnm			= String.valueOf(infoMap.get("str_nm")) == "null" ? "" : String.valueOf(infoMap.get("str_nm"));
+		String  vennm			= String.valueOf(infoMap.get("ven_nm")) == "null" ? "" : String.valueOf(infoMap.get("ven_nm"));
+		String  title			= String.valueOf(infoMap.get("title")) == "null" ? "" : String.valueOf(infoMap.get("title"));
+		String  cust_nm			= String.valueOf(infoMap.get("cust_name")) == "null" ? "" : String.valueOf(infoMap.get("cust_name"));
+		String  age				= String.valueOf(infoMap.get("age")) == "null" ? "" : String.valueOf(infoMap.get("age"));
+		String  career_yy		= String.valueOf(infoMap.get("career_yy")) == "null" ? "" : String.valueOf(infoMap.get("career_yy"));
+		String  career_mm		= String.valueOf(infoMap.get("career_mm")) == "null" ? "" : String.valueOf(infoMap.get("career_mm"));
+		String  tel_1			= String.valueOf(infoMap.get("tel_1")) == "null" ? "" : String.valueOf(infoMap.get("tel_1"));
+		String  tel_2			= String.valueOf(infoMap.get("tel_2")) == "null" ? "" : String.valueOf(infoMap.get("tel_2"));
+		String  tel_3			= String.valueOf(infoMap.get("tel_3")) == "null" ? "" : String.valueOf(infoMap.get("tel_3"));
+		String  hope_salary		= String.valueOf(infoMap.get("hope_salary")) == "null" ? "0" : String.valueOf(infoMap.get("hope_salary"));
+		String  reg_cdate		= String.valueOf(infoMap.get("reg_cdate")) == "null" ? "" : String.valueOf(infoMap.get("reg_cdate"));
+		String  content			= String.valueOf(infoMap.get("content_prt")) == "null" ? "" : String.valueOf(infoMap.get("content_prt"));
+		String  attatch_file	= String.valueOf(infoMap.get("attatch_file")) == "null" ? "" : String.valueOf(infoMap.get("attatch_file"));
+		String  attatch_path	= String.valueOf(infoMap.get("attatch_path")) == "null" ? "" : String.valueOf(infoMap.get("attatch_path"));
+		String  seq 			= String.valueOf(infoMap.get("seq")) == "null" ? "" : String.valueOf(infoMap.get("seq"));
+		String  ymd				= String.valueOf(infoMap.get("ymd")) == "null" ? "" : String.valueOf(infoMap.get("ymd"));
+
+%>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>아트몰링</title>
+<script language="javascript"  src="/edi/js/common.js"  type="text/javascript"></script>
+<script language="javascript"  src="/edi/js/PopupCalendar.js"  type="text/javascript"></script>
+<link href="/edi/css/ds.css" rel="stylesheet" type="text/css" />
+<style = "">
+.cls {padding-left:2px; padding-right:2px; height:22px; background-color:#efefef; text-align:left; font-size:12px;}
+.cls1 {padding-left:2px; padding-right:2px; height:22px; background-color:#ffffff; text-align:left; font-size:12px;}
+</style>
+</head>
+
+<body  class="PL10 PT15" OnLoad="window.print(); self.close();">
+<table width="100%" border="1" cellspacing="1" cellpadding="1" bgcolor="#000000">
+	<tr>
+		<td bgcolor="#FFFFFF">
+			<table width="100%" border="0" cellspacing="0" cellpadding="0">	
+				<tr>
+					<td height="30"></td>
+				</tr>
+				<tr>
+					<td style="text-align:center">
+						<table width="65%" border="1" cellpadding="0" cellspacing="1"" bgcolor="#000000">
+							<tr>
+								<td bgcolor="#FFFFFF">
+									<table width="100%" border="0" cellpadding="0" cellspacing="0" height="60">
+										<tr>
+											<th style="text-align:center;" class="cls1">지 원 서</th>
+										</tr>
+										<tr>
+											<td style="text-align:center;" class="cls1">채용공고명 : <%=title%></td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td height="30"></td>
+				</tr>
+				<tr>
+					<td style="text-align:center">
+						<table width="90%" border="1" cellpadding="1" cellspacing="0">
+							<tr>
+								<th height="27" width="20%" bgcolor="#EFEFEF" class="cls">구직자명</th>
+								<td bgcolor="#FFFFFF" class="cls1">
+								&nbsp;&nbsp;<%=cust_nm%>
+								</td>
+								<th width="20%" bgcolor="#EFEFEF" class="cls">연령</th>
+								<td bgcolor="#FFFFFF" class="cls1">
+								&nbsp;&nbsp;<%=age%>
+								</td>
+							</tr>
+							<tr>
+								<th height="27" width="20%" bgcolor="#EFEFEF" class="cls">경력</th>
+								<td bgcolor="#FFFFFF" class="cls1">
+								&nbsp;&nbsp;<%=career_yy%>년 <%=career_mm %>개월
+								</td>
+								<th height="27" width="20%" bgcolor="#EFEFEF" class="cls">연락처</th>
+								<td bgcolor="#FFFFFF" class="cls1">
+								&nbsp;&nbsp;<%=tel_1%> - 
+								<%=tel_2%> - 
+								<%=tel_3%>
+								</td>
+							</tr>
+							<tr>
+								<th height="27" width="20%" bgcolor="#EFEFEF" class="cls">희망연봉</th>
+								<td colspan="3" bgcolor="#FFFFFF" class="cls1">
+								&nbsp;&nbsp;<%=hope_salary%>
+								</td>
+							</tr>
+							<tr>
+								<th height="27" width="20%" bgcolor="#EFEFEF" class="cls">지원일</th>
+								<td colspan="3" bgcolor="#FFFFFF" class="cls1">
+								&nbsp;&nbsp;<%=reg_cdate%> 
+								</td>
+							</tr>
+							<tr>
+								<th height="27" width="20%" bgcolor="#EFEFEF" class="cls">내용</th>
+								<td colspan="3" bgcolor="#FFFFFF" class="cls1"><br>
+								&nbsp;&nbsp;<%=content%><br><br>
+								</td>
+							</tr>
+							<tr>
+								<th height="27" width="20%" bgcolor="#EFEFEF" class="cls">첨부파일</th>
+								<td colspan="3" bgcolor="#FFFFFF" class="cls1">
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr><td height="20"></td></tr>
+			</table>
+		</td>
+	</tr>
+</table>
+</body>
+</html>

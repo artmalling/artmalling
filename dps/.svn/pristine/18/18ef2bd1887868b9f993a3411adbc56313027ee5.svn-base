@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  마진정보를 조회한다.
+ -->
+<service name="/pcod302.pc">
+
+  <gauce name="H_SEL_MASTER">   
+        <column colName="PUMBUN_CD"        colType="TB_STRING" size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PUMBUN_NAME"      colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="MG_FLAG"          colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_FLAG"       colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"       colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_MG_RATE"     colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_MG_RATE"    colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"         colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"         colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"         colType="TB_STRING" size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"       colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"           colType="TB_STRING" size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"         colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RENTB_MGAPP_FLAG" colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RENTB_MGAPP_NAME" colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BAS_AMT"          colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"           colType="TB_STRING" size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_MARGINMST">
+        <![CDATA[
+            SELECT MAR.PUMBUN_CD       
+                 , PBN.PUMBUN_NAME     
+                 , MAR.MG_FLAG     
+                 , MAR.EVENT_FLAG       
+                 , MAR.EVENT_RATE
+                 , MAR.NORM_MG_RATE    
+                 , MAR.EVENT_MG_RATE   
+                 , MAR.APP_S_DT    
+                 , MAR.APP_E_DT         
+                 , MAR.EVENT_CD   
+                 , EVT.EVENT_NAME      
+                 , PBN.VEN_CD          
+                 , VEN.VEN_NAME    
+                 , STR.RENTB_MGAPP_FLAG 
+                 , COM.FN_GET_COMM_NAME('D','P086',STR.RENTB_MGAPP_FLAG) AS RENTB_MGAPP_NAME
+                 , MAR.BAS_AMT         
+                 , MAR.REMARK
+              FROM DPS.PC_MARGINMST MAR
+                 , DPS.PC_PBNMST PBN
+                 , DPS.PC_EVTMST EVT
+                 , DPS.PC_VENMST VEN
+                 , DPS.PC_STRPBN STR
+             WHERE MAR.PUMBUN_CD = PBN.PUMBUN_CD
+               AND MAR.EVENT_CD = EVT.EVENT_CD(+)  
+               AND PBN.VEN_CD = VEN.VEN_CD
+               AND MAR.STR_CD = STR.STR_CD
+               AND MAR.PUMBUN_CD = STR.PUMBUN_CD
+               AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = MAR.STR_CD
+                                 AND MYORG.PUMBUN_CD   = MAR.PUMBUN_CD
+                                 AND MYORG.USER_ID     = ?
+                                 AND MYORG.ORG_FLAG    = ?
+                                 AND ROWNUM            = 1
+                             )
+        ]]>        
+    </query>  
+    <query name="SEL_MARGINMST_WHERE_STR_CD">
+        <![CDATA[
+               AND MAR.STR_CD            = ?
+        ]]>  
+    </query>
+    <query name="SEL_MARGINMST_WHERE_LIKE_VEN_CD">
+        <![CDATA[
+               AND STR.VEN_CD        LIKE      ?||'%'
+        ]]> 
+    </query>
+    <query name="SEL_MARGINMST_WHERE_LIKE_VEN_NAME">
+        <![CDATA[
+               AND VEN.VEN_NAME      LIKE   '%'||?||'%'
+        ]]> 
+    </query>
+    <query name="SEL_MARGINMST_WHERE_LIKE_PUMBUN_CD">
+        <![CDATA[
+               AND MAR.PUMBUN_CD     LIKE  ?||'%'
+        ]]>  
+    </query>
+    <query name="SEL_MARGINMST_WHERE_LIKE_PUMBUN_NAME">
+        <![CDATA[
+               AND PBN.PUMBUN_NAME   LIKE '%'||?||'%'
+        ]]>  
+    </query>
+    <query name="SEL_MARGINMST_WHERE_REP_VEN_CD">
+        <![CDATA[
+               AND VEN.REP_VEN_CD         = ?
+        ]]> 
+    </query>
+    <query name="SEL_MARGINMST_WHERE_REP_PUMBUN_CD">
+        <![CDATA[
+               AND PBN.REP_PUMBUN_CD      = ?
+        ]]> 
+    </query>    
+    <query name="SEL_MARGINMST_WHERE_MG_FLAG">
+        <![CDATA[
+               AND MAR.MG_FLAG            = ?
+        ]]> 
+    </query>  
+    <query name="SEL_MARGINMST_WHERE_EVENT_CD">
+        <![CDATA[
+               AND MAR.EVENT_CD           = ?
+        ]]> 
+    </query>
+    <query name="SEL_MARGINMST_WHERE_EVENT_DT">
+        <![CDATA[
+               AND ? BETWEEN MAR.APP_S_DT  AND MAR.APP_E_DT
+        ]]> 
+    </query>
+    <query name="SEL_MARGINMST_ORDER">
+        <![CDATA[
+            ORDER BY MAR.PUMBUN_CD 
+                   , MAR.MG_FLAG
+                   , MAR.EVENT_FLAG
+                   , MAR.APP_S_DT
+        ]]> 
+    </query>
+    
+</service>

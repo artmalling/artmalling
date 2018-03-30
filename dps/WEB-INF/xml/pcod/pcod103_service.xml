@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.07
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  점별협력사를 조회한다.
+ -->
+<service name="/pcod103.pc">
+
+  <gauce name="H_SEL_MASTER">   
+        <column colName="STR_CD"           colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"           colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"         colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_SALE_FLAG"    colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BIZ_TYPE"         colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EDI_YN"           colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PAY_CYC"          colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_DT_FLAG"      colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_WAY"          colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_HOLI_FLAG"    colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RUND_FLAG"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="POS_CAL_FLAG"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BANK_CD"          colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="BANK_ACC_NO"      colType="TB_STRING" size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="ACC_NO_OWN"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"           colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_S_DT"         colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="BIZ_E_DT"         colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NO"          colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_STRVENMST">
+        <![CDATA[
+            SELECT STR.STR_CD      , STR.VEN_CD          , STR.VEN_NAME       , VEN.BUY_SALE_FLAG    , STR.BIZ_TYPE
+                 , STR.EDI_YN      , STR.PAY_CYC         , STR.PAY_DT_FLAG    , STR.PAY_WAY          , STR.PAY_HOLI_FLAG 
+                 , STR.RUND_FLAG   , STR.POS_CAL_FLAG    , STR.BANK_CD        , STR.BANK_ACC_NO      , STR.ACC_NO_OWN
+                 , STR.USE_YN      , STR.BIZ_S_DT        , STR.BIZ_E_DT		  , VEN.COMP_NO
+              FROM DPS.PC_VENMST    VEN
+                 , DPS.PC_STRVENMST STR
+             WHERE VEN.VEN_CD = STR.VEN_CD 
+        ]]>          
+    </query> 
+    <query name="SEL_STRVENMST_WHERE_BUY_STR_CD">
+        <![CDATA[
+               AND STR.STR_CD           = ?
+        ]]>
+    </query>
+    <query name="SEL_STRVENMST_WHERE_COMP_FLAG">
+        <![CDATA[
+               AND VEN.COMP_FLAG    = ?
+        ]]>
+    </query>
+    <query name="SEL_STRVENMST_WHERE_COMP_NO">
+        <![CDATA[
+               AND VEN.COMP_NO  LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_STRVENMST_WHERE_BIZ_TYPE">
+        <![CDATA[
+               AND STR.BIZ_TYPE         = ?
+        ]]>
+    </query>
+    <query name="SEL_STRVENMST_WHERE_LIKE_VEN_CD">
+        <![CDATA[
+               AND STR.VEN_CD     LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_STRVENMST_WHERE_REP_VEN_NAME">
+        <![CDATA[
+               AND STR.VEN_NAME   LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_STRVENMST_WHERE_USE_YN">
+        <![CDATA[
+               AND STR.USE_YN           = ?
+        ]]>
+    </query>
+    <query name="SEL_STRVENMST_ORDER">
+        <![CDATA[
+            ORDER BY STR.STR_CD
+                   , STR.VEN_CD
+        ]]>
+    </query>
+    
+</service>

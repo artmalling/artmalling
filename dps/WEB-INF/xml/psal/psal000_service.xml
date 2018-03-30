@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : jyk
+ * 회 사 명 : 패션그룹형지(주) 
+ * 작 성 일 : 2018.02.07
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal000.ps">
+
+	<!-- 점별 지결 헤더 -->
+    <gauce name="H_SEL_MASTER"> 
+    	<column colName="CO_NAME"               colType="TB_STRING"   size="30"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    	<column colName="USERPOSTNAME"          colType="TB_STRING"   size="30"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    	<column colName="DOCTITLE"          	colType="TB_STRING"   size="100"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    	<column colName="EXPENDDATE"          	colType="TB_STRING"   size="10"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    	<column colName="EXPENDCOST"		    colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="USEREMPNO"          	colType="TB_STRING"   size="30"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="USERNO"          		colType="TB_STRING"   size="30"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="USERS"          		colType="TB_STRING"   size="30"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="APPUSERNM"          	colType="TB_STRING"   size="20"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+     	<column colName="APPGB"          		colType="TB_STRING"   size="2"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     	<column colName="APPGBNM"          		colType="TB_STRING"   size="10"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     	<column colName="COMPLETEDDT"          	colType="TB_STRING"   size="30"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CO_CD"          		colType="TB_STRING"   size="4"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DOCID"          		colType="TB_DECIMAL"  size="13"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EXPENDNO"          	colType="TB_DECIMAL"  size="13"   	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 점별 지결 헤더 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT (SELECT COMM_NAME1 FROM COM.TC_COMMCODE WHERE SYS_PART='D' AND COMM_PART = 'D220' AND COMM_CODE=CO_CD) CO_NAME
+			     , USERPOSTNAME
+			     , DOCTITLE
+			     , EXPENDDATE
+			     , EXPENDCOST
+			     , USEREMPNO
+			     , USERNO
+			     , USERS
+			     , DECODE(APPGB, 1, '*', APPUSERNM) AS APPUSERNM
+			     , APPGB
+			     , DECODE(APPGB,'0', '진행', '1', '종결', '반려') APPGBNM
+			     , COMPLETEDDT
+			     , CO_CD
+			     , DOCID
+			     , EXPENDNO
+			  FROM 
+			  (
+			SELECT HD."userPost" AS USERPOST                            -- 기안 부서 코드
+			     , HD."userPostName" AS USERPOSTNAME                    -- 기안 부서
+			     , TRIM(HD."DocTitle") AS DOCTITLE                      -- 지결 제목
+			     , TO_CHAR(HD."expendDate",'YYYYMMDD') AS EXPENDDATE    -- 결의일자
+			     , HD."expendCost" AS EXPENDCOST                        -- 금액
+			     , SUBSTR(HD."USER_EMP_NO",3,8) USEREMPNO               -- 사원코드
+			     , HD."CO_CD" AS CO_CD                                  -- 회사코드
+			     , HD."expendNo" AS EXPENDNO                            -- 지결문서번호
+			     , HD."userNo" AS USERNO                                -- 기안자 코드
+			     , HD."users" AS USERS                                  -- 기안자
+			     , LN."app_user_nm" AS APPUSERNM                        -- 현결재자
+			     , LN."sign_kind" AS SIGNKIND                           -- 진행상태
+			     , TO_CHAR(HD."regiDate",'YYYYMMDD') AS REGIDATE        -- 작성일자
+			     , AD."completed_dt" AS COMPLETEDDT                     -- 완료일시
+			     , HD."doc_id" AS DOCID                                 -- 문서번호
+			     , DECODE(LN."sign_kind", '6', '2',
+			              DECODE(AD."completed_dt", NULL, '0', '1')
+			              ) AS APPGB                                   -- 진행상태구분 ( 0 : 진행중, 1 : 종결 , 2 : 반려 )
+			
+			  FROM "T_EXPEND"@DZGW HD
+			     , "TEAG_APP"@DZGW LN
+			     , "TEAG_APPDOC"@DZGW AD
+			 WHERE HD."CO_CD" = ?
+			   AND HD."doc_id" = LN."doc_id"
+			   AND HD."doc_id" = AD."doc_id"
+			   AND LN."app_level" = ( SELECT MAX("app_level") 
+			                            FROM "TEAG_APP"@DZGW LN 
+			                           WHERE "doc_id" = HD."doc_id"
+			                             AND "sign_yn"='1' )								-- 기안자가 결재 상신하지 않으면 리스트에서 제외
+			   AND TO_CHAR(HD."expendDate",'YYYYMMDD') BETWEEN ? AND ?    					-- 결의일자 기간조회
+			   AND TRIM(HD."DocTitle") LIKE '%'||?||'%'                                        	-- 문서 제목 
+			   AND HD."userPostName" LIKE '%'||?||'%'                                           	-- 부서명 검색
+			  )
+			  WHERE ( USEREMPNO LIKE '%'||?||'%' OR USERS LIKE '%'||?||'%' )	                                -- 기안자 사번 및 사원명
+			    AND APPGB LIKE  ?||'%'         												-- 진행상태구분 ( 0 : 진행중, 1 : 종결 , 2 : 반려 )
+        ]]>        
+    </query>
+    
+    
+    <!-- 점별 지결 조건 반려제외 -->
+    <query name="SEL_MASTER_EXCEPT">
+    	<![CDATA[       
+			    AND APPGB < 2		-- 반려 제외
+        ]]>        
+    </query>
+    
+    
+    <!-- 지결 내용 상세 헤더 -->
+    <gauce name="H_SEL_DETAIL"> 
+		<column colName="L_DESC"               	colType="TB_STRING"   size="100"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DEBITCODE"	           	colType="TB_STRING"   size="6" 		dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DEBITTITLE"           	colType="TB_STRING"   size="100" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="L_COST"  			   	colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="VAT"			   	   	colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DEBTERCODE"	       	colType="TB_STRING"   size="6" 		dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DEBTERTITLE"          	colType="TB_STRING"   size="100" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="AMT"	           	   	colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="AUTH_DATE"          	colType="TB_STRING"   size="10"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="AUTHCD"          		colType="TB_STRING"   size="3" 		dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="AUTHTITLE"          	colType="TB_STRING"   size="100" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CARDCD"          		colType="TB_STRING"   size="20" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CARDNAME"          	colType="TB_STRING"   size="100" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="VENDCD"          		colType="TB_STRING"   size="20" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="VENDNAME"          	colType="TB_STRING"   size="100" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="COMP_AMT"			   	colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EXPENDNO"			   	colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="LISTNO"			   	colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+     
+    
+    <!-- 지결 내용 상세 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[	SELECT L_DESC
+					      , DEBITCODE
+					      , DEBITTITLE
+					      , L_COST
+					      , VAT
+					      , DEBTERCODE
+					      , DEBTERTITLE
+					      , AMT
+					      , AUTH_DATE
+					      , AUTHCD 
+					      , AUTHTITLE
+					      , CARDCD
+					      , CARDNAME
+					      , VENDCD 
+					      , VENDNAME 
+					      , L_COST+VAT-AMT COMP_AMT 								-- 차변[공급가+부가세] - 대변
+					      , EXPENDNO
+					      , LISTNO
+					   FROM
+					 (
+					 SELECT "l_desc"        AS L_DESC       						-- 상세내역
+					      , "debitCode"     AS DEBITCODE    						-- 계정과목코드(차)
+					      , "debitTitle"    AS DEBITTITLE   						-- 계정과목코드(차)
+					      , DECODE("l_cost"+"vat",0,"amt","l_cost")  AS L_COST      -- 공급가액
+					      , "vat"           AS VAT          						-- 부가세
+					      , "debterCode"    AS DEBTERCODE   						-- 계정과목코드(대)
+					      , "debterTitle"   AS DEBTERTITLE 						 	-- 계정과목명(대)
+					      , "amt"           AS AMT          						-- 금액
+					      , "auth_date"     AS AUTH_DATE    						-- 증빙일자
+					      , "authCD"        AS AUTHCD       						-- 증빙코드
+					      , "authTitle"     AS AUTHTITLE    						-- 증빙명
+					      , "add_1"         AS CARDCD       						-- 법인카드코드
+					      , "add_1_txt"     AS CARDNAME     						-- 법인카드명
+					      , "add_3"         AS VENDCD       						-- 거래처코드
+					      , "add_3_txt"     AS VENDNAME     						-- 거래처명
+					      , "expendNo"      AS EXPENDNO
+					      , "listNo"		AS LISTNO
+					 FROM "T_EXPEND_LIST"@DZGW
+					  WHERE "CO_CD" = ?
+					   AND "expendNo" = ?
+					 )
+					 ORDER BY LISTNO
+        ]]>        
+    </query>
+    
+    
+    <!-- 지결 결재 라인 헤더 -->
+    <gauce name="H_SEL_APPRLINE"> 
+		<column colName="DOCDEPTNM"         colType="TB_STRING"   size="50"		dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DOCUSERNM"	        colType="TB_STRING"   size="50" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DOCGRADENM"        colType="TB_STRING"   size="50" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="APPKIND"  			colType="TB_STRING"   size="50"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="APPLEVEL"			colType="TB_DECIMAL"  size="3"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SIGNKIND"	       	colType="TB_STRING"   size="10" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="APPDT"          	colType="TB_STRING"   size="30" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+     
+    
+    <!-- 지결 결재 라인 -->
+    <query name="SEL_APPRLINE">        
+        <![CDATA[	 SELECT LN."doc_dept_nm"									AS DOCDEPTNM	-- 부서
+					      , LN."doc_user_nm"									AS DOCUSERNM	-- 사원명
+					      , LN."doc_grade_nm" 									AS DOCGRADENM	-- 직급
+					      , DECODE(LN."app_kind",1,'결재','합의') 				AS APPKIND  	-- 결재종류
+					      , LN."app_level" 										AS APPLEVEL		-- 결재순서
+					      , DECODE(LN."sign_kind",0,'미결',1,'결재','반송') 	AS SIGNKIND 	-- 결재여부
+					      , LN."app_dt" 										AS APPDT 		-- 결재 시간
+					  FROM "TEAG_APP"@DZGW LN
+					 where "doc_id" = ?
+        ]]>        
+    </query>   
+    
+    
+    <!-- 지결 결재 라인 헤더 -->
+    <gauce name="H_SEL_ACCOUNT"> 
+		<column colName="CODE"		colType="TB_STRING"   size="50"		dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TITLE"	    colType="TB_STRING"   size="50" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="L_COST"	colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="VAT"		colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="L_AMT"		colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="AMT"		colType="TB_DECIMAL"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="COMP_AMT"	colType="TB_STRING"  size="13"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />				
+    </gauce>
+     
+    
+    <!-- 지결 결재 라인 -->
+    <query name="SEL_ACCOUNT">        
+        <![CDATA[
+           SELECT CODE
+           		, MIN(TITLE) AS TITLE
+           		, SUM(L_COST) AS L_COST
+				, SUM(VAT) AS VAT
+				, SUM(L_COST) + SUM(VAT) AS L_AMT 
+				, SUM(AMT) AS AMT 
+				--, SUM(L_COST)+SUM(VAT)-SUM(AMT) AS COMP_AMT
+				, '' AS COMP_AMT
+				FROM 
+				(
+					/*차변 계정*/
+				SELECT B."debitCode"            AS CODE    -- 계정과목코드(차)
+				      , MIN(B."debitTitle")     AS TITLE   -- 계정과목코드(차)
+				      , SUM(DECODE(B."l_cost"+B."vat",0,B."amt",B."l_cost"))         AS L_COST       -- 공급가액
+				      , SUM(B."vat")            AS VAT          -- 부가세
+				      , 0 AMT
+				  FROM
+				(
+				SELECT HD."userPost" AS USERPOST                            -- 기안 부서 코드
+				     , HD."userPostName" AS USERPOSTNAME                    -- 기안 부서
+				     , HD."CO_CD" AS CD_CD                                  -- 회사코드
+				     , HD."expendNo" AS EXPENDNO                            -- 지결문서번호
+				     , HD."doc_id" AS DOCID                                 -- 문서번호
+				     , DECODE(LN."sign_kind", '6', '2',
+				              DECODE(AD."completed_dt", NULL, '0', '1')
+				              ) AS APPGB                                    -- 진행상태구분 ( 0 : 진행중, 1 : 종결 , 2 : 반려 )
+				  FROM "T_EXPEND"@DZGW HD
+				     , "TEAG_APP"@DZGW LN
+				     , "TEAG_APPDOC"@DZGW AD
+				 WHERE HD."CO_CD" = ?
+				   AND HD."doc_id" = LN."doc_id"(+)
+				   AND HD."doc_id" = AD."doc_id"
+				   AND LN."app_level" = ( SELECT MAX("app_level") 
+				                            FROM "TEAG_APP"@DZGW LN 
+				                           WHERE "doc_id" = HD."doc_id"
+				                             AND "sign_yn"='1' )
+				   AND TO_CHAR(HD."expendDate",'YYYYMMDD') BETWEEN ? AND ?       -- 결의일자 기간조회
+				 ) A
+				 , "T_EXPEND_LIST"@DZGW B
+				 WHERE A.CD_CD = B."CO_CD"
+				 AND A.EXPENDNO = B."expendNo"
+				 AND A.APPGB < 2
+				GROUP BY B."debitCode" 
+				
+				UNION ALL
+				
+					/*대변 계정*/
+				SELECT B."debterCode"         AS CODE   -- 계정과목코드(대)
+				     , MIN(B."debterTitle")   AS TITLE  -- 계정과목명(대)
+				     , 0 L_COST
+				     , 0 VAT
+				     , SUM(B."amt")           AS AMT          -- 금액
+				  FROM
+				(
+				SELECT HD."userPost" AS USERPOST                            -- 기안 부서 코드
+				     , HD."userPostName" AS USERPOSTNAME                    -- 기안 부서
+				     , HD."CO_CD" AS CD_CD                                  -- 회사코드
+				     , HD."expendNo" AS EXPENDNO                            -- 지결문서번호
+				     , HD."doc_id" AS DOCID                                 -- 문서번호
+				     , DECODE(LN."sign_kind", '6', '2',
+				              DECODE(AD."completed_dt", NULL, '0', '1')
+				              ) AS APPGB                                    -- 진행상태구분 ( 0 : 진행중, 1 : 종결 , 2 : 반려 )
+				  FROM "T_EXPEND"@DZGW HD
+				     , "TEAG_APP"@DZGW LN
+				     , "TEAG_APPDOC"@DZGW AD
+				 WHERE HD."CO_CD" = ?
+				   AND HD."doc_id" = LN."doc_id"(+)
+				   AND HD."doc_id" = AD."doc_id"
+				   AND LN."app_level" = ( SELECT MAX("app_level") 
+				                            FROM "TEAG_APP"@DZGW LN 
+				                           WHERE "doc_id" = HD."doc_id"
+				                             AND "sign_yn"='1' )
+				   AND TO_CHAR(HD."expendDate",'YYYYMMDD') BETWEEN ? AND ?       -- 결의일자 기간조회
+				 ) A
+				 , "T_EXPEND_LIST"@DZGW B
+				 WHERE A.CD_CD = B."CO_CD"
+				 AND A.EXPENDNO = B."expendNo"
+				 AND A.APPGB < 2
+				GROUP BY B."debterCode"
+				)
+			GROUP BY CODE
+        ]]>        
+    </query>     
+    
+ 
+     
+		        
+</service>
+

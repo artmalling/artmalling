@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 윤지영
+ * 회 사 명 : 한국후지쯔 
+ * 작 성 일 : 2016.11.18
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 사은행사 브랜드 부담예정 현황
+ -->
+<service name="/mcae910.mc">
+    <!-- 사은행사정보-->
+    <gauce name="H_EVENTINFO">
+        <column colName="STR_CD"            colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"            colType="TB_STRING" size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EVENT_TYPE"        colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_TYPE_NM"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"        	colType="TB_STRING" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"        colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"     	colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"        colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+        <column colName="PB_APP_RATE"       colType="TB_DECIMAL" size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+        <column colName="PRSNT_AMT"         colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="PRSNT_AMT_B"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="PRSNT_AMT_M"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce> 
+    
+    <!-- 사은행사정보상세-->
+	<gauce name="H_DTL_EVENTINFO">
+		<column colName="PUMBUN_CD"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT_TAX" colType="TB_DECIMAL" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_RATE"         colType="TB_DECIMAL" size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MC_AMT"           colType="TB_DECIMAL" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="MC_RATE"          colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />    
+        <column colName="PRSNT_AMT"        colType="TB_DECIMAL" size="12" dec="2" keyType="TB_NORMAL" roundMode="ROUND" />   
+    </gauce> 
+    
+    
+    <!-- 사은행사정보-->
+    <query name="SEL_EVENTINFO">
+        <![CDATA[ 
+			SELECT A.STR_CD
+			     , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM              
+			     , A.EVENT_TYPE
+			     , COM.FN_GET_COMM_NAME('D','M002',A.EVENT_TYPE) AS EVENT_TYPE_NM  --사은행사유형명 
+			     , A.EVENT_CD
+			     , B.EVENT_NAME
+			     , A.EVENT_S_DT
+			     , A.EVENT_E_DT  
+			     , A.PB_APP_RATE                                                         -- 브랜드부담율
+			     , (A.PRSNT_AMT - A.PRSNT_AMT_C) AS PRSNT_AMT                            -- 지급금액
+			     , ((A.PRSNT_AMT - A.PRSNT_AMT_C) * A.PB_APP_RATE /100) AS PRSNT_AMT_B   -- 브랜드부담지급금액
+			     , A.PRSNT_AMT_M                                                         -- POS미회수취소금액
+			  FROM (
+				       SELECT A.STR_CD
+							, A.EVENT_TYPE AS EVENT_TYPE                                      --사은행사유형                  
+							, A.EVENT_CD
+							, B.EVENT_S_DT
+							, B.EVENT_E_DT  
+							, A.PB_APP_RATE
+							, SUM(CASE WHEN C.PRSNT_FLAG IN ('1','2') THEN C.PRSNT_AMT ELSE 0 END) AS PRSNT_AMT
+							, SUM(CASE WHEN C.PRSNT_FLAG IN ('4','5','7') THEN C.PRSNT_AMT ELSE 0 END) AS PRSNT_AMT_C
+							, SUM(CASE WHEN C.PRSNT_FLAG IN ('6') THEN C.PRSNT_AMT ELSE 0 END) AS PRSNT_AMT_M
+				         FROM MSS.MC_EVTMST A
+				            , DPS.PC_STREVT B 
+				            , MSS.MC_EVTSKUPRSNT C
+				        WHERE A.STR_CD   = B.STR_CD
+				          AND A.EVENT_CD = B.EVENT_CD
+				          AND A.STR_CD   = C.STR_CD
+				          AND A.EVENT_CD = C.EVENT_CD
+				          AND A.CAL_YN = 'T'     --정산여부
+				          AND A.STR_CD = ?  
+				          AND B.EVENT_E_DT LIKE  ? || '%'
+				       GROUP BY A.STR_CD
+				              , A.EVENT_TYPE            
+				              , A.EVENT_CD
+				              , B.EVENT_S_DT
+				              , B.EVENT_E_DT  
+				              , A.PB_APP_RATE
+				   ) A
+			      , DPS.PC_EVTMST B
+		  	 WHERE A.EVENT_CD = B.EVENT_CD
+			   AND B.EVENT_TYPE IN ('4')-- 사은행사
+			   AND (A.EVENT_CD LIKE ? || '%' OR B.EVENT_NAME LIKE ? || '%' )
+        ]]>
+    </query>
+    
+    <!-- 사은행사정보-->
+    <query name="SEL_EVENTINFO_BACK">
+        <![CDATA[ 
+			SELECT C.STR_CD
+			     , DPS.FN_GET_STORE_NAME(C.STR_CD) AS STR_NM
+			     , C.EVENT_TYPE AS EVENT_TYPE       						      --사은행사유형                 
+			     , COM.FN_GET_COMM_NAME('D','M002',C.EVENT_TYPE) AS EVENT_TYPE_NM --사은행사유형명                
+			     , B.EVENT_CD
+			     , A.EVENT_NAME
+			     , B.EVENT_S_DT
+			     , B.EVENT_E_DT  
+			  FROM DPS.PC_EVTMST A
+			     , DPS.PC_STREVT B
+			     , MSS.MC_EVTMST C 
+			 WHERE A.EVENT_CD = B.EVENT_CD
+			   AND B.STR_CD   = C.STR_CD
+			   AND B.EVENT_CD = C.EVENT_CD
+			   AND A.EVENT_TYPE IN ('4')-- 사은행사
+			   AND C.CAL_YN = 'T' 		--정산여부
+			   AND B.STR_CD = ?  
+			   AND (A.EVENT_CD LIKE ? || '%' OR A.EVENT_NAME LIKE ? || '%' )
+        ]]>
+    </query>
+    
+
+    <!-- 사은행사정보상세-->
+    <query name="SEL_EVENTINFO_DTL">
+        <![CDATA[  
+		     SELECT A.PUMBUN_CD
+		           , DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD) AS PUMBUN_NM
+		           , SUM(A.NET_SALE_AMT_TAX) AS NET_SALE_AMT_TAX            --세포함 매출그액
+		           , F.APP_RATE                                             --인정율
+		           , SUM(A.NET_SALE_AMT_TAX * F.APP_RATE/100) AS MC_AMT     --인정금액
+		           , 0 AS MC_RATE                                           --비중
+		           , 0 AS PRSNT_AMT                                         --부담금액
+		       FROM DPS.PS_DISITEM A   --판매상품정
+		           , MSS.MC_PRSNTRECP B   --지급영수증
+		           , (         
+		               SELECT DISTINCT              
+		                      A.EVENT_CD ,A.PRSNT_DT, A.PRSNT_NO, A.STR_CD
+		                   , (CASE C.PUMBUN_CD WHEN '******' THEN D.PUMBUN_CD ELSE C.PUMBUN_CD END) AS PUMBUN_CD
+		                   , (CASE C.PUMBUN_CD WHEN '******' THEN D.APP_RATE ELSE C.APP_RATE END) AS APP_RATE
+		               FROM MSS.MC_EVTSKUPRSNT A   
+		                    , MSS.MC_EVTPUMBUN  C
+		                    , MSS.MC_APPRATE  D
+		               WHERE A.STR_CD   = C.STR_CD
+		                 AND A.EVENT_CD = C.EVENT_CD
+		                 AND C.STR_CD = D.STR_CD(+)
+		                 AND A.STR_CD   = ?
+		                 AND A.EVENT_CD = ?
+		                 ) F
+		         WHERE A.STR_CD     = B.STR_CD 
+		           AND A.SALE_DT    = B.SALE_DT 
+		           AND A.POS_NO     = B.POS_NO 
+		           AND A.TRAN_NO    = B.TRAN_NO
+		           AND B.PRSNT_DT   = F.PRSNT_DT
+		           AND B.STR_CD     = F.STR_CD
+		           AND B.PRSNT_NO   = F.PRSNT_NO  
+		           AND A.PUMBUN_CD  = F.PUMBUN_CD
+		     GROUP BY A.PUMBUN_CD
+		           , F.EVENT_CD
+		           , F.APP_RATE
+		    ORDER BY A.PUMBUN_CD
+		           , F.EVENT_CD    
+        ]]>
+    </query>    
+ 
+           
+           
+    <!-- 사은행사정보상세-->
+    <query name="SEL_EVENTINFO_DTL_BACK">
+        <![CDATA[  
+			SELECT TA.EVENT_CD 
+                 , TA.EVENT_NAME 
+                 , TA.PUMBUN_CD
+                 , TA.NET_SALE_AMT_TAX
+                 , TA.APP_RATE
+                 , TA.MC_AMT
+                 , 0 AS MC_RATE  
+                 , TA.PRSNT_AMT AS PRSNT_AMT 
+			  FROM (SELECT A.EVENT_CD         --행사코드
+			           , D.EVENT_NAME         --행사명
+			           , C.PUMBUN_CD          --품번코드
+                       , NVL(C.NET_SALE_AMT_TAX,0) AS NET_SALE_AMT_TAX   --매출액
+                       , NVL(F.APP_RATE,0) AS APP_RATE                   --인정율 
+                       , ((NVL(C.NET_SALE_AMT_TAX,0)*NVL(F.APP_RATE,0))/100) AS MC_AMT--인정금액=매출금액*인정율 
+                       , ((NVL(A.PRSNT_AMT,0)*NVL(G.PB_APP_RATE,0))/100) AS PRSNT_AMT        --부담금액=지급금액*브랜드부담율
+			        FROM MSS.MC_EVTSKUPRSNT A --사은품지급
+			           , MSS.MC_PRSNTRECP B   --지급영수증
+			           , DPS.PS_DISITEM C     --판매상품정보
+			           , DPS.PC_EVTMST D      --점별행사
+			           , DPS.PC_STREVT E      --행사마스터
+			           , MSS.MC_APPRATE F     --품번별 인정율
+			           , MSS.MC_EVTMST G      --사은행사마스터
+			       WHERE A.PRSNT_DT = B.PRSNT_DT
+			         AND A.STR_CD   = B.STR_CD
+			         AND A.PRSNT_NO = B.PRSNT_NO                                   
+			         AND B.SALE_DT  = C.SALE_DT 
+			         AND B.POS_NO   = C.POS_NO 
+			         AND B.TRAN_NO  = C.TRAN_NO
+			         AND A.EVENT_CD = D.EVENT_CD 
+			         AND D.EVENT_CD = E.EVENT_CD 
+			         AND A.STR_CD = F.STR_CD 
+			         AND C.PUMBUN_CD = F.PUMBUN_CD 
+			         AND A.STR_CD = G.STR_CD 
+                     AND A.EVENT_CD = G.EVENT_CD 
+			         AND A.PRSNT_FLAG = '1'   --지급구분(1:정상지급) 
+			         AND A.CANCEL_GB  = '1'   --취소구분(1:정산,2:취소)
+			         AND D.EVENT_TYPE = '4'   --사은행사
+			         AND A.STR_CD = ?
+			         AND A.EVENT_CD = ?
+			         ) TA
+		 ORDER BY TA.EVENT_CD 
+		        , TA.EVENT_NAME 
+		        , TA.PUMBUN_CD
+        ]]>
+    </query>    
+</service>

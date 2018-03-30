@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  입금상세데이터를 조회한다.
+ -->
+<service name="/psal932.ps">
+    <!-- 입금상세데이터조회 -->
+    <gauce name="H_MASTER">
+        <column colName="CHK_BOX"       colType="TB_STRING"     size="1"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+        <column colName="REC_FLAG"      colType="TB_STRING"     size="1"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+		<column colName="RECV_CNT"      colType="TB_DECIMAL"    size="7"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="RECV_AMT"      colType="TB_DECIMAL"    size="12"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="RTN_CNT"       colType="TB_DECIMAL"    size="7"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="RTN_AMT"       colType="TB_DECIMAL"    size="12"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="DEFER_CNT"     colType="TB_DECIMAL"    size="7"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="DEFER_AMT"     colType="TB_DECIMAL"    size="12"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="CLEAR_CNT"     colType="TB_DECIMAL"    size="7"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="CLEAR_AMT"     colType="TB_DECIMAL"    size="12"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="TOT_CNT"       colType="TB_DECIMAL"    size="7"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="TOT_AMT"       colType="TB_DECIMAL"    size="12"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="COMIS_AMT"     colType="TB_DECIMAL"    size="12"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="PEXPT_DT"      colType="TB_STRING"     size="6"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+        <column colName="PEXPT_AMT"     colType="TB_DECIMAL"    size="12"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="JBRCH_ID"      colType="TB_STRING"     size="13"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+        <column colName="SEND_DT"       colType="TB_STRING"     size="6"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+        <column colName="FILLER"        colType="TB_STRING"     size="5"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+        <column colName="ACCNT_MIG_DT"  colType="TB_STRING"     size="14"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="JBRCH_NM"      colType="TB_STRING"     size="40"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="PAY_DT"        colType="TB_STRING"     size="8"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="PAY_SEQ"       colType="TB_DECIMAL"    size="3"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="SEQ_NO"        colType="TB_DECIMAL"    size="7"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />   
+        <column colName="STR_CD"        colType="TB_STRING"     size="2"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="FLAG"          colType="TB_STRING"     size="1"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="REAL_DT"       colType="TB_STRING"     size="8"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 입금상세데이터조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT 'F' CHK_BOX
+                 , A.REC_FLAG
+                 , A.RECV_CNT
+                 , A.RECV_AMT
+                 , A.RTN_CNT
+                 , A.RTN_AMT
+                 , A.DEFER_CNT
+                 , A.DEFER_AMT
+                 , A.CLEAR_CNT
+                 , A.CLEAR_AMT
+                 , A.TOT_CNT
+                 , A.TOT_AMT
+                 , A.COMIS_AMT
+                 , A.PEXPT_DT
+                 , A.PEXPT_AMT
+                 , A.JBRCH_ID
+                 , A.SEND_DT
+                 , A.FILLER
+                 , A.ACCNT_MIG_DT || LTRIM(to_char(A.ACCNT_NO,'00000') ) ACCNT_MIG_DT     
+                 , B.JBRCH_NM
+                 , A.PAY_DT
+                 , A.PAY_SEQ
+                 , A.SEQ_NO
+                 , B.STR_CD
+                 , DECODE(NVL(A.ACCNT_MIG_DT,''),'','1','2') FLAG 
+                 , A.REAL_DT
+              FROM DPS.PD_PAYD A 
+                 , DPS.PD_BRANCH B
+             WHERE A.JBRCH_ID = B.JBRCH_ID
+               AND B.STR_CD   LIKE ? || '%'
+               AND A.PAY_DT   BETWEEN ? AND ?
+               AND A.JBRCH_ID LIKE ? || '%'
+               AND (A.PAY_DT,A.JBRCH_ID,A.PAY_SEQ) IN (SELECT PAY_DT,JBRCH_ID, MAX(PAY_SEQ) PAY_SEQ  
+                                                        FROM DPS.PD_PAYD
+                                                        WHERE A.PAY_DT   BETWEEN ? AND ?
+                                                        GROUP BY PAY_DT ,JBRCH_ID) 
+        ]]>        
+    </query>
+    
+    <!-- 입금상세내역 수정 -->
+    <query name="UPD_PAYD_REAL_DT">
+        <![CDATA[
+            UPDATE DPS.PD_PAYD /* 2010.07.26 */
+               SET REAL_DT    = ?
+             WHERE PAY_DT     = ?
+               AND PAY_SEQ    = ?
+               AND SEQ_NO     = ?
+        ]]>
+    </query>
+    
+    <!-- 점별KSNET단말기ID조회  -->
+    <query name="SEL_DEVICEID">        
+        <![CDATA[
+			SELECT A.COMM_NAME2 AS DEVICE_ID
+			  FROM COM.TC_COMMCODE A 
+			     , DPS.PC_STRMST B
+			 WHERE A.SYS_PART = 'D'
+			   AND A.COMM_PART = B.VANID_FLAG
+			   AND A.REFER_CODE = B.STR_CD
+			   AND B.STR_CD = ? 
+        ]]>        
+    </query>
+    
+</service>

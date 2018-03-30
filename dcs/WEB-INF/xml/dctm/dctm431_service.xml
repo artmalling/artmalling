@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔 
+ * 작 성 일 : 2010.03.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  데이터조회이력조회
+ -->
+<service name="/dctm431.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="TABLE_ID"   colType="TB_STRING"  size="30"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TABLE_NM"   colType="TB_STRING"  size="30"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_DATE"   colType="TB_STRING"  size="14"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SEQ_NO"     colType="TB_DECIMAL" size="7"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PGM_ID"     colType="TB_STRING"  size="30"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SEL_KEY"    colType="TB_STRING"  size="100"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SEL_SQL"    colType="TB_STRING"  size="1000" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_ID"     colType="TB_STRING"  size="10"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_NAME"   colType="TB_STRING"  size="40"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+     
+    <!-- 코드/명 조회 -->
+    <gauce name="H_COMMON">
+      <column colName="CODE"       colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SORT"       colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>       
+
+    <!-- 데이터변경이력 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT A.TABLE_ID
+                 , B.TABLE_NM
+                 , TO_CHAR( TO_DATE(A.REG_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS') REG_DATE
+                 , A.SEQ_NO
+                 , A.PGM_ID
+                 , A.SEL_KEY
+                 , A.SEL_SQL
+                 , A.REG_ID
+                 , COM.FN_GET_USER_NAME(A.REG_ID) REG_NAME
+              FROM DCS.DM_TBL_SHIST A
+                 , DCS.DM_TBL_SRULE B
+             WHERE A.TABLE_ID = B.TABLE_ID(+)
+               AND A.REG_DATE BETWEEN ? || '000000' AND ? || '240000'
+               AND A.TABLE_ID LIKE ? || '%'               
+        ]]>        
+    </query>      
+    
+    <query name="SEL_ETC_CODE">   
+        <![CDATA[    
+            SELECT '%' AS CODE 
+                 , '전체' AS NAME 
+                 , '0'  AS SORT FROM DUAL
+             UNION 
+            SELECT TABLE_ID AS CODE
+                 , TABLE_NM AS NM
+                 , '1' AS SORT
+              FROM DCS.DM_TBL_SRULE     
+             ORDER BY SORT, NAME         
+        ]]>        
+    </query>       
+</service>

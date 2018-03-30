@@ -1,0 +1,1696 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.25
+ * 변 경 일 : 
+ * 변경내용: 
+ * 개     요 :  실행PC별가중치 조회, 수정, 등록
+ -->
+<service name="/psal202.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"          colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"           colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_ORG_NAME"     colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"           colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_ORG_NAME"     colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"             colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_ORG_NAME"       colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="YYYYMM"            colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_WEIGHT"       colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_WEIGHT"     colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_WEIGHT_S"   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 대비일자 데이터 -->
+    <gauce name="H_SEL_SCHEDULE"> 
+        <column colName="STD_WEIGHT"        colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="PC_CD"             colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"          colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GUBUN"             colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="YYYYMM"            colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK"           colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DT"                colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WEIGHT"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 영업일자 데이터 -->
+    <gauce name="H_SEL_DETAIL_VIEW"> 
+        <column colName="PC_CD"             colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"          colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GUBUN"             colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOTAL"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAB"               colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK1"          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK2"          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK3"          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK4"          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK5"          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK6"          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK7"          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK8"          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK9"          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK10"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK11"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK12"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK13"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK14"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK15"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK16"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK17"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK18"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK19"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK20"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK21"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK22"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK23"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK24"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK25"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK26"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK27"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK28"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK29"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK30"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYWEEK31"         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY1"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY2"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY3"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY4"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY5"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY6"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY7"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY8"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY9"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY10"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY11"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY12"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY13"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY14"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY15"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY16"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY17"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY18"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY19"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY20"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY21"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY22"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY23"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY24"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY25"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY26"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY27"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY28"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY29"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY30"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY31"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_DAY_WEIGHT"> 
+        <column colName="STR_CD"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"          colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"           colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY_WEEK"          colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STD_WEIGHT"        colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+     </gauce>
+    
+    <!-- 코드/명 조회 -->
+    <gauce name="H_CONF_FLAG_M">
+        <column colName="CONF_FLAG"         colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 코드/명 조회 -->
+    <gauce name="H_COUNT">
+        <column colName="CNT"              colType="TB_DECIMAL"      size="2"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE">        
+        <![CDATA[    
+            SELECT A.STR_CD
+		         , A.STR_NAME
+		         , A.DEPT_CD
+		         , A.DEPT_ORG_NAME
+		         , A.TEAM_CD
+		         , A.TEAM_ORG_NAME
+		         , A.PC_CD
+		         , A.PC_ORG_NAME
+		         , A.YYYYMM
+		         , (CASE WHEN  SUM(A.BFYY_WEIGHT) = 0 THEN SUM(A.BFYY_WEIGHT_S) ELSE SUM(A.BFYY_WEIGHT) END)       AS BFYY_WEIGHT
+		         , (CASE WHEN  SUM(A.ORIGIN_WEIGHT) = 0 THEN SUM(A.ORIGIN_WEIGHT_S) ELSE SUM(A.ORIGIN_WEIGHT) END) AS ORIGIN_WEIGHT
+		         , SUM(ORIGIN_WEIGHT_S)                                                                            AS ORIGIN_WEIGHT_S
+		      FROM (
+		            SELECT A.STR_CD
+		                 , B.STR_NAME
+		                 , A.DEPT_CD
+		                 , C.ORG_SHORT_NAME     AS DEPT_ORG_NAME
+		                 , A.TEAM_CD
+		                 , D.ORG_SHORT_NAME     AS TEAM_ORG_NAME
+		                 , A.PC_CD
+		                 , E.ORG_SHORT_NAME     AS PC_ORG_NAME
+		                 , A.YYYYMM
+		                 , SUM(A.BFYY_WEIGHT)      AS BFYY_WEIGHT
+		                 , SUM(A.ORIGIN_WEIGHT)   AS ORIGIN_WEIGHT
+		                 , SUM(A.BFYY_WEIGHT_S)      AS BFYY_WEIGHT_S
+		                 , SUM(A.ORIGIN_WEIGHT_S)   AS ORIGIN_WEIGHT_S
+		              FROM (
+		                   
+		                    SELECT A.STR_CD
+		                         , A.DEPT_CD
+		                         , A.TEAM_CD
+		                         , A.PC_CD
+		                         , ?                                                                 AS YYYYMM
+		                         , A.WEIGHT                                                          AS BFYY_WEIGHT
+		                         , 0                                                                 AS ORIGIN_WEIGHT
+		                         , 0                                                                 AS BFYY_WEIGHT_S
+		                         , 0                                                                 AS ORIGIN_WEIGHT_S
+		                      FROM DPS.PS_ACTPCWEIGHT     A
+		                     WHERE A.STR_CD             = ?
+		                       AND A.DEPT_CD            = ?
+		                       AND A.TEAM_CD            = ?
+		                       AND A.PC_CD              LIKE ? || '%'
+		                       AND A.YYYYMM             = TO_CHAR(ADD_MONTHS(? || '01', -12),'YYYYMM') 
+		                       
+		                     UNION ALL
+		                     
+		                    SELECT A.STR_CD 
+		                         , A.DEPT_CD
+		                         , A.TEAM_CD
+		                         , A.PC_CD
+		                         , A.YYYYMM
+		                         , 0                                                                 AS BFYY_WEIGHT
+		                         , A.WEIGHT                                                          AS ORIGIN_WEIGHT
+		                         , 0                                                                 AS BFYY_WEIGHT_S
+		                         , 0                                                                 AS ORIGIN_WEIGHT_S
+		                      FROM DPS.PS_ACTPCWEIGHT     A
+		                     WHERE A.STR_CD             = ?
+		                       AND A.DEPT_CD            = ?
+		                       AND A.TEAM_CD            = ?
+		                       AND A.PC_CD              LIKE ? || '%'
+		                       AND A.YYYYMM             = ?
+		                       
+		                     UNION ALL
+		                    
+		                    SELECT B.STR_CD
+		                         , B.DEPT_CD
+		                         , B.TEAM_CD
+		                         , B.PC_CD
+		                         , ?                                                                 AS YYYYMM
+		                         , 0                                                                 AS BFYY_WEIGHT
+		                         , 0                                                                 AS ORIGIN_WEIGHT
+		                         , A.CMPR_STD_WEIGHT                                                 AS BFYY_WEIGHT_S
+		                         , 0                                                                 AS ORIGIN_WEIGHT_S
+		                      FROM DPS.PS_SCHEDULE           A
+		                         , DPS.PS_PLANPC             B
+		                     WHERE A.STR_CD                = B.STR_CD
+		                       AND SUBSTR(A.SALE_DT,0,6)   = B.PLAN_YM
+		                       AND B.STR_CD                = ?
+		                       AND B.DEPT_CD               = ?
+		                       AND B.TEAM_CD               = ?
+		                       AND B.PC_CD                 LIKE ? || '%'
+		                       AND A.SALE_DT               LIKE ? || '%'
+		                       
+		                     UNION ALL
+		                     
+		                    SELECT B.STR_CD
+		                         , B.DEPT_CD
+		                         , B.TEAM_CD
+		                         , B.PC_CD
+		                         , SUBSTR(A.SALE_DT,0,6)                                             AS YYYYMM
+		                         , 0                                                                 AS BFYY_WEIGHT
+		                         , 0                                                                 AS ORIGIN_WEIGHT
+		                         , 0                                                                 AS BFYY_WEIGHT_S
+		                         , A.STD_WEIGHT                                                      AS ORIGIN_WEIGHT_S
+		                      FROM DPS.PS_SCHEDULE           A
+		                         , DPS.PS_PLANPC             B
+		                     WHERE A.STR_CD                = B.STR_CD
+		                       AND SUBSTR(A.SALE_DT,0,6)   = B.PLAN_YM
+		                       AND B.STR_CD                = ?
+		                       AND B.DEPT_CD               = ?
+		                       AND B.TEAM_CD               = ?
+		                       AND B.PC_CD                 LIKE ? || '%'
+		                       AND A.SALE_DT               LIKE ? || '%'
+		                      )                   A
+		                 , DPS.PC_STRMST          B
+		                 , (SELECT DEPT_CD
+		                         , ORG_SHORT_NAME
+		                      FROM DPS.PC_ORGMST
+		                     WHERE STR_CD  = ?
+		                       AND DEPT_CD = ?
+		                       AND ORG_CD  = ? || ? || '000000') C
+		                 , (SELECT TEAM_CD
+		                         , ORG_SHORT_NAME
+		                      FROM DPS.PC_ORGMST
+		                     WHERE STR_CD  = ?
+		                       AND DEPT_CD = ?
+		                       AND TEAM_CD = ?
+		                       AND ORG_CD  = ? || ? || ? || '0000') D
+		                 , DPS.PC_ORGMST E
+		                 , (SELECT STR_CD
+		                         , DEPT_CD
+		                         , TEAM_CD
+		                         , PC_CD
+		                      FROM DPS.PS_PLANPC
+		                     WHERE STR_CD             = ?
+		                       AND DEPT_CD            = ?
+		                       AND TEAM_CD            = ?
+		                       AND PC_CD              LIKE ? || '%'
+		                       AND PLAN_YM             = ?) F
+		             WHERE A.STR_CD     = B.STR_CD
+		               AND A.STR_CD     = E.STR_CD
+		               AND A.DEPT_CD    = E.DEPT_CD
+		               AND A.TEAM_CD    = E.TEAM_CD
+		               AND A.PC_CD      = E.PC_CD
+		               AND A.STR_CD     = F.STR_CD
+		               AND A.DEPT_CD    = F.DEPT_CD
+		               AND A.TEAM_CD    = F.TEAM_CD
+		               AND A.PC_CD      = F.PC_CD
+		               AND E.ORG_LEVEL  = '4'
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                              FROM COM.V_MYORG MYORG
+		                             WHERE MYORG.STR_CD      = A.STR_CD
+		                               AND MYORG.DEPT_CD     = A.DEPT_CD
+		                               AND MYORG.TEAM_CD     = A.TEAM_CD
+		                               AND MYORG.PC_CD       = A.PC_CD
+		                               AND MYORG.USER_ID     = ?
+		                             )
+		             GROUP BY 
+		                   A.STR_CD
+		                 , B.STR_NAME
+		                 , A.DEPT_CD
+		                 , C.ORG_SHORT_NAME
+		                 , A.TEAM_CD
+		                 , D.ORG_SHORT_NAME
+		                 , A.PC_CD
+		                 , E.ORG_SHORT_NAME
+		                 , A.YYYYMM
+		            ) A
+		     GROUP BY
+		           A.STR_CD
+		         , A.STR_NAME
+		         , A.DEPT_CD
+		         , A.DEPT_ORG_NAME
+		         , A.TEAM_CD
+		         , A.TEAM_ORG_NAME
+		         , A.PC_CD
+		         , A.PC_ORG_NAME
+		         , A.YYYYMM
+		     ORDER BY
+		           A.STR_CD
+		         , A.DEPT_CD
+		         , A.TEAM_CD
+		         , A.PC_CD
+                 
+               
+            
+        ]]>        
+    </query>
+    
+    <!-- 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE2">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , B.STR_NAME
+                 , C.DEPT_CD
+                 , C.ORG_SHORT_NAME     AS DEPT_ORG_NAME
+                 , D.TEAM_CD
+                 , D.ORG_SHORT_NAME     AS TEAM_ORG_NAME
+                 , E.PC_CD
+                 , E.ORG_SHORT_NAME     AS PC_ORG_NAME
+                 , A.YYYYMM
+                 , SUM(A.BFYY_WEIGHT)     AS BFYY_WEIGHT
+                 , SUM(A.ORIGIN_WEIGHT)   AS ORIGIN_WEIGHT
+              FROM (
+                    SELECT B.STR_CD
+                         , B.DEPT_CD
+                         , B.TEAM_CD
+                         , B.PC_CD
+                         , ?                         AS YYYYMM
+                         , A.CMPR_STD_WEIGHT         AS BFYY_WEIGHT
+                         , 0                         AS ORIGIN_WEIGHT
+                      FROM DPS.PS_SCHEDULE           A
+                         , DPS.PS_PLANPC             B
+                     WHERE A.STR_CD                = B.STR_CD
+                       AND SUBSTR(A.SALE_DT,0,6)   = B.PLAN_YM
+                       AND B.STR_CD                = ?
+                       AND B.DEPT_CD               = ?
+                       AND B.TEAM_CD               = ?
+                       AND B.PC_CD                 LIKE ? || '%'
+                       AND A.SALE_DT               LIKE ? || '%'
+                       
+                     UNION ALL
+                     
+                    SELECT B.STR_CD
+                         , B.DEPT_CD
+                         , B.TEAM_CD
+                         , B.PC_CD
+                         , SUBSTR(A.SALE_DT,0,6)     AS YYYYMM
+                         , 0                         AS BFYY_WEIGHT
+                         , A.STD_WEIGHT              AS ORIGIN_WEIGHT
+                      FROM DPS.PS_SCHEDULE           A
+                         , DPS.PS_PLANPC             B
+                     WHERE A.STR_CD                = B.STR_CD
+                       AND SUBSTR(A.SALE_DT,0,6)   = B.PLAN_YM
+                       AND B.STR_CD                = ?
+                       AND B.DEPT_CD               = ?
+                       AND B.TEAM_CD               = ?
+                       AND B.PC_CD                 LIKE ? || '%'
+                       AND A.SALE_DT               LIKE ? || '%'
+                      )                   A
+                 , DPS.PC_STRMST          B
+                 , (SELECT DEPT_CD
+                         , ORG_SHORT_NAME
+                      FROM DPS.PC_ORGMST
+                     WHERE STR_CD  = ?
+                       AND DEPT_CD = ?
+                       AND ORG_CD  = ? || ? || '000000') C
+                 , (SELECT TEAM_CD
+                         , ORG_SHORT_NAME
+                      FROM DPS.PC_ORGMST
+                     WHERE STR_CD  = ?
+                       AND DEPT_CD = ?
+                       AND TEAM_CD = ?
+                       AND ORG_CD  = ? || ? || ? || '0000') D
+                 , DPS.PC_ORGMST E
+             WHERE A.STR_CD     = B.STR_CD
+               AND A.STR_CD     = E.STR_CD
+               AND A.DEPT_CD    = E.DEPT_CD
+               AND A.TEAM_CD    = E.TEAM_CD
+               AND A.PC_CD      = E.PC_CD
+               AND E.ORG_LEVEL  = '4'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = E.STR_CD
+                               AND MYORG.DEPT_CD     = E.DEPT_CD
+                               AND MYORG.TEAM_CD     = E.TEAM_CD
+                               AND MYORG.PC_CD       = E.PC_CD
+                               AND MYORG.USER_ID     = ?
+                             )
+             GROUP BY 
+                   A.STR_CD
+                 , B.STR_NAME
+                 , C.DEPT_CD
+                 , C.ORG_SHORT_NAME
+                 , D.TEAM_CD
+                 , D.ORG_SHORT_NAME
+                 , E.PC_CD
+                 , E.ORG_SHORT_NAME
+                 , A.YYYYMM
+             ORDER BY
+                   A.STR_CD
+                 , C.DEPT_CD
+                 , D.TEAM_CD
+                 , E.PC_CD 
+        ]]>        
+    </query>
+    
+    <!-- PC별가중치정보 일자별 조회 쿼리  -->
+    <query name="H_SEL_DETAIL">        
+        <![CDATA[
+            
+			SELECT A.PC_CD
+			     , A.ORG_NAME
+			     , A.GUBUN
+			     , SUM(A.TOTAL) AS TOTAL
+			     , SUM(A.GAB)    AS GAB
+			     
+                 , MAX( A.DAYWEEK1)  AS DAYWEEK1
+                 , MAX(A.DAYWEEK2) AS DAYWEEK2
+                 , MAX(A.DAYWEEK3) AS DAYWEEK3
+                 , MAX(A.DAYWEEK4) AS DAYWEEK4
+                 , MAX( A.DAYWEEK5) AS DAYWEEK5
+                 , MAX(A.DAYWEEK6) AS DAYWEEK6
+                 , MAX(A.DAYWEEK7) AS DAYWEEK7
+                 , MAX(A.DAYWEEK8) AS DAYWEEK8
+                 , MAX(A.DAYWEEK9) AS DAYWEEK9
+                 , MAX(A.DAYWEEK10) AS DAYWEEK10
+                 , MAX(A.DAYWEEK11) AS DAYWEEK11
+                 , MAX(A.DAYWEEK12) AS DAYWEEK12
+                 , MAX(A.DAYWEEK13) AS DAYWEEK13
+                 , MAX(A.DAYWEEK14) AS DAYWEEK14
+                 , MAX(A.DAYWEEK15) AS DAYWEEK15
+                 , MAX(A.DAYWEEK16) AS DAYWEEK16
+                 , MAX(A.DAYWEEK17) AS DAYWEEK17
+                 , MAX(A.DAYWEEK18) AS DAYWEEK18
+                 , MAX(A.DAYWEEK19) AS DAYWEEK19
+                 , MAX(A.DAYWEEK20) AS DAYWEEK20
+                 , MAX(A.DAYWEEK21) AS DAYWEEK21
+                 , MAX(A.DAYWEEK22) AS DAYWEEK22
+                 , MAX(A.DAYWEEK23) AS DAYWEEK23
+                 , MAX(A.DAYWEEK24) AS DAYWEEK24
+                 , MAX(A.DAYWEEK25) AS DAYWEEK25
+                 , MAX(A.DAYWEEK26) AS DAYWEEK26
+                 , MAX(A.DAYWEEK27) AS DAYWEEK27
+                 , MAX(A.DAYWEEK28) AS DAYWEEK28
+                 , MAX(A.DAYWEEK29) AS DAYWEEK29
+                 , MAX(A.DAYWEEK30) AS DAYWEEK30
+                 , MAX(A.DAYWEEK31) AS DAYWEEK31
+                 , SUM(A.DAY1)  AS DAY1
+                 , SUM(A.DAY2)  AS DAY2
+                 , SUM(A.DAY3)  AS DAY3
+                 , SUM(A.DAY4)  AS DAY4
+                 , SUM(A.DAY5)  AS DAY5
+                 , SUM(A.DAY6)  AS DAY6
+                 , SUM(A.DAY7)  AS DAY7
+                 , SUM(A.DAY8)  AS DAY8
+                 , SUM(A.DAY9)  AS DAY9
+                 , SUM(A.DAY10)  AS DAY10
+                 , SUM(A.DAY11)  AS DAY11
+                 , SUM(A.DAY12)  AS DAY12
+                 , SUM(A.DAY13)  AS DAY13
+                 , SUM(A.DAY14)  AS DAY14
+                 , SUM(A.DAY15)  AS DAY15
+                 , SUM(A.DAY16)  AS DAY16
+                 , SUM(A.DAY17)  AS DAY17
+                 , SUM(A.DAY18)  AS DAY18
+                 , SUM(A.DAY19)  AS DAY19
+                 , SUM(A.DAY20)  AS DAY20
+                 , SUM(A.DAY21)  AS DAY21
+                 , SUM(A.DAY22)  AS DAY22
+                 , SUM(A.DAY23)  AS DAY23
+                 , SUM(A.DAY24)  AS DAY24
+                 , SUM(A.DAY25)  AS DAY25
+                 , SUM(A.DAY26)  AS DAY26
+                 , SUM(A.DAY27)  AS DAY27
+                 , SUM(A.DAY28)  AS DAY28
+                 , SUM(A.DAY29)  AS DAY29
+                 , SUM(A.DAY30)  AS DAY30
+                 , SUM(A.DAY31)  AS DAY31
+                 
+			  FROM (
+			        SELECT A.PC_CD
+			             , A.ORG_NAME
+			             , A.GUBUN
+			             , 0            AS TOTAL
+			             , 0            AS GAB
+			             , (CASE WHEN DT = '1' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK1
+			             , (CASE WHEN DT = '1' THEN A.WEIGHT ELSE 0 END)   AS DAY1
+			             
+			             , (CASE WHEN DT = '2' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK2
+			             , (CASE WHEN DT = '2' THEN A.WEIGHT ELSE 0 END)   AS DAY2
+			             
+			             , (CASE WHEN DT = '3' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK3
+			             , (CASE WHEN DT = '3' THEN A.WEIGHT ELSE 0 END)   AS DAY3
+			             
+			             , (CASE WHEN DT = '4' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK4
+			             , (CASE WHEN DT = '4' THEN A.WEIGHT ELSE 0 END)   AS DAY4
+			             
+			             , (CASE WHEN DT = '5' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK5
+			             , (CASE WHEN DT = '5' THEN A.WEIGHT ELSE 0 END)   AS DAY5
+			             
+			             , (CASE WHEN DT = '6' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK6
+			             , (CASE WHEN DT = '6' THEN A.WEIGHT ELSE 0 END)   AS DAY6
+			             
+			             , (CASE WHEN DT = '7' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK7
+			             , (CASE WHEN DT = '7' THEN A.WEIGHT ELSE 0 END)   AS DAY7
+			             
+			             , (CASE WHEN DT = '8' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK8
+			             , (CASE WHEN DT = '8' THEN A.WEIGHT ELSE 0 END)   AS DAY8
+			             
+			             , (CASE WHEN DT = '9' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK9
+			             , (CASE WHEN DT = '9' THEN A.WEIGHT ELSE 0 END)   AS DAY9
+			             
+			             , (CASE WHEN DT = '10' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK10
+			             , (CASE WHEN DT = '10' THEN A.WEIGHT ELSE 0 END)   AS DAY10
+			             
+			             , (CASE WHEN DT = '11' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK11
+			             , (CASE WHEN DT = '11' THEN A.WEIGHT ELSE 0 END)   AS DAY11
+			             
+			             , (CASE WHEN DT = '12' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK12
+			             , (CASE WHEN DT = '12' THEN A.WEIGHT ELSE 0 END)   AS DAY12
+			             
+			             , (CASE WHEN DT = '13' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK13
+			             , (CASE WHEN DT = '13' THEN A.WEIGHT ELSE 0 END)   AS DAY13
+			             
+			             , (CASE WHEN DT = '14' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK14
+			             , (CASE WHEN DT = '14' THEN A.WEIGHT ELSE 0 END)   AS DAY14
+			             
+			             , (CASE WHEN DT = '15' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK15
+			             , (CASE WHEN DT = '15' THEN A.WEIGHT ELSE 0 END)   AS DAY15
+			             
+			             , (CASE WHEN DT = '16' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK16
+			             , (CASE WHEN DT = '16' THEN A.WEIGHT ELSE 0 END)   AS DAY16
+			             
+			             , (CASE WHEN DT = '17' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK17
+			             , (CASE WHEN DT = '17' THEN A.WEIGHT ELSE 0 END)   AS DAY17
+			             
+			             , (CASE WHEN DT = '18' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK18
+			             , (CASE WHEN DT = '18' THEN A.WEIGHT ELSE 0 END)   AS DAY18
+			             
+			             , (CASE WHEN DT = '19' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK19
+			             , (CASE WHEN DT = '19' THEN A.WEIGHT ELSE 0 END)   AS DAY19
+			             
+			             , (CASE WHEN DT = '20' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK20
+			             , (CASE WHEN DT = '20' THEN A.WEIGHT ELSE 0 END)   AS DAY20
+			             
+			             , (CASE WHEN DT = '21' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK21
+			             , (CASE WHEN DT = '21' THEN A.WEIGHT ELSE 0 END)   AS DAY21
+			             
+			             , (CASE WHEN DT = '22' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK22
+			             , (CASE WHEN DT = '22' THEN A.WEIGHT ELSE 0 END)   AS DAY22
+			             
+			             , (CASE WHEN DT = '23' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK23
+			             , (CASE WHEN DT = '23' THEN A.WEIGHT ELSE 0 END)   AS DAY23
+			             
+			             , (CASE WHEN DT = '24' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK24
+			             , (CASE WHEN DT = '24' THEN A.WEIGHT ELSE 0 END)   AS DAY24
+			             
+			             , (CASE WHEN DT = '25' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK25
+			             , (CASE WHEN DT = '25' THEN A.WEIGHT ELSE 0 END)   AS DAY25
+			             
+			             , (CASE WHEN DT = '26' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK26
+			             , (CASE WHEN DT = '26' THEN A.WEIGHT ELSE 0 END)   AS DAY26
+			             
+			             , (CASE WHEN DT = '27' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK27
+			             , (CASE WHEN DT = '27' THEN A.WEIGHT ELSE 0 END)   AS DAY27
+			             
+			             , (CASE WHEN DT = '28' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK28
+			             , (CASE WHEN DT = '28' THEN A.WEIGHT ELSE 0 END)   AS DAY28
+			             
+			             , (CASE WHEN DT = '29' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK29
+			             , (CASE WHEN DT = '29' THEN A.WEIGHT ELSE 0 END)   AS DAY29
+			             
+			             , (CASE WHEN DT = '30' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK30
+			             , (CASE WHEN DT = '30' THEN A.WEIGHT ELSE 0 END)   AS DAY30
+			             
+			             , (CASE WHEN DT = '31' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK31
+			             , (CASE WHEN DT = '31' THEN A.WEIGHT ELSE 0 END)   AS DAY31
+			          FROM (   
+				            SELECT A.PC_CD
+				                 , B.ORG_SHORT_NAME          AS ORG_NAME
+				                 , A.GUBUN
+				                 , A.YYYYMM
+				                 , A.DAYWEEK
+				                 , A.DT
+				                 , SUM(A.WEIGHT)             AS WEIGHT
+				              FROM (
+				              
+        ]]>        
+    </query>
+    
+    <!-- 가중치 체크 조회 쿼리  -->
+    <query name="SEL_PS_ACTPCWEIGHT_BFYYSCH">        
+        <![CDATA[
+                                    SELECT A.STR_CD || A.DEPT_CD || A.TEAM_CD || A.PC_CD || '00'     AS PC_CD
+                                         , ?                                                         AS YYYYMM
+                                         , '대비'                                                    AS GUBUN
+                                         , (CASE WHEN SUBSTR(A.SALE_DT,7,2) >= 10 THEN SUBSTR(A.SALE_DT,7,2) ELSE SUBSTR(A.SALE_DT,8,1) END)  AS DT
+                                         , TO_CHAR( TO_DATE( A.SALE_DT, 'YYYYMMDD'),'DAY')           AS DAYWEEK
+                                         , A.WEIGHT
+                                      FROM DPS.PS_ACTPCWEIGHT     A
+                                     WHERE A.STR_CD             = ?
+                                       AND A.DEPT_CD            = ?
+                                       AND A.TEAM_CD            = ?
+                                       AND A.PC_CD              = ?
+                                       AND A.YYYYMM             = TO_CHAR(ADD_MONTHS(? || '01', -12),'YYYYMM') 
+                                       
+        ]]>        
+    </query>
+    
+    <!-- PC별가중치정보 일자별 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE_DETAIL1">        
+        <![CDATA[
+            SELECT A.PC_CD
+                 , A.ORG_NAME
+                 , A.GUBUN
+                 , SUM(A.TOTAL) AS TOTAL
+                 , SUM(A.GAB)    AS GAB
+                 
+                 , MAX( A.DAYWEEK1)  AS DAYWEEK1
+                 , MAX(A.DAYWEEK2) AS DAYWEEK2
+                 , MAX(A.DAYWEEK3) AS DAYWEEK3
+                 , MAX(A.DAYWEEK4) AS DAYWEEK4
+                 , MAX( A.DAYWEEK5) AS DAYWEEK5
+                 , MAX(A.DAYWEEK6) AS DAYWEEK6
+                 , MAX(A.DAYWEEK7) AS DAYWEEK7
+                 , MAX(A.DAYWEEK8) AS DAYWEEK8
+                 , MAX(A.DAYWEEK9) AS DAYWEEK9
+                 , MAX(A.DAYWEEK10) AS DAYWEEK10
+                 , MAX(A.DAYWEEK11) AS DAYWEEK11
+                 , MAX(A.DAYWEEK12) AS DAYWEEK12
+                 , MAX(A.DAYWEEK13) AS DAYWEEK13
+                 , MAX(A.DAYWEEK14) AS DAYWEEK14
+                 , MAX(A.DAYWEEK15) AS DAYWEEK15
+                 , MAX(A.DAYWEEK16) AS DAYWEEK16
+                 , MAX(A.DAYWEEK17) AS DAYWEEK17
+                 , MAX(A.DAYWEEK18) AS DAYWEEK18
+                 , MAX(A.DAYWEEK19) AS DAYWEEK19
+                 , MAX(A.DAYWEEK20) AS DAYWEEK20
+                 , MAX(A.DAYWEEK21) AS DAYWEEK21
+                 , MAX(A.DAYWEEK22) AS DAYWEEK22
+                 , MAX(A.DAYWEEK23) AS DAYWEEK23
+                 , MAX(A.DAYWEEK24) AS DAYWEEK24
+                 , MAX(A.DAYWEEK25) AS DAYWEEK25
+                 , MAX(A.DAYWEEK26) AS DAYWEEK26
+                 , MAX(A.DAYWEEK27) AS DAYWEEK27
+                 , MAX(A.DAYWEEK28) AS DAYWEEK28
+                 , MAX(A.DAYWEEK29) AS DAYWEEK29
+                 , MAX(A.DAYWEEK30) AS DAYWEEK30
+                 , MAX(A.DAYWEEK31) AS DAYWEEK31
+                 , SUM(A.DAY1)  AS DAY1
+                 , SUM(A.DAY2)  AS DAY2
+                 , SUM(A.DAY3)  AS DAY3
+                 , SUM(A.DAY4)  AS DAY4
+                 , SUM(A.DAY5)  AS DAY5
+                 , SUM(A.DAY6)  AS DAY6
+                 , SUM(A.DAY7)  AS DAY7
+                 , SUM(A.DAY8)  AS DAY8
+                 , SUM(A.DAY9)  AS DAY9
+                 , SUM(A.DAY10)  AS DAY10
+                 , SUM(A.DAY11)  AS DAY11
+                 , SUM(A.DAY12)  AS DAY12
+                 , SUM(A.DAY13)  AS DAY13
+                 , SUM(A.DAY14)  AS DAY14
+                 , SUM(A.DAY15)  AS DAY15
+                 , SUM(A.DAY16)  AS DAY16
+                 , SUM(A.DAY17)  AS DAY17
+                 , SUM(A.DAY18)  AS DAY18
+                 , SUM(A.DAY19)  AS DAY19
+                 , SUM(A.DAY20)  AS DAY20
+                 , SUM(A.DAY21)  AS DAY21
+                 , SUM(A.DAY22)  AS DAY22
+                 , SUM(A.DAY23)  AS DAY23
+                 , SUM(A.DAY24)  AS DAY24
+                 , SUM(A.DAY25)  AS DAY25
+                 , SUM(A.DAY26)  AS DAY26
+                 , SUM(A.DAY27)  AS DAY27
+                 , SUM(A.DAY28)  AS DAY28
+                 , SUM(A.DAY29)  AS DAY29
+                 , SUM(A.DAY30)  AS DAY30
+                 , SUM(A.DAY31)  AS DAY31
+                 
+              FROM (
+                    SELECT A.PC_CD
+                         , A.ORG_NAME
+                         , A.GUBUN
+                         , 0            AS TOTAL
+                         , 0            AS GAB
+                         , (CASE WHEN DT = '1' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK1
+                         , (CASE WHEN DT = '1' THEN A.WEIGHT ELSE 0 END)   AS DAY1
+                         
+                         , (CASE WHEN DT = '2' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK2
+                         , (CASE WHEN DT = '2' THEN A.WEIGHT ELSE 0 END)   AS DAY2
+                         
+                         , (CASE WHEN DT = '3' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK3
+                         , (CASE WHEN DT = '3' THEN A.WEIGHT ELSE 0 END)   AS DAY3
+                         
+                         , (CASE WHEN DT = '4' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK4
+                         , (CASE WHEN DT = '4' THEN A.WEIGHT ELSE 0 END)   AS DAY4
+                         
+                         , (CASE WHEN DT = '5' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK5
+                         , (CASE WHEN DT = '5' THEN A.WEIGHT ELSE 0 END)   AS DAY5
+                         
+                         , (CASE WHEN DT = '6' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK6
+                         , (CASE WHEN DT = '6' THEN A.WEIGHT ELSE 0 END)   AS DAY6
+                         
+                         , (CASE WHEN DT = '7' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK7
+                         , (CASE WHEN DT = '7' THEN A.WEIGHT ELSE 0 END)   AS DAY7
+                         
+                         , (CASE WHEN DT = '8' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK8
+                         , (CASE WHEN DT = '8' THEN A.WEIGHT ELSE 0 END)   AS DAY8
+                         
+                         , (CASE WHEN DT = '9' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK9
+                         , (CASE WHEN DT = '9' THEN A.WEIGHT ELSE 0 END)   AS DAY9
+                         
+                         , (CASE WHEN DT = '10' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK10
+                         , (CASE WHEN DT = '10' THEN A.WEIGHT ELSE 0 END)   AS DAY10
+                         
+                         , (CASE WHEN DT = '11' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK11
+                         , (CASE WHEN DT = '11' THEN A.WEIGHT ELSE 0 END)   AS DAY11
+                         
+                         , (CASE WHEN DT = '12' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK12
+                         , (CASE WHEN DT = '12' THEN A.WEIGHT ELSE 0 END)   AS DAY12
+                         
+                         , (CASE WHEN DT = '13' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK13
+                         , (CASE WHEN DT = '13' THEN A.WEIGHT ELSE 0 END)   AS DAY13
+                         
+                         , (CASE WHEN DT = '14' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK14
+                         , (CASE WHEN DT = '14' THEN A.WEIGHT ELSE 0 END)   AS DAY14
+                         
+                         , (CASE WHEN DT = '15' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK15
+                         , (CASE WHEN DT = '15' THEN A.WEIGHT ELSE 0 END)   AS DAY15
+                         
+                         , (CASE WHEN DT = '16' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK16
+                         , (CASE WHEN DT = '16' THEN A.WEIGHT ELSE 0 END)   AS DAY16
+                         
+                         , (CASE WHEN DT = '17' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK17
+                         , (CASE WHEN DT = '17' THEN A.WEIGHT ELSE 0 END)   AS DAY17
+                         
+                         , (CASE WHEN DT = '18' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK18
+                         , (CASE WHEN DT = '18' THEN A.WEIGHT ELSE 0 END)   AS DAY18
+                         
+                         , (CASE WHEN DT = '19' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK19
+                         , (CASE WHEN DT = '19' THEN A.WEIGHT ELSE 0 END)   AS DAY19
+                         
+                         , (CASE WHEN DT = '20' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK20
+                         , (CASE WHEN DT = '20' THEN A.WEIGHT ELSE 0 END)   AS DAY20
+                         
+                         , (CASE WHEN DT = '21' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK21
+                         , (CASE WHEN DT = '21' THEN A.WEIGHT ELSE 0 END)   AS DAY21
+                         
+                         , (CASE WHEN DT = '22' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK22
+                         , (CASE WHEN DT = '22' THEN A.WEIGHT ELSE 0 END)   AS DAY22
+                         
+                         , (CASE WHEN DT = '23' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK23
+                         , (CASE WHEN DT = '23' THEN A.WEIGHT ELSE 0 END)   AS DAY23
+                         
+                         , (CASE WHEN DT = '24' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK24
+                         , (CASE WHEN DT = '24' THEN A.WEIGHT ELSE 0 END)   AS DAY24
+                         
+                         , (CASE WHEN DT = '25' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK25
+                         , (CASE WHEN DT = '25' THEN A.WEIGHT ELSE 0 END)   AS DAY25
+                         
+                         , (CASE WHEN DT = '26' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK26
+                         , (CASE WHEN DT = '26' THEN A.WEIGHT ELSE 0 END)   AS DAY26
+                         
+                         , (CASE WHEN DT = '27' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK27
+                         , (CASE WHEN DT = '27' THEN A.WEIGHT ELSE 0 END)   AS DAY27
+                         
+                         , (CASE WHEN DT = '28' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK28
+                         , (CASE WHEN DT = '28' THEN A.WEIGHT ELSE 0 END)   AS DAY28
+                         
+                         , (CASE WHEN DT = '29' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK29
+                         , (CASE WHEN DT = '29' THEN A.WEIGHT ELSE 0 END)   AS DAY29
+                         
+                         , (CASE WHEN DT = '30' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK30
+                         , (CASE WHEN DT = '30' THEN A.WEIGHT ELSE 0 END)   AS DAY30
+                         
+                         , (CASE WHEN DT = '31' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK31
+                         , (CASE WHEN DT = '31' THEN A.WEIGHT ELSE 0 END)   AS DAY31
+                      FROM (   
+                            SELECT A.PC_CD
+                                 , B.ORG_SHORT_NAME          AS ORG_NAME
+                                 , A.GUBUN
+                                 , A.YYYYMM
+                                 , A.DAYWEEK
+                                 , A.DT
+                                 , SUM(A.WEIGHT)             AS WEIGHT
+                              FROM (
+				                    SELECT A.STR_CD || A.DEPT_CD || A.TEAM_CD || A.PC_CD || '00'     AS PC_CD
+				                         , ?                                                         AS YYYYMM
+				                         , '대비'                                                    AS GUBUN
+				                         , (CASE WHEN SUBSTR(A.SALE_DT,7,2) >= 10 THEN SUBSTR(A.SALE_DT,7,2) ELSE SUBSTR(A.SALE_DT,8,1) END)  AS DT
+				                         , TO_CHAR( TO_DATE( A.SALE_DT, 'YYYYMMDD'),'DAY')           AS DAYWEEK
+				                         , A.WEIGHT
+				                      FROM DPS.PS_ACTPCWEIGHT     A
+				                     WHERE A.STR_CD             = ?
+				                       AND A.DEPT_CD            = ?
+				                       AND A.TEAM_CD            = ?
+				                       AND A.PC_CD              LIKE ? || '%'
+				                       AND A.YYYYMM             = TO_CHAR(ADD_MONTHS(? || '01', -12),'YYYYMM') 
+				                       
+				                     UNION ALL
+				                     
+                                    SELECT A.STR_CD || A.DEPT_CD || A.TEAM_CD || A.PC_CD || '00'     AS PC_CD
+                                         , A.YYYYMM
+                                         , '실행'                                                    AS GUBUN
+                                         , (CASE WHEN SUBSTR(A.SALE_DT,7,2) >= 10 THEN SUBSTR(A.SALE_DT,7,2) ELSE SUBSTR(A.SALE_DT,8,1) END)  AS DT
+                                         , TO_CHAR( TO_DATE( A.SALE_DT, 'YYYYMMDD'),'DAY')           AS DAYWEEK
+                                         , A.WEIGHT
+                                      FROM DPS.PS_ACTPCWEIGHT     A
+                                     WHERE A.STR_CD             = ?
+                                       AND A.DEPT_CD            = ?
+                                       AND A.TEAM_CD            = ?
+                                       AND A.PC_CD              LIKE ? || '%'
+                                       AND A.YYYYMM             = ?
+				                            
+        ]]>        
+    </query>
+    
+    <!-- PC별가중치정보 일자별 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE_DETAIL2">        
+        <![CDATA[
+				                    SELECT A.STR_CD || A.DEPT_CD || A.TEAM_CD || A.PC_CD || '00'     AS PC_CD
+				                         , A.YYYYMM
+				                         , '실행'                                                    AS GUBUN
+				                         , (CASE WHEN SUBSTR(A.SALE_DT,7,2) >= 10 THEN SUBSTR(A.SALE_DT,7,2) ELSE SUBSTR(A.SALE_DT,8,1) END)  AS DT
+				                         , TO_CHAR( TO_DATE( A.SALE_DT, 'YYYYMMDD'),'DAY')           AS DAYWEEK
+				                         , A.WEIGHT
+				                      FROM DPS.PS_ACTPCWEIGHT     A
+				                     WHERE A.STR_CD             = ?
+				                       AND A.DEPT_CD            = ?
+				                       AND A.TEAM_CD            = ?
+				                       AND A.PC_CD              LIKE ? || '%'
+				                       AND A.YYYYMM             = ?
+                        
+        ]]>        
+    </query>
+    
+    <!-- PC별가중치정보 일자별 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE_DETAIL3">        
+        <![CDATA[
+                                         
+            SELECT A.PC_CD
+                 , A.ORG_NAME
+                 , A.GUBUN
+                 , SUM(A.TOTAL) AS TOTAL
+                 , SUM(A.GAB)    AS GAB
+                 
+                 , MAX( A.DAYWEEK1)  AS DAYWEEK1
+                 , MAX(A.DAYWEEK2) AS DAYWEEK2
+                 , MAX(A.DAYWEEK3) AS DAYWEEK3
+                 , MAX(A.DAYWEEK4) AS DAYWEEK4
+                 , MAX( A.DAYWEEK5) AS DAYWEEK5
+                 , MAX(A.DAYWEEK6) AS DAYWEEK6
+                 , MAX(A.DAYWEEK7) AS DAYWEEK7
+                 , MAX(A.DAYWEEK8) AS DAYWEEK8
+                 , MAX(A.DAYWEEK9) AS DAYWEEK9
+                 , MAX(A.DAYWEEK10) AS DAYWEEK10
+                 , MAX(A.DAYWEEK11) AS DAYWEEK11
+                 , MAX(A.DAYWEEK12) AS DAYWEEK12
+                 , MAX(A.DAYWEEK13) AS DAYWEEK13
+                 , MAX(A.DAYWEEK14) AS DAYWEEK14
+                 , MAX(A.DAYWEEK15) AS DAYWEEK15
+                 , MAX(A.DAYWEEK16) AS DAYWEEK16
+                 , MAX(A.DAYWEEK17) AS DAYWEEK17
+                 , MAX(A.DAYWEEK18) AS DAYWEEK18
+                 , MAX(A.DAYWEEK19) AS DAYWEEK19
+                 , MAX(A.DAYWEEK20) AS DAYWEEK20
+                 , MAX(A.DAYWEEK21) AS DAYWEEK21
+                 , MAX(A.DAYWEEK22) AS DAYWEEK22
+                 , MAX(A.DAYWEEK23) AS DAYWEEK23
+                 , MAX(A.DAYWEEK24) AS DAYWEEK24
+                 , MAX(A.DAYWEEK25) AS DAYWEEK25
+                 , MAX(A.DAYWEEK26) AS DAYWEEK26
+                 , MAX(A.DAYWEEK27) AS DAYWEEK27
+                 , MAX(A.DAYWEEK28) AS DAYWEEK28
+                 , MAX(A.DAYWEEK29) AS DAYWEEK29
+                 , MAX(A.DAYWEEK30) AS DAYWEEK30
+                 , MAX(A.DAYWEEK31) AS DAYWEEK31
+                 , SUM(A.DAY1)  AS DAY1
+                 , SUM(A.DAY2)  AS DAY2
+                 , SUM(A.DAY3)  AS DAY3
+                 , SUM(A.DAY4)  AS DAY4
+                 , SUM(A.DAY5)  AS DAY5
+                 , SUM(A.DAY6)  AS DAY6
+                 , SUM(A.DAY7)  AS DAY7
+                 , SUM(A.DAY8)  AS DAY8
+                 , SUM(A.DAY9)  AS DAY9
+                 , SUM(A.DAY10)  AS DAY10
+                 , SUM(A.DAY11)  AS DAY11
+                 , SUM(A.DAY12)  AS DAY12
+                 , SUM(A.DAY13)  AS DAY13
+                 , SUM(A.DAY14)  AS DAY14
+                 , SUM(A.DAY15)  AS DAY15
+                 , SUM(A.DAY16)  AS DAY16
+                 , SUM(A.DAY17)  AS DAY17
+                 , SUM(A.DAY18)  AS DAY18
+                 , SUM(A.DAY19)  AS DAY19
+                 , SUM(A.DAY20)  AS DAY20
+                 , SUM(A.DAY21)  AS DAY21
+                 , SUM(A.DAY22)  AS DAY22
+                 , SUM(A.DAY23)  AS DAY23
+                 , SUM(A.DAY24)  AS DAY24
+                 , SUM(A.DAY25)  AS DAY25
+                 , SUM(A.DAY26)  AS DAY26
+                 , SUM(A.DAY27)  AS DAY27
+                 , SUM(A.DAY28)  AS DAY28
+                 , SUM(A.DAY29)  AS DAY29
+                 , SUM(A.DAY30)  AS DAY30
+                 , SUM(A.DAY31)  AS DAY31
+                 
+              FROM (
+                    SELECT A.PC_CD
+                         , A.ORG_NAME
+                         , A.GUBUN
+                         , 0            AS TOTAL
+                         , 0            AS GAB
+                         , (CASE WHEN DT = '1' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK1
+                         , (CASE WHEN DT = '1' THEN A.WEIGHT ELSE 0 END)   AS DAY1
+                         
+                         , (CASE WHEN DT = '2' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK2
+                         , (CASE WHEN DT = '2' THEN A.WEIGHT ELSE 0 END)   AS DAY2
+                         
+                         , (CASE WHEN DT = '3' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK3
+                         , (CASE WHEN DT = '3' THEN A.WEIGHT ELSE 0 END)   AS DAY3
+                         
+                         , (CASE WHEN DT = '4' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK4
+                         , (CASE WHEN DT = '4' THEN A.WEIGHT ELSE 0 END)   AS DAY4
+                         
+                         , (CASE WHEN DT = '5' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK5
+                         , (CASE WHEN DT = '5' THEN A.WEIGHT ELSE 0 END)   AS DAY5
+                         
+                         , (CASE WHEN DT = '6' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK6
+                         , (CASE WHEN DT = '6' THEN A.WEIGHT ELSE 0 END)   AS DAY6
+                         
+                         , (CASE WHEN DT = '7' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK7
+                         , (CASE WHEN DT = '7' THEN A.WEIGHT ELSE 0 END)   AS DAY7
+                         
+                         , (CASE WHEN DT = '8' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK8
+                         , (CASE WHEN DT = '8' THEN A.WEIGHT ELSE 0 END)   AS DAY8
+                         
+                         , (CASE WHEN DT = '9' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK9
+                         , (CASE WHEN DT = '9' THEN A.WEIGHT ELSE 0 END)   AS DAY9
+                         
+                         , (CASE WHEN DT = '10' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK10
+                         , (CASE WHEN DT = '10' THEN A.WEIGHT ELSE 0 END)   AS DAY10
+                         
+                         , (CASE WHEN DT = '11' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK11
+                         , (CASE WHEN DT = '11' THEN A.WEIGHT ELSE 0 END)   AS DAY11
+                         
+                         , (CASE WHEN DT = '12' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK12
+                         , (CASE WHEN DT = '12' THEN A.WEIGHT ELSE 0 END)   AS DAY12
+                         
+                         , (CASE WHEN DT = '13' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK13
+                         , (CASE WHEN DT = '13' THEN A.WEIGHT ELSE 0 END)   AS DAY13
+                         
+                         , (CASE WHEN DT = '14' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK14
+                         , (CASE WHEN DT = '14' THEN A.WEIGHT ELSE 0 END)   AS DAY14
+                         
+                         , (CASE WHEN DT = '15' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK15
+                         , (CASE WHEN DT = '15' THEN A.WEIGHT ELSE 0 END)   AS DAY15
+                         
+                         , (CASE WHEN DT = '16' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK16
+                         , (CASE WHEN DT = '16' THEN A.WEIGHT ELSE 0 END)   AS DAY16
+                         
+                         , (CASE WHEN DT = '17' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK17
+                         , (CASE WHEN DT = '17' THEN A.WEIGHT ELSE 0 END)   AS DAY17
+                         
+                         , (CASE WHEN DT = '18' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK18
+                         , (CASE WHEN DT = '18' THEN A.WEIGHT ELSE 0 END)   AS DAY18
+                         
+                         , (CASE WHEN DT = '19' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK19
+                         , (CASE WHEN DT = '19' THEN A.WEIGHT ELSE 0 END)   AS DAY19
+                         
+                         , (CASE WHEN DT = '20' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK20
+                         , (CASE WHEN DT = '20' THEN A.WEIGHT ELSE 0 END)   AS DAY20
+                         
+                         , (CASE WHEN DT = '21' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK21
+                         , (CASE WHEN DT = '21' THEN A.WEIGHT ELSE 0 END)   AS DAY21
+                         
+                         , (CASE WHEN DT = '22' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK22
+                         , (CASE WHEN DT = '22' THEN A.WEIGHT ELSE 0 END)   AS DAY22
+                         
+                         , (CASE WHEN DT = '23' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK23
+                         , (CASE WHEN DT = '23' THEN A.WEIGHT ELSE 0 END)   AS DAY23
+                         
+                         , (CASE WHEN DT = '24' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK24
+                         , (CASE WHEN DT = '24' THEN A.WEIGHT ELSE 0 END)   AS DAY24
+                         
+                         , (CASE WHEN DT = '25' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK25
+                         , (CASE WHEN DT = '25' THEN A.WEIGHT ELSE 0 END)   AS DAY25
+                         
+                         , (CASE WHEN DT = '26' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK26
+                         , (CASE WHEN DT = '26' THEN A.WEIGHT ELSE 0 END)   AS DAY26
+                         
+                         , (CASE WHEN DT = '27' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK27
+                         , (CASE WHEN DT = '27' THEN A.WEIGHT ELSE 0 END)   AS DAY27
+                         
+                         , (CASE WHEN DT = '28' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK28
+                         , (CASE WHEN DT = '28' THEN A.WEIGHT ELSE 0 END)   AS DAY28
+                         
+                         , (CASE WHEN DT = '29' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK29
+                         , (CASE WHEN DT = '29' THEN A.WEIGHT ELSE 0 END)   AS DAY29
+                         
+                         , (CASE WHEN DT = '30' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK30
+                         , (CASE WHEN DT = '30' THEN A.WEIGHT ELSE 0 END)   AS DAY30
+                         
+                         , (CASE WHEN DT = '31' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK31
+                         , (CASE WHEN DT = '31' THEN A.WEIGHT ELSE 0 END)   AS DAY31
+                      FROM (   
+                            SELECT A.PC_CD
+                                 , B.ORG_SHORT_NAME          AS ORG_NAME
+                                 , A.GUBUN
+                                 , A.YYYYMM
+                                 , A.DAYWEEK
+                                 , A.DT
+                                 , SUM(A.WEIGHT)             AS WEIGHT
+                              FROM (
+                                   SELECT  ? || ? || ? ||? || '00'                                   AS PC_CD
+                                         , ?                                                         AS YYYYMM
+                                         , '대비'                                                     AS GUBUN
+                                         , (CASE WHEN SUBSTR(SALE_DT,7,2) < 10 THEN SUBSTR(SALE_DT,8,1) ELSE SUBSTR(SALE_DT,7,2) END)    AS DT
+                                         , TO_CHAR( ADD_MONTHS( SALE_DT ,-12),'DAY')                  AS DAYWEEK
+                                         , NVL(STD_WEIGHT,0)                                          AS WEIGHT
+                                      FROM DPS.PS_SCHEDULE
+                                     WHERE STR_CD  = ?
+                                       AND SALE_DT LIKE TO_CHAR( ADD_MONTHS( ? || '01' ,-12),'YYYYMM')  
+                                        
+                                     UNION ALL
+                                     
+                                    SELECT ? || ? || ? ||? || '00'                                   AS PC_CD
+                                         , ?                                                         AS YYYYMM
+                                         , '실행'                                                     AS GUBUN
+                                         ,  (CASE WHEN SUBSTR(SALE_DT,7,2) < 10 THEN SUBSTR(SALE_DT,8,1) ELSE SUBSTR(SALE_DT,7,2) END)  AS DT
+                                         , TO_CHAR( TO_DATE( SALE_DT ,'YYYYMMDD'),'DAY')              AS DAYWEEK
+                                         , NVL(STD_WEIGHT,0)                                          AS WEIGHT
+                                      FROM DPS.PS_SCHEDULE
+                                     WHERE STR_CD  = ?
+                                       AND SALE_DT LIKE ? || '%'     
+                                         
+        ]]>        
+    </query>
+    
+    <!-- PC별가중치정보 일자별 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE_DETAIL4">        
+        <![CDATA[
+                                    SELECT ? || ? || ? ||? || '00'                                   AS PC_CD
+                                         , ?                                                         AS YYYYMM
+                                         , '실행'                                                     AS GUBUN
+                                         ,  (CASE WHEN SUBSTR(SALE_DT,7,2) < 10 THEN SUBSTR(SALE_DT,8,1) ELSE SUBSTR(SALE_DT,7,2) END)  AS DT
+                                         , TO_CHAR( TO_DATE( SALE_DT ,'YYYYMMDD'),'DAY')              AS DAYWEEK
+                                         , NVL(STD_WEIGHT,0)                                          AS WEIGHT
+                                      FROM DPS.PS_SCHEDULE
+                                     WHERE STR_CD  = ?
+                                       AND SALE_DT LIKE ? || '%'              
+        ]]>        
+    </query>
+    
+    <!-- PC별가중치정보 일자별 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE_DETAIL5">        
+        <![CDATA[
+                                         
+            SELECT A.PC_CD
+                 , A.ORG_NAME
+                 , A.GUBUN
+                 , SUM(A.TOTAL) AS TOTAL
+                 , SUM(A.GAB)    AS GAB
+                 
+                 , MAX( A.DAYWEEK1)  AS DAYWEEK1
+                 , MAX(A.DAYWEEK2) AS DAYWEEK2
+                 , MAX(A.DAYWEEK3) AS DAYWEEK3
+                 , MAX(A.DAYWEEK4) AS DAYWEEK4
+                 , MAX( A.DAYWEEK5) AS DAYWEEK5
+                 , MAX(A.DAYWEEK6) AS DAYWEEK6
+                 , MAX(A.DAYWEEK7) AS DAYWEEK7
+                 , MAX(A.DAYWEEK8) AS DAYWEEK8
+                 , MAX(A.DAYWEEK9) AS DAYWEEK9
+                 , MAX(A.DAYWEEK10) AS DAYWEEK10
+                 , MAX(A.DAYWEEK11) AS DAYWEEK11
+                 , MAX(A.DAYWEEK12) AS DAYWEEK12
+                 , MAX(A.DAYWEEK13) AS DAYWEEK13
+                 , MAX(A.DAYWEEK14) AS DAYWEEK14
+                 , MAX(A.DAYWEEK15) AS DAYWEEK15
+                 , MAX(A.DAYWEEK16) AS DAYWEEK16
+                 , MAX(A.DAYWEEK17) AS DAYWEEK17
+                 , MAX(A.DAYWEEK18) AS DAYWEEK18
+                 , MAX(A.DAYWEEK19) AS DAYWEEK19
+                 , MAX(A.DAYWEEK20) AS DAYWEEK20
+                 , MAX(A.DAYWEEK21) AS DAYWEEK21
+                 , MAX(A.DAYWEEK22) AS DAYWEEK22
+                 , MAX(A.DAYWEEK23) AS DAYWEEK23
+                 , MAX(A.DAYWEEK24) AS DAYWEEK24
+                 , MAX(A.DAYWEEK25) AS DAYWEEK25
+                 , MAX(A.DAYWEEK26) AS DAYWEEK26
+                 , MAX(A.DAYWEEK27) AS DAYWEEK27
+                 , MAX(A.DAYWEEK28) AS DAYWEEK28
+                 , MAX(A.DAYWEEK29) AS DAYWEEK29
+                 , MAX(A.DAYWEEK30) AS DAYWEEK30
+                 , MAX(A.DAYWEEK31) AS DAYWEEK31
+                 , SUM(A.DAY1)  AS DAY1
+                 , SUM(A.DAY2)  AS DAY2
+                 , SUM(A.DAY3)  AS DAY3
+                 , SUM(A.DAY4)  AS DAY4
+                 , SUM(A.DAY5)  AS DAY5
+                 , SUM(A.DAY6)  AS DAY6
+                 , SUM(A.DAY7)  AS DAY7
+                 , SUM(A.DAY8)  AS DAY8
+                 , SUM(A.DAY9)  AS DAY9
+                 , SUM(A.DAY10)  AS DAY10
+                 , SUM(A.DAY11)  AS DAY11
+                 , SUM(A.DAY12)  AS DAY12
+                 , SUM(A.DAY13)  AS DAY13
+                 , SUM(A.DAY14)  AS DAY14
+                 , SUM(A.DAY15)  AS DAY15
+                 , SUM(A.DAY16)  AS DAY16
+                 , SUM(A.DAY17)  AS DAY17
+                 , SUM(A.DAY18)  AS DAY18
+                 , SUM(A.DAY19)  AS DAY19
+                 , SUM(A.DAY20)  AS DAY20
+                 , SUM(A.DAY21)  AS DAY21
+                 , SUM(A.DAY22)  AS DAY22
+                 , SUM(A.DAY23)  AS DAY23
+                 , SUM(A.DAY24)  AS DAY24
+                 , SUM(A.DAY25)  AS DAY25
+                 , SUM(A.DAY26)  AS DAY26
+                 , SUM(A.DAY27)  AS DAY27
+                 , SUM(A.DAY28)  AS DAY28
+                 , SUM(A.DAY29)  AS DAY29
+                 , SUM(A.DAY30)  AS DAY30
+                 , SUM(A.DAY31)  AS DAY31
+                 
+              FROM (
+                    SELECT A.PC_CD
+                         , A.ORG_NAME
+                         , A.GUBUN
+                         , 0            AS TOTAL
+                         , 0            AS GAB
+                         , (CASE WHEN DT = '1' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK1
+                         , (CASE WHEN DT = '1' THEN A.WEIGHT ELSE 0 END)   AS DAY1
+                         
+                         , (CASE WHEN DT = '2' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK2
+                         , (CASE WHEN DT = '2' THEN A.WEIGHT ELSE 0 END)   AS DAY2
+                         
+                         , (CASE WHEN DT = '3' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK3
+                         , (CASE WHEN DT = '3' THEN A.WEIGHT ELSE 0 END)   AS DAY3
+                         
+                         , (CASE WHEN DT = '4' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK4
+                         , (CASE WHEN DT = '4' THEN A.WEIGHT ELSE 0 END)   AS DAY4
+                         
+                         , (CASE WHEN DT = '5' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK5
+                         , (CASE WHEN DT = '5' THEN A.WEIGHT ELSE 0 END)   AS DAY5
+                         
+                         , (CASE WHEN DT = '6' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK6
+                         , (CASE WHEN DT = '6' THEN A.WEIGHT ELSE 0 END)   AS DAY6
+                         
+                         , (CASE WHEN DT = '7' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK7
+                         , (CASE WHEN DT = '7' THEN A.WEIGHT ELSE 0 END)   AS DAY7
+                         
+                         , (CASE WHEN DT = '8' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK8
+                         , (CASE WHEN DT = '8' THEN A.WEIGHT ELSE 0 END)   AS DAY8
+                         
+                         , (CASE WHEN DT = '9' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK9
+                         , (CASE WHEN DT = '9' THEN A.WEIGHT ELSE 0 END)   AS DAY9
+                         
+                         , (CASE WHEN DT = '10' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK10
+                         , (CASE WHEN DT = '10' THEN A.WEIGHT ELSE 0 END)   AS DAY10
+                         
+                         , (CASE WHEN DT = '11' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK11
+                         , (CASE WHEN DT = '11' THEN A.WEIGHT ELSE 0 END)   AS DAY11
+                         
+                         , (CASE WHEN DT = '12' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK12
+                         , (CASE WHEN DT = '12' THEN A.WEIGHT ELSE 0 END)   AS DAY12
+                         
+                         , (CASE WHEN DT = '13' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK13
+                         , (CASE WHEN DT = '13' THEN A.WEIGHT ELSE 0 END)   AS DAY13
+                         
+                         , (CASE WHEN DT = '14' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK14
+                         , (CASE WHEN DT = '14' THEN A.WEIGHT ELSE 0 END)   AS DAY14
+                         
+                         , (CASE WHEN DT = '15' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK15
+                         , (CASE WHEN DT = '15' THEN A.WEIGHT ELSE 0 END)   AS DAY15
+                         
+                         , (CASE WHEN DT = '16' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK16
+                         , (CASE WHEN DT = '16' THEN A.WEIGHT ELSE 0 END)   AS DAY16
+                         
+                         , (CASE WHEN DT = '17' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK17
+                         , (CASE WHEN DT = '17' THEN A.WEIGHT ELSE 0 END)   AS DAY17
+                         
+                         , (CASE WHEN DT = '18' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK18
+                         , (CASE WHEN DT = '18' THEN A.WEIGHT ELSE 0 END)   AS DAY18
+                         
+                         , (CASE WHEN DT = '19' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK19
+                         , (CASE WHEN DT = '19' THEN A.WEIGHT ELSE 0 END)   AS DAY19
+                         
+                         , (CASE WHEN DT = '20' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK20
+                         , (CASE WHEN DT = '20' THEN A.WEIGHT ELSE 0 END)   AS DAY20
+                         
+                         , (CASE WHEN DT = '21' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK21
+                         , (CASE WHEN DT = '21' THEN A.WEIGHT ELSE 0 END)   AS DAY21
+                         
+                         , (CASE WHEN DT = '22' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK22
+                         , (CASE WHEN DT = '22' THEN A.WEIGHT ELSE 0 END)   AS DAY22
+                         
+                         , (CASE WHEN DT = '23' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK23
+                         , (CASE WHEN DT = '23' THEN A.WEIGHT ELSE 0 END)   AS DAY23
+                         
+                         , (CASE WHEN DT = '24' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK24
+                         , (CASE WHEN DT = '24' THEN A.WEIGHT ELSE 0 END)   AS DAY24
+                         
+                         , (CASE WHEN DT = '25' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK25
+                         , (CASE WHEN DT = '25' THEN A.WEIGHT ELSE 0 END)   AS DAY25
+                         
+                         , (CASE WHEN DT = '26' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK26
+                         , (CASE WHEN DT = '26' THEN A.WEIGHT ELSE 0 END)   AS DAY26
+                         
+                         , (CASE WHEN DT = '27' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK27
+                         , (CASE WHEN DT = '27' THEN A.WEIGHT ELSE 0 END)   AS DAY27
+                         
+                         , (CASE WHEN DT = '28' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK28
+                         , (CASE WHEN DT = '28' THEN A.WEIGHT ELSE 0 END)   AS DAY28
+                         
+                         , (CASE WHEN DT = '29' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK29
+                         , (CASE WHEN DT = '29' THEN A.WEIGHT ELSE 0 END)   AS DAY29
+                         
+                         , (CASE WHEN DT = '30' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK30
+                         , (CASE WHEN DT = '30' THEN A.WEIGHT ELSE 0 END)   AS DAY30
+                         
+                         , (CASE WHEN DT = '31' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK31
+                         , (CASE WHEN DT = '31' THEN A.WEIGHT ELSE 0 END)   AS DAY31
+                      FROM (   
+                            SELECT A.PC_CD
+                                 , B.ORG_SHORT_NAME          AS ORG_NAME
+                                 , A.GUBUN
+                                 , A.YYYYMM
+                                 , A.DAYWEEK
+                                 , A.DT
+                                 , SUM(A.WEIGHT)             AS WEIGHT
+                              FROM (
+                                   SELECT  ? || ? || ? ||? || '00'                                   AS PC_CD
+                                         , ?                                                         AS YYYYMM
+                                         , '대비'                                                     AS GUBUN
+                                         , (CASE WHEN SUBSTR(SALE_DT,7,2) < 10 THEN SUBSTR(SALE_DT,8,1) ELSE SUBSTR(SALE_DT,7,2) END)    AS DT
+                                         , TO_CHAR( ADD_MONTHS( SALE_DT ,-12),'DAY')                  AS DAYWEEK
+                                         , NVL(STD_WEIGHT,0)                                          AS WEIGHT
+                                      FROM DPS.PS_SCHEDULE
+                                     WHERE STR_CD  = ?
+                                       AND SALE_DT LIKE TO_CHAR( ADD_MONTHS( ? || '01' ,-12),'YYYYMM')  
+                                        
+                                     UNION ALL
+                                     
+                                    SELECT A.STR_CD || A.DEPT_CD || A.TEAM_CD || A.PC_CD || '00'     AS PC_CD
+                                         , A.YYYYMM
+                                         , '실행'                                                    AS GUBUN
+                                         , (CASE WHEN SUBSTR(A.SALE_DT,7,2) >= 10 THEN SUBSTR(A.SALE_DT,7,2) ELSE SUBSTR(A.SALE_DT,8,1) END)  AS DT
+                                         , TO_CHAR( TO_DATE( A.SALE_DT, 'YYYYMMDD'),'DAY')           AS DAYWEEK
+                                         , A.WEIGHT
+                                      FROM DPS.PS_ACTPCWEIGHT     A
+                                     WHERE A.STR_CD             = ?
+                                       AND A.DEPT_CD            = ?
+                                       AND A.TEAM_CD            = ?
+                                       AND A.PC_CD              LIKE ? || '%'
+                                       AND A.YYYYMM             = ?    
+                                         
+        ]]>        
+    </query>
+    
+    <!-- PC별가중치정보 일자별 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE_DETAIL7">        
+        <![CDATA[
+                                         
+            SELECT A.PC_CD
+                 , A.ORG_NAME
+                 , A.GUBUN
+                 , SUM(A.TOTAL) AS TOTAL
+                 , SUM(A.GAB)    AS GAB
+                 
+                 , MAX( A.DAYWEEK1)  AS DAYWEEK1
+                 , MAX(A.DAYWEEK2) AS DAYWEEK2
+                 , MAX(A.DAYWEEK3) AS DAYWEEK3
+                 , MAX(A.DAYWEEK4) AS DAYWEEK4
+                 , MAX( A.DAYWEEK5) AS DAYWEEK5
+                 , MAX(A.DAYWEEK6) AS DAYWEEK6
+                 , MAX(A.DAYWEEK7) AS DAYWEEK7
+                 , MAX(A.DAYWEEK8) AS DAYWEEK8
+                 , MAX(A.DAYWEEK9) AS DAYWEEK9
+                 , MAX(A.DAYWEEK10) AS DAYWEEK10
+                 , MAX(A.DAYWEEK11) AS DAYWEEK11
+                 , MAX(A.DAYWEEK12) AS DAYWEEK12
+                 , MAX(A.DAYWEEK13) AS DAYWEEK13
+                 , MAX(A.DAYWEEK14) AS DAYWEEK14
+                 , MAX(A.DAYWEEK15) AS DAYWEEK15
+                 , MAX(A.DAYWEEK16) AS DAYWEEK16
+                 , MAX(A.DAYWEEK17) AS DAYWEEK17
+                 , MAX(A.DAYWEEK18) AS DAYWEEK18
+                 , MAX(A.DAYWEEK19) AS DAYWEEK19
+                 , MAX(A.DAYWEEK20) AS DAYWEEK20
+                 , MAX(A.DAYWEEK21) AS DAYWEEK21
+                 , MAX(A.DAYWEEK22) AS DAYWEEK22
+                 , MAX(A.DAYWEEK23) AS DAYWEEK23
+                 , MAX(A.DAYWEEK24) AS DAYWEEK24
+                 , MAX(A.DAYWEEK25) AS DAYWEEK25
+                 , MAX(A.DAYWEEK26) AS DAYWEEK26
+                 , MAX(A.DAYWEEK27) AS DAYWEEK27
+                 , MAX(A.DAYWEEK28) AS DAYWEEK28
+                 , MAX(A.DAYWEEK29) AS DAYWEEK29
+                 , MAX(A.DAYWEEK30) AS DAYWEEK30
+                 , MAX(A.DAYWEEK31) AS DAYWEEK31
+                 , SUM(A.DAY1)  AS DAY1
+                 , SUM(A.DAY2)  AS DAY2
+                 , SUM(A.DAY3)  AS DAY3
+                 , SUM(A.DAY4)  AS DAY4
+                 , SUM(A.DAY5)  AS DAY5
+                 , SUM(A.DAY6)  AS DAY6
+                 , SUM(A.DAY7)  AS DAY7
+                 , SUM(A.DAY8)  AS DAY8
+                 , SUM(A.DAY9)  AS DAY9
+                 , SUM(A.DAY10)  AS DAY10
+                 , SUM(A.DAY11)  AS DAY11
+                 , SUM(A.DAY12)  AS DAY12
+                 , SUM(A.DAY13)  AS DAY13
+                 , SUM(A.DAY14)  AS DAY14
+                 , SUM(A.DAY15)  AS DAY15
+                 , SUM(A.DAY16)  AS DAY16
+                 , SUM(A.DAY17)  AS DAY17
+                 , SUM(A.DAY18)  AS DAY18
+                 , SUM(A.DAY19)  AS DAY19
+                 , SUM(A.DAY20)  AS DAY20
+                 , SUM(A.DAY21)  AS DAY21
+                 , SUM(A.DAY22)  AS DAY22
+                 , SUM(A.DAY23)  AS DAY23
+                 , SUM(A.DAY24)  AS DAY24
+                 , SUM(A.DAY25)  AS DAY25
+                 , SUM(A.DAY26)  AS DAY26
+                 , SUM(A.DAY27)  AS DAY27
+                 , SUM(A.DAY28)  AS DAY28
+                 , SUM(A.DAY29)  AS DAY29
+                 , SUM(A.DAY30)  AS DAY30
+                 , SUM(A.DAY31)  AS DAY31
+                 
+              FROM (
+                    SELECT A.PC_CD
+                         , A.ORG_NAME
+                         , A.GUBUN
+                         , 0            AS TOTAL
+                         , 0            AS GAB
+                         , (CASE WHEN DT = '1' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK1
+                         , (CASE WHEN DT = '1' THEN A.WEIGHT ELSE 0 END)   AS DAY1
+                         
+                         , (CASE WHEN DT = '2' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK2
+                         , (CASE WHEN DT = '2' THEN A.WEIGHT ELSE 0 END)   AS DAY2
+                         
+                         , (CASE WHEN DT = '3' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK3
+                         , (CASE WHEN DT = '3' THEN A.WEIGHT ELSE 0 END)   AS DAY3
+                         
+                         , (CASE WHEN DT = '4' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK4
+                         , (CASE WHEN DT = '4' THEN A.WEIGHT ELSE 0 END)   AS DAY4
+                         
+                         , (CASE WHEN DT = '5' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK5
+                         , (CASE WHEN DT = '5' THEN A.WEIGHT ELSE 0 END)   AS DAY5
+                         
+                         , (CASE WHEN DT = '6' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK6
+                         , (CASE WHEN DT = '6' THEN A.WEIGHT ELSE 0 END)   AS DAY6
+                         
+                         , (CASE WHEN DT = '7' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK7
+                         , (CASE WHEN DT = '7' THEN A.WEIGHT ELSE 0 END)   AS DAY7
+                         
+                         , (CASE WHEN DT = '8' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK8
+                         , (CASE WHEN DT = '8' THEN A.WEIGHT ELSE 0 END)   AS DAY8
+                         
+                         , (CASE WHEN DT = '9' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK9
+                         , (CASE WHEN DT = '9' THEN A.WEIGHT ELSE 0 END)   AS DAY9
+                         
+                         , (CASE WHEN DT = '10' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK10
+                         , (CASE WHEN DT = '10' THEN A.WEIGHT ELSE 0 END)   AS DAY10
+                         
+                         , (CASE WHEN DT = '11' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK11
+                         , (CASE WHEN DT = '11' THEN A.WEIGHT ELSE 0 END)   AS DAY11
+                         
+                         , (CASE WHEN DT = '12' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK12
+                         , (CASE WHEN DT = '12' THEN A.WEIGHT ELSE 0 END)   AS DAY12
+                         
+                         , (CASE WHEN DT = '13' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK13
+                         , (CASE WHEN DT = '13' THEN A.WEIGHT ELSE 0 END)   AS DAY13
+                         
+                         , (CASE WHEN DT = '14' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK14
+                         , (CASE WHEN DT = '14' THEN A.WEIGHT ELSE 0 END)   AS DAY14
+                         
+                         , (CASE WHEN DT = '15' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK15
+                         , (CASE WHEN DT = '15' THEN A.WEIGHT ELSE 0 END)   AS DAY15
+                         
+                         , (CASE WHEN DT = '16' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK16
+                         , (CASE WHEN DT = '16' THEN A.WEIGHT ELSE 0 END)   AS DAY16
+                         
+                         , (CASE WHEN DT = '17' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK17
+                         , (CASE WHEN DT = '17' THEN A.WEIGHT ELSE 0 END)   AS DAY17
+                         
+                         , (CASE WHEN DT = '18' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK18
+                         , (CASE WHEN DT = '18' THEN A.WEIGHT ELSE 0 END)   AS DAY18
+                         
+                         , (CASE WHEN DT = '19' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK19
+                         , (CASE WHEN DT = '19' THEN A.WEIGHT ELSE 0 END)   AS DAY19
+                         
+                         , (CASE WHEN DT = '20' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK20
+                         , (CASE WHEN DT = '20' THEN A.WEIGHT ELSE 0 END)   AS DAY20
+                         
+                         , (CASE WHEN DT = '21' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK21
+                         , (CASE WHEN DT = '21' THEN A.WEIGHT ELSE 0 END)   AS DAY21
+                         
+                         , (CASE WHEN DT = '22' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK22
+                         , (CASE WHEN DT = '22' THEN A.WEIGHT ELSE 0 END)   AS DAY22
+                         
+                         , (CASE WHEN DT = '23' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK23
+                         , (CASE WHEN DT = '23' THEN A.WEIGHT ELSE 0 END)   AS DAY23
+                         
+                         , (CASE WHEN DT = '24' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK24
+                         , (CASE WHEN DT = '24' THEN A.WEIGHT ELSE 0 END)   AS DAY24
+                         
+                         , (CASE WHEN DT = '25' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK25
+                         , (CASE WHEN DT = '25' THEN A.WEIGHT ELSE 0 END)   AS DAY25
+                         
+                         , (CASE WHEN DT = '26' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK26
+                         , (CASE WHEN DT = '26' THEN A.WEIGHT ELSE 0 END)   AS DAY26
+                         
+                         , (CASE WHEN DT = '27' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK27
+                         , (CASE WHEN DT = '27' THEN A.WEIGHT ELSE 0 END)   AS DAY27
+                         
+                         , (CASE WHEN DT = '28' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK28
+                         , (CASE WHEN DT = '28' THEN A.WEIGHT ELSE 0 END)   AS DAY28
+                         
+                         , (CASE WHEN DT = '29' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK29
+                         , (CASE WHEN DT = '29' THEN A.WEIGHT ELSE 0 END)   AS DAY29
+                         
+                         , (CASE WHEN DT = '30' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK30
+                         , (CASE WHEN DT = '30' THEN A.WEIGHT ELSE 0 END)   AS DAY30
+                         
+                         , (CASE WHEN DT = '31' THEN A.DAYWEEK ELSE '' END) AS DAYWEEK31
+                         , (CASE WHEN DT = '31' THEN A.WEIGHT ELSE 0 END)   AS DAY31
+                      FROM (   
+                            SELECT A.PC_CD
+                                 , B.ORG_SHORT_NAME          AS ORG_NAME
+                                 , A.GUBUN
+                                 , A.YYYYMM
+                                 , A.DAYWEEK
+                                 , A.DT
+                                 , SUM(A.WEIGHT)             AS WEIGHT
+                              FROM (
+                                    SELECT A.STR_CD || A.DEPT_CD || A.TEAM_CD || A.PC_CD || '00'     AS PC_CD
+                                         , ?                                                         AS YYYYMM
+                                         , '대비'                                                    AS GUBUN
+                                         , (CASE WHEN SUBSTR(A.SALE_DT,7,2) >= 10 THEN SUBSTR(A.SALE_DT,7,2) ELSE SUBSTR(A.SALE_DT,8,1) END)  AS DT
+                                         , TO_CHAR( TO_DATE( A.SALE_DT, 'YYYYMMDD'),'DAY')           AS DAYWEEK
+                                         , A.WEIGHT
+                                      FROM DPS.PS_ACTPCWEIGHT     A
+                                     WHERE A.STR_CD             = ?
+                                       AND A.DEPT_CD            = ?
+                                       AND A.TEAM_CD            = ?
+                                       AND A.PC_CD              LIKE ? || '%'
+                                       AND A.YYYYMM             = TO_CHAR(ADD_MONTHS(? || '01', -12),'YYYYMM') 
+                                       
+                                     UNION ALL
+                                     
+                                     
+                                    SELECT ? || ? || ? ||? || '00'                                   AS PC_CD
+                                         , ?                                                         AS YYYYMM
+                                         , '실행'                                                     AS GUBUN
+                                         ,  (CASE WHEN SUBSTR(SALE_DT,7,2) < 10 THEN SUBSTR(SALE_DT,8,1) ELSE SUBSTR(SALE_DT,7,2) END)  AS DT
+                                         , TO_CHAR( TO_DATE( SALE_DT ,'YYYYMMDD'),'DAY')              AS DAYWEEK
+                                         , NVL(STD_WEIGHT,0)                                          AS WEIGHT
+                                      FROM DPS.PS_SCHEDULE
+                                     WHERE STR_CD  = ?
+                                       AND SALE_DT LIKE ? || '%'     
+                                         
+        ]]>        
+    </query>
+    
+    <!-- PC별가중치정보 일자별 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE_UNION">        
+        <![CDATA[
+				                     UNION ALL
+				                     
+				                    SELECT ? || ? || ? || ? || '00'                                  AS PC_CD
+				                         , ?                                                         AS YYYYMM
+				                         , '대비'                                                     AS GUBUN
+				                         , ?                                                         AS DT
+				                         , TO_CHAR( ADD_MONTHS( ? || ? ,-12),'DAY')                  AS DAYWEEK
+				                         , 0                                                         AS WEIGHT
+				                      FROM DUAL
+				                      
+				                     UNION ALL
+				                     
+				                    SELECT ? || ? || ? || ? || '00'                                  AS PC_CD
+				                         , ?                                                         AS YYYYMM
+				                         , '실행'                                                     AS GUBUN
+				                         , ?                                                         AS DT
+				                         , TO_CHAR( TO_DATE( ? || ? ,'YYYYMMDD'),'DAY')              AS DAYWEEK
+				                         , 0                                                         AS WEIGHT
+				                      FROM DUAL
+               
+        ]]>        
+    </query>
+    
+    <!-- PC별가중치정보 일자별 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE_WHERE">        
+        <![CDATA[
+				                   ) A
+				                 , DPS.PC_ORGMST         B
+				             WHERE A.PC_CD        = B.ORG_CD
+				               AND EXISTS ( SELECT MYORG.USER_ID
+				                              FROM COM.V_MYORG MYORG
+				                             WHERE MYORG.STR_CD      = B.STR_CD
+				                               AND MYORG.DEPT_CD     = B.DEPT_CD
+				                               AND MYORG.TEAM_CD     = B.TEAM_CD
+				                               AND MYORG.PC_CD       = B.PC_CD
+				                               AND MYORG.USER_ID     = ?
+				                             )
+				             GROUP BY 
+				                   A.PC_CD
+				                 , B.ORG_SHORT_NAME
+				                 , A.GUBUN
+				                 , A.YYYYMM
+				                 , A.DAYWEEK
+				                 , A.DT
+				             ORDER BY 
+				                   A.PC_CD
+				                 , A.YYYYMM
+				                 , CASE WHEN A.DT >=10 THEN A.DT ELSE '0' || A.DT END
+				                 , A.GUBUN
+               
+            
+                          ) A
+	               ) A
+		     GROUP BY
+		           A.PC_CD
+		         , A.ORG_NAME
+		         , A.GUBUN
+		     ORDER BY 
+		           A.GUBUN
+               
+            
+        ]]>        
+    </query>
+    
+    <!-- 당초품번별월매출계획 확정 조회 쿼리  -->
+    <query name="SEL_CONF_FLAG_M">        
+        <![CDATA[
+            
+            SELECT DISTINCT A.CONF_FLAG
+              FROM DPS.PS_PLANPUMBUN A
+             WHERE A.STR_CD                   = ? 
+               AND A.ORG_LEVEL                = '4'
+               AND A.DEPT_CD                  = ?
+               AND A.TEAM_CD                  = ?
+               AND A.PC_CD                    = ?
+               AND A.PLAN_YM                  LIKE ? || '%'
+               AND A.CONF_FLAG                = 'Y'
+        ]]>        
+    </query>
+    
+    <!-- 실행계획 확정 조회 쿼리  -->
+    <query name="SEL_ACT_CONF">        
+        <![CDATA[
+            
+            SELECT DISTINCT A.CONF_FLAG
+              FROM DPS.PS_ACTPUMBUN A
+             WHERE A.STR_CD                   = ? 
+               AND A.ORG_LEVEL                = '4'
+               AND A.DEPT_CD                  = ?
+               AND A.TEAM_CD                  = ?
+               AND A.PC_CD                    = ?
+               AND A.EXE_YM                  LIKE ? || '%'
+               AND A.CONF_FLAG                = 'Y'
+        ]]>        
+    </query>
+    
+    <!-- 영업일자 데이터 조회 쿼리  -->
+    <query name="SEL_WEIGHT">        
+        <![CDATA[
+            SELECT DISTINCT 'Y'           AS FLAG
+              FROM DPS.PS_ACTPCWEIGHT     A
+             WHERE A.STR_CD     = ?
+               AND A.DEPT_CD    = ?
+               AND A.TEAM_CD    = ?
+               AND A.PC_CD      = ?
+               AND A.YYYYMM     = ?
+               
+            
+        ]]>        
+    </query>
+    
+    <!-- 신규 입력  -->
+    <query name="INS_PS_ACTPCWEIGHT">        
+        <![CDATA[
+            INSERT INTO DPS.PS_ACTPCWEIGHT  ( 
+                                              STR_CD
+	                                        , YYYYMM
+	                                        , SALE_DT
+	                                        , DEPT_CD
+	                                        , TEAM_CD
+	                                        , PC_CD
+	                                        , WEIGHT
+	                                        , REG_DATE
+	                                        , REG_ID
+	                                        , MOD_DATE
+	                                        , MOD_ID
+	                                        )
+	                                VALUES  ( 
+	                                          ?
+	                                        , ?
+	                                        , ?
+	                                        , ?
+	                                        , ?
+	                                        , ?
+                                            , ROUND(?,2)
+                                            , SYSDATE
+                                            , ?
+	                                        , SYSDATE
+	                                        , ?
+	                                        )
+                                        
+            
+        ]]>        
+    </query>
+    
+    <!-- 수정  -->
+    
+    <query name="UPD_PS_ACTPCWEIGHT">
+        <![CDATA[
+            UPDATE DPS.PS_ACTPCWEIGHT
+               SET WEIGHT          = ROUND(?,2)
+                 , MOD_DATE        = SYSDATE
+                 , MOD_ID          = ?
+             WHERE STR_CD          = ?
+               AND DEPT_CD         = ?
+               AND TEAM_CD         = ?
+               AND PC_CD           = ?
+               AND YYYYMM          = ?
+               AND SALE_DT         = ?
+               
+        ]]>
+    </query>
+    
+    <!-- 삭제  -->
+    <query name="DEL_PS_ACTPCWEIGHT">
+        <![CDATA[
+            DELETE DPS.PS_ACTPCWEIGHT
+             WHERE STR_CD     = ?
+               AND DEPT_CD    = ?
+               AND TEAM_CD    = ?
+               AND PC_CD      = ?
+               AND YYYYMM     = ?
+               AND SALE_DT    = ?
+        ]]>
+    </query>
+    
+    
+    <!-- 영업일 COOUNT 조회 쿼리  -->
+    <query name="SEL_SALEDATE_COUNT">        
+        <![CDATA[
+            SELECT COUNT(*) CNT
+              FROM DPS.PS_SCHEDULE     A
+             WHERE A.STR_CD     = ?
+               AND A.SALE_DT LIKE ? || '%'
+               AND A.HOLIDAY_GB <> '4'
+               
+            
+        ]]>        
+    </query>
+    
+    
+    <!-- 영업일 가중치정보 조회 쿼리  -->
+    <query name="SEL_DAY_WEIGHT">        
+        <![CDATA[
+    
+    SELECT         A.STR_CD
+                 , B.STR_NAME
+                 , A.SALE_DT
+                 , A.DAY_WEEK
+                 , A.STD_WEIGHT
+              FROM DPS.PS_SCHEDULE     A
+                 , DPS.PC_STRMST       B
+             WHERE A.STR_CD     = B.STR_CD
+               AND A.STR_CD     = ?
+               AND A.SALE_DT    LIKE ? || '%'
+             ORDER BY
+                   A.STR_CD
+                 , A.SALE_DT
+        ]]>        
+    </query>
+    
+    
+</service>

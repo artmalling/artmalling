@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.11
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  임대을 매출세금계산서 일괄생성
+ -->
+<service name="/ppay104.pp">
+    <!-- 임대을 매출세금계산서 마스터  리스트 -->
+    <gauce name="H_MASTER"> 
+    <column colName="VEN_CD"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VEN_NM"            colType="TB_STRING"  size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PUMBUN_CD"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PUMBUN_NM"         colType="TB_STRING"  size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="SALE_TOT_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="REDU_AMT"          colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    <column colName="SALE_AMT"          colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="SALE_COMIS_AMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="SUP_AMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VAT_AMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="TOT_AMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    <column colName="TAX_ISSUE_DT"      colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="TAX_ISSUE_SEQ_NO"  colType="TB_STRING"  size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="EDI_SEQ_NO"        colType="TB_STRING"  size="24"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="STR_CD"            colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PAY_YM"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CYC"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CNT"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="TERM_S_DT"         colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="TERM_E_DT"         colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="SEL"               colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    
+    </gauce>
+    
+    <!-- 임대을 매출세금계산서상세  리스트 -->
+    <gauce name="H_DETAIL"> 
+    <column colName="CHK_DT"             colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="SLIP_FLAG"          colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="SLIP_NO"            colType="TB_STRING"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PUMBUN_CD"          colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PUMBUN_NM"          colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CHK_COST_TAMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CHK_V_COST_TAMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    <column colName="CHK_TOT_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    <column colName="ROUND_FLAG"         colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="REMARK"             colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--  임대을 매출세금계산서 마스터  리스트  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+		SELECT A.VEN_CD                                                    /* 협력사      */
+		     , C.VEN_NAME                                                  /* 협력사명    */
+		     , A.PUMBUN_CD                                                 /* 품번코드 */
+		     , DPS.FN_GET_PUMBUN_SNAME(A.PUMBUN_CD) AS PUMBUN_NM           /* 품번명 */
+		     , SUM(A.SALE_TOT_AMT)        AS SALE_TOT_AMT                  /* 총매출      */
+		     , SUM(A.REDU_AMT)            AS REDU_AMT                      /* 할인        */
+		     , SUM(A.SALE_AMT)            AS SALE_AMT                      /* 매출        */
+		     , SUM(A.SALE_COMIS_AMT)      AS SALE_COMIS_AMT                /* 매출수수료  */
+		     , MAX(B.SUP_AMT)             AS SUP_AMT                       /* 공급액      */
+		     , MAX(B.VAT_AMT)             AS VAT_AMT                       /* 부가세      */
+		     , MAX(B.TOT_AMT)             AS TOT_AMT                       /* 합계        */  
+		     , MAX(NVL(A.TAX_ISSUE_DT, ' '))        AS TAX_ISSUE_DT
+		     , MAX(A.TAX_ISSUE_SEQ_NO)    AS TAX_ISSUE_SEQ_NO
+		     , MAX(B.EDI_SEQ_NO)          AS EDI_SEQ_NO
+		     , ?                          AS STR_CD
+		     , ?                          AS PAY_YM
+             , ?                          AS PAY_CYC
+             , ?                          AS PAY_CNT
+		     , ?                          AS TERM_S_DT
+		     , ?                          AS TERM_E_DT
+		     , 'F'                        AS SEL
+		  FROM DPS.PP_VENPAYDTL A
+		     , DPS.PP_TAXMST    B
+		     , DPS.PC_STRVENMST C
+		 WHERE A.STR_CD               = B.STR_CD(+)
+		   AND A.TAX_ISSUE_DT         = B.TAX_ISSUE_DT(+)
+		   AND A.TAX_ISSUE_SEQ_NO     = B.TAX_ISSUE_SEQ_NO(+)
+		   AND A.STR_CD               = C.STR_CD
+		   AND A.VEN_CD               = C.VEN_CD
+		   AND C.BIZ_TYPE             = '3'             /* 거래형태(3:임대을) */
+		   AND C.POS_CAL_FLAG         = '1'             /* POS정산구분(1:백화점POS,2:협력사POS(A)-관리안함,3:협력사POS(B) */
+		   AND A.STR_CD               = ?
+		   AND A.PAY_YM               = ?
+		   AND A.PAY_CYC              = ?
+		   AND A.PAY_CNT              = ?
+		   AND A.VEN_CD               LIKE ? || '%'
+		   AND NVL(B.EDI_SEQ_NO,' ')  LIKE ? || '%'
+        ]]>
+    </query> 
+    
+    <query name="SEL_TAX_DT">
+        <![CDATA[
+            AND A.TAX_ISSUE_DT BETWEEN ? AND ? 
+        ]]>
+    </query> 
+    
+    <query name="SEL_MASTER_GROUP">
+        <![CDATA[
+            GROUP BY A.VEN_CD
+		        , C.VEN_NAME
+		        , A.PUMBUN_CD
+		    ORDER BY A.VEN_CD
+		            ,A.PUMBUN_CD     
+        ]]>
+    </query>
+    
+    <!--  임대을 매출세금계산서 저장  -->
+    <query name="INS_MASTER">
+        <![CDATA[
+        INSERT INTO DPS.PP_BUYTAXPROCHIST ( 
+                             REG_DATE                  /* 등록일시 */                
+                           , REG_ID                    /* 등록자  */                        
+                           , STR_CD                    /* 점코드 */  
+                           , PAY_YM                    /* 지불년월  */  
+                           , PAY_CYC                   /* 지불주기  */          
+                           , PAY_CNT                   /* 지불회차  */ 
+                           , BIZ_TYPE                  /* 거래형태 */   
+                           , TAX_FLAG                  /* 과세구분  */    
+                           , VEN_CD                    /* 협력사코드  */   
+                           , TERM_S_DT                 /* 매출/매입기간시작일 */      
+                           , TERM_E_DT                 /* 매출/매입기간종료일 */      
+                            )
+                     VALUES (
+                               SYSDATE
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             )
+        ]]>
+    </query> 
+    
+    <!--  SYSDATE가져오기  -->
+    <query name="SEL_SYSDATE">
+        <![CDATA[
+        SELECT TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') AS TODAY
+          FROM DUAL
+        ]]>
+    </query> 
+ </service>

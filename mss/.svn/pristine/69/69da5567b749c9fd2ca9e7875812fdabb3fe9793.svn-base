@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 강진
+ * 회 사 명 : 
+ * 작 성 일 : 2012.08.16
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상품권강제불출
+ -->
+<service name="/mgif217.mg">
+    <!-- 불출상품권 상품권 헤더  -->
+    <gauce name="H_SEL_POUT_GIFT">
+    	<column colName="FLAG" 				colType="TB_STRING"   size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_STR"            colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING"   size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME"    colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING"   size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_NO"       colType="TB_STRING"   size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_QTY"          colType="TB_DECIMAL"  size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_AMT"          colType="TB_DECIMAL"  size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 불출상품권 조회쿼리-->
+    <query name="SEL_POUT_GIFT">
+        <![CDATA[
+        SELECT 'F' AS FLAG
+        	 , MST.IN_STR
+             , MST.GIFT_TYPE_CD
+             , TPM.GIFT_TYPE_NAME
+             , AMT.GIFT_AMT_TYPE
+             , AMT.GIFT_AMT_NAME
+             , AMT.GIFTCERT_AMT
+             , MST.GIFTCARD_NO
+             , 1                    AS CONF_QTY
+             , AMT.GIFTCERT_AMT * 1 AS CONF_AMT
+          FROM MSS.MG_GIFTAMTMST AMT
+             , MSS.MG_GIFTMST    MST
+             , MSS.MG_GIFTTPMST  TPM
+         WHERE AMT.GIFT_TYPE_CD     = MST.GIFT_TYPE_CD
+           AND TPM.GIFT_TYPE_CD     = MST.GIFT_TYPE_CD
+           AND AMT.ISSUE_TYPE       = MST.ISSUE_TYPE
+           AND AMT.GIFT_AMT_TYPE    = MST.GIFT_AMT_TYPE
+           AND MST.STAT_FLAG        = '03' /*점입고*/
+           AND MST.IN_STR           = ?
+        ]]>
+    </query>
+    
+    <!-- 불출상품권 조회쿼리-->
+    <query name="SEL_POUT_GIFT_WHERE_NO">
+        <![CDATA[
+           AND MST.GIFTCARD_NO BETWEEN ? AND ?
+        ]]>
+    </query>
+    
+    <!-- 불출상품권 조회쿼리-->
+    <query name="SEL_POUT_GIFT_WHERE_DATE">
+        <![CDATA[
+           AND MST.POUT_TYPE      = ? /*강제유형*/
+           AND MST.POUT_DT        = ? /*강제일자*/
+        ]]>
+    </query>
+    
+    <!-- 불출상품권 조회쿼리-->
+    <query name="SEL_SEQ_NO">
+        <![CDATA[
+           SELECT LPAD(MSS.SQ_MG_POUTREQCONF.NEXTVAL,6,'0') AS SEQ
+             FROM DUAL
+        ]]>
+    </query>
+    
+    <!-- 불출상품권 등록-->
+    <query name="INS_POUT">
+        <![CDATA[
+			INSERT 
+			  INTO MSS.MG_POUTREQCONF
+			     ( CONF_DT
+			     , STR_CD
+			     , CONF_SLIP_NO
+			     , CONF_SEQ_NO
+			     , EVENT_CD
+			     , POUT_REQ_SLIP_NO
+			     , POUT_REQ_SEQ_NO
+			     , POUT_REQ_DT
+			     , GIFT_TYPE_CD
+			     , ISSUE_TYPE
+			     , GIFT_AMT_TYPE
+			     , CONF_QTY
+			     , CONF_AMT
+			     , GIFT_S_NO
+			     , GIFT_E_NO
+			     , POUT_FLAG
+			     , POUT_TYPE
+			     , REG_ID
+			     , REG_DATE
+			     , MOD_ID
+			     , MOD_DATE
+			     , POUT_PART_CD)
+			VALUES 
+			     ( ?                         /*CONF_DT*/
+			     , ?                         /*STR_CD*/
+                 , ?                         /*CONF_SLIP_NO*/
+                 , (SELECT NVL(MAX(CONF_SEQ_NO)+1, 1) 
+                     FROM MSS.MG_POUTREQCONF
+                    WHERE CONF_DT = ?
+                      AND STR_CD = ?
+                      AND CONF_SLIP_NO = ?)  /*CONF_SEQ_NO*/
+			     , ''                        /*EVENT_CD*/
+			     , ''                        /*POUT_REQ_SLIP_NO*/
+			     , ''                        /*POUT_REQ_SEQ_NO*/
+			     , ''                        /*POUT_REQ_DT*/
+			     , ?                         /*GIFT_TYPE_CD*/
+			     , '1'                       /*ISSUE_TYPE*/
+			     , ?                         /*GIFT_AMT_TYPE*/
+			     , ?                         /*CONF_QTY*/
+			     , ?                         /*CONF_AMT*/
+			     , ?                         /*GIFT_S_NO*/
+			     , ?                         /*GIFT_E_NO*/
+			     , '1'                       /*POUT_FLAG:불출*/
+			     , '6'                       /*POUT_TYPE:특판강제불출*/
+			     , ?                         /*REG_ID*/
+			     , SYSDATE                   /*REG_DATE*/
+			     , ?                         /*MOD_ID*/
+			     , SYSDATE                   /*MOD_DATE*/
+			     , ?)						 /*POUT_PART_CD:불출부서*/		
+			     
+        ]]>
+    </query>
+    
+    <!-- 불출 상품권 정보수정-->
+    <query name="UPD_GIFTMST">
+        <![CDATA[
+        UPDATE MSS.MG_GIFTMST
+           SET STAT_FLAG    = '05'  /*가판매*/
+             , POUT_TYPE    = '6'   /*특판강제불출*/
+             , POUT_FLAG    = '1'   /*불출*/
+             , POUT_DT      = ?     /*불출일자*/
+             , POUT_EMP_ID  = ?     /*불출사번*/
+             , MOD_ID       = ?
+             , MOD_DATE     = SYSDATE
+             , POUT_PART_CD = ?     /*불출부서*/
+         WHERE GIFTCARD_NO  = ?
+        ]]>
+    </query>
+    
+</service>

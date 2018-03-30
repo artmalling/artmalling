@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작  성  자  : 김영진
+ * 회  사  명  : 한국후지쯔
+ * 작  성  일  : 2010.05.11
+ * 변  경  일  :
+ * 변경내용 :
+ * 개         요  : 신주소, 구주소 찾기
+ -->
+<service name="/ccom430.cc">	
+
+    <!-- 조회 조건 헤더 -->
+    <gauce name="H_POPUP">
+        <column colName="ADDR1"     colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="ROAD_NM"   colType="TB_STRING" size="60"   dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="SI_DO"     colType="TB_STRING" size="20"   dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="SI_GUN_GU" colType="TB_STRING" size="20"   dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="BLDG1" 	colType="TB_STRING" size="20"   dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="BLDG2" 	colType="TB_STRING" size="20"   dec="0" keyType="TB_NORMAL"  roundMode=""     />
+    </gauce>
+
+    <!-- 조회 결과 헤더 -->
+    <gauce name="H_SEL_POPUP">
+        <column colName="POST_NO"   colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="FULL_ADDR" colType="TB_STRING" size="150"  dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="FULL_ADDR2" colType="TB_STRING" size="150"  dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="ADDR1"     colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="ADDR2"     colType="TB_STRING" size="60"   dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="POST_NO1"  colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="POST_NO2"  colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="GUBUN"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL"  roundMode=""     />
+    </gauce> 
+
+    <!-- 조회 결과 헤더 -->
+    <gauce name="H_SEL_ADDR">
+        <column colName="POST_NO"   colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="ADDR1"     colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="ADDR2"     colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode=""     />
+        <column colName="ADDR3"     colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode=""     />
+    </gauce> 
+    
+    <!-- 코드/명 조회 -->
+    <gauce name="H_COMMON">
+      <column colName="NAME"       colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>    
+    
+    <!-- 코드/명 조회  -->
+    <query name="SEL_ETC_CODE">   
+        <![CDATA[    
+            SELECT SI AS NAME FROM COM.ST_ADDR_SI ORDER BY CODE_SI
+        ]]>        
+    </query>
+    
+    <query name="SEL_ETC_CODE_bak">   
+        <![CDATA[    
+            SELECT SI_DO AS NAME
+              FROM ( 
+                    SELECT POST_NO
+                         , SI_DO
+                      FROM (
+                            SELECT MIN(POST_NO) POST_NO
+                                 , SI_DO
+                              FROM COM.TC_POSTNO_NEW
+                             GROUP BY SI_DO
+                           )
+                     ORDER BY POST_NO      
+                   ) 
+        ]]>        
+    </query>
+    
+    <!-- 코드/명 조회  -->
+    <query name="SEL_ETC_CODE2">   
+        <![CDATA[    
+            SELECT GU AS NAME 
+              FROM COM.ST_ADDR_GU 
+			 WHERE CODE_GU LIKE (SELECT CODE_SI FROM COM.ST_ADDR_SI WHERE SI = ?)||'%'  
+			ORDER BY GU
+        ]]>        
+    </query>
+    
+    <query name="SEL_ETC_CODE2_bak">   
+        <![CDATA[    
+            SELECT UNIQUE SI_GUN_GU AS NAME
+              FROM COM.TC_POSTNO_NEW
+             WHERE SI_DO = ?
+             GROUP BY SI_GUN_GU
+             ORDER BY NAME  
+        ]]>        
+    </query>
+    
+    <!-- 구주소  조회 SQL -->
+    <query name="SEL_OLD_ADDR_BAK">
+        <![CDATA[
+        	 SELECT POST_NO
+        	      , FULL_ADDR
+                  , ADDR1
+                  , ADDR2
+                  , SUBSTR(POST_NO,1,3) POST_NO1
+                  , SUBSTR(POST_NO,4,6) POST_NO2 
+                  , 'N' AS GUBUN
+               FROM COM.TC_POSTNO_OLD
+              WHERE EUP_DONG  LIKE '%' || ? || '%'  
+              ORDER BY FULL_ADDR ASC
+        ]]>
+    </query>
+   
+    <!-- 도로명  조회 SQL -->
+    <query name="SEL_NEW_ADDR">
+        <![CDATA[
+        	SELECT DISTINCT POST_NO
+                   , ADDR1||' '||BLDG FULL_ADDR
+                   , ADDR1||' '||DONG ADDR1
+                   , ADDR2
+                   , POST_NO1
+                   , POST_NO2 
+                   , GUBUN
+        	  FROM (
+	             SELECT  ZIPCODE POST_NO
+	                     , '' FULL_ADDR,
+	                     CASE WHEN SI <> GU THEN
+	                        CASE WHEN BLDG1 = '0' THEN SI||' '||GU||' '||NM_DORO
+	                               WHEN BLDG1 <> '0' AND BLDG2 = '0' THEN SI||' '||GU||' '||NM_DORO||' '||TRIM(BLDG1)
+	                               WHEN BLDG1 <> '0' AND BLDG2 <> '0' THEN SI||' '||GU||' '||NM_DORO||' '||TRIM(BLDG1)||'-'||TRIM(BLDG2)
+	                        ELSE SI||' '||GU||' '||NM_DORO END
+	                     ELSE
+	                       CASE WHEN BLDG1 = '0' THEN SI||' '||NM_DORO
+	                               WHEN BLDG1 <> '0' AND BLDG2 = '0' THEN SI||' '||NM_DORO||' '||TRIM(BLDG1)
+	                               WHEN BLDG1 <> '0' AND BLDG2 <> '0' THEN SI||' '||NM_DORO||' '||TRIM(BLDG1)||'-'||TRIM(BLDG2)
+	                       ELSE SI||' '||GU||' '||NM_DORO END
+	                     END ADDR1
+	                     , '('||DONG_BUB||')' DONG
+                         , '('||DONG_BUB||DECODE(DECODE(NM_BLDG, NULL, NM_SI_GUN_BLDG, NM_BLDG), NULL, '', ', '||DECODE(NM_BLDG, NULL, NM_SI_GUN_BLDG, NM_BLDG))||')' BLDG
+                         , DECODE(NM_BLDG, NULL, NM_SI_GUN_BLDG, NM_BLDG) ADDR2
+	                     , ZIPCODE POST_NO1
+	                     , '' POST_NO2
+	                     , 'Y' GUBUN
+				  FROM COM.ST_ADDR
+				WHERE NM_DORO LIKE '%' || ? || '%'
+			      AND SI = ?
+			      AND GU = ?
+        ]]>
+    </query>
+    
+    <!-- 도로명 건물명1 조회 SQL -->
+    <query name="SEL_NEW_ADDR_BLDG1">
+    	<![CDATA[
+    		AND BLDG1 = ?
+    	]]>
+    </query>
+    
+    <!-- 도로명 건물명2 조회 SQL -->
+    <query name="SEL_NEW_ADDR_BLDG2">
+    	<![CDATA[
+    		AND BLDG2 = ?
+    	]]>
+    </query>
+    
+    <query name="SEL_NEW_ADDR_ORDERBY">
+    	<![CDATA[
+    		  )
+		 	  ORDER BY FULL_ADDR
+    	]]>
+    </query>
+    
+    
+    <!-- 지번  조회 SQL -->
+    <query name="SEL_OLD_ADDR">
+        <![CDATA[
+        	SELECT DISTINCT POST_NO
+                   , ADDR1||' '||BLDG FULL_ADDR
+                   , FULL_ADDR2
+                   , ADDR1||' '||DONG ADDR1
+                   , ADDR2
+                   , POST_NO1
+                   , POST_NO2
+                   , GUBUN
+                  FROM (
+                     SELECT  NEW_ZIPCODE POST_NO
+                             , '' FULL_ADDR,
+                             CASE WHEN SI <> GU THEN
+                                CASE WHEN BLDG1 = '0' THEN SI||' '||GU||' '||NM_DORO
+                                       WHEN BLDG1 <> '0' AND BLDG2 = '0' THEN SI||' '||GU||' '||NM_DORO||' '||TRIM(BLDG1)
+                                       WHEN BLDG1 <> '0' AND BLDG2 <> '0' THEN SI||' '||GU||' '||NM_DORO||' '||TRIM(BLDG1)||'-'||TRIM(BLDG2)
+                                ELSE SI||' '||GU||' '||NM_DORO END
+                             ELSE
+                               CASE WHEN BLDG1 = '0' THEN SI||' '||NM_DORO
+                                       WHEN BLDG1 <> '0' AND BLDG2 = '0' THEN SI||' '||NM_DORO||' '||TRIM(BLDG1)
+                                       WHEN BLDG1 <> '0' AND BLDG2 <> '0' THEN SI||' '||NM_DORO||' '||TRIM(BLDG1)||'-'||TRIM(BLDG2)
+                               ELSE SI||' '||GU||' '||NM_DORO END
+                             END ADDR1
+                             , '('||DONG_BUB||')' DONG
+                         , '('||DONG_BUB||DECODE(DECODE(NM_BLDG, NULL, NM_SI_GUN_BLDG, NM_BLDG), NULL, '', ', '||DECODE(NM_BLDG, NULL, NM_SI_GUN_BLDG, NM_BLDG))||')' BLDG
+                         , DECODE(NM_BLDG, NULL, NM_SI_GUN_BLDG, NM_BLDG) ADDR2
+                             , NEW_ZIPCODE POST_NO1
+                             , '' POST_NO2
+                             , 'Y' GUBUN
+                             , SI||' '||GU||' '||DONG_BUB||' '||TRIM(JIBUN1)||DECODE(TRIM(JIBUN2),'0','','-'||JIBUN2) FULL_ADDR2
+                                  FROM COM.ST_ADDR
+                                WHERE (NM_DORO LIKE ? || '%' OR DONG_BUB LIKE ? || '%')
+                              
+                              
+        ]]>
+    </query>
+    
+    <!-- 지번 시 조회 SQL -->
+    <query name="SEL_OLD_ADDR_SI">
+    	<![CDATA[
+    		AND SI = ?
+    	]]>
+    </query>
+    
+    <!-- 지번 구 조회 SQL -->
+    <query name="SEL_OLD_ADDR_GU">
+    	<![CDATA[
+    		AND GU = ?
+    	]]>
+    </query>
+    
+    <!-- 지번 건물명1 조회 SQL -->
+    <query name="SEL_OLD_ADDR_BLDG1">
+    	<![CDATA[
+    		AND (TRIM(JIBUN1) = ? OR TRIM(BLDG1) = ?)
+    	]]>
+    </query>
+    
+    <!-- 지번 건물명2 조회 SQL -->
+    <query name="SEL_OLD_ADDR_BLDG2">
+    	<![CDATA[
+    		AND (TRIM(JIBUN2) = ? OR TRIM(BLDG2) = ?)
+    	]]>
+    </query>
+    
+    <query name="SEL_OLD_ADDR_ORDERBY">
+    	<![CDATA[
+    		  )
+		 	  ORDER BY FULL_ADDR
+    	]]>
+    </query>
+    
+    <query name="SEL_NEW_ADDR_bak">
+        <![CDATA[
+             SELECT POST_NO
+                  , FULL_ADDR
+                  , ADDR1
+                  , ADDR2
+                  , SUBSTR(POST_NO,1,3) POST_NO1
+                  , SUBSTR(POST_NO,4,6) POST_NO2 
+                  , 'Y' AS GUBUN
+               FROM COM.TC_POSTNO_NEW
+              WHERE ROAD_NM   LIKE '%' || ? || '%'  
+                AND SI_DO     LIKE ? || '%'  
+                AND SI_GUN_GU LIKE ? || '%'  
+              ORDER BY FULL_ADDR ASC
+        ]]>
+    </query>
+    
+    
+    <!--  조회 SQL -->
+    <query name="SEL_ADDR">
+        <![CDATA[
+			SELECT ZIPNO AS POST_NO
+			     , SIDO||' '||SIGUNGU||' '||DORONM ||' '||BUILDNG_MNO || DECODE(BUILDNG_SNO,'0','','-'||BUILDNG_SNO) ||' ('||  NVL(DONG, NVL(HANGNM, BUPDONGNM)) || CASE WHEN NVL(BUILDNG_NM, ' ') = ' ' THEN ')' ELSE ', ' || NVL(BUILDNG_NM, '') || ')' END  ADDR1
+			     , SIDO||' '||SIGUNGU||' '||NVL(DONG, NVL(HANGNM, BUPDONGNM)) ||' '|| JIBUN || DECODE(JIBUNSEQ,'0','','-'||JIBUNSEQ) || CASE WHEN NVL(BUILDNG_NM, ' ') = ' ' THEN '' ELSE ' ' || NVL(BUILDNG_NM, '') || ')' END ADDR2
+			     , SIDO||' '||SIGUNGU||' '||DORONM ||' '||BUILDNG_MNO || DECODE(BUILDNG_SNO,'0','','-'||BUILDNG_SNO) || NVL(BUILDNG_NM, '') ADDR3
+			  FROM COM.TC_ZIPMST
+			 WHERE (
+			          HANGNM    LIKE  ? || '%'  -- 행정동명 
+			       OR BUPDONGNM LIKE  ? || '%'  -- 법정동명  
+			       OR DORONM    LIKE  ? || '%'  -- 도로명  
+			       )
+			 ORDER BY
+			       1, 2
+        ]]>
+    </query>
+</service>
+

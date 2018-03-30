@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작  성  자  : 김영진
+ * 회  사  명  : 
+ * 작  성  일  : 2010.06.30
+ * 변  경  일  : 
+ * 변경내용 : 
+ * 개          요 : 시간대별 VIP 방문고객조회
+ -->
+<service name="/dmbo713.do">
+    <!-- 시간대별  방문자수 -->
+    <gauce name="H_MASTER">
+        <column colName="IN_DATE"     colType="TB_STRING"   size="8"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="VISIT_TQTY"  colType="TB_DECIMAL" size="10"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="H11B"        colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="H12"         colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="H13"         colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="H14"         colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="H15"         colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="H16"         colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="H17"         colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="H18"         colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="H19"         colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="H19A"        colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    <query name="SEL_TOTAL_MASTER">
+    <![CDATA[
+        SELECT IN_DATE
+             , SUM(MEMBER_QTY) VISIT_TQTY
+             , SUM(CASE WHEN IN_HOUR <= '1100' THEN MEMBER_QTY ELSE 0 END) H11B
+             , SUM(CASE WHEN '1100' < IN_HOUR AND IN_HOUR <= '1200' THEN MEMBER_QTY ELSE 0 END) H12
+             , SUM(CASE WHEN '1200' < IN_HOUR AND IN_HOUR <= '1300' THEN MEMBER_QTY ELSE 0 END) H13
+             , SUM(CASE WHEN '1300' < IN_HOUR AND IN_HOUR <= '1400' THEN MEMBER_QTY ELSE 0 END) H14
+             , SUM(CASE WHEN '1400' < IN_HOUR AND IN_HOUR <= '1500' THEN MEMBER_QTY ELSE 0 END) H15
+             , SUM(CASE WHEN '1500' < IN_HOUR AND IN_HOUR <= '1600' THEN MEMBER_QTY ELSE 0 END) H16
+             , SUM(CASE WHEN '1600' < IN_HOUR AND IN_HOUR <= '1700' THEN MEMBER_QTY ELSE 0 END) H17
+             , SUM(CASE WHEN '1700' < IN_HOUR AND IN_HOUR <= '1800' THEN MEMBER_QTY ELSE 0 END) H18
+             , SUM(CASE WHEN '1800' < IN_HOUR AND IN_HOUR <= '1900' THEN MEMBER_QTY ELSE 0 END) H19
+             , SUM(CASE WHEN '1900' < IN_HOUR THEN MEMBER_QTY ELSE 0 END) H19A
+          FROM (
+                 SELECT TO_CHAR(TO_DATE(VISIT_IN_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDD') IN_DATE
+                      , TO_CHAR(TO_DATE(VISIT_IN_DATE, 'YYYYMMDDHH24MISS'), 'HH24MI') IN_HOUR
+                      , 1 VISIT_QTY
+                      , MEMBER_QTY
+                   FROM DCS.DO_VIP_VISIT 
+                  WHERE BRCH_ID = ? 
+                    AND VISIT_IN_DATE BETWEEN ? || '000000'
+                                          AND ? || '235959'
+               )
+         GROUP BY IN_DATE
+         ORDER BY IN_DATE 
+     ]]>
+    </query>
+
+    <query name="SEL_VIP_MASTER">
+    <![CDATA[
+        SELECT IN_DATE
+             , SUM(VISIT_QTY) VISIT_TQTY
+             , SUM(CASE WHEN IN_HOUR <= '1100' THEN VISIT_QTY ELSE 0 END) H11B
+             , SUM(CASE WHEN '1100' < IN_HOUR AND IN_HOUR <= '1200' THEN VISIT_QTY ELSE 0 END) H12
+             , SUM(CASE WHEN '1200' < IN_HOUR AND IN_HOUR <= '1300' THEN VISIT_QTY ELSE 0 END) H13
+             , SUM(CASE WHEN '1300' < IN_HOUR AND IN_HOUR <= '1400' THEN VISIT_QTY ELSE 0 END) H14
+             , SUM(CASE WHEN '1400' < IN_HOUR AND IN_HOUR <= '1500' THEN VISIT_QTY ELSE 0 END) H15
+             , SUM(CASE WHEN '1500' < IN_HOUR AND IN_HOUR <= '1600' THEN VISIT_QTY ELSE 0 END) H16
+             , SUM(CASE WHEN '1600' < IN_HOUR AND IN_HOUR <= '1700' THEN VISIT_QTY ELSE 0 END) H17
+             , SUM(CASE WHEN '1700' < IN_HOUR AND IN_HOUR <= '1800' THEN VISIT_QTY ELSE 0 END) H18
+             , SUM(CASE WHEN '1800' < IN_HOUR AND IN_HOUR <= '1900' THEN VISIT_QTY ELSE 0 END) H19
+             , SUM(CASE WHEN '1900' < IN_HOUR THEN VISIT_QTY ELSE 0 END) H19A
+          FROM (
+                 SELECT TO_CHAR(TO_DATE(VISIT_IN_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDD') IN_DATE
+                      , TO_CHAR(TO_DATE(VISIT_IN_DATE, 'YYYYMMDDHH24MISS'), 'HH24MI') IN_HOUR
+                      , 1 VISIT_QTY
+                      , MEMBER_QTY
+                   FROM DCS.DO_VIP_VISIT 
+                  WHERE BRCH_ID = ?
+                    AND VISIT_IN_DATE BETWEEN ? || '000000'
+                                          AND ?|| '235959'
+               )
+         GROUP BY IN_DATE
+         ORDER BY IN_DATE
+     ]]>
+    </query>
+</service>

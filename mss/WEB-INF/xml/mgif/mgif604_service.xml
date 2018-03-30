@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.06.07
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  자사위탁판매 정산
+ -->
+<service name="/mgif604.mg">
+     <!--위탁매출 내역-->
+    <gauce name="H_OUTREQCONF"> 
+        <column colName="FLAG"              colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_STR"           colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_STR_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_YM"            colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"            colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"            colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_PAY_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FEE_PAY_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUR_BOND_AMT"      colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--정산내역 -->
+    <gauce name="H_JOINCAL"> 
+        <column colName="CAL_YM"            colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"            colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"            colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"            colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"            colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BASIC_BOND_AMT"    colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BOND_AMT"          colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FEE_PAY_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_PAY_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUR_BOND_AMT"      colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FINAL_BOND_AMT"    colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--위탁매출 내역  -->
+    <query name="SEL_OUTREQCONF">
+        <![CDATA[
+		SELECT 'F' AS FLAG
+		            , OUT.OUT_STR
+		            , DPS.FN_GET_STORE_NAME(OUT_STR) AS OUT_STR_NM
+		            , OUT.CAL_YM
+		            , OUT.VEN_CD
+		            , DPS.FN_GET_VENDOR_NAME(OUT.VEN_CD) AS VEN_NM
+		            , SUM(OUT.OUT_AMT) AS OUT_AMT
+		            , MAX(TOT_PAY_AMT) AS TOT_PAY_AMT
+		            , MAX(PAY_AMT) AS PAY_AMT
+		            , MAX(FEE_PAY_AMT) AS FEE_PAY_AMT
+		            , SUM(OUT.OUT_AMT) - MAX(PAY_AMT) - MAX(FEE_PAY_AMT) AS CUR_BOND_AMT
+		        FROM ( SELECT A.OUT_STR
+		                , A.CAL_YM
+		                , VEN_CD
+		                , OUT_QTY * GIFTCERT_AMT AS OUT_AMT
+		           FROM (SELECT OUT_STR
+		                      , SUBSTR(OUT_DT,1,6) AS CAL_YM
+		                      , VEN_CD
+		                      , GIFT_TYPE_CD
+		                      , GIFT_AMT_TYPE
+		                      , ISSUE_TYPE
+		                      , SUM(OUT_QTY) AS OUT_QTY
+		                   FROM MSS.MG_OUTREQCONF 
+		                  WHERE VEN_CD IS NOT NULL
+		               GROUP BY OUT_STR, SUBSTR(OUT_DT,1,6), VEN_CD, GIFT_TYPE_CD, GIFT_AMT_TYPE, ISSUE_TYPE) A
+		                , MSS.MG_GIFTAMTMST B  
+		            WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+		              AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+		              AND A.ISSUE_TYPE = B.ISSUE_TYPE
+		              AND A.OUT_STR = ?
+                      AND A.CAL_YM = ?
+                      AND A.VEN_CD LIKE ? || '%'
+		             ) OUT
+		             LEFT OUTER JOIN 
+		                 ( SELECT STR_CD
+		                        , SUBSTR(PAY_DT,0,6) AS PAY_YM
+		                        , VEN_CD
+		                        , SUM(PAY_AMT) + SUM(FEE_PAY_AMT) AS TOT_PAY_AMT
+		                        , SUM(PAY_AMT) AS PAY_AMT
+		                        , SUM(FEE_PAY_AMT) AS FEE_PAY_AMT
+		                    FROM MSS.MG_VENPAY 
+		                    WHERE CAL_TYPE = '3'
+		                      AND PAYREC_FLAG = '1'
+		                      AND CAL_FLAG = '1'
+		                      AND STR_CD = ?
+                              AND SUBSTR(PAY_DT,0,6) = ?
+                              AND VEN_CD LIKE ? || '%'
+		                      GROUP BY STR_CD
+			                      , PAY_DT
+			                      , VEN_CD ) PAY
+		            ON OUT.OUT_STR = PAY.STR_CD
+		             AND OUT.CAL_YM = PAY.PAY_YM
+		             AND OUT.VEN_CD = PAY.VEN_CD
+		        GROUP BY OUT.OUT_STR, OUT.CAL_YM, OUT.VEN_CD
+        ]]>
+    </query> 
+    
+      <!--정산내역 -->
+    <query name="SEL_JOINCAL">
+        <![CDATA[
+		SELECT CAL_YM
+		     , STR_CD
+		     , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+		     , VEN_CD
+		     , DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VEN_NM
+		     , BASIC_BOND_AMT
+		     , BOND_AMT
+		     , PAY_AMT
+		     , FEE_PAY_AMT
+		     , PAY_AMT + FEE_PAY_AMT AS TOT_PAY_AMT
+		     , CUR_BOND_AMT
+		     , FINAL_BOND_AMT
+		  FROM MSS.MG_VENCAL
+		 WHERE CAL_TYPE = '3'
+		   AND PAYREC_FLAG = '1'
+		   AND CAL_FLAG = '1'
+		   AND STR_CD = ?
+		   AND CAL_YM = ?
+		   AND VEN_CD LIKE ? || '%'
+        ]]>
+    </query> 
+    
+       <!--정산자료 생성-->
+    <query name="INS_JOINCAL">
+        <![CDATA[
+        MERGE INTO MSS.MG_VENCAL A
+                    USING (SELECT ? AS CAL_YM
+                                , ? AS STR_CD
+                                , '3' AS CAL_TYPE
+                                , ? AS VEN_CD
+                                , '1' AS PAYREC_FLAG
+                                , '1' AS CAL_FLAG
+                                , ? AS BOND_AMT
+                                , ? AS PAY_AMT
+                                , ? AS FEE_PAY_AMT
+                                , ? AS CUR_BOND_AMT
+                                , ? AS USER_ID
+                             FROM DUAL) B 
+                       ON (A.CAL_YM = B.CAL_YM
+                      AND A.STR_CD = B.STR_CD
+                      AND A.VEN_CD = B.VEN_CD
+                      AND A.CAL_TYPE = B.CAL_TYPE
+                      AND A.PAYREC_FLAG = B.PAYREC_FLAG
+                      AND A.CAL_FLAG = B.CAL_FLAG)
+        WHEN MATCHED THEN 
+               UPDATE SET BASIC_BOND_AMT =  NVL((SELECT FINAL_BOND_AMT
+                                                   FROM MSS.MG_VENCAL
+                                                  WHERE CAL_YM = TO_CHAR(ADD_MONTHS( B.CAL_YM || '01',-1),'YYYYMM')
+                                                    AND STR_CD = B.STR_CD
+                                                    AND CAL_TYPE = B.CAL_TYPE
+                                                    AND VEN_CD = B.VEN_CD
+                                                    AND PAYREC_FLAG = B.PAYREC_FLAG
+                                                    AND CAL_FLAG = B.CAL_FLAG),0)
+                        , BOND_AMT = B.BOND_AMT
+                        , PAY_AMT = B.PAY_AMT
+                        , FEE_PAY_AMT = B.FEE_PAY_AMT
+                        , CUR_BOND_AMT = B.CUR_BOND_AMT
+                        , FINAL_BOND_AMT = (NVL(( SELECT FINAL_BOND_AMT
+                                                FROM MSS.MG_VENCAL
+                                               WHERE CAL_YM = TO_CHAR(ADD_MONTHS( B.CAL_YM || '01',-1),'YYYYMM')
+                                                 AND STR_CD = B.STR_CD
+                                                 AND CAL_TYPE = B.CAL_TYPE
+                                                 AND VEN_CD = B.VEN_CD
+                                                 AND PAYREC_FLAG = B.PAYREC_FLAG
+                                                 AND CAL_FLAG = B.CAL_FLAG),0) + B.CUR_BOND_AMT)
+                        , MOD_ID = B.USER_ID
+                        , MOD_DATE = SYSDATE
+    WHEN NOT MATCHED THEN
+             INSERT (  CAL_YM
+                     , STR_CD
+                     , CAL_TYPE
+                     , VEN_CD
+                     , PAYREC_FLAG
+                     , CAL_FLAG
+                     , BASIC_BOND_AMT
+                     , BOND_AMT
+                     , PAY_AMT
+                     , FEE_PAY_AMT
+                     , CUR_BOND_AMT
+                     , FINAL_BOND_AMT
+                     , REG_ID
+                     , REG_DATE
+                     , MOD_ID
+                     , MOD_DATE)
+              VALUES ( B.CAL_YM
+                     , B.STR_CD
+                     , B.CAL_TYPE
+                     , B.VEN_CD
+                     , B.PAYREC_FLAG
+                     , B.CAL_FLAG
+                     , NVL((SELECT FINAL_BOND_AMT
+                              FROM MSS.MG_VENCAL
+                             WHERE CAL_YM = TO_CHAR(ADD_MONTHS( B.CAL_YM || '01',-1),'YYYYMM')
+                               AND STR_CD = B.STR_CD
+                               AND CAL_TYPE = B.CAL_TYPE
+                               AND VEN_CD = B.VEN_CD
+                               AND PAYREC_FLAG = B.PAYREC_FLAG
+                               AND CAL_FLAG = B.CAL_FLAG),0)
+                     , B.BOND_AMT
+                     , B.PAY_AMT
+                     , B.FEE_PAY_AMT
+                     , B.CUR_BOND_AMT
+                     , (NVL(( SELECT FINAL_BOND_AMT
+                            FROM MSS.MG_VENCAL
+                           WHERE CAL_YM = TO_CHAR(ADD_MONTHS( B.CAL_YM || '01',-1),'YYYYMM')
+                             AND STR_CD = B.STR_CD
+                             AND CAL_TYPE = B.CAL_TYPE
+                             AND VEN_CD = B.VEN_CD
+                             AND PAYREC_FLAG = B.PAYREC_FLAG
+                             AND CAL_FLAG = B.CAL_FLAG),0) + B.CUR_BOND_AMT)
+                     , B.USER_ID
+                     , SYSDATE
+                     , B.USER_ID
+                     , SYSDATE)
+        ]]>
+    </query>  
+    
+    <!--정산자료 생성 :: 사용안함!!!-->
+    <query name="INS_JOINCAL_OLD">
+        <![CDATA[
+                 MERGE INTO MSS.MG_JOINCAL A
+                      USING (SELECT ? AS CAL_YM
+                                  , ? AS STR_CD
+                                  , ? AS VEN_CD
+                                  , '1' AS CAL_FLAG
+                                  , ? AS OUT_PAY_AMT
+                                  , ? AS PAY_FEE_AMT
+                                  , ? AS CAL_AMT
+                                  , ? AS USER_ID
+                               FROM DUAL) B 
+                         ON (A.CAL_YM = B.CAL_YM
+                        AND A.STR_CD = B.STR_CD
+                        AND A.VEN_CD = B.VEN_CD)
+          WHEN MATCHED THEN 
+                 UPDATE SET OUT_PAY_AMT = B.OUT_PAY_AMT
+                          , PAY_FEE_AMT = B.PAY_FEE_AMT
+                          , CAL_AMT = B.CAL_AMT
+                          , PREV_AMT = NVL((SELECT (SELECT PREV_AMT 
+	                                                  FROM MSS.MG_JOINCAL
+	                                                 WHERE CAL_YM = TO_CHAR(ADD_MONTHS( B.CAL_YM || '01',-1),'YYYYMM')
+	                                                   AND STR_CD = B.STR_CD
+	                                                   AND VEN_CD = B.VEN_CD) + B.OUT_PAY_AMT - 
+	                                                   (SELECT PAY_AMT 
+	                                                  FROM MSS.MG_JOINCAL
+	                                                 WHERE CAL_YM = B.CAL_YM
+	                                                   AND STR_CD = B.STR_CD
+	                                                   AND VEN_CD = B.VEN_CD) - 
+	                                                   B.PAY_FEE_AMT
+                                               FROM DUAL),0)
+                          , MOD_ID = B.USER_ID
+                          , MOD_DATE = SYSDATE
+      WHEN NOT MATCHED THEN
+               INSERT (  CAL_YM
+                       , STR_CD
+                       , VEN_CD
+                       , CAL_FLAG
+                       , OUT_PAY_AMT
+                       , PAY_FEE_AMT
+                       , CAL_AMT
+                       , PREV_AMT
+                       , REG_ID
+                       , REG_DATE
+                       , MOD_ID
+                       , MOD_DATE)
+                VALUES ( B.CAL_YM
+                       , B.STR_CD
+                       , B.VEN_CD
+                       , B.CAL_FLAG
+                       , B.OUT_PAY_AMT
+                       , B.PAY_FEE_AMT
+                       , B.CAL_AMT
+                       , NVL((SELECT (SELECT PREV_AMT 
+                                            FROM MSS.MG_JOINCAL
+                                           WHERE CAL_YM = TO_CHAR(ADD_MONTHS( B.CAL_YM || '01',-1),'YYYYMM')
+                                             AND STR_CD = B.STR_CD
+                                             AND VEN_CD = B.VEN_CD) + B.OUT_PAY_AMT - B.PAY_FEE_AMT
+                                  FROM DUAL),0)
+                       , B.USER_ID
+                       , SYSDATE
+                       , B.USER_ID
+                       , SYSDATE)
+        ]]>
+    </query>  
+    
+    
+    <!--위탁매출 내역  사용안함!!!-->
+    <query name="SEL_OUTREQCONF_OLD">
+        <![CDATA[
+        WITH OUT_CONF AS
+        ( SELECT OUT.OUT_STR
+                   , OUT.CAL_YM
+                   , OUT.VEN_CD
+                   , SUM(OUT.OUT_AMT) AS OUT_AMT
+                FROM ( SELECT A.OUT_STR
+                            , A.CAL_YM
+                            , VEN_CD
+                            , OUT_QTY * GIFTCERT_AMT AS OUT_AMT
+                       FROM (SELECT OUT_STR
+                                  , SUBSTR(OUT_DT,1,6) AS CAL_YM
+                                  , VEN_CD
+                                  , GIFT_TYPE_CD
+                                  , GIFT_AMT_TYPE
+                                  , ISSUE_TYPE
+                                  , SUM(OUT_QTY) AS OUT_QTY
+                               FROM MSS.MG_OUTREQCONF 
+                              WHERE VEN_CD IS NOT NULL
+                           GROUP BY OUT_STR, SUBSTR(OUT_DT,1,6), VEN_CD, GIFT_TYPE_CD, GIFT_AMT_TYPE, ISSUE_TYPE) A
+                            , MSS.MG_GIFTAMTMST B
+                        WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+                          AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+                          AND A.ISSUE_TYPE = B.ISSUE_TYPE) OUT
+                GROUP BY OUT.OUT_STR, OUT.CAL_YM, OUT.VEN_CD  ),
+                RATE AS
+            ( SELECT STR_CD
+                   , VEN_CD
+                   , APP_DT
+                   , CNS_PAY_FEE_RATE
+                FROM MSS.MG_VENFEEMST A
+               WHERE A.APP_DT = ( SELECT MAX(APP_DT) 
+                                    FROM MSS.MG_VENFEEMST
+                                   WHERE STR_CD = A.STR_CD
+                                     AND VEN_CD = A.VEN_CD
+                                     AND APP_DT <= DECODE(TO_CHAR(SYSDATE,'YYYYMM') , ?
+                                              , TO_CHAR(SYSDATE,'YYYYMMDD')
+                                              , TO_CHAR(LAST_DAY(?),'YYYYMMDD') )  )
+                                     ORDER BY STR_CD)
+                SELECT 'F' AS FLAG
+                     , OUT_STR
+                     , DPS.FN_GET_STORE_NAME(OUT_STR) AS OUT_STR_NM
+                     , CAL_YM
+                     , A.VEN_CD
+                     , DPS.FN_GET_VENDOR_NAME(A.VEN_CD) AS VEN_NM
+                     , OUT_AMT
+                     , NVL(CNS_PAY_FEE_RATE,0) AS RATE
+                     , ((NVL(CNS_PAY_FEE_RATE,0) /100) * OUT_AMT) AS PAY_FEE_AMT
+                     , OUT_AMT - ((NVL(CNS_PAY_FEE_RATE,0) /100) * OUT_AMT)  AS CAL_AMT
+                  FROM OUT_CONF A
+                       LEFT OUTER JOIN 
+                       RATE B
+                     ON A.OUT_STR = B.STR_CD
+                    AND A.VEN_CD = B.VEN_CD
+                  WHERE A.CAL_YM = ?
+                    AND A.OUT_STR = ?
+                    AND A.VEN_CD LIKE ? || '%'
+              ORDER BY OUT_STR, CAL_YM, VEN_CD
+        ]]>
+    </query> 
+    
+      <!--정산내역  사용안함!!!-->
+    <query name="SEL_JOINCAL_OLD">
+        <![CDATA[
+       WITH JOINCAL AS
+        (   SELECT A.STR_CD
+                 , CAL_YM
+                 , A.VEN_CD
+                 , OUT_PAY_AMT
+                 , PAY_FEE_AMT
+                 , CAL_AMT
+              FROM MSS.MG_JOINCAL A
+                 , MSS.MG_STRVENMST B
+            WHERE CAL_FLAG = '1'
+              AND A.STR_CD = B.STR_CD
+              AND A.VEN_CD = B.VEN_CD), 
+                 RATE AS
+            ( SELECT STR_CD
+                   , VEN_CD
+                   , APP_DT
+                   , CNS_PAY_FEE_RATE
+                FROM MSS.MG_VENFEEMST A
+               WHERE A.APP_DT = ( SELECT MAX(APP_DT) 
+                                    FROM MSS.MG_VENFEEMST
+                                   WHERE STR_CD = A.STR_CD
+                                     AND VEN_CD = A.VEN_CD
+                                     AND APP_DT <= DECODE(TO_CHAR(SYSDATE,'YYYYMM') , ?
+                                              , TO_CHAR(SYSDATE,'YYYYMMDD')
+                                              , TO_CHAR(LAST_DAY(?),'YYYYMMDD') )  )
+                                     ORDER BY STR_CD)
+              
+              
+              SELECT  'F' AS FLAG
+                     , A.STR_CD
+                     , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM
+                     , CAL_YM
+                     , A.VEN_CD
+                     , DPS.FN_GET_VENDOR_NAME(A.VEN_CD) AS VEN_NM
+                     , OUT_PAY_AMT
+                     , NVL(CNS_PAY_FEE_RATE,0) AS RATE
+                     , PAY_FEE_AMT
+                     , CAL_AMT
+                    FROM JOINCAL A
+                         LEFT OUTER JOIN
+                         RATE B
+                      ON A.STR_CD = B.STR_CD
+                     AND A.VEN_CD = B.VEN_CD
+                  WHERE CAL_YM = ?
+                    AND A.STR_CD = ?
+                    AND A.VEN_CD LIKE ? || '%'
+               ORDER BY STR_CD, CAL_YM, VEN_CD
+        ]]>
+    </query> 
+</service>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal534.ps">
+    
+    <gauce name="H_MASTER"> 
+		<column colName="DED_NM"             colType="TB_STRING"      size="40"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ORDERER_NM"         colType="TB_STRING"      size="20"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="INQR_ORDER1"        colType="TB_DECIMAL"      size="3"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="INQR_ORDER2"        colType="TB_DECIMAL"      size="3"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DED_AMT"            colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />		
+	</gauce>
+	 
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			 SELECT X.DED_NM
+		          , x.ORDERER_NM
+		          , X.INQR_ORDER1
+		          , X.INQR_ORDER2
+		          , X.DED_AMT
+		       FROM (
+		            SELECT '00'             AS DED_CD
+		                 , A.ORDERER_CD     AS ORDERER_CD
+		                 , 0                AS INQR_ORDER1
+		                 , B.INQR_ORDER     AS INQR_ORDER2
+		                 , '합 계'          AS DED_NM
+		                 , B.COMM_NAME1     AS ORDERER_NM
+		                 , SUM(NVL(A.INPUT_AMT,0)) AS DED_AMT
+		              FROM DPS.PS_DEDONLINE A
+		                 , (SELECT COMM_CODE
+		                         , COMM_NAME1
+		                         , INQR_ORDER  AS INQR_ORDER
+		                      FROM COM.TC_COMMCODE
+		                     WHERE COMM_PART = 'P613'
+		                       AND SYS_PART  = 'D'
+		                       AND USE_YN = 'Y'
+		                   ) B
+		             WHERE A.ORDERER_CD     = B.COMM_CODE
+		               AND A.SALE_YM      = ?
+		               AND A.STR_CD       = ?
+		               AND A.ORDERER_CD   LIKE ? || '%' 
+		             GROUP BY A.ORDERER_CD
+		                    , B.INQR_ORDER
+		                    , B.COMM_NAME1
+		            UNION ALL
+		            SELECT A.DED_CD      AS DED_CD
+		                 , A.ORDERER_CD  AS ORDERER_CD
+		                 , C.INQR_ORDER  AS INQR_ORDER1
+		                 , B.INQR_ORDER  AS INQR_ORDER2
+		                 , C.COMM_NAME1  AS DED_NAME 
+		                 , B.COMM_NAME1  AS ORDERER_NAME
+		                 , SUM(NVL(A.INPUT_AMT,0)) AS DED_AMT
+		              FROM DPS.PS_DEDONLINE A
+		                 , (SELECT COMM_CODE
+		                         , COMM_NAME1
+		                         , INQR_ORDER  AS INQR_ORDER
+		                      FROM COM.TC_COMMCODE
+		                     WHERE COMM_PART = 'P613'
+		                       AND SYS_PART  = 'D'
+		                       AND USE_YN = 'Y'
+		                   ) B
+		                 , (SELECT COMM_CODE
+		                         , COMM_NAME1
+		                         , INQR_ORDER AS INQR_ORDER
+		                      FROM COM.TC_COMMCODE
+		                     WHERE COMM_PART = 'P618'
+		                       AND USE_YN = 'Y'
+		                   ) C
+		             WHERE A.ORDERER_CD = B.COMM_CODE
+		               AND A.DED_CD     = C.COMM_CODE
+		               AND A.SALE_YM      = ?
+		               AND A.STR_CD       = ?
+		               AND A.ORDERER_CD   LIKE ? || '%' 
+		             GROUP BY A.DED_CD      
+		                    , A.ORDERER_CD    
+		                    , C.INQR_ORDER 
+		                    , B.INQR_ORDER 
+		                    , C.COMM_NAME1  
+		                    , B.COMM_NAME1  
+		            ) X
+		       ORDER BY
+		             X.INQR_ORDER1
+		           , X.INQR_ORDER2
+        ]]>        
+    </query>
+</service>

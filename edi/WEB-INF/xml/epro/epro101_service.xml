@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.06.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  약속대장 관리
+ -->
+<service name="/epro101.ep">
+    
+    <!-- 약속대장 조회   -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+         SELECT TAKE_DT
+              , A.STR_CD    
+              , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM
+              , LPAD(TAKE_SEQ, 3, '0')    AS TAKE_SEQ               
+              , PROM_TYPE
+              , COM.FN_GET_COMM_NAME('D', 'M021', PROM_TYPE) AS PROM_TYPE_NM    
+              , CUST_NM        
+	       FROM MSS.MP_PROMISECERT A
+	          , DPS.PC_STRPBN B
+	      WHERE A.PUMBUN_CD = B.PUMBUN_CD
+            AND B.PUMBUN_TYPE      IN ('0', '4', 'B')
+	        AND A.STR_CD = B.STR_CD
+	        AND A.STR_CD = ?
+	        AND B.VEN_CD LIKE ?          
+	        AND B.PUMBUN_CD LIKE ? || '%' 
+	        AND A.CUST_NM LIKE ? || '%'
+	        AND A.PROM_TYPE LIKE ? || '%'
+        ]]>
+    </query> 
+    
+     <!-- 약속 대장 조회 추가 조건 : 조회구분 접수일자-->
+    <query name="ADD_TAKE_DT">
+        <![CDATA[
+              AND A.TAKE_DT BETWEEN ? AND ?
+         ORDER BY A.TAKE_SEQ
+        ]]>
+    </query>  
+    
+    <!-- 약속 대장 조회 추가 조건 : 조회구분 입고예정일자-->
+    <query name="ADD_IN_DELI_DT">
+        <![CDATA[
+              AND A.IN_DELI_DT BETWEEN ? AND ?
+         ORDER BY A.TAKE_SEQ
+        ]]>
+    </query>
+    
+    <!-- 약속 대장 조회 추가 조건 : 조회구분 약속일자(변경내용이 없는 경우 최초약속일자 조회 )-->
+    <query name="ADD_PROM_DT">
+        <![CDATA[
+              AND A.LAST_PROM_DT BETWEEN ? AND ?
+         ORDER BY A.TAKE_SEQ
+        ]]>
+    </query>
+    
+    <!-- 약속대장 상세 내역 조회   -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+        SELECT TAKE_DT                      
+             , A.STR_CD    
+             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM
+             , LPAD(TAKE_SEQ, 3, '0')    AS TAKE_SEQ               
+             , TAKE_USER_ID               
+             , COM.FN_GET_USER_NAME(TAKE_USER_ID) AS TAKE_USER_NM                       
+             , CUST_NM                    
+             , POST_NO                    
+             , CUST_POST_SEQ              
+             , ADDR                       
+             , DTL_ADDR                   
+             , NVL(MOBILE_PH1,'') AS  MOBILE_PH1                
+             , NVL(MOBILE_PH2,'') AS  MOBILE_PH2                    
+             , NVL(MOBILE_PH3,'') AS  MOBILE_PH3                    
+             , NVL(HOME_PH1,'') AS  HOME_PH1                      
+             , NVL(HOME_PH2,'') AS  HOME_PH2                      
+             , NVL(HOME_PH3,'') AS  HOME_PH3                      
+             , FRST_PROM_DT               
+             , SUBSTR(FRST_PROM_TIME, 0,2) AS FRST_PROM_HH               
+             , SUBSTR(FRST_PROM_TIME, 3,2) AS FRST_PROM_MM               
+             , LAST_PROM_DT                
+             , SUBSTR(LAST_PROM_TIME, 0,2) AS LAST_PROM_HH                
+             , SUBSTR(LAST_PROM_TIME, 3,2) AS LAST_PROM_MM                
+             , PROM_TYPE                  
+             , PROM_DTL                   
+             , DELI_TYPE                  
+             , DELI_STR                   
+             , B.PUMBUN_CD                  
+             , (SELECT PUMBUN_NAME FROM DPS.PC_PBNMST WHERE PUMBUN_CD = A.PUMBUN_CD) AS PUMBUN_NM                  
+             , COM.FN_GET_ORG_INFO(A.TAKE_USER_ID, 'CODE') AS ORG_CD                     
+             , COM.FN_GET_ORG_INFO(A.TAKE_USER_ID, 'NAME') AS ORG_NM                     
+             , SKU_NM                     
+             , IN_DELI_DT                 
+             , SMS_YN                     
+             , COUR_CUST_NM               
+             , COUR_POST_NO               
+             , COUR_POST_SEQ              
+             , COUR_ADDR                  
+             , COUR_DTL_ADDR              
+             , NVL(COUR_MOBILE_PH1,'') AS  COUR_MOBILE_PH1               
+             , NVL(COUR_MOBILE_PH2,'') AS  COUR_MOBILE_PH2               
+             , NVL(COUR_MOBILE_PH3,'') AS  COUR_MOBILE_PH3               
+             , NVL(COUR_HOME_PH1,'') AS  COUR_HOME_PH1                 
+             , NVL(COUR_HOME_PH2,'') AS  COUR_HOME_PH2                 
+             , NVL(COUR_HOME_PH3,'') AS  COUR_HOME_PH3                 
+             , COUR_COMP_NM               
+             , COUR_SEND_NO               
+             , PROC_STAT   
+             , COM.FN_GET_COMM_NAME('D','M024',PROC_STAT) AS PROC_STAT_NM   
+             , DECODE((SELECT COUNT(*) FROM MSS.MP_HAPPYCALLMGR B 
+                 WHERE A.TAKE_DT = B.TAKE_DT 
+                   AND A.STR_CD = B.STR_CD 
+                   AND A.TAKE_SEQ = B.TAKE_SEQ),1,'T','F') AS HAPPY_CALL_YN               
+	     FROM MSS.MP_PROMISECERT A
+	        , DPS.PC_STRPBN B
+	    WHERE A.PUMBUN_CD = B.PUMBUN_CD
+          AND B.PUMBUN_TYPE      IN ('0', '4', 'B')
+	      AND A.STR_CD = B.STR_CD
+	      AND A.STR_CD = ?          
+	      AND A.TAKE_DT = ?
+	      AND A.TAKE_SEQ = ?
+	 ORDER BY A.TAKE_SEQ
+        ]]>
+    </query>
+    
+   <!-- 약속대장 등록-->
+    <query name="INS_PROMISECERT">
+        <![CDATA[
+         INSERT INTO MSS.MP_PROMISECERT(TAKE_DT         , STR_CD            , TAKE_SEQ          , TAKE_USER_ID  , CUST_NM
+                                      , POST_NO         , ADDR              , DTL_ADDR
+                                      , MOBILE_PH1      , MOBILE_PH2        , MOBILE_PH3
+                                      , HOME_PH1        , HOME_PH2          , HOME_PH3
+                                      , FRST_PROM_DT    , FRST_PROM_TIME    , LAST_PROM_DT    , LAST_PROM_TIME    
+                                      , PROM_TYPE       , PROM_DTL          , DELI_TYPE
+                                      , DELI_STR        , PUMBUN_CD         , SKU_NM            , IN_DELI_DT    , SMS_YN
+                                      , COUR_CUST_NM    , COUR_POST_NO      , COUR_ADDR     , COUR_DTL_ADDR
+                                      , COUR_MOBILE_PH1 , COUR_MOBILE_PH2   , COUR_MOBILE_PH3   
+                                      , COUR_HOME_PH1   , COUR_HOME_PH2     , COUR_HOME_PH3
+                                      , COUR_COMP_NM    , COUR_SEND_NO      , PROC_STAT                             
+                                      , REG_ID          , REG_DATE          , MOD_ID          , MOD_DATE)
+                                VALUES( ?               , ?                 , MSS.SQ_MP_PROMISECERT.NEXTVAL                  , ?             , ?
+                                      , ?               , ?                 , ?    
+                                      , ?               , ?                 , ? 
+                                      , ?               , ?                 , ? 
+                                      , ?               , ?                 , ?                 , ?             
+                                      , ?               , ?                 , ?                 
+                                      , ?               , ?                 , ?                 , ?                 
+                                      , ?               , ?                 , ?                 , ?               , ?                 
+                                      , ?               , ?                 , ?                 
+                                      , ?               , ?                 , ?                 
+                                      , ?               , ?                 , ?
+                                      , ?               , SYSDATE           , ?                 , SYSDATE)
+        ]]>
+    </query> 
+   
+
+   <!-- 약속 대장 내용 수정-->
+    <query name="UPD_PROMISECERT">
+        <![CDATA[
+        UPDATE MSS.MP_PROMISECERT
+           SET   CUST_NM = ?
+               , POST_NO = ?
+               , ADDR = ?
+               , DTL_ADDR = ?
+               , MOBILE_PH1 = ?
+               , MOBILE_PH2 = ?
+               , MOBILE_PH3 = ?
+               , HOME_PH1 = ?
+               , HOME_PH2 = ?
+               , HOME_PH3 = ?
+               , FRST_PROM_DT = ?
+               , FRST_PROM_TIME = ?
+               , PROM_TYPE = ?
+               , PROM_DTL = ?
+               , DELI_TYPE = ?
+               , DELI_STR = ?
+               , PUMBUN_CD = ?
+               , SKU_NM = ?
+               , IN_DELI_DT = ?
+               , SMS_YN = ?
+               , COUR_CUST_NM = ?
+               , COUR_POST_NO = ?
+               , COUR_ADDR = ?
+               , COUR_DTL_ADDR = ?
+               , COUR_MOBILE_PH1 = ?
+               , COUR_MOBILE_PH2 = ?
+               , COUR_MOBILE_PH3 = ?
+               , COUR_HOME_PH1 = ?
+               , COUR_HOME_PH2 = ?
+               , COUR_HOME_PH3 = ?
+               , COUR_COMP_NM = ?
+               , COUR_SEND_NO = ?
+               , PROC_STAT = ?
+               , MOD_ID = ?
+               , MOD_DATE = SYSDATE
+         WHERE TAKE_DT = ?
+           AND STR_CD = ?
+           AND TAKE_SEQ = ?  
+        ]]>
+    </query> 
+
+    <!-- 약속대장 변경내용 조회-->
+    <query name="SEL_PROMISEHIS">
+        <![CDATA[
+        SELECT TAKE_DT
+             , STR_CD
+             , TAKE_SEQ
+             , LAST_PROM_DT
+             , LAST_PROM_TIME
+             , IN_DELI_DT
+             , DELI_STR
+             , DPS.FN_GET_STORE_NAME(DELI_STR) AS DELI_STR_NM
+             , DELI_TYPE
+             , COM.FN_GET_COMM_NAME('D','M022',DELI_TYPE) AS DELI_TYPE_NM
+        FROM MSS.MP_PROMISECERT
+        WHERE TAKE_DT = ?
+          AND STR_CD = ?
+          AND TAKE_SEQ = ?
+        ]]>
+    </query> 
+
+<!-- 약속대장 변경내용 저장 :약속일-->
+    <query name="INS_PROMISEHIS01">
+        <![CDATA[
+        INSERT INTO MSS.MP_PROMISEHIS  (TAKE_DT         , STR_CD            , TAKE_SEQ          , SEQ_NO                    , MOD_LIST
+                                      , MOD_REASON      , MOD_REASON_DTL    , MOD_TAKE_DT       
+                                      , ORG_PROM_DT     , MOD_PROM_DT       , ORG_PROM_TIME     , MOD_PROM_TIME
+                                      , REG_ID          , REG_DATE)
+                                VALUES( ?               , ?                 , ?                 , MSS.SQ_MP_PROMISEHIS.NEXTVAL    , ?
+                                      , ?               , ?                 , ?                     
+                                      , ?               , ?                 , ?                 , ? 
+                                      , ?               , SYSDATE)   
+        ]]>
+    </query> 
+    
+    <!-- 약속대장 변경내용 저장 : 입고예정일-->
+    <query name="INS_PROMISEHIS02">
+        <![CDATA[
+        INSERT INTO MSS.MP_PROMISEHIS  (TAKE_DT         , STR_CD            , TAKE_SEQ          , SEQ_NO                    , MOD_LIST
+                                      , MOD_REASON      , MOD_REASON_DTL    , MOD_TAKE_DT       
+                                      , ORG_IN_DELI_DT  , MOD_IN_DELI_DT                         
+                                      , REG_ID          , REG_DATE)
+                                VALUES( ?               , ?                 , ?                 , MSS.SQ_MP_PROMISEHIS.NEXTVAL    , ?
+                                      , ?               , ?                 , ?                     
+                                      , ?               , ?                 
+                                      , ?               , SYSDATE)   
+        ]]>
+    </query> 
+    
+    <!-- 약속대장 변경내용 저장 : 인도점-->
+    <query name="INS_PROMISEHIS03">
+        <![CDATA[
+        INSERT INTO MSS.MP_PROMISEHIS  (TAKE_DT         , STR_CD            , TAKE_SEQ          , SEQ_NO                    , MOD_LIST
+                                      , MOD_REASON      , MOD_REASON_DTL    , MOD_TAKE_DT       
+                                      , ORG_DELI_STR    , MOD_DELI_STR
+                                      , REG_ID          , REG_DATE)
+                                VALUES( ?               , ?                 , ?                 , MSS.SQ_MP_PROMISEHIS.NEXTVAL    , ?
+                                      , ?               , ?                 , ?                     
+                                      , ?               , ?                 
+                                      , ?               , SYSDATE)   
+        ]]>
+    </query> 
+    
+    <!-- 약속대장 변경내용 저장 : 인도방식-->
+    <query name="INS_PROMISEHIS04">
+        <![CDATA[
+        INSERT INTO MSS.MP_PROMISEHIS  (TAKE_DT         , STR_CD            , TAKE_SEQ          , SEQ_NO                    , MOD_LIST
+                                      , MOD_REASON      , MOD_REASON_DTL    , MOD_TAKE_DT       
+                                      , ORG_DELI_TYPE   , MOD_DELI_TYPE
+                                      , REG_ID          , REG_DATE)
+                                VALUES( ?               , ?                 , ?                 , MSS.SQ_MP_PROMISEHIS.NEXTVAL    , ?
+                                      , ?               , ?                 , ?                     
+                                      , ?               , ?                 
+                                      , ?               , SYSDATE)   
+        ]]>
+    </query> 
+    
+    <!-- 약속대장 변경내용 저장 : 취소-->
+    <query name="INS_PROMISEHIS05">
+        <![CDATA[
+        INSERT INTO MSS.MP_PROMISEHIS  (TAKE_DT         , STR_CD            , TAKE_SEQ          , SEQ_NO                    , MOD_LIST
+                                      , MOD_REASON      , MOD_REASON_DTL    , MOD_TAKE_DT       
+                                      , REG_ID          , REG_DATE)
+                                VALUES( ?               , ?                 , ?                 , MSS.SQ_MP_PROMISEHIS.NEXTVAL    , ?
+                                      , ?               , ?                 , ?                     
+                                      , ?               , SYSDATE)   
+        ]]>
+    </query> 
+    
+      <!-- 약속대장 변경내용 저장 시 마스터 내용 UPDATE -->
+    <query name="UPD_PROMISECERT_HEAD">
+        <![CDATA[
+         UPDATE MSS.MP_PROMISECERT  
+        ]]>
+    </query> 
+    
+     <!-- 약속대장 변경내용 저장 시 마스터 내용 UPDATE -->
+    <query name="UPD_PROMISECERT_01">
+        <![CDATA[
+         SET LAST_PROM_DT = ?
+           , LAST_PROM_TIME = ?
+        ]]>
+    </query> 
+    
+     <!-- 약속대장 변경내용 저장 시 마스터 내용 UPDATE -->
+    <query name="UPD_PROMISECERT_02">
+        <![CDATA[
+         SET IN_DELI_DT = ?
+        ]]>
+    </query> 
+    
+     <!-- 약속대장 변경내용 저장 시 마스터 내용 UPDATE -->
+    <query name="UPD_PROMISECERT_03">
+        <![CDATA[
+         SET DELI_STR = ?
+        ]]>
+    </query> 
+    
+     <!-- 약속대장 변경내용 저장 시 마스터 내용 UPDATE -->
+    <query name="UPD_PROMISECERT_04">
+        <![CDATA[
+         SET DELI_TYPE = ?
+        ]]>
+    </query> 
+    
+     <!-- 약속대장 변경내용 저장 시 마스터 내용 UPDATE -->
+    <query name="UPD_PROMISECERT_05">
+        <![CDATA[
+         SET PROC_STAT = ?
+        ]]>
+    </query> 
+    
+     <!-- 약속대장 변경내용 저장 시 마스터 내용 UPDATE -->
+    <query name="UPD_PROMISECERT_TAIL">
+        <![CDATA[
+               , MOD_ID = ?
+               , MOD_DATE = SYSDATE
+           WHERE TAKE_DT = ?
+             AND STR_CD = ?
+             AND TAKE_SEQ = ?
+        ]]>
+    </query> 
+    
+    <!-- 약속 대장  변경 히스토리 조회-->
+    <query name="SEL_HIS_MASTER">
+        <![CDATA[
+        SELECT CASE WHEN MOD_LIST = '01' THEN '약속일'
+                    WHEN MOD_LIST = '02' THEN '입고예정일'
+                    WHEN MOD_LIST = '03' THEN '인도점'
+                    WHEN MOD_LIST = '04' THEN '인도방식'
+                    WHEN MOD_LIST = '05' THEN '취소' END AS MOD_ITEM
+             , CASE WHEN MOD_LIST = '01' THEN TO_CHAR(TO_DATE(MOD_PROM_DT),'YYYY/MM/DD') 
+                                || '  ' || SUBSTR(MOD_PROM_TIME,0,2) || ':' || SUBSTR(MOD_PROM_TIME,3,4)
+                    WHEN MOD_LIST = '02' THEN TO_CHAR(TO_DATE(MOD_IN_DELI_DT),'YYYY/MM/DD')
+                    WHEN MOD_LIST = '03' THEN DPS.FN_GET_STORE_NAME(MOD_DELI_STR)
+                    WHEN MOD_LIST = '04' THEN COM.FN_GET_COMM_NAME('D','M022',MOD_DELI_TYPE)
+                    WHEN MOD_LIST = '05' THEN '취소' END AS MOD_CONTENTS
+             , COM.FN_GET_COMM_NAME('D','M023',MOD_REASON) AS MOD_REASON 
+             , CASE WHEN MOD_REASON_DTL IS NULL THEN  '' 
+                    ELSE (CASE WHEN LENGTHB(MOD_REASON_DTL) >60 THEN SUBSTR(MOD_REASON_DTL,0,50) || '...'
+                    ELSE MOD_REASON_DTL END) END AS MOD_REASON_DTL
+             --, MOD_REASON_DTL
+             , TO_CHAR(MOD_TAKE_DT, 'YYYY/MM/DD') AS MOD_TAKE_DT
+          FROM MSS.MP_PROMISEHIS
+         WHERE TAKE_DT = ?
+           AND TAKE_SEQ = ?
+           AND STR_CD = ?
+         ORDER BY SEQ_NO  
+        ]]>
+    </query> 
+</service>

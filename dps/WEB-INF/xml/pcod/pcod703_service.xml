@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.18
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  행사코드를 관리한다.
+ -->
+<service name="/pcod703.pc">
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="EVENT_THME_CD"    colType="TB_STRING" size="4"  	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_THME_NAME"  colType="TB_STRING" size="40" 	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_YM"         colType="TB_STRING" size="10" 	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"         colType="TB_STRING" size="11" 	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"       colType="TB_STRING" size="40" 	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"       colType="TB_STRING" size="8"  	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"       colType="TB_STRING" size="8"  	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                
+        <column colName="EVENT_TYPE"       colType="TB_STRING" size="1"  	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLU_FLAG"   colType="TB_STRING" size="1"  	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_MNG_FLAG"   colType="TB_STRING" size="1"  	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_ORG_CD"     colType="TB_STRING" size="10" 	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_ORG_NAME"   colType="TB_STRING" size="40" 	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="EVENT_CHAR_ID"    colType="TB_STRING" size="10" 	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CHAR_NAME"  colType="TB_STRING" size="40" 	 dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DTLCNT"           colType="TB_INT"    size="1"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIGO"             colType="TB_STRING" size="2000"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+                 
+    </gauce>
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="SEL"              colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"           colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"         colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"       colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"       colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_YN"           colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"         colType="TB_STRING" size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DTLCNT"           colType="TB_INT"    size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_EVENT_S_DT"   colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <gauce name="H_SEL_EVENT_PLACE"> 
+        <column colName="STR_CD"           colType="TB_STRING" size="2"   dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="EVENT_CD"         colType="TB_STRING" size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_CD"   colType="TB_STRING" size="4"   dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+    </gauce>
+    <gauce name="H_SEL_POS_NO"> 
+        <column colName="STR_CD"           colType="TB_STRING" size="2"   dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="EVENT_CD"         colType="TB_STRING" size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"           colType="TB_STRING" size="4"   dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="POS_NAME"         colType="TB_STRING" size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SPS_YN"           colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_EVTMST">
+        <![CDATA[
+            SELECT EVT.EVENT_THME_CD     
+                 , ETM.EVENT_THME_NAME    
+                 , EVT.EVENT_YM         
+                 , EVT.EVENT_CD           
+                 , EVT.EVENT_NAME     
+                 , EVT.EVENT_S_DT        
+                 , EVT.EVENT_E_DT         
+                 , EVT.EVENT_TYPE       
+                 , EVT.EVENT_PLU_FLAG     
+                 , EVT.EVENT_MNG_FLAG     
+                 , EVT.EVENT_ORG_CD      
+                 , DPS.FN_GET_ORG_NAME(SUBSTR(EVT.EVENT_ORG_CD,1,2)
+                                       , SUBSTR(EVT.EVENT_ORG_CD,3,2)
+                                       , SUBSTR(EVT.EVENT_ORG_CD,5,2)
+                                       , SUBSTR(EVT.EVENT_ORG_CD,7,2)
+                                       , SUBSTR(EVT.EVENT_ORG_CD,9,2))   AS EVENT_ORG_NAME
+                 , EVT.EVENT_CHAR_ID       
+                 , COM.FN_GET_USER_NAME(EVT.EVENT_CHAR_ID)                     AS EVENT_CHAR_NAME
+                 , (SELECT COUNT(*) FROM DPS.PC_STRSKUEVTPRC WHERE EVENT_CD = EVT.EVENT_CD AND ROWNUM = 1)
+                   +( SELECT COUNT(*) FROM DPS.PC_STRPBNEVTMG WHERE EVENT_CD = EVT.EVENT_CD AND ROWNUM = 1) AS DTLCNT
+                 , EVT.BIGO
+              FROM DPS.PC_EVTMST     EVT
+                 , DPS.PC_EVTTHMEMST ETM
+             WHERE EVT.EVENT_THME_CD   = ETM.EVENT_THME_CD 
+               AND EVT.EVENT_CD       != '00000000000'
+               AND ?                   BETWEEN SUBSTR(EVT.EVENT_S_DT,0,6) AND SUBSTR(EVT.EVENT_E_DT,0,6)
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_TYPE">
+        <![CDATA[
+               AND EVT.EVENT_TYPE      = ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_MNG_FLAG">
+        <![CDATA[
+               AND EVT.EVENT_MNG_FLAG  = ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_L_CD">
+        <![CDATA[
+               AND ETM.EVENT_L_CD      = ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_M_CD">
+        <![CDATA[
+               AND ETM.EVENT_M_CD      = ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_S_CD">
+        <![CDATA[
+               AND ETM.EVENT_S_CD      = ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_CD">
+        <![CDATA[
+               AND EVT.EVENT_CD        LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_NAME">
+        <![CDATA[
+               AND EVT.EVENT_NAME      LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_ORDER">
+        <![CDATA[
+             ORDER BY EVT.EVENT_CD
+        ]]>
+    </query>
+    
+    <!-- 디테일 조회 쿼리 -->
+    <query name="SEL_STREVT">
+        <![CDATA[
+            SELECT CASE WHEN SEV.EVENT_CD IS NULL THEN 'F'
+                        ELSE 'T'
+                   END                AS SEL
+                 , STREVN.STR_CD
+                 , STREVN.STR_NAME
+                 , SEV.EVENT_S_DT
+                 , SEV.EVENT_E_DT
+                 , CASE WHEN SEV.EVENT_CD IS NULL THEN 'Y'
+                        WHEN SEV.EVENT_E_DT < TO_CHAR(SYSDATE,'YYYYMMDD') THEN 'N'
+                        ELSE 'Y'
+                   END                AS MOD_YN
+                 , STREVN.EVENT_CD
+                 , ((SELECT COUNT(*) FROM DPS.PC_STRSKUEVTPRC WHERE EVENT_CD = STREVN.EVENT_CD AND STR_CD = STREVN.STR_CD AND ROWNUM = 1)
+                     +( SELECT COUNT(*) FROM DPS.PC_STRPBNEVTMG WHERE EVENT_CD = STREVN.EVENT_CD AND STR_CD = STREVN.STR_CD AND ROWNUM = 1)) AS DTLCNT
+                 , CASE WHEN SEV.EVENT_S_DT IS NULL 
+                        THEN STREVN.EVENT_S_DT
+                        ELSE SEV.EVENT_S_DT
+                   END                                  AS ORG_EVENT_S_DT
+              FROM (SELECT STR.STR_CD
+                         , STR.STR_NAME
+                         , EVN.EVENT_CD
+                         , EVN.EVENT_S_DT
+                         , EVN.EVENT_E_DT
+                      FROM DPS.PC_STRMST STR
+                         , DPS.PC_EVTMST EVN
+                     WHERE STR.FCL_FLAG  = '1'   /*1:백화점,2:호텔,3:아트센터,4:오피스,5:CES,6:아파트*/
+                       AND STR.STR_FLAG  = '1'   /*1:점포,0:본사 */
+                       AND STR.MNG_FLAG  = '0'   /*0:운영,1:비운영*/
+                       AND EVN.EVENT_CD  = ?
+                   ) STREVN
+                 , DPS.PC_STREVT SEV
+             WHERE STREVN.EVENT_CD = SEV.EVENT_CD(+)
+               AND STREVN.STR_CD   = SEV.STR_CD(+)
+             ORDER BY STR_CD, EVENT_S_DT
+        ]]>   
+    </query>
+    <!-- 행사장 조회 쿼리 -->
+    <query name="SEL_STREVTPLAC">
+        <![CDATA[
+            SELECT STR_CD
+                 , EVENT_CD
+                 , EVENT_PLACE_CD
+              FROM DPS.PC_STREVTPLAC
+             WHERE EVENT_CD = ?
+             ORDER BY STR_CD, EVENT_PLACE_CD
+        ]]>   
+    </query>
+    <!-- POS 조회 쿼리 -->
+    <query name="SEL_STREVTPOS">
+        <![CDATA[
+            SELECT STR_CD
+                 , EVENT_CD
+                 , POS_NO
+                 , DPS.FN_GET_POS_NAME(STR_CD,POS_NO) AS POS_NAME
+                 , SPS_YN
+              FROM DPS.PC_STREVTPOS
+             WHERE EVENT_CD = ?
+             ORDER BY STR_CD, POS_NO
+        ]]>   
+    </query>
+    <!-- 행사코드로 등록되어 이는 정보 수 조회 -->
+    <query name="SEL_EVEVT_REG_CNT">
+        <![CDATA[
+            SELECT (SELECT COUNT(*) FROM DPS.PC_STRSKUEVTPRC WHERE EVENT_CD = ? AND ROWNUM = 1)
+                   +( SELECT COUNT(*) FROM DPS.PC_STRPBNEVTMG WHERE EVENT_CD = ? AND ROWNUM = 1) AS CNT
+              FROM DUAL
+        ]]>   
+    </query>
+    <!-- 점별 행사의행사코드로 등록되어 이는 정보 수 조회 -->
+    <query name="SEL_EVEVT_DTL_CNT">
+        <![CDATA[
+            SELECT COUNT(*)  AS CNT
+              FROM DPS.PC_STREVT 
+             WHERE EVENT_CD = ? 
+               AND ROWNUM   = 1
+        ]]>   
+    </query>
+    <!-- 점별행사코드로 등록되어 있는  수 조회 -->
+    <query name="SEL_STR_EVEVT_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_STREVT
+             WHERE STR_CD   = ?
+               AND EVENT_CD = ?
+        ]]>   
+    </query>
+    <!-- 점에 행사코드로 등록되어 이는 정보 수 조회 -->
+    <query name="SEL_STR_EVEVT_REG_CNT">
+        <![CDATA[
+            SELECT (SELECT COUNT(*) FROM DPS.PC_STRSKUEVTPRC WHERE STR_CD = ? AND EVENT_CD = ? AND ROWNUM = 1)
+                     +( SELECT COUNT(*) FROM DPS.PC_STRPBNEVTMG WHERE STR_CD = ? AND EVENT_CD = ? AND ROWNUM = 1) AS CNT
+              FROM DUAL
+        ]]>   
+    </query>
+    <!-- 점별 행사의행사코드로 등록되어 이는 정보 수 조회 -->
+    <query name="SEL_STR_EVEVT_DTL_CNT">
+        <![CDATA[
+            SELECT (SELECT COUNT(*) FROM DPS.PC_STRSKUEVTPRC WHERE STR_CD = ? AND EVENT_CD = ? AND ROWNUM = 1)
+                   +( SELECT COUNT(*) FROM DPS.PC_STRPBNEVTMG WHERE STR_CD = ? AND EVENT_CD = ? AND ROWNUM = 1)
+                   +( SELECT COUNT(*) FROM DPS.PC_STREVTPLAC WHERE STR_CD = ? AND EVENT_CD = ? AND ROWNUM = 1)
+                   +( SELECT COUNT(*) FROM DPS.PC_STREVTPOS WHERE STR_CD = ? AND EVENT_CD = ? AND ROWNUM = 1) AS CNT
+              FROM DUAL
+        ]]>   
+    </query>
+    <!-- 점별 행사의 행사장코드로 등록되어 있는  수 조회 -->
+    <query name="SEL_STR_EVEVT_PLACE_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_STREVTPLAC
+             WHERE STR_CD         = ?
+               AND EVENT_CD       = ?
+               AND EVENT_PLACE_CD = ?
+        ]]>   
+    </query>
+    <!-- 점별 행사의 POS번호로 등록되어 있는  수 조회 -->
+    <query name="SEL_STR_EVEVT_POS_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_STREVTPOS
+             WHERE STR_CD     = ?
+               AND EVENT_CD   = ?
+               AND POS_NO     = ?
+        ]]>   
+    </query>
+    <!-- 행사마스터 등록 -->
+    <query name="INS_EVTMST">
+        <![CDATA[
+            INSERT INTO DPS.PC_EVTMST(EVENT_CD
+                                    , EVENT_NAME
+                                    , EVENT_YM
+                                    , EVENT_SEQ
+                                    , EVENT_S_DT
+                                    , EVENT_E_DT
+                                    , MOD_E_DT
+                                    , EVENT_THME_CD
+                                    , EVENT_TYPE
+                                    , EVENT_PLU_FLAG
+                                    , EVENT_MNG_FLAG
+                                    , EVENT_ORG_CD
+                                    , EVENT_CHAR_ID
+                                    , REG_DATE
+                                    , REG_ID
+                                    , MOD_DATE
+                                    , MOD_ID
+                                    , BIGO
+                                     )
+                               VALUES(?||SUBSTR(?,0,4)||(SELECT LPAD(NVL(MAX(EVENT_SEQ)+1, 1),3,'0') FROM DPS.PC_EVTMST WHERE EVENT_THME_CD = ? AND SUBSTR(EVENT_YM,0,4) = SUBSTR(?,0,4))
+                                    , ?
+                                    , ?
+                                    , (SELECT LPAD(NVL(MAX(EVENT_SEQ)+1, 1),3,'0') FROM DPS.PC_EVTMST WHERE EVENT_THME_CD = ? AND SUBSTR(EVENT_YM,0,4) = SUBSTR(?,0,4))
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , SYSDATE                                    
+                                    , ?
+                                    , SYSDATE
+                                    , ?
+                                    , ?
+                                     )
+        ]]>   
+    </query>
+    <!-- 행사마스터 수정 -->
+    <query name="UPD_EVTMST">
+        <![CDATA[
+            UPDATE DPS.PC_EVTMST
+               SET EVENT_YM       = ?
+                 , EVENT_NAME     = ?
+                 , EVENT_S_DT     = ?
+                 , EVENT_E_DT     = ?
+                 , EVENT_TYPE     = ?
+                 , EVENT_PLU_FLAG = ?
+                 , EVENT_MNG_FLAG = ?
+                 , EVENT_ORG_CD   = ?
+                 , EVENT_CHAR_ID  = ?
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+                 , BIGO           = ?
+             WHERE EVENT_CD       = ?
+        ]]>   
+    </query>
+    <!-- 행사마스터 삭제 -->
+    <query name="DEL_EVTMST">
+        <![CDATA[
+            DELETE
+              FROM DPS.PC_EVTMST
+             WHERE EVENT_CD       = ?
+        ]]>   
+    </query>
+    <!-- 점별행사 등록 -->
+    <query name="INS_STREVT">
+        <![CDATA[
+            INSERT INTO DPS.PC_STREVT(STR_CD
+                                    , EVENT_CD
+                                    , EVENT_S_DT
+                                    , EVENT_E_DT
+                                    , MOD_E_DT
+                                    , REG_DATE
+                                    , REG_ID
+                                    , MOD_DATE
+                                    , MOD_ID
+                                     )
+                               VALUES(?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , ?
+                                    , SYSDATE
+                                    , ?
+                                    , SYSDATE
+                                    , ?
+                                     )
+        ]]>   
+    </query>
+    <!-- 점별행사 수정 -->
+    <query name="UPD_STREVT">
+        <![CDATA[
+            UPDATE DPS.PC_STREVT
+               SET EVENT_S_DT   = ?
+                 , EVENT_E_DT   = ?
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE STR_CD       = ?
+               AND EVENT_CD     = ?
+        ]]>   
+    </query>
+    <!-- 점별행사 삭제 -->
+    <query name="DEL_STREVT">
+        <![CDATA[
+            DELETE
+              FROM DPS.PC_STREVT
+             WHERE STR_CD       = ?
+               AND EVENT_CD     = ?
+        ]]>   
+    </query>
+    <!-- 점별행사행사장 등록 -->
+    <query name="INS_STREVTPLAC">
+        <![CDATA[
+            INSERT INTO DPS.PC_STREVTPLAC(STR_CD
+                                        , EVENT_CD
+                                        , EVENT_PLACE_CD
+                                        , REG_DATE
+                                        , REG_ID
+                                        , MOD_DATE
+                                        , MOD_ID
+                                         )
+                                   VALUES(?
+                                        , ?
+                                        , ?
+                                        , SYSDATE
+                                        , ?
+                                        , SYSDATE
+                                        , ?
+                                         )
+        ]]>   
+    </query>
+    <!-- 점별행사행사장 삭제 -->
+    <query name="DEL_STREVTPLAC">
+        <![CDATA[
+            DELETE
+              FROM DPS.PC_STREVTPLAC
+             WHERE STR_CD          = ?
+               AND EVENT_CD        = ?
+               AND EVENT_PLACE_CD  = ?
+        ]]>   
+    </query>
+    <!-- 점별행사POS 등록 -->
+    <query name="INS_STREVTPOS">
+        <![CDATA[
+            INSERT INTO DPS.PC_STREVTPOS(STR_CD
+                                       , EVENT_CD
+                                       , POS_NO
+                                       , SPS_YN
+                                       , REG_DATE
+                                       , REG_ID
+                                       , MOD_DATE
+                                       , MOD_ID
+                                        )
+                                  VALUES(?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , SYSDATE
+                                       , ?
+                                       , SYSDATE
+                                       , ?
+                                        )
+        ]]>   
+    </query>
+    <!-- 점별행사POS 수정 -->
+    <query name="UPD_STREVTPOS">
+        <![CDATA[
+            UPDATE DPS.PC_STREVTPOS
+               SET SPS_YN     = ?
+                 , MOD_DATE   = SYSDATE
+                 , MOD_ID     = ?
+             WHERE STR_CD     = ?
+               AND EVENT_CD   = ?
+               AND POS_NO     = ?
+        ]]>   
+    </query>
+    <!-- 점별행사POS 삭제 -->
+    <query name="DEL_STREVTPOS">
+        <![CDATA[
+            DELETE
+              FROM DPS.PC_STREVTPOS
+             WHERE STR_CD     = ?
+               AND EVENT_CD   = ?
+               AND POS_NO     = ?
+        ]]>   
+    </query>
+</service>

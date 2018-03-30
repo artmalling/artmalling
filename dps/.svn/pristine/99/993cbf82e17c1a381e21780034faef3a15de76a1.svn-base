@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.02.17
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/pord000.po">
+    <!-- 바이어/SM 여부 확인  -->
+    <query name="SEL_BUYERYN">
+        <![CDATA[
+            SELECT CASE WHEN COUNT(B.EMP_NO) > 0 THEN 'Y'
+                        ELSE 'N' END BuyerYN
+           FROM DPS.PC_BUYERMST A
+              , DPS.PC_BUYERORG B
+          WHERE A.BUYER_CD = B.BUYER_CD
+            AND ? BETWEEN B.APP_S_DT AND B.APP_E_DT
+            AND ORG_FLAG = ?
+            AND EMP_NO = ?
+            AND A.USE_YN = 'Y'
+            AND B.USE_YN = 'Y'
+        ]]>
+    </query> 
+    
+     <!-- 협력사별 반올림 구분  -->
+    <query name="SEL_ROUNDFLAG">
+        <![CDATA[
+             SELECT RUND_FLAG
+              FROM DPS.PC_STRVENMST
+             WHERE STR_CD = ?
+               AND VEN_CD = ?
+               AND USE_YN = 'Y'
+        ]]>
+    </query> 
+</service>

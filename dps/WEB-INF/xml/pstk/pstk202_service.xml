@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.04.04
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  인정LOSS율을 관리한다.
+ -->
+<service name="/pstk202.pt">
+
+  <gauce name="H_SEL_MASTER">
+        <column colName="PUMBUN_CD"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"       colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COST_CAL_WAY"      colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_YYYY"          colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_LOSS_RATE"     colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"            colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                  
+    </gauce>
+  <!-- 재고평가구분 -->  
+  <gauce name="H_SEL_STRPBN">        
+        <column colName="COST_CAL_WAY"      colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                         
+  </gauce>
+  <!-- 중복데이타 -->  
+  <gauce name="H_SEL_CNT"> 
+        <column colName="CNT"               colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                  
+  </gauce>
+  <gauce name="H_SEL_CNT2"> 
+        <column colName="CNT1"               colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                  
+        <column colName="CNT2"               colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+  </gauce>
+  
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_STKLOSS">
+        <![CDATA[
+            SELECT STL.PUMBUN_CD 
+                 , STP.PUMBUN_NAME 
+                 , NVL(STP.COST_CAL_WAY, '3') 
+                 , STL.STK_YYYY 
+                 , STL.APP_LOSS_RATE
+                 , STL.STR_CD                 
+              FROM DPS.PT_STKLOSS STL
+                 , DPS.PC_STRPBN STP
+             WHERE STL.STR_CD = STP.STR_CD
+               AND STL.PUMBUN_CD = STP.PUMBUN_CD
+               AND STL.STR_CD    = ?
+               AND STL.STK_YYYY  = ?
+        ]]>    
+    </query> 
+    <query name="SEL_STKLOSS_LIKE_PUMBUN">
+        <![CDATA[
+               AND STL.PUMBUN_CD LIKE         ?||'%'
+               AND STP.PUMBUN_NAME LIKE  '%'||?||'%'
+        ]]>    
+    </query> 
+    <query name="SEL_STKLOSS_ORDER">
+        <![CDATA[
+            ORDER BY STL.PUMBUN_CD
+        ]]>    
+    </query>
+    
+    <!-- 신규시 제고평가구분 조회  -->
+    <query name="SEL_STRPBN_COST_CAL_WAY">
+        <![CDATA[
+            SELECT NVL(COST_CAL_WAY, '3') 
+              FROM DPS.PC_STRPBN
+             WHERE STR_CD    = ?
+               AND PUMBUN_CD = ?
+        ]]> 
+    </query>
+    
+    <!-- 신규시 중복 체크  -->
+    <query name="SEL_STKLOSS_INS_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PT_STKLOSS
+             WHERE STR_CD    = ?
+               AND STK_YYYY  = ?
+               AND PUMBUN_CD = ?
+        ]]> 
+    </query>
+       
+       
+     <!-- 복사시  체크  -->
+    <query name="SEL_STKLOSS_COPY_CHECK">
+        <![CDATA[
+            SELECT SUM(CNT1) AS CNT1
+			      ,SUM(CNT2) AS CNT2  
+			FROM (
+			        SELECT COUNT(*) AS CNT1
+			                    ,0  AS CNT2 
+			                      FROM DPS.PT_STKLOSS
+			                     WHERE STR_CD    = ?
+			                       AND STK_YYYY  = ?-1
+			        UNION ALL
+			        SELECT 0 AS CNT1
+			              ,COUNT(*)  AS CNT2 
+			                      FROM DPS.PT_STKLOSS
+			                     WHERE STR_CD    = ?
+			                       AND STK_YYYY  = ?
+			       )
+        ]]> 
+    </query>
+    
+     
+    <!-- 복사  -->
+    <query name="INS_STKLOSS_COPY">
+        <![CDATA[
+            INSERT INTO DPS.PT_STKLOSS(STR_CD
+                                     , STK_YYYY
+                                     , PUMBUN_CD
+                                     , APP_LOSS_RATE
+                                     , REG_DATE
+                                     , REG_ID
+                                     , MOD_DATE
+                                     , MOD_ID
+                                      )
+                                SELECT   STR_CD
+                                     , ?
+                                     , PUMBUN_CD
+                                     , APP_LOSS_RATE
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE
+                                     , ?                                
+                                FROM  DPS.PT_STKLOSS
+                                WHERE STR_CD    = ?
+                                AND STK_YYYY  = ?-1  
+        ]]> 
+    </query>
+       
+    <!-- 인정LOSS율 신규 입력  -->    
+    <query name="INS_STKLOSS">    
+        <![CDATA[
+            INSERT INTO DPS.PT_STKLOSS(STR_CD
+                                     , STK_YYYY
+                                     , PUMBUN_CD
+                                     , APP_LOSS_RATE
+                                     , REG_DATE
+                                     , REG_ID
+                                     , MOD_DATE
+                                     , MOD_ID
+                                      )                                  
+                                VALUES(?  
+                                     , ?         
+                                     , ?        
+                                     , ? 
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE
+                                     , ?                                
+                                      )  
+        ]]>                                 
+    </query>
+
+    <!-- 인정LOSS율 수정 입력  -->
+    <query name="UPD_STKLOSS">
+        <![CDATA[
+            UPDATE DPS.PT_STKLOSS
+               SET APP_LOSS_RATE  = ?          
+                 , MOD_DATE       = SYSDATE     
+                 , MOD_ID         = ?  
+             WHERE STR_CD         = ?
+               AND STK_YYYY       = ?
+               AND PUMBUN_CD      = ?
+        ]]>
+    </query>
+     
+    <!-- 인정LOSS율 삭제-->
+    <query name="DEL_STKLOSS">
+        <![CDATA[
+            DELETE
+              FROM DPS.PT_STKLOSS
+             WHERE STR_CD     = ?     
+               AND STK_YYYY   = ?
+               AND PUMBUN_CD  = ?
+        ]]>
+    </query>
+    
+</service>

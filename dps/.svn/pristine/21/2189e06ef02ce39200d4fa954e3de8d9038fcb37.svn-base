@@ -1,0 +1,70 @@
+<html>
+<head><title>Menu ImgDataID</title>
+<meta http-equiv="Content-Type" content="text/html" charset="euc-kr">
+<style>	
+	//body  {font-family:arial, san-serif; font-size:9pt; background-color: #184775 }	
+	label {font-family:arial, san-serif; font-size:9pt; height:24px}	
+	table {font-family:arial, san-serif; font-size:9pt}	
+	input {font-family:arial, san-serif; font-size:9pt; height:24px; width: 110px}	
+	select {font-family:arial, san-serif; font-size:9pt; height:24px; width: 80px}	
+	object {font-family:arial, san-serif; font-size:9pt}	
+	div.page {background-color: #fffff0;border: black outset 1px;visibility:hidden;z-index:2;font-family:arial, san-serif; font-size:9pt}    
+</style>
+
+<!--DataSet Component-->
+<object id="tb_DataSet" classid="clsid:2506B38B-0FF7-4249-BA3E-8BC1DC399FBB">
+  <param name="Syncload"	value=true>
+</object>
+
+<!-- 이미지를 csv에서 호출 -->
+<object id="tb_ImgData2"	classid="clsid:2B0B1D8B-CAAA-4e06-BD9A-A09A916BD67A">	
+	<param name="Syncload"	value=true>
+</object>
+
+</head>
+<script>
+function fcOnLoad() {
+	tb_ImgData2.dataid = "/retrieveImageList.bf";
+	tb_ImgData2.reset();
+
+	tb_DataSet.dataid = "/retrieveMenuList.bf";
+	tb_DataSet.reset();
+}
+</script>
+<body  onload="fcOnLoad()">
+
+	&nbsp;<object id="tb_Menu" classid="clsid:216FC5D2-962D-4dd6-A000-02754CF91231"
+		style="position:relative;width=945; height=34;background-color:#E7E7E7;">
+		<param name="DataID"		        value="tb_DataSet"> <!-- 메뉴에서 사용할 데이터셋 -->
+		<param name="TextColumn"	        value="Text">		<!-- 메뉴명으로 표시할 컬럼 지정::이미지적용할 경우에는 데이터값을 ""으로 넣는다 -->
+		<param name="LevelColumn"	        value="Level">		<!-- 메뉴 레벨 최상위메뉴만 이미지 표현가능 :: LEVEL = 1 -->
+		<param name="EnableColumn"	        value="Enable">		<!-- 메뉴 Enable/Disable제어용 컬럼 지정 -->
+		<param name="InternalMargin"		value="false">
+		<param name="InheritColor"	        value="true">
+		<param name="HighLightBackColor"	value="#0A246A">
+		<param name="ImgDataID"		        value="tb_ImgData2"> <!-- 이미지 데이터셋 지정 -->
+		<param name="ImgIndexColumn"	    value="image_id">		 <!-- 이미지로 맵핑할 컬럼 지정 이 컬럼의 값에 따라 이미지가 표현됨 -->
+		<param name="ImgMarginAdjust"       value="-16">
+
+	</object>
+
+	<Br><br>
+	<object	id="oPilotListGrid" classid="clsid:EA8B6EE6-3DD8-4534-B4BB-27148CF0042B" style="width:800px;height:200px;">
+	<param name="DataID"							value="tb_DataSet">
+	<param name="ImgDataId"                         value="tb_ImgData2">
+	<param name="EdiTABLE"					value="true">
+	<param name="DragDropEnable"			value="true">
+	<param name="SortView"						value="Left">
+	 <param name="VIEWSUMMARY"			value=0>
+	<param name="Format"							value="
+		<C> id='Text'		width=80		name='메뉴명',		align=center</C>
+		<C> id='Level'		width=80		name='레벨',		align=center</C>
+		<C> id='Code'		width=80		name='메뉴코드',		align=center</C>
+		<C> id='Enable'		width=120		name='Enable/Disable',		align=center</C>
+		<C> id='image_id'		width=80		name='이미지',	imgCol=true, imgfitstyle=2	align=center</C>">
+	</object>
+<!--	<br>
+	<input type=button value="추가" onclick="tb_DataSet.addRow()"> -->
+</body>
+</html>
+

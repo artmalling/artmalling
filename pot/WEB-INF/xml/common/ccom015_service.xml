@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.17
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 대표 협력사코드 공통 XML
+ -->
+<service name="/ccom015.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_VENMST">
+      <column colName="SEL"             colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_CD"          colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_NAME"        colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_SHORT_NAME"  colType="TB_STRING" size="20"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="COMP_NO"         colType="TB_STRING" size="10"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="REP_VEN_CD"      colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="CORP_NO"           colType="TB_STRING"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="COMP_NAME"         colType="TB_STRING"     size="40"       dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="BIZ_STAT"          colType="TB_STRING"     size="40"       dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="BIZ_CAT"           colType="TB_STRING"     size="40"       dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="REP_NAME"          colType="TB_STRING"     size="40"       dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="POST_NO"           colType="TB_STRING"     size="6"        dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="ADDR"              colType="TB_STRING"     size="80"       dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="DTL_ADDR"          colType="TB_STRING"     size="80"       dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="PHONE1_NO"         colType="TB_STRING"     size="4"        dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="PHONE2_NO"         colType="TB_STRING"     size="4"        dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="PHONE3_NO"         colType="TB_STRING"     size="4"        dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="FAX1_NO"           colType="TB_STRING"     size="4"        dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="FAX2_NO"           colType="TB_STRING"     size="4"        dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="FAX3_NO"           colType="TB_STRING"     size="4"        dec="0" keyType="TB_NORMAL" roundMode="" />	
+    </gauce>  
+    
+    <!-- 협력사코드조회 SQL -->
+    <query name="SEL_VENMST">
+        <![CDATA[                                        
+            SELECT 'F'        AS SEL
+                 , VEN.VEN_CD
+                 , VEN.VEN_NAME
+                 , VEN.VEN_SHORT_NAME
+                 , VEN.COMP_NO
+                 , VEN.REP_VEN_CD
+                 , VEN.CORP_NO
+                 , VEN.COMP_NAME
+                 , VEN.BIZ_STAT
+                 , VEN.BIZ_CAT
+                 , VEN.REP_NAME
+                 , VEN.POST_NO
+                 , VEN.ADDR
+                 , VEN.DTL_ADDR
+                 , VEN.PHONE1_NO
+                 , VEN.PHONE2_NO
+                 , VEN.PHONE3_NO
+                 , VEN.FAX1_NO
+                 , VEN.FAX2_NO
+                 , VEN.FAX3_NO
+              FROM DPS.PC_VENMST    VEN
+             WHERE VEN.VEN_CD = VEN.REP_VEN_CD
+        ]]>
+    </query>
+    <query name="SEL_VENMST_WHERE_VEN_CD">
+        <![CDATA[
+               AND VEN.VEN_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_VENMST_WHERE_LIKE_VEN_CD">
+        <![CDATA[
+               AND VEN.VEN_CD   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_VENMST_WHERE_VEN_NAME">
+        <![CDATA[
+               AND VEN.VEN_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_VENMST_WHERE_STR_CD">
+        <![CDATA[
+              AND EXISTS ( SELECT STR.STR_CD
+                             FROM DPS.PC_STRVENMST STR
+                            WHERE STR.STR_CD      = ?
+                              AND STR.VEN_CD      = VEN.VEN_CD     
+                          )
+        ]]>
+    </query>
+    <query name="SEL_VENMST_WHERE_USE_YN">
+        <![CDATA[
+               AND VEN.USE_YN           = ?
+        ]]>
+    </query>
+    <query name="SEL_VENMST_WHERE_PUMBUN_TYPE">
+        <![CDATA[
+              AND EXISTS ( SELECT PBN.PUMBUN_TYPE
+                             FROM DPS.PC_PBNMST PBN
+                            WHERE PBN.PUMBUN_TYPE = ?
+                              AND PBN.VEN_CD      = VEN.VEN_CD     
+                          )
+        ]]>
+    </query>
+    <query name="SEL_VENMST_WHERE_BIZ_TYPE">
+        <![CDATA[
+               AND VEN.BIZ_TYPE           = ?
+        ]]>
+    </query>
+    <query name="SEL_VENMST_WHERE_BUY_SALE_FLAG">
+        <![CDATA[
+               AND VEN.BUY_SALE_FLAG           = ?
+        ]]>
+    </query>
+    <query name="SEL_VENMST_WHERE_BIZ_FLAG">
+        <![CDATA[
+               AND VEN.BIZ_FLAG           = ?
+        ]]>
+    </query>
+    <query name="SEL_VENMST_ORDER">
+        <![CDATA[
+             ORDER BY VEN.VEN_CD
+        ]]>
+    </query>
+</service>

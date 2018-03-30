@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.02.17
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  기부기획등록
+ -->
+<service name="/dmtc701.dc">
+  
+    <!-- 기부기획 검색 -->
+    <gauce name="H_MASTER"> 
+        <column colName="DON_NAME"      colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_ID"        colType="TB_STRING"  size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="STATUS"        colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="S_DT"          colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="E_DT"          colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_TARGET"    colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MEMO"          colType="TB_STRING"  size="400"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>   
+    
+    <!-- 기부기획 등록 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="DON_NAME"      colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_ID"        colType="TB_STRING"  size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="S_DT"          colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="E_DT"          colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_TARGET"    colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MEMO"          colType="TB_STRING"  size="400"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>    
+    
+    <!-- 기부기획등록 리스트 조회 -->
+    <query name="SEL_DC_DON_PLAN">        
+        <![CDATA[
+            SELECT A.DON_NAME 
+                 , A.DON_ID
+                 , CASE WHEN A.E_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD') 
+                        THEN '활성' ELSE '비활성' END STATUS
+                 , A.S_DT
+                 , A.E_DT
+                 , A.DON_TARGET 
+                 , REPLACE(A.MEMO,CHR(13)||CHR(10),' ') AS MEMO
+              FROM DCS.DC_DON_PLAN A
+             WHERE (   A.S_DT BETWEEN ? AND ?
+                    OR A.E_DT BETWEEN ? AND ?
+                   ) 
+               AND A.DON_ID LIKE ? || '%'
+        ]]>        
+    </query>    
+    
+   <!-- 기부기획등록 리스트 상세 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT A.DON_NAME
+                 , A.DON_ID
+                 , A.S_DT
+                 , A.E_DT
+                 , A.DON_TARGET 
+                 , A.MEMO
+              FROM DCS.DC_DON_PLAN A
+             WHERE A.DON_ID = ?
+        ]]>        
+    </query>  
+    
+    
+    
+    <!-- 기부기획등록 팝업  리스트 조회 -->
+    <query name="POP_SEL_DC_DON_PLAN">        
+        <![CDATA[
+            SELECT A.DON_NAME 
+                 , A.DON_ID
+                 , CASE WHEN A.E_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD') 
+                        THEN '활성' ELSE '비활성' END STATUS
+                 , A.S_DT
+                 , A.E_DT
+                 , A.DON_TARGET
+                 , A.MEMO
+              FROM DCS.DC_DON_PLAN A
+             WHERE A.DON_TARGET LIKE ? || '%'
+               AND A.DON_NAME LIKE ? || '%'
+             ORDER BY A.DON_ID 
+        ]]>        
+    </query>    
+    
+    <!-- 기부기획등록 팝업  리스트 1건  조회 -->
+    <query name="POP_SEL_DC_DON_PLAN_ONE">        
+        <![CDATA[
+            SELECT A.DON_NAME 
+                 , A.DON_ID
+                 , CASE WHEN A.E_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD') 
+                        THEN '활성' ELSE '비활성' END STATUS
+                 , A.S_DT, A.E_DT
+                 , A.DON_TARGET
+                 , A.MEMO
+              FROM DCS.DC_DON_PLAN A
+             WHERE A.DON_ID = ?  
+        ]]>        
+    </query> 
+    
+    <!-- 기부기획 등록  -->
+    <query name="INS_DC_DON_PLAN">        
+        <![CDATA[
+            INSERT INTO DCS.DC_DON_PLAN (
+                        DON_ID 
+                      , DON_NAME
+                      , S_DT
+                      , E_DT
+                      , DON_TARGET
+                      , MEMO
+                      , REG_DATE 
+                      , REG_ID   
+                      , MOD_DATE
+                      , MOD_ID
+                      ) VALUES (  
+                        ?
+                      , ?
+                      , ?
+                      , ?
+                      , ?
+                      , ?
+                      , SYSDATE
+                      , ?
+                      , SYSDATE
+                      , ?                    
+                      )
+
+         ]]>   
+    </query>  
+    
+    <!-- 기부등록 정보 수정 -->
+    <query name="UPD_DC_DON_PLAN"> 
+    <![CDATA[   
+        UPDATE DCS.DC_DON_PLAN A
+           SET A.DON_NAME    = ?
+             , A.S_DT        = ?
+             , A.E_DT        = ?
+             , A.DON_TARGET  = ?
+             , A.MEMO        = ?
+             , A.MOD_DATE    = SYSDATE             -- REG_ID, REG_DATE : 등록자 ID 및 일자이므로 수정시 값을 변경하지 않음
+             , A.MOD_ID      = ?                   -- MOD_ID : 세션정보의 사용자 ID
+         WHERE A.DON_ID      = ?    
+         ]]>   
+    </query>  
+
+</service>

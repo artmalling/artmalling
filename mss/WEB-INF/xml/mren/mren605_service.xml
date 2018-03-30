@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  메인계량기 사용량 조회
+ -->
+<service name="/mren605.mr">
+    <!-- 월 직접 사용량 조회 -->
+    <gauce name="H_SEL_MR_MGAUGUSED">
+        <column colName="DT"            colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIME_ZONE"     colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"        colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_KIND_CD"  colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="N_DEFAMT"      colType="TB_DECIMAL" size="12"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="N_USEQTY"      colType="TB_DECIMAL" size="12"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="N_USEAMT"      colType="TB_DECIMAL" size="12"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="I_DEFAMT"      colType="TB_DECIMAL" size="12"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="I_USEQTY"      colType="TB_DECIMAL" size="12"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="I_USEAMT"      colType="TB_DECIMAL" size="12"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="E_DEFAMT"      colType="TB_DECIMAL" size="12"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="E_USEQTY"      colType="TB_DECIMAL" size="12"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="E_USEAMT"      colType="TB_DECIMAL" size="12"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- ===10: 전기=== -->
+    <!-- 전기:시간  -->
+    <query name="SEL_MR_MGAUGUSED_PW_TIME"> 
+        <![CDATA[   
+			SELECT MGA.USE_DT AS DT
+			     , MGA.TIME_ZONE
+			     , MGA.STR_CD
+                 , DPS.FN_GET_STORE_NAME(MGA.STR_CD) AS STR_NM
+			     , GAM.GAUG_KIND_CD
+			     /*일반용*/
+			     , CASE WHEN GAUG_KIND_CD IN ('11','12','13') THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS N_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD IN ('11','12','13') THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS N_USEQTY
+			     , CASE WHEN GAUG_KIND_CD IN ('11','12','13') THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS N_USEAMT
+			     /*산업용*/
+			     , CASE WHEN GAUG_KIND_CD IN ('14','15','16') THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS I_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD IN ('14','15','16') THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS I_USEQTY
+			     , CASE WHEN GAUG_KIND_CD IN ('14','15','16') THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS I_USEAMT
+			     /*기타*/
+			     , CASE WHEN GAUG_KIND_CD NOT IN ('11','12','13','14','15','16') THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS E_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD NOT IN ('11','12','13','14','15','16') THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS E_USEQTY
+			     , CASE WHEN GAUG_KIND_CD NOT IN ('11','12','13','14','15','16') THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS E_USEAMT
+			  FROM MSS.MR_MGAUGUSED_TIME    MGA
+			     , MSS.MR_GAUGMST           GAM
+			     , COM.TC_COMMCODE          COM
+			 WHERE MGA.GAUG_ID = GAM.GAUG_ID
+			   AND COM.COMM_CODE LIKE SUBSTR(GAM.GAUG_KIND_CD,1,1)||'%'
+			   AND COM.COMM_PART = 'M045' /*계량기용도*/
+			   AND COM.SYS_PART  = 'D'
+			   AND GAUG_LVL = '1' /*메인계량기*/
+			   AND MGA.USE_DT BETWEEN ? AND ?
+			   AND GAM.GAUG_TYPE = ?
+			 GROUP BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+			 ORDER BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+        ]]>        
+    </query>
+    <!-- 전기:일자  -->
+    <query name="SEL_MR_MGAUGUSED_PW_DAY"> 
+        <![CDATA[   
+			SELECT MGA.USE_DT AS DT 
+			     , MGA.TIME_ZONE
+			     , MGA.STR_CD
+                 , DPS.FN_GET_STORE_NAME(MGA.STR_CD) AS STR_NM
+			     , GAM.GAUG_KIND_CD
+			     /*일반용*/
+			     , CASE WHEN GAUG_KIND_CD IN ('11','12','13') THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS N_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD IN ('11','12','13') THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS N_USEQTY
+			     , CASE WHEN GAUG_KIND_CD IN ('11','12','13') THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS N_USEAMT
+			     /*산업용*/
+			     , CASE WHEN GAUG_KIND_CD IN ('14','15','16') THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS I_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD IN ('14','15','16') THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS I_USEQTY
+			     , CASE WHEN GAUG_KIND_CD IN ('14','15','16') THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS I_USEAMT
+			     /*기타*/
+			     , CASE WHEN GAUG_KIND_CD NOT IN ('11','12','13','14','15','16') THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS E_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD NOT IN ('11','12','13','14','15','16') THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS E_USEQTY
+			     , CASE WHEN GAUG_KIND_CD NOT IN ('11','12','13','14','15','16') THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS E_USEAMT
+			  FROM MSS.MR_MGAUGUSED_DAY     MGA
+			     , MSS.MR_GAUGMST           GAM
+			     , COM.TC_COMMCODE          COM
+			 WHERE MGA.GAUG_ID = GAM.GAUG_ID
+			   AND COM.COMM_CODE LIKE SUBSTR(GAM.GAUG_KIND_CD,1,1)||'%'
+			   AND COM.COMM_PART = 'M045' /*계량기용도*/
+			   AND COM.SYS_PART  = 'D'
+			   AND GAUG_LVL = '1' /*메인계량기*/
+			   AND MGA.USE_DT BETWEEN ? AND ?
+			   AND GAM.GAUG_TYPE = ?
+			 GROUP BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+			 ORDER BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+        ]]>        
+    </query>
+    <!-- 전기:월 -->
+    <query name="SEL_MR_MGAUGUSED_PW_MONTH"> 
+        <![CDATA[   
+			SELECT MGA.USE_YM AS DT 
+			     , MGA.TIME_ZONE
+			     , MGA.STR_CD
+                 , DPS.FN_GET_STORE_NAME(MGA.STR_CD) AS STR_NM
+			     , GAM.GAUG_KIND_CD
+			     /*일반용*/
+			     , CASE WHEN GAUG_KIND_CD IN ('11','12','13') THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS N_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD IN ('11','12','13') THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS N_USEQTY
+			     , CASE WHEN GAUG_KIND_CD IN ('11','12','13') THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS N_USEAMT
+			     /*산업용*/
+			     , CASE WHEN GAUG_KIND_CD IN ('14','15','16') THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS I_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD IN ('14','15','16') THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS I_USEQTY
+			     , CASE WHEN GAUG_KIND_CD IN ('14','15','16') THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS I_USEAMT
+			     /*기타*/
+			     , CASE WHEN GAUG_KIND_CD NOT IN ('11','12','13','14','15','16') THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS E_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD NOT IN ('11','12','13','14','15','16') THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS E_USEQTY
+			     , CASE WHEN GAUG_KIND_CD NOT IN ('11','12','13','14','15','16') THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS E_USEAMT
+			  FROM MSS.MR_MGAUGUSED_MONTH   MGA
+			     , MSS.MR_GAUGMST           GAM
+			     , COM.TC_COMMCODE          COM
+			 WHERE MGA.GAUG_ID = GAM.GAUG_ID
+			   AND COM.COMM_CODE LIKE SUBSTR(GAM.GAUG_KIND_CD,1,1)||'%'
+			   AND COM.COMM_PART = 'M045' /*계량기용도*/
+			   AND COM.SYS_PART  = 'D'
+			   AND GAUG_LVL = '1' /*메인계량기*/
+			   AND MGA.USE_YM BETWEEN ? AND ?
+			   AND GAM.GAUG_TYPE = ?
+			 GROUP BY MGA.USE_YM, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+			 ORDER BY MGA.USE_YM, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+        ]]>        
+    </query>
+    
+    <!-- ===20: 온수=== -->
+    <!-- 온수:시간 -->
+    <query name="SEL_MR_MGAUGUSED_WW_TIME"> 
+        <![CDATA[   
+			SELECT MGA.USE_DT AS DT
+			     , MGA.TIME_ZONE
+			     , MGA.STR_CD
+                 , DPS.FN_GET_STORE_NAME(MGA.STR_CD) AS STR_NM
+			     , GAM.GAUG_KIND_CD
+			     /*주택용*/
+			     , CASE WHEN GAUG_KIND_CD = '21' THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS N_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD = '21' THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS N_USEQTY
+			     , CASE WHEN GAUG_KIND_CD = '21' THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS N_USEAMT
+			     /*업무용*/
+			     , CASE WHEN GAUG_KIND_CD = '22' THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS I_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD = '22' THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS I_USEQTY
+			     , CASE WHEN GAUG_KIND_CD = '22' THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS I_USEAMT
+			     /*공공용*/
+			     , CASE WHEN GAUG_KIND_CD = '23' THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS E_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD = '23' THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS E_USEQTY
+			     , CASE WHEN GAUG_KIND_CD = '23' THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS E_USEAMT
+			  FROM MSS.MR_MGAUGUSED_TIME    MGA
+			     , MSS.MR_GAUGMST           GAM
+			     , COM.TC_COMMCODE          COM
+			 WHERE MGA.GAUG_ID = GAM.GAUG_ID
+			   AND COM.COMM_CODE LIKE SUBSTR(GAM.GAUG_KIND_CD,1,1)||'%'
+			   AND COM.COMM_PART = 'M045' /*계량기용도*/
+			   AND COM.SYS_PART  = 'D'
+			   AND GAUG_LVL = '1' /*메인계량기*/
+			   AND MGA.USE_DT BETWEEN ? AND ?
+			   AND GAM.GAUG_TYPE = ?
+			 GROUP BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+			 ORDER BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+        ]]>        
+    </query>
+    <!-- 온수:일 -->
+    <query name="SEL_MR_MGAUGUSED_WW_DAY"> 
+        <![CDATA[   
+			SELECT MGA.USE_DT AS DT
+			     , MGA.TIME_ZONE
+			     , MGA.STR_CD
+                 , DPS.FN_GET_STORE_NAME(MGA.STR_CD) AS STR_NM
+			     , GAM.GAUG_KIND_CD
+			     /*주택용*/
+			     , CASE WHEN GAUG_KIND_CD = '21' THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS N_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD = '21' THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS N_USEQTY
+			     , CASE WHEN GAUG_KIND_CD = '21' THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS N_USEAMT
+			     /*업무용*/
+			     , CASE WHEN GAUG_KIND_CD = '22' THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS I_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD = '22' THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS I_USEQTY
+			     , CASE WHEN GAUG_KIND_CD = '22' THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS I_USEAMT
+			     /*공공용*/
+			     , CASE WHEN GAUG_KIND_CD = '23' THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS E_DEFAMT
+			     , CASE WHEN GAUG_KIND_CD = '23' THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS E_USEQTY
+			     , CASE WHEN GAUG_KIND_CD = '23' THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS E_USEAMT
+			  FROM MSS.MR_MGAUGUSED_DAY     MGA
+			     , MSS.MR_GAUGMST           GAM
+			     , COM.TC_COMMCODE          COM
+			 WHERE MGA.GAUG_ID = GAM.GAUG_ID
+			   AND COM.COMM_CODE LIKE SUBSTR(GAM.GAUG_KIND_CD,1,1)||'%'
+			   AND COM.COMM_PART = 'M045' /*계량기용도*/
+			   AND COM.SYS_PART  = 'D'
+			   AND GAUG_LVL = '1' /*메인계량기*/
+			   AND MGA.USE_DT BETWEEN ? AND ?
+			   AND GAM.GAUG_TYPE = ?
+			 GROUP BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+			 ORDER BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+        ]]>        
+    </query>
+    <!-- 온수:월 -->
+    <query name="SEL_MR_MGAUGUSED_WW_MONTH"> 
+        <![CDATA[   
+            SELECT MGA.USE_YM AS DT 
+                 , MGA.TIME_ZONE
+                 , MGA.STR_CD
+                 , DPS.FN_GET_STORE_NAME(MGA.STR_CD) AS STR_NM
+                 , GAM.GAUG_KIND_CD
+                 /*주택용*/
+                 , CASE WHEN GAUG_KIND_CD = '21' THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS N_DEFAMT
+                 , CASE WHEN GAUG_KIND_CD = '21' THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS N_USEQTY
+                 , CASE WHEN GAUG_KIND_CD = '21' THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS N_USEAMT
+                 /*업무용*/
+                 , CASE WHEN GAUG_KIND_CD = '22' THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS I_DEFAMT
+                 , CASE WHEN GAUG_KIND_CD = '22' THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS I_USEQTY
+                 , CASE WHEN GAUG_KIND_CD = '22' THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS I_USEAMT
+                 /*공공용*/
+                 , CASE WHEN GAUG_KIND_CD = '23' THEN SUM(NVL(MGA.BAS_AMT,0)) ELSE 0 END AS E_DEFAMT
+                 , CASE WHEN GAUG_KIND_CD = '23' THEN SUM(NVL(MGA.USE_QTY,0)) ELSE 0 END AS E_USEQTY
+                 , CASE WHEN GAUG_KIND_CD = '23' THEN SUM(NVL(MGA.USE_AMT,0)) ELSE 0 END AS E_USEAMT
+              FROM MSS.MR_MGAUGUSED_MONTH   MGA
+                 , MSS.MR_GAUGMST           GAM
+                 , COM.TC_COMMCODE          COM
+             WHERE MGA.GAUG_ID = GAM.GAUG_ID
+               AND COM.COMM_CODE LIKE SUBSTR(GAM.GAUG_KIND_CD,1,1)||'%'
+               AND COM.COMM_PART = 'M045' /*계량기용도*/
+               AND COM.SYS_PART  = 'D'
+               AND GAUG_LVL = '1' /*메인계량기*/
+               AND MGA.USE_YM BETWEEN ? AND ?
+               AND GAM.GAUG_TYPE = ?
+             GROUP BY MGA.USE_YM, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+             ORDER BY MGA.USE_YM, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+        ]]>        
+    </query>
+    
+    <!-- ===30: 증기 / 40: 냉수=== -->
+    <!-- 증기:시간 -->
+    <query name="SEL_MR_MGAUGUSED_ST_TIME"> 
+        <![CDATA[   
+			SELECT MGA.USE_DT AS DT
+			     , MGA.TIME_ZONE
+			     , MGA.STR_CD
+                 , DPS.FN_GET_STORE_NAME(MGA.STR_CD) AS STR_NM
+			     , GAM.GAUG_KIND_CD
+			     /*증기*/
+			     , SUM(NVL(MGA.BAS_AMT,0)) AS N_DEFAMT
+			     , SUM(NVL(MGA.USE_QTY,0)) AS N_USEQTY
+			     , SUM(NVL(MGA.USE_AMT,0)) AS N_USEAMT
+			     /*구분없음*/
+			     , 0 AS I_DEFAMT
+			     , 0 AS I_USEQTY
+			     , 0 AS I_USEAMT
+			     /*구분없음*/
+			     , 0 AS E_DEFAMT
+			     , 0 AS E_USEQTY
+			     , 0 AS E_USEAMT
+			  FROM MSS.MR_MGAUGUSED_TIME    MGA
+			     , MSS.MR_GAUGMST           GAM
+			     , COM.TC_COMMCODE          COM
+			 WHERE MGA.GAUG_ID = GAM.GAUG_ID
+			   AND COM.COMM_CODE LIKE SUBSTR(GAM.GAUG_KIND_CD,1,1)||'%'
+			   AND COM.COMM_PART = 'M045' /*계량기용도*/
+			   AND COM.SYS_PART  = 'D'
+			   AND GAUG_LVL = '1' /*메인계량기*/
+			   AND MGA.USE_DT BETWEEN ? AND ?
+			   AND GAM.GAUG_TYPE = ?
+			 GROUP BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+			 ORDER BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+        ]]>        
+    </query>
+    <!-- 증기:일 -->
+    <query name="SEL_MR_MGAUGUSED_ST_DAY"> 
+        <![CDATA[   
+            SELECT MGA.USE_DT AS DT
+                 , MGA.TIME_ZONE
+                 , MGA.STR_CD
+                 , DPS.FN_GET_STORE_NAME(MGA.STR_CD) AS STR_NM
+                 , GAM.GAUG_KIND_CD
+                 /*증기*/
+                 , SUM(NVL(MGA.BAS_AMT,0)) AS N_DEFAMT
+                 , SUM(NVL(MGA.USE_QTY,0)) AS N_USEQTY
+                 , SUM(NVL(MGA.USE_AMT,0)) AS N_USEAMT
+                 /*구분없음*/
+                 , 0 AS I_DEFAMT
+                 , 0 AS I_USEQTY
+                 , 0 AS I_USEAMT
+                 /*구분없음*/
+                 , 0 AS E_DEFAMT
+                 , 0 AS E_USEQTY
+                 , 0 AS E_USEAMT
+              FROM MSS.MR_MGAUGUSED_DAY     MGA
+                 , MSS.MR_GAUGMST           GAM
+                 , COM.TC_COMMCODE          COM
+             WHERE MGA.GAUG_ID = GAM.GAUG_ID
+               AND COM.COMM_CODE LIKE SUBSTR(GAM.GAUG_KIND_CD,1,1)||'%'
+               AND COM.COMM_PART = 'M045' /*계량기용도*/
+               AND COM.SYS_PART  = 'D'
+               AND GAUG_LVL = '1' /*메인계량기*/
+               AND MGA.USE_DT BETWEEN ? AND ?
+               AND GAM.GAUG_TYPE = ?
+             GROUP BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+             ORDER BY MGA.USE_DT, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+        ]]>        
+    </query>
+    <!-- 증기:월 -->
+    <query name="SEL_MR_MGAUGUSED_ST_MONTH"> 
+        <![CDATA[   
+            SELECT MGA.USE_YM AS DT 
+                 , MGA.TIME_ZONE
+                 , MGA.STR_CD
+                 , DPS.FN_GET_STORE_NAME(MGA.STR_CD) AS STR_NM
+                 , GAM.GAUG_KIND_CD
+                 /*증기*/
+                 , SUM(NVL(MGA.BAS_AMT,0)) AS N_DEFAMT
+                 , SUM(NVL(MGA.USE_QTY,0)) AS N_USEQTY
+                 , SUM(NVL(MGA.USE_AMT,0)) AS N_USEAMT
+                 /*구분없음*/
+                 , 0 AS I_DEFAMT
+                 , 0 AS I_USEQTY
+                 , 0 AS I_USEAMT
+                 /*구분없음*/
+                 , 0 AS E_DEFAMT
+                 , 0 AS E_USEQTY
+                 , 0 AS E_USEAMT
+              FROM MSS.MR_MGAUGUSED_MONTH   MGA
+                 , MSS.MR_GAUGMST           GAM
+                 , COM.TC_COMMCODE          COM
+             WHERE MGA.GAUG_ID = GAM.GAUG_ID
+               AND COM.COMM_CODE LIKE SUBSTR(GAM.GAUG_KIND_CD,1,1)||'%'
+               AND COM.COMM_PART = 'M045' /*계량기용도*/
+               AND COM.SYS_PART  = 'D'
+               AND GAUG_LVL = '1' /*메인계량기*/
+               AND MGA.USE_YM BETWEEN ? AND ?
+               AND GAM.GAUG_TYPE = ?
+             GROUP BY MGA.USE_YM, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+             ORDER BY MGA.USE_YM, MGA.TIME_ZONE, MGA.STR_CD, GAM.GAUG_KIND_CD
+        ]]>        
+    </query>
+</service>

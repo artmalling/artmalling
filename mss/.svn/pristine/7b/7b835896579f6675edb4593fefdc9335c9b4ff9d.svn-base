@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  주거세대전출정산
+ -->
+<service name="/mren306.mr">
+<!-- 주거세대마스터관리 내역 -->
+    <gauce name="H_SEL_MASTER">
+        <column colName="HUSE_ID"       colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DONG"          colType="TB_STRING"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HO"            colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DONGHO"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="HHOLD_NAME"    colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE1_NO"     colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE2_NO"     colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE3_NO"     colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOVE_IN_DT"    colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOVE_OUT_DT"   colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNTR_AREA"     colType="TB_STRING"  size="10"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HHOLD_ID"      colType="TB_STRING"  size="10"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING"  size="40"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <gauce name="H_SEL_DETAIL">  
+        <column colName="MNTN_ITEM_CD"  colType="TB_STRING"   size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_ITEM_NM"  colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_QTY"       colType="TB_DECIMAL"  size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_AMT"       colType="TB_DECIMAL"  size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+ 
+    <!-- 조회(전입일 기준) Query  -->
+    <query name="SEL_MASTER"> 
+        <![CDATA[   
+            SELECT HUSE_ID
+			     , DONG 
+			     , HO
+			     , DONG || HO AS DONGHO 
+			     , HHOLD_NAME
+			     , DCS.SC_Crypto_FUN('DEC', PHONE1_NO) AS PHONE1_NO
+			     , DCS.SC_Crypto_FUN('DEC', PHONE2_NO) AS PHONE2_NO
+			     , DCS.SC_Crypto_FUN('DEC', PHONE3_NO) AS PHONE3_NO
+			     , MOVE_IN_DT
+			     , MOVE_OUT_DT
+			     , CNTR_AREA
+			     , HHOLD_ID
+			     , STR_CD
+			  FROM MSS.MR_HHOLDMST
+			 WHERE STR_CD = ?
+			   AND DONG   LIKE ? || '%'
+			   AND HO     LIKE ? || '%'
+			   AND HHOLD_NAME LIKE ? || '%'
+        ]]>        
+    </query>
+    
+    <!-- 조회(전입일 기준) Query  -->
+    <query name="SEL_IN_DT"> 
+        <![CDATA[   
+               AND MOVE_IN_DT BETWEEN ? AND ?
+        ]]>        
+    </query>
+    
+    <!-- 조회(전출일 기준) Query  -->
+    <query name="SEL_OUT_DT"> 
+        <![CDATA[   
+               AND MOVE_OUT_DT BETWEEN ? AND ?
+        ]]>        
+    </query>
+
+    <!-- 조회(전출일 기준) Query  -->
+    <query name="SEL_ORDER_BY"> 
+        <![CDATA[   
+             ORDER BY HUSE_ID, DONG, HO
+        ]]>        
+    </query>
+    
+    <!-- 조회(전입일 기준) Query -Detail  -->
+    <query name="SEL_DETAIL"> 
+        <![CDATA[   
+               SELECT CAL.MNTN_ITEM_CD
+		         , MNT.MNTN_ITEM_NM
+		         , CAL.USE_QTY
+		         , CAL.USE_AMT
+              FROM MSS.MR_CALITEM   CAL
+                 , MSS.MR_MNTNITEM  MNT
+                 , MSS.MR_CALMST    CAM
+             WHERE CAL.STR_CD = MNT.STR_CD
+               AND CAL.MNTN_ITEM_CD = MNT.MNTN_ITEM_CD
+               AND CAL.CAL_YM = CAM.CAL_YM
+               AND CAL.CNTR_ID = CAM.CNTR_ID
+               AND CAM.CAL_TYPE = '2'
+		       AND CAL.CAL_YM = SUBSTR(?,1,6) 
+		       AND CAL.CNTR_ID = ?
+		  ORDER BY MNT.MNTN_ITEM_NM
+        ]]>        
+    </query>
+    
+    <!-- 전출일 UPDATE  -->
+    <query name="UPD_MRCALMOVEOUT"> 
+        <![CDATA[   
+               UPDATE MSS.MR_HHOLDMST
+			      SET MOVE_OUT_DT = ?
+			    WHERE HHOLD_ID =?
+        ]]>        
+    </query>
+</service>

@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/eord105.eo">
+    <!-- 택발행 마스터 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+        SELECT SLM.STR_CD                                                       /* 점코드*/
+             , DPS.FN_GET_STORE_NAME(SLM.STR_CD) AS STR_NM                      /* 점명*/
+             , SLM.SLIP_NO                                                      /* 전표번호*/
+             , SLM.ORD_DT                                                       /* 발주 일자 */
+             , SLM.DELI_DT                                                      /* 납품예정일 */
+             , SLM.PUMBUN_CD                                                    /* 브랜드코드*/
+             , DPS.FN_GET_PUMBUN_NAME(SLM.PUMBUN_CD) AS PUMBUN_NM               /* 브랜드명*/
+             , SLM.VEN_CD                                                       /* 협력사코드*/
+             , DPS.FN_GET_VENDOR_NAME(SLM.VEN_CD)    AS VEN_NM                  /* 협력사명*/
+             , SLM.BIZ_TYPE                                                     /* 거래형태*/
+             , COM.FN_GET_COMM_NAME('D', 'P002', SLM.BIZ_TYPE) AS BIZ_TYPE_NM   /* 거래명*/  
+             , SLM.TAG_PRT_YN                                                   /*발행여부*/
+             , SLM.TAG_PRT_DT                                                   /*발행일자*/
+             , SLM.TAG_PRT_CNT                                                  /*택발행회수*/ 
+             , SLM.SLIP_FLAG AS SLIP_FLAG                                       /* 전표구분*/
+             , COM.FN_GET_COMM_NAME('D', 'P201', SLM.SLIP_FLAG)  AS  SLIP_FLAG_NM                /* 전표구분명 */
+             , SLM.SLIP_PROC_STAT AS SLIP_PROC_STAT                             /* 전표진행상태*/
+             , COM.FN_GET_COMM_NAME('D', 'P207', SLM.SLIP_PROC_STAT) AS  SLIP_PROC_STAT_NM         /* 전표진행상태명 */
+             , SLM.ORD_TOT_QTY AS ORD_TOT_QTY                                   /* 수량 */
+             , SLM.NEW_COST_TAMT AS NEW_COST_TAMT                               /*  원가금액 */
+             , SLM.NEW_SALE_TAMT AS NEW_SALE_TAMT                               /*  매가금액 */
+             , PBN.SKU_FLAG                                                     /* 단품구분*/
+             , PBN.SKU_TYPE                                                     /* 단품종류*/    
+             , (
+                SELECT MAX(DTL.TAG_FLAG)
+                  FROM DPS.PO_SLPDTL DTL
+                 WHERE DTL.STR_CD  = SLM.STR_CD
+                   AND DTL.SLIP_NO = SLM.SLIP_NO
+               ) AS TAG_FLAG
+		  FROM DPS.PO_SLPMST SLM
+		     , DPS.PC_PBNMST PBN
+		 WHERE SLM.PUMBUN_CD = PBN.PUMBUN_CD 
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND PBN.SKU_FLAG = SUBSTR(?,0,1) 
+		   AND NVL(PBN.SKU_TYPE,' ') <> '2' 
+		   AND SLM.SLIP_PROC_STAT LIKE ? ||   '%'
+		   AND SLM.SLIP_FLAG      LIKE ? ||   '%'
+		   AND SLM.STR_CD = ?
+		   AND SLM.VEN_CD = ?
+		   AND SLM.PUMBUN_CD LIKE ? || '%'
+		   AND EXISTS ( 
+	                   SELECT '1'
+	                     FROM DPS.PO_SLPDTL SLD
+	                    WHERE SLD.STR_CD = SLM.STR_CD
+	                      AND SLD.SLIP_NO = SLM.SLIP_NO
+	                      AND SLD.TAG_FLAG = ? 
+	                      AND ROWNUM = 1
+                      )                 
+        ]]>
+    </query>
+    
+    <!-- 발주일자 -->
+    <query name="SEL_ORDDT">
+        <![CDATA[
+           AND SLM.ORD_DT BETWEEN ? AND ?                     /* 발주일자 */        
+        ]]>
+    </query>
+    <!-- 납품예정일 -->
+    <query name="SEL_DELIDT">
+        <![CDATA[
+           AND SLM.DELI_DT BETWEEN ? AND ?    /* 납품예정일 */       
+        ]]>
+    </query>
+    
+    <!-- 택발행 디테일 품목 조회 -->
+    <query name="SEL_PUMMOK">
+        <![CDATA[
+        SELECT DTL.STR_CD
+             , DTL.SLIP_NO
+             , MST.PUMBUN_CD
+             , DPS.FN_GET_PUMBUN_NAME(MST.PUMBUN_CD) AS PUMBUN_NM
+             , DTL.PUMMOK_CD
+             , DPS.FN_GET_PUMMOK_NAME(DTL.PUMMOK_CD) AS PUMMOK_NM    /* 품목명 */
+             , SPM.RECP_NAME        AS     PMK_RECP_NAME           /* 품목 영수증명 */   
+             , PBN.RECP_NAME                                       /* 브랜드 영수증명 */   
+             , DTL.ORD_UNIT_CD                                     /* 발주단위 */
+             , DTL.ORD_QTY                                              /* 발주수량 */
+             , DTL.NEW_SALE_PRC                                     /* 신매가단가 */
+             , DECODE(SLIP_PROC_STAT, '09', DTL.CHK_SALE_AMT, DTL.NEW_SALE_AMT) AS NEW_SALE_AMT /* 신매가금액 */
+             , MST.EVENT_FLAG       /* 행사구분*/
+             , MST.EVENT_RATE       /* 행사율*/
+             , SPM.PUMMOK_SRT_CD    /* 품목단축코드*/
+             , PBN.BIZ_TYPE
+             , COM.FN_GET_COMM_NAME('D', 'P002', PBN.BIZ_TYPE) AS BIZ_TYPE_NM  /* 거래형태*/
+             , PBN.TAX_FLAG
+             , COM.FN_GET_COMM_NAME('D', 'P004', PBN.TAX_FLAG) AS TAX_FLAG_NM  /* 과세구분*/
+          FROM DPS.PO_SLPDTL DTL
+             , DPS.PO_SLPMST MST
+             , DPS.PC_PMKMST SPM
+             , DPS.PC_PBNMST PBN
+         WHERE DTL.STR_CD  = ?
+           AND DTL.STR_CD  = MST.STR_CD
+           AND DTL.SLIP_NO = MST.SLIP_NO
+           AND DTL.SLIP_NO = ?
+           AND DTL.PUMMOK_CD  = SPM.PUMMOK_CD
+           AND MST.PUMBUN_CD  = PBN.PUMBUN_CD
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+        ]]>
+    </query>
+    
+    <!-- 택발행 디테일 단품 조회 -->
+    <query name="SEL_SKU">
+        <![CDATA[
+        SELECT DTL.STR_CD
+             , DTL.SLIP_NO
+             , MST.PUMBUN_CD
+             , DPS.FN_GET_PUMBUN_NAME(MST.PUMBUN_CD) AS PUMBUN_NM
+             , DTL.PUMMOK_CD
+             , DPS.FN_GET_PUMMOK_NAME(DTL.PUMMOK_CD) AS  PUMMOK_NM
+             , DTL.SKU_CD
+             , DPS.FN_GET_SKU_NAME(DTL.SKU_CD) SKU_NM
+             , SSM.RECP_NAME      AS SKU_RECP_NAME             /* 단품 영수증명*/
+             , STM.RECP_NAME                                   /* 브랜드 영수증명*/
+             , SSM.STYLE_CD
+             , SSM.COLOR_CD
+             , COM.FN_GET_COMM_NAME('D', 'P062', SSM.COLOR_CD) AS COLOR_NM /* 컬러명*/
+             , SSM.SIZE_CD
+             , COM.FN_GET_COMM_NAME('D', 'P026', SSM.SIZE_CD)  AS SIZE_NM  /* 사이즈명*/
+             , DTL.ORD_UNIT_CD
+             , DTL.ORD_QTY
+             , DTL.NEW_SALE_PRC
+             , DECODE(SLIP_PROC_STAT, '09', DTL.CHK_SALE_AMT, DTL.NEW_SALE_AMT) AS NEW_SALE_AMT
+             , STM.SEASON_CD      
+             , COM.FN_GET_COMM_NAME('D', 'P035', STM.SEASON_CD) AS SEASON_NM /* 시즌명*/
+             , STM.PLAN_YEAR                                                 /* 기획년월*/
+             , PBN.BIZ_TYPE
+             , COM.FN_GET_COMM_NAME('D', 'P002', PBN.BIZ_TYPE) AS BIZ_TYPE_NM /* 거래형태*/
+             , PBN.TAX_FLAG
+             , COM.FN_GET_COMM_NAME('D', 'P004', PBN.TAX_FLAG) AS TAX_FLAG_NM /* 과세구분*/
+          FROM DPS.PO_SLPDTL   DTL
+             , DPS.PO_SLPMST   MST
+             , DPS.PC_SKUMST   SSM
+             , DPS.PC_STYLEMST STM
+             , DPS.PC_PBNMST   PBN
+         WHERE DTL.STR_CD     = ?
+           AND DTL.STR_CD     = MST.STR_CD
+           AND DTL.SLIP_NO    = MST.SLIP_NO
+           AND DTL.SLIP_NO    = ? 
+           AND DTL.SKU_CD     = SSM.SKU_CD           
+           AND STM.PUMBUN_CD  (+)= SSM.PUMBUN_CD
+           AND STM.STYLE_CD   (+)= SSM.STYLE_CD
+           AND SSM.PUMBUN_CD  = PBN.PUMBUN_CD 
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+        ]]>
+    </query>
+    
+    <!-- 택발행 이후 마스터 정보 수정-->            
+    <query name="UPD_MASTER">  
+        <![CDATA[   
+            UPDATE DPS.PO_SLPMST
+               SET TAG_PRT_YN  = 'Y'
+                 , TAG_PRT_CNT = TAG_PRT_CNT + 1
+                 , TAG_PRT_DT  = TO_CHAR(SYSDATE, 'YYYYMMDD')
+                 , MOD_DATE    = SYSDATE
+                 , MOD_ID      = ?
+             WHERE STR_CD      = ?
+               AND SLIP_NO     = ?
+        ]]>
+    </query>
+    
+    <!-- 출력:택발행 디테일 품목 조회 -->
+    <query name="SEL_PUMMOK_IN"> 
+        SELECT DTL.STR_CD
+             , DTL.SLIP_NO
+             , MST.PUMBUN_CD
+             , DPS.FN_GET_PUMBUN_NAME(MST.PUMBUN_CD) AS PUMBUN_NM
+             , DTL.PUMMOK_CD
+             , DPS.FN_GET_PUMMOK_NAME(DTL.PUMMOK_CD) AS PUMMOK_NM    /* 품목명 */
+             , SPM.RECP_NAME        AS     PMK_RECP_NAME           /* 품목 영수증명 */   
+             , SUBSTRB(PBN.RECP_NAME,1,12)                          /* 브랜드 영수증명 */   
+             , DTL.ORD_UNIT_CD                                     /* 발주단위 */
+             , DTL.ORD_QTY                                              /* 발주수량 */
+             , DTL.NEW_SALE_PRC                                     /* 신매가단가 */
+             , DECODE(SLIP_PROC_STAT, '09', DTL.CHK_SALE_AMT, DTL.NEW_SALE_AMT) AS NEW_SALE_AMT /* 신매가금액 */
+             , MST.EVENT_FLAG       /* 행사구분*/
+             , MST.EVENT_RATE       /* 행사율*/
+             , SPM.PUMMOK_SRT_CD    /* 품목단축코드*/
+             , PBN.BIZ_TYPE
+             , COM.FN_GET_COMM_NAME('D', 'P002', PBN.BIZ_TYPE) AS BIZ_TYPE_NM  /* 거래형태*/
+             , PBN.TAX_FLAG
+             , COM.FN_GET_COMM_NAME('D', 'P004', PBN.TAX_FLAG) AS TAX_FLAG_NM  /* 과세구분*/
+          FROM DPS.PO_SLPDTL DTL
+             , DPS.PO_SLPMST MST
+             , DPS.PC_PMKMST SPM
+             , DPS.PC_PBNMST PBN
+         WHERE DTL.STR_CD  = ?
+           AND DTL.STR_CD  = MST.STR_CD
+           AND DTL.SLIP_NO = MST.SLIP_NO 
+           AND DTL.PUMMOK_CD  = SPM.PUMMOK_CD
+           AND MST.PUMBUN_CD  = PBN.PUMBUN_CD 
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+    </query>
+    
+    <!-- 출력:택발행 디테일 품목 조회-구분 -->
+    <query name="SEL_PUMMOK_IN_GB"> 
+        SELECT DISTINCT ''                                      AS STR_CD
+             , DTL.SLIP_NO                                      AS SLIP_NO
+             , ''                                               AS PUMBUN_CD
+             , ''                                               AS PUMBUN_NM
+             , ''                                               AS PUMMOK_CD       
+             , ''                                               AS PUMMOK_NM        /* 품목명 */
+             , ''                                               AS PMK_RECP_NAME    /* 품목 영수증명 */   
+             , SUBSTRB(PBN.RECP_NAME,1,12)                      AS RECP_NAME        /* 브랜드 영수증명 */   
+             , ''                                               AS ORD_UNIT_CD      /* 발주단위 */
+             , 0                                                AS ORD_QTY          /* 발주수량 */
+             , 0                                                AS NEW_SALE_PRC     /* 신매가단가 */
+             , 0                                                AS NEW_SALE_AMT     /* 신매가금액 */
+             , ''                                               AS EVENT_FLAG       /* 행사구분*/
+             , ''                                               AS EVENT_RATE       /* 행사율*/
+             , ''                                               AS PUMMOK_SRT_CD    /* 품목단축코드*/
+             , ''                                               AS BIZ_TYPE
+             , COM.FN_GET_COMM_NAME('D', 'P002', PBN.BIZ_TYPE)  AS BIZ_TYPE_NM      /* 거래형태*/
+             , ''                                               AS TAX_FLAG
+             , ''                                               AS TAX_FLAG_NM      /* 과세구분*/
+          FROM DPS.PO_SLPDTL DTL
+             , DPS.PO_SLPMST MST
+             , DPS.PC_PMKMST SPM
+             , DPS.PC_PBNMST PBN
+         WHERE DTL.STR_CD  = ?
+           AND DTL.STR_CD  = MST.STR_CD
+           AND DTL.SLIP_NO = MST.SLIP_NO 
+           AND DTL.PUMMOK_CD  = SPM.PUMMOK_CD
+           AND MST.PUMBUN_CD  = PBN.PUMBUN_CD
+    </query>
+    
+    <!-- 출력:택발행 디테일 단품 조회 -->
+    <query name="SEL_SKU_IN"> 
+        SELECT DTL.STR_CD
+             , DTL.SLIP_NO
+             , MST.PUMBUN_CD
+             , DPS.FN_GET_PUMBUN_NAME(MST.PUMBUN_CD) AS PUMBUN_NM
+             , DTL.PUMMOK_CD
+             , DPS.FN_GET_PUMMOK_NAME(DTL.PUMMOK_CD) AS  PUMMOK_NM
+             , DTL.SKU_CD
+             , DPS.FN_GET_SKU_NAME(DTL.SKU_CD) SKU_NM
+             , SSM.RECP_NAME      AS SKU_RECP_NAME             /* 단품 영수증명*/
+             , SUBSTRB(PBN.RECP_NAME, 1, 12)         AS RECP_NAME              /* 브랜드 영수증명*/
+             , SSM.STYLE_CD
+             , SSM.COLOR_CD
+             , COM.FN_GET_COMM_NAME('D', 'P062', SSM.COLOR_CD) AS COLOR_NM /* 컬러명*/
+             , SSM.SIZE_CD
+             , COM.FN_GET_COMM_NAME('D', 'P026', SSM.SIZE_CD)  AS SIZE_NM  /* 사이즈명*/
+             , DTL.ORD_UNIT_CD
+             , DTL.ORD_QTY
+             , DTL.NEW_SALE_PRC
+             , DECODE(SLIP_PROC_STAT, '09', DTL.CHK_SALE_AMT, DTL.NEW_SALE_AMT) AS NEW_SALE_AMT
+             , STM.SEASON_CD      
+             , COM.FN_GET_COMM_NAME('D', 'P035', STM.SEASON_CD) AS SEASON_NM /* 시즌명*/
+             , STM.PLAN_YEAR                                                 /* 기획년월*/
+             , PBN.BIZ_TYPE
+             , COM.FN_GET_COMM_NAME('D', 'P002', PBN.BIZ_TYPE) AS BIZ_TYPE_NM /* 거래형태*/
+             , PBN.TAX_FLAG
+             , COM.FN_GET_COMM_NAME('D', 'P004', PBN.TAX_FLAG) AS TAX_FLAG_NM /* 과세구분*/
+          FROM DPS.PO_SLPDTL   DTL
+             , DPS.PO_SLPMST   MST
+             , DPS.PC_SKUMST   SSM
+             , DPS.PC_STYLEMST STM
+             , DPS.PC_PBNMST   PBN
+         WHERE DTL.STR_CD     = ?
+           AND DTL.STR_CD     = MST.STR_CD
+           AND DTL.SLIP_NO    = MST.SLIP_NO
+           AND DTL.SKU_CD     = SSM.SKU_CD           
+           AND STM.PUMBUN_CD  (+)= SSM.PUMBUN_CD
+           AND STM.STYLE_CD   (+)= SSM.STYLE_CD
+           AND SSM.PUMBUN_CD  = PBN.PUMBUN_CD  
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+    </query>
+    
+    <!-- 출력:택발행 디테일 단품 조회_구분 -->
+    <query name="SEL_SKU_IN_GB"> 
+        SELECT DISTINCT ''     AS STR_CD
+             , DTL.SLIP_NO
+             , ''                                   AS PUMBUN_CD
+             , ''                                   AS PUMBUN_NM
+             , ''                                   AS PUMMOK_CD
+             , ''                                   AS PUMMOK_NM
+             , ''                                   AS SKU_CD
+             , ''                                   AS SKU_NM
+             , ''                                   AS SKU_RECP_NAME    /* 단품 영수증명*/
+             , SUBSTRB(PBN.RECP_NAME, 1, 12)        AS RECP_NAME        /* 브랜드 영수증명*/
+             , ''                                   AS STYLE_CD
+             , ''                                   AS COLOR_CD
+             , ''                                   AS COLOR_NM         /* 컬러명*/
+             , ''                                   AS SIZE_CD
+             , ''                                   AS SIZE_NM          /* 사이즈명*/
+             , ''                                   AS ORD_UNIT_CD
+             , 0                                    AS ORD_QTY
+             , 0                                    AS NEW_SALE_PRC
+             , 0                                    AS NEW_SALE_AMT
+             , ''                                   AS SEASON_CD
+             , ''                                   AS SEASON_NM        /* 시즌명*/
+             , ''                                   AS PLAN_YEAR        /* 기획년월*/
+             , ''                                   AS BIZ_TYPE
+             , ''                                   AS BIZ_TYPE_NM      /* 거래형태*/
+             , ''                                   AS TAX_FLAG
+             , ''                                   AS TAX_FLAG_NM      /* 과세구분*/
+          FROM DPS.PO_SLPDTL   DTL
+             , DPS.PO_SLPMST   MST
+             , DPS.PC_SKUMST   SSM
+             , DPS.PC_STYLEMST STM
+             , DPS.PC_PBNMST   PBN
+         WHERE DTL.STR_CD     = ?
+           AND DTL.STR_CD     = MST.STR_CD
+           AND DTL.SLIP_NO    = MST.SLIP_NO
+           AND DTL.SKU_CD     = SSM.SKU_CD           
+           AND STM.PUMBUN_CD  (+)= SSM.PUMBUN_CD
+           AND STM.STYLE_CD   (+)= SSM.STYLE_CD
+           AND SSM.PUMBUN_CD  = PBN.PUMBUN_CD    
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+    </query>
+    
+    <!-- 단품 엑셀다운 -->
+    <query name="SEL_SKU_EXCEL"> 
+        SELECT    'T9' 
+               || TO_CHAR(SYSDATE, 'YYYYMMDD')
+               || LPAD(TO_CHAR(DTL.ORD_SEQ_NO), 5, '0')
+               || '0000'
+               || TO_CHAR(SYSDATE, 'MM')
+               || SUBSTR(TO_CHAR(SYSDATE, 'YYYY'), 3, 2)
+               || DECODE(SUBSTR(MST.PUMBUN_CD, 1, 1), '1', '2', '2', '1', '3', '4', '4', '3') 
+               || MSS.FN_GET_BARCODE_CHECKDIGIT('21' || MST.PUMBUN_CD || SPM.PUMMOK_SRT_CD)
+               || MSS.FN_GET_BARCODE_CHECKDIGIT('29' || MST.EVENT_FLAG || LPAD(TO_CHAR(DTL.NEW_SALE_PRC), 8, '0'))
+               || MST.EVENT_FLAG
+               || SUBSTR(SUBSTRB(REPLACE(PBN.RECP_NAME, ' ', ''), 1, 28), 1, 14) || SUBSTR('              ', LENGTH(SUBSTR(SUBSTRB(REPLACE(PBN.RECP_NAME, ' ', ''), 1, 28), 1, 14)) + 1, 14)
+               || SUBSTR(SUBSTRB(REPLACE(SPM.RECP_NAME, ' ', ''), 1, 28), 1, 14) || SUBSTR('              ', LENGTH(SUBSTR(SUBSTRB(REPLACE(SPM.RECP_NAME, ' ', ''), 1, 28), 1, 14)) + 1, 14)
+               --|| RPAD(SUBSTR(SUBSTRB(PBN.RECP_NAME, 1, 22), 1, 11), 11, ' ')
+               --|| RPAD(SUBSTR(SUBSTRB(SPM.RECP_NAME, 1, 20), 1, 10), 10, ' ')
+               --|| DPS.FN_GET_POSIFSTR_CHAR(18, PBN.RECP_NAME)
+               --|| DPS.FN_GET_POSIFSTR_CHAR(18, SPM.RECP_NAME)
+               || LPAD(TO_CHAR(DTL.NEW_SALE_PRC), 8, '0')
+               || LPAD(TO_CHAR(DTL.ORD_QTY), 4, '0')
+               , LENGTH(SUBSTR(SUBSTRB(PBN.RECP_NAME, 1, 22), 1, 11))
+               , SUBSTR(SUBSTRB(PBN.RECP_NAME, 1, 22), 1, 11) || SUBSTR('           ', LENGTH(SUBSTR(SUBSTRB(PBN.RECP_NAME, 1, 22), 1, 11)) + 1, 11)  
+          FROM DPS.PO_SLPDTL DTL
+             , DPS.PO_SLPMST MST
+             , DPS.PC_PMKMST SPM
+             , DPS.PC_PBNMST PBN
+         WHERE DTL.STR_CD  = MST.STR_CD
+           AND DTL.SLIP_NO = MST.SLIP_NO
+           AND DTL.PUMMOK_CD  = SPM.PUMMOK_CD
+           AND MST.PUMBUN_CD  = PBN.PUMBUN_CD
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND DTL.STR_CD     = ?
+    </query>
+    
+    <!-- 품목 엑셀다운 -->
+    <query name="SEL_PUMMOK_EXCEL"> 
+        SELECT    'T9' 
+               || TO_CHAR(SYSDATE, 'YYYYMMDD')
+               || LPAD(TO_CHAR(DTL.ORD_SEQ_NO), 5, '0')
+               || '0000'
+               || TO_CHAR(SYSDATE, 'MM')
+               || SUBSTR(TO_CHAR(SYSDATE, 'YYYY'), 3, 2)
+               || DECODE(SUBSTR(MST.PUMBUN_CD, 1, 1), '1', '2', '2', '1', '3', '4', '4', '3') 
+               || MSS.FN_GET_BARCODE_CHECKDIGIT('21' || MST.PUMBUN_CD || SPM.PUMMOK_SRT_CD)
+               || MSS.FN_GET_BARCODE_CHECKDIGIT('29' || MST.EVENT_FLAG || LPAD(TO_CHAR(DTL.NEW_SALE_PRC), 8, '0'))
+               || MST.EVENT_FLAG
+               || SUBSTR(SUBSTRB(REPLACE(PBN.RECP_NAME, ' ', ''), 1, 28), 1, 14) || SUBSTR('              ', LENGTH(SUBSTR(SUBSTRB(REPLACE(PBN.RECP_NAME, ' ', ''), 1, 28), 1, 14)) + 1, 14)
+               || SUBSTR(SUBSTRB(REPLACE(SPM.RECP_NAME, ' ', ''), 1, 28), 1, 14) || SUBSTR('              ', LENGTH(SUBSTR(SUBSTRB(REPLACE(SPM.RECP_NAME, ' ', ''), 1, 28), 1, 14)) + 1, 14)
+               --|| RPAD(SUBSTR(SUBSTRB(PBN.RECP_NAME, 1, 22), 1, 11), 11, ' ')
+               --|| RPAD(SUBSTR(SUBSTRB(SPM.RECP_NAME, 1, 20), 1, 10), 10, ' ')
+               --|| DPS.FN_GET_POSIFSTR_CHAR(18, PBN.RECP_NAME)
+               --|| DPS.FN_GET_POSIFSTR_CHAR(18, SPM.RECP_NAME)
+               || LPAD(TO_CHAR(DTL.NEW_SALE_PRC), 8, '0')
+               || LPAD(TO_CHAR(DTL.ORD_QTY), 4, '0')
+               , LENGTH(SUBSTR(SUBSTRB(PBN.RECP_NAME, 1, 22), 1, 11))
+               , SUBSTR(SUBSTRB(PBN.RECP_NAME, 1, 22), 1, 11) || SUBSTR('           ', LENGTH(SUBSTR(SUBSTRB(PBN.RECP_NAME, 1, 22), 1, 11)) + 1, 11)  
+          FROM DPS.PO_SLPDTL DTL
+             , DPS.PO_SLPMST MST
+             , DPS.PC_PMKMST SPM
+             , DPS.PC_PBNMST PBN
+         WHERE DTL.STR_CD  = MST.STR_CD
+           AND DTL.SLIP_NO = MST.SLIP_NO
+           AND DTL.PUMMOK_CD  = SPM.PUMMOK_CD
+           AND MST.PUMBUN_CD  = PBN.PUMBUN_CD
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND DTL.STR_CD     = ?
+    </query>
+    
+    <!-- 단품 엑셀다운 -->
+    <query name="SEL_SKU_EXCEL2"> 
+        SELECT ROWNUM
+             , (CASE PBN.SKU_TYPE WHEN '1' THEN '규격' WHEN '3' THEN '의류' ELSE '신선' END) AS SKU_TYPE
+             , TO_CHAR(SYSDATE, 'MM')||SUBSTR(TO_CHAR(SYSDATE, 'YYYY'), 3, 2) AS YYYYMM
+             , SUBSTRB(PBN.RECP_NAME, 1, 12)         AS RECP_NAME              /* 브랜드 영수증명*/
+             , RPAD(SUBSTRB(COM.FN_GET_COMM_NAME('D', 'P035', STM.SEASON_CD), 1, 8), 8, ' ') || 
+               DPS.FN_GET_PUMMOK_NAME(DTL.PUMMOK_CD) AS  PUMMOK_NM 
+             , DTL.SKU_CD
+             , SSM.RECP_NAME || COM.FN_GET_COMM_NAME('D', 'P062', SSM.COLOR_CD) || COM.FN_GET_COMM_NAME('D', 'P026', SSM.SIZE_CD)    AS SKU_RECP_NAME 
+             , DTL.NEW_SALE_PRC
+             , DTL.ORD_QTY
+          FROM DPS.PO_SLPDTL   DTL
+             , DPS.PO_SLPMST   MST
+             , DPS.PC_SKUMST   SSM
+             , DPS.PC_STYLEMST STM
+             , DPS.PC_PBNMST   PBN
+         WHERE DTL.STR_CD     = MST.STR_CD
+           AND DTL.SLIP_NO    = MST.SLIP_NO
+           AND DTL.SKU_CD     = SSM.SKU_CD           
+           AND STM.PUMBUN_CD  (+)= SSM.PUMBUN_CD
+           AND STM.STYLE_CD   (+)= SSM.STYLE_CD
+           AND SSM.PUMBUN_CD  = PBN.PUMBUN_CD 
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND DTL.STR_CD     = ?
+    </query>
+    
+    <!-- 품목 엑셀다운 -->
+    <query name="SEL_PUMMOK_EXCEL2"> 
+       SELECT ROWNUM
+             , DTL.TAG_FLAG 
+             , TO_CHAR(SYSDATE, 'MM')||SUBSTR(TO_CHAR(SYSDATE, 'YYYY'), 3, 2) AS YYYYMM
+             , SUBSTR(COM.FN_GET_COMM_NAME('D', 'P002', PBN.BIZ_TYPE), 1, 1) AS BIZ_TYPE
+             , PBN.RECP_NAME 
+             , MSS.FN_GET_BARCODE_CHECKDIGIT('21' || MST.PUMBUN_CD || SPM.PUMMOK_SRT_CD) AS CODE1
+             , MSS.FN_GET_BARCODE_CHECKDIGIT('29' || MST.EVENT_FLAG || LPAD(TO_CHAR(DTL.NEW_SALE_PRC), 8, '0')) AS CODE2
+             , SPM.RECP_NAME        AS     PMK_RECP_NAME 
+             , DTL.NEW_SALE_PRC                                     /* 신매가단가 */
+             , DTL.ORD_QTY                                          /* 발주수량 */
+          FROM DPS.PO_SLPDTL DTL
+             , DPS.PO_SLPMST MST
+             , DPS.PC_PMKMST SPM
+             , DPS.PC_PBNMST PBN
+         WHERE DTL.STR_CD  = MST.STR_CD
+           AND DTL.SLIP_NO = MST.SLIP_NO
+           AND DTL.PUMMOK_CD  = SPM.PUMMOK_CD
+           AND MST.PUMBUN_CD  = PBN.PUMBUN_CD
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND DTL.STR_CD  = ?
+    </query>
+    
+    
+    <!-- 택발행 이후 마스터 정보 수정-->            
+    <query name="SEL_MONTH_WEEK">  
+        <![CDATA[   
+            SELECT TO_CHAR(SYSDATE, 'W') MONTH_WEEK
+            FROM DUAL
+        ]]>
+    </query>
+</service>

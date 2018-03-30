@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 임대계약마스터
+ -->
+<service name="/ccom215.cc">    
+
+    <!-- POPUP HEADER -->
+    <gauce name="H_SEL_CODE">
+	    <column colName="CHK"              colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_ID"          colType="TB_STRING"   size="8"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_CD"           colType="TB_STRING"   size="6"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"           colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_S_DT"        colType="TB_STRING"   size="8"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_E_DT"        colType="TB_STRING"   size="8"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="USE_YN"           colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="KIND_YN"          colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REAL_CHAREG_AMT"  colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_TYPE"         colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+
+    <!-- POPUP SEARCH DATE -->
+    <query name="SEL_CODE">
+        <![CDATA[  
+            SELECT 
+                   'F'  AS CHK
+                 , CNT.CNTR_ID
+                 , CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , CNT.CNTR_S_DT
+                 , CNT.CNTR_E_DT
+                 , 'Y' AS USE_YN
+                 , CASE WHEN ? = '10' THEN DECODE(PWR_KIND_CD, ?, 'Y', 'N') /*전기*/
+                        WHEN ? = '20' THEN DECODE(WWTR_KIND_CD,?, 'Y', 'N') /*온수*/
+                        WHEN ? = '30' THEN DECODE(STM_KIND_CD, ?, 'Y', 'N') /*증기*/
+                        WHEN ? = '40' THEN DECODE(CWTR_KIND_CD,?, 'Y', 'N') /*냉수*/
+                        WHEN ? = '50' THEN DECODE(GAS_KIND_CD, ?, 'Y', 'N') /*가스*/
+                        WHEN ? = '60' THEN DECODE(WTR_KIND_CD, ?, 'Y', 'N') /*수도*/
+                        ELSE 'N' END AS KIND_YN
+                 , 0 AS REAL_CHAREG_AMT
+                 , '' AS CAL_TYPE
+              FROM MSS.MR_CNTRMST   CNT,
+                   DPS.PC_VENMST    VEN
+             WHERE CNT.VEN_CD = VEN.VEN_CD
+               AND CNT.CNTR_E_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+               AND CNT.VEN_CD  LIKE ?||'%'
+               AND CNT.STR_CD  LIKE ?||'%' 
+               AND CNT.CNTR_ID LIKE ?||'%' 
+        ]]>
+    </query> 
+    
+    <query name="SEL_CODE_CES">
+        <![CDATA[  
+            SELECT 
+                   'F'  AS CHK
+                 , CNT.CNTR_ID
+                 , CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , CNT.CNTR_S_DT
+                 , CNT.CNTR_E_DT
+                 , 'Y' AS USE_YN
+                 , CASE WHEN ? = '10' THEN DECODE(PWR_KIND_CD, ?, 'Y', 'N') /*전기*/
+                        WHEN ? = '20' THEN DECODE(WWTR_KIND_CD,?, 'Y', 'N') /*온수*/
+                        WHEN ? = '30' THEN DECODE(STM_KIND_CD, ?, 'Y', 'N') /*증기*/
+                        WHEN ? = '40' THEN DECODE(CWTR_KIND_CD,?, 'Y', 'N') /*냉수*/
+                        WHEN ? = '50' THEN DECODE(GAS_KIND_CD, ?, 'Y', 'N') /*가스*/
+                        WHEN ? = '60' THEN DECODE(WTR_KIND_CD, ?, 'Y', 'N') /*수도*/
+                        ELSE 'N' END AS KIND_YN
+                 , 0 AS REAL_CHAREG_AMT
+                 , '' AS CAL_TYPE
+              FROM MSS.MR_CNTRMST   CNT,
+                   DPS.PC_VENMST    VEN
+             WHERE CNT.VEN_CD = VEN.VEN_CD
+               AND CNT.CNTR_E_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+               AND CNT.VEN_CD  LIKE ?||'%'
+               AND CNT.BELONG_STR_CD  LIKE ?||'%' 
+               AND CNT.CNTR_ID LIKE ?||'%' 
+        ]]>
+    </query> 
+    
+    <!-- 주거마스터 조회 -->
+    <query name="SEL_CODE_HOME">
+        <![CDATA[  
+            SELECT 'F' AS CHK
+                 , HHOLD_ID AS CNTR_ID
+                 , '' AS VEN_CD
+                 , DONG||'-'||HO AS VEN_NM
+                 , MOVE_IN_DT AS CNTR_S_DT
+                 , MOVE_OUT_DT AS CNTR_E_DT
+                 , 'Y' AS USE_YN
+                 , CASE WHEN ? = '10' THEN DECODE(PWR_KIND_CD, ?, 'Y', 'N') /*전기*/
+                        WHEN ? = '20' THEN DECODE(WWTR_KIND_CD,?, 'Y', 'N') /*온수*/
+                        WHEN ? = '30' THEN DECODE(STM_KIND_CD, ?, 'Y', 'N') /*증기*/
+                        WHEN ? = '40' THEN DECODE(CWTR_KIND_CD,?, 'Y', 'N') /*냉수*/
+                        WHEN ? = '50' THEN DECODE(GAS_KIND_CD, ?, 'Y', 'N') /*가스*/
+                        WHEN ? = '60' THEN DECODE(WTR_KIND_CD, ?, 'Y', 'N') /*수도*/
+                        ELSE 'N' END AS KIND_YN
+                 , 0 AS REAL_CHAREG_AMT
+                 , '' AS CAL_TYPE
+              FROM MSS.MR_HHOLDMST
+             WHERE NVL(MOVE_OUT_DT, '99991231') >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+               AND HO LIKE ?||'%'
+               AND DONG LIKE ?||'%'
+               AND STR_CD LIKE ?||'%'
+               AND HHOLD_ID LIKE ?||'%'
+        ]]>
+    </query> 
+    
+    <!-- POPUP SEARCH DATE -->
+    <query name="SEL_CODE_NOCHK">
+        <![CDATA[  
+            SELECT 
+                   'F'  AS CHK
+                 , CNT.CNTR_ID
+                 , CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , CNT.CNTR_S_DT
+                 , CNT.CNTR_E_DT
+                 , 'Y' AS USE_YN
+                 , 'Y' AS KIND_YN
+                 , 0 AS REAL_CHAREG_AMT
+                 , '' AS CAL_TYPE
+              FROM MSS.MR_CNTRMST   CNT,
+                   DPS.PC_VENMST    VEN
+             WHERE CNT.VEN_CD = VEN.VEN_CD
+               AND ? = CASE WHEN ? = '10' THEN  PWR_KIND_CD   /*전기*/
+                            WHEN ? = '20' THEN  WWTR_KIND_CD  /*온수*/
+                            WHEN ? = '30' THEN  STM_KIND_CD   /*증기*/
+                            WHEN ? = '40' THEN  CWTR_KIND_CD  /*냉수*/
+                            WHEN ? = '50' THEN  GAS_KIND_CD   /*가스*/
+                            WHEN ? = '60' THEN  WTR_KIND_CD   /*수도*/
+                            ELSE 'XXX' END
+               AND CNT.CNTR_E_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+               AND CNT.VEN_CD  LIKE ?||'%'
+               AND CNT.STR_CD  LIKE ?||'%' 
+               AND CNT.CNTR_ID LIKE ?||'%' 
+        ]]>
+    </query> 
+    
+    <!-- 주거마스터 조회 -->
+    <query name="SEL_CODE_NOCHK_HOME">
+        <![CDATA[  
+			SELECT 'F' AS CHK
+			     , HHOLD_ID AS CNTR_ID
+			     , '' AS VEN_CD
+			     , DONG||'-'||HO AS VEN_NM
+			     , MOVE_IN_DT AS CNTR_S_DT
+			     , MOVE_OUT_DT AS CNTR_E_DT
+			     , 'Y' AS USE_YN
+			     , 'Y' AS KIND_YN
+			     , 0 AS REAL_CHAREG_AMT
+			     , '' AS CAL_TYPE
+			  FROM MSS.MR_HHOLDMST
+			 WHERE NVL(MOVE_OUT_DT, '99991231') >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			   AND ? = CASE WHEN ? = '10' THEN  PWR_KIND_CD   /*전기*/
+			                WHEN ? = '20' THEN  WWTR_KIND_CD  /*온수*/
+			                WHEN ? = '30' THEN  STM_KIND_CD   /*증기*/
+			                WHEN ? = '40' THEN  CWTR_KIND_CD  /*냉수*/
+			                WHEN ? = '50' THEN  GAS_KIND_CD   /*가스*/
+			                WHEN ? = '60' THEN  WTR_KIND_CD   /*수도*/
+			                ELSE 'XXX' END
+               AND HO LIKE ?||'%'
+               AND DONG LIKE ?||'%'
+			   AND STR_CD LIKE ?||'%'
+			   AND HHOLD_ID LIKE ?||'%'
+        ]]>
+    </query> 
+    
+    <!-- POPUP SEARCH DATE -->
+    <query name="SEL_CODE_NORMAL">
+        <![CDATA[  
+            SELECT 'F'  AS CHK
+                 , CNT.CNTR_ID
+                 , CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , CNT.CNTR_S_DT
+                 , CNT.CNTR_E_DT
+                 , 'Y' AS USE_YN
+                 , 'Y' AS KIND_YN
+                 , CAM.REAL_CHAREG_AMT
+                 , CAM.CAL_TYPE
+              FROM MSS.MR_CNTRMST   CNT
+                 , DPS.PC_VENMST    VEN
+                 , MSS.MR_CALMST    CAM
+             WHERE CNT.VEN_CD = VEN.VEN_CD
+               AND CNT.CNTR_ID = CAM.CNTR_ID
+               AND CNT.VEN_CD  LIKE ?||'%'
+               AND CNT.STR_CD  LIKE ?||'%' 
+               AND CNT.CNTR_ID LIKE ?||'%'
+               AND CAM.CAL_YM = ?
+        ]]>
+    </query> 
+    
+    <!-- POPUP SEARCH ADD -->
+    <query name="SEL_CODE_END">
+        <![CDATA[    
+             ORDER BY CNT.CNTR_ID
+        ]]>
+    </query> 
+    
+    <!-- POPUP SEARCH ADD -->
+    <query name="SEL_CODE_END_HOME">
+        <![CDATA[
+             ORDER BY HHOLD_ID
+        ]]>
+    </query> 
+</service>
+

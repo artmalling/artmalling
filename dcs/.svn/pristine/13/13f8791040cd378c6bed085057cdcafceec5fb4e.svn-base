@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.05.30
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  지역별 회원 매출 현황(월)
+ -->
+<service name="/dbri302.db">
+    <!-- 월단위 포인트 현황  -->
+    <gauce name="H_MASTER"> 
+        <column colName="YYYYMM"    		colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUSI_AREA"      	colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUSI_AREA_NM"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"  		colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_RATE"     	colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_SALE_AMT"    	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_SALE_AMT"  	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_SALE_RATE"     colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+    
+    <!-- 지역별 회원 매출 현황(월) -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			    SELECT
+                        YYYYMM --년월
+                        ,BUSI_AREA -- 상권코드
+                        ,BUSI_AREA_NM -- 상권
+                        --, BUSI_AREA_SEQ
+                        --, POINT
+                        , SALE_AMT --판매액
+                        --, TOT_AMT
+                        , SALE_RATE  -- 구성비
+                            
+                        , PRE_SALE_AMT -- 전월상권매출
+                        --, TOT_AMT -- 전월총매출        
+                            
+                        , ADD_SALE_AMT -- 상권매출증감
+                        , ADD_SALE_RATE -- 상권매출증감율
+                FROM    (
+                        SELECT
+                            XX.YYYYMM
+                            , XX.BUSI_AREA
+                            , XX.BUSI_AREA_NM
+                            --, XX.BUSI_AREA_SEQ
+                            , 0         AS  POINT
+                            , SUM(XX.SALE_AMT)      AS  SALE_AMT
+                            , SUM(YY.TOT_AMT)       AS  TOT_AMT
+                            , ROUND( (SUM(XX.SALE_AMT) / SUM(YY.TOT_AMT)) * 100,2) AS SALE_RATE  -- 구성비
+                            
+                            , LAG(SUM(XX.SALE_AMT),1) OVER (PARTITION BY XX.BUSI_AREA, XX.BUSI_AREA_NM ORDER BY XX.YYYYMM) AS PRE_SALE_AMT -- 전월상권매출
+                            , LAG(SUM(YY.TOT_AMT),1) OVER (PARTITION BY XX.BUSI_AREA, XX.BUSI_AREA_NM ORDER BY XX.YYYYMM) AS PRE_TOT_AMT -- 전월총매출        
+                            
+                            , SUM(XX.SALE_AMT) - LAG(SUM(XX.SALE_AMT),1) OVER (PARTITION BY XX.BUSI_AREA, XX.BUSI_AREA_NM ORDER BY XX.YYYYMM) AS ADD_SALE_AMT -- 상권매출증감
+                            , DECODE(SUM(XX.SALE_AMT),0,0,ROUND((SUM(XX.SALE_AMT) - LAG(SUM(XX.SALE_AMT),1) OVER (PARTITION BY XX.BUSI_AREA, XX.BUSI_AREA_NM ORDER BY XX.YYYYMM))
+                              / SUM(XX.SALE_AMT)* 100, 2))   AS ADD_SALE_RATE -- 상권매출증감율
+                        FROM
+                        (
+                            SELECT
+                                YYYYMM,BUSI_AREA,BUSI_AREA_NM
+                                ,SUM(SALE_AMT) SALE_AMT
+                            FROM
+                                (SELECT /*+ INDEX(D IX_BUSI_AREA_POSTNO3_01) INDEX(A PK_DM_CUSTOMER) */ SUBSTR(C.SALE_DT,1,6) YYYYMM
+                                    , NVL(D.BUSI_AREA,'9') BUSI_AREA
+                                    , NVL(D.BUSI_AREA_NM,'주소없음') BUSI_AREA_NM 
+                                    --, D.BUSI_AREA_SEQ
+                                    --, (SELECT MIN(SI_DO)||' '||MIN(SI_GUN_GU) FROM COM.TC_POSTNO_OLD WHERE SUBSTR(POST_NO,1,3) LIKE A.HOME_ZIP_CD1) SI_DO_GUN_GU
+                                    --, SUM(POINT)    AS POINT
+                                    --, SUM(SALE_AMT) AS SALE_AMT
+                                    , SUM(NORM_SALE_AMT) AS SALE_AMT
+                                    from dps.ps_daycust c left outer join dcs.dm_customer a on c.cust_no = a.cust_id
+                                                                   left outer join dcs.busi_area_postno3 d on nvl(a.HOME_ZIP_CD1,'999') BETWEEN D.POST_ZIP_MIN AND D.POST_ZIP_MAX 
+                                  where C.SALE_DT >= TO_CHAR(ADD_MONTHS(TO_DATE(?,'YYYYMM'),-1),'YYYYMM')||'01'
+                                  AND C.SALE_DT <= ?||'31'
+                                  GROUP BY SUBSTR(C.SALE_DT,1,6), D.BUSI_AREA, D.BUSI_AREA_NM--, D.BUSI_AREA_SEQ
+                                 )       --, D.BUSI_AREA_SEQ
+                            GROUP BY YYYYMM,BUSI_AREA,BUSI_AREA_NM
+                        ) XX,
+                            (
+                            SELECT /*+ INDEX(D IX_BUSI_AREA_POSTNO3_01) INDEX(A PK_DM_CUSTOMER) */ SUBSTR(C.SALE_DT,1,6) YYYYMM
+                                --, SUM(SALE_AMT) AS TOT_AMT
+                                , SUM(NORM_SALE_AMT) AS TOT_AMT
+                            from dps.ps_daycust c left outer join dcs.dm_customer a on c.cust_no = a.cust_id
+                                                               left outer join dcs.busi_area_postno3 d on nvl(a.HOME_ZIP_CD1,'999') BETWEEN D.POST_ZIP_MIN AND D.POST_ZIP_MAX 
+                              where C.SALE_DT >= TO_CHAR(ADD_MONTHS(TO_DATE(?,'YYYYMM'),-1),'YYYYMM')||'01'
+                              AND C.SALE_DT <= ?||'31'
+                            GROUP BY SUBSTR(C.SALE_DT,1,6)
+                        ) YY
+                        WHERE XX.YYYYMM = YY.YYYYMM
+                        GROUP BY XX.YYYYMM
+                            , XX.BUSI_AREA
+                            --, XX.BUSI_AREA_SEQ
+                            , XX.BUSI_AREA_NM
+                
+                    )
+                WHERE YYYYMM >= ?
+                  AND YYYYMM <= ?
+    ORDER BY
+            YYYYMM DESC
+            , BUSI_AREA
+            , SALE_AMT DESC
+        ]]>        
+    </query>  
+</service>

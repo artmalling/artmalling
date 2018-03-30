@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/dmbo404.do">
+
+    <gauce name="H_MASTER">  
+        <column colName="STR_CD"       colType="TB_STRING"   size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_ID"      colType="TB_STRING"   size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"    colType="TB_STRING"   size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CPN_ID"       colType="TB_STRING"   size="13"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CPN_NM"       colType="TB_STRING"   size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="APP_FLAG"     colType="TB_STRING"   size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DC_RATE"      colType="TB_DECIMAL"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DC_AMT"       colType="TB_DECIMAL"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="START_DT"     colType="TB_STRING"   size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="END_DT"       colType="TB_STRING"   size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="JEHU_ONLY_YN" colType="TB_STRING"   size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CPN_TYPE"     colType="TB_STRING"   size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ISSUE_PATH"   colType="TB_STRING"   size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_DETAIL"> 
+        <column colName="CUST_GRADE"    colType="TB_STRING"   size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POCARD_PREFIX" colType="TB_STRING"   size="3"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING"   size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_ID"       colType="TB_STRING"   size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="CPN_NM"        colType="TB_STRING"   size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="APP_FLAG"      colType="TB_STRING"   size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DC_RATE"       colType="TB_DECIMAL"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DC_AMT"        colType="TB_DECIMAL"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="START_DT"      colType="TB_STRING"   size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="END_DT"        colType="TB_STRING"   size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="JEHU_ONLY_YN"  colType="TB_STRING"   size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CPN_TYPE"      colType="TB_STRING"   size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ISSUE_PATH"    colType="TB_DECIMAL"  size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ISSUE_CNT"     colType="TB_DECIMAL"  size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+    </gauce>    
+    
+    
+    
+    <!--전자쿠폰 발급 내역 조회  -->
+    <query name="SEL_MASTER">     
+        <![CDATA[       
+            SELECT A.STR_CD
+                 , A.CUST_ID
+                 , B.CUST_NAME
+                 , A.CPN_ID
+     			 , A.CPN_NM
+     			 , A.APP_FLAG
+     			 , A.DC_RATE
+     			 , A.DC_AMT
+     			 , A.START_DT
+     			 , A.END_DT
+    			 , A.JEHU_ONLY_YN
+     			 , A.CPN_TYPE
+        		 , A.ISSUE_PATH
+  			  FROM DCS.DO_E_COUPON A
+  			     , DCS.DM_CUSTOMER B
+ 			 WHERE A.CUST_ID = B.CUST_ID
+ 			   AND A.STR_CD = ?
+        ]]>        
+    </query> 
+    
+    <query name="SEL_MASTER_WHERE_CUST_ID">     
+        <![CDATA[
+   			   AND A.CUST_ID = ?
+        ]]>        
+    </query> 
+    
+    <query name="SEL_MASTER_WHERE_START_DT">     
+        <![CDATA[
+  			   AND A.START_DT <= ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_END_DT">     
+        <![CDATA[
+   			   AND A.END_DT  >= ?   			   
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_JEHU_ONLY_YN">     
+        <![CDATA[
+   			   AND A.JEHU_ONLY_YN  = ?   			   
+        ]]>        
+    </query>     
+    <query name="SEL_MASTER_ORDER">     
+        <![CDATA[
+   			ORDER BY A.STR_CD
+                   , A.CUST_ID
+                   , A.CPN_ID			   
+        ]]>        
+    </query>   
+    
+    <!-- 전자쿠폰발급 Update  -->
+    <query name="UPD_E_COUPON">        
+        <![CDATA[
+        UPDATE DCS.DO_E_COUPON
+           SET CPN_NM       = ?
+             , APP_FLAG     = ?
+             , DC_RATE      = ?
+             , DC_AMT       = ?
+             , START_DT     = ?
+             , END_DT       = ?
+             , JEHU_ONLY_YN = ?
+             , CPN_TYPE     = ?
+             , MOD_DATE     = SYSDATE
+             , MOD_ID       = ?
+         WHERE STR_CD       = ?
+           AND CUST_ID      = ?
+           AND CPN_ID       = ?
+        ]]> 
+    </query>                  
+</service>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae204.mc"> 
+<!-- MASTER 조회 -->
+    <gauce name="H_MASTER">  
+        <column colName="STR_CD"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"      colType="TB_STRING"      size="11"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"    colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT"         colType="TB_STRING"      size="25"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_S_DT"    colType="TB_STRING"      size="10"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_E_DT"    colType="TB_STRING"      size="10"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+    
+    <gauce name="H_MASTER_EVENT">  
+        <column colName="FLAG"          colType="TB_STRING"      size="2"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"      colType="TB_STRING"      size="11"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"    colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="ENTRY_DT"      colType="TB_STRING"      size="10"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    </gauce>
+    
+    <gauce name="H_DETAIL">  
+        <column colName="ENTY_NAME"  colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SS_NO"      colType="TB_STRING"      size="64"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PHONE1_NO"   colType="TB_STRING"      size="32"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PHONE2_NO"   colType="TB_STRING"      size="32"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PHONE3_NO"   colType="TB_STRING"      size="32"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="HP1_NO"      colType="TB_STRING"      size="32"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="HP2_NO"      colType="TB_STRING"      size="32"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HP3_NO"      colType="TB_STRING"      size="32"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ADDR"       colType="TB_STRING"      size="100"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EMAIL"      colType="TB_STRING"      size="124"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    </gauce>
+    
+    <query name="SEL_MASTER">
+        <![CDATA[     
+            SELECT STR.STR_CD
+                 , MST.EVENT_CD
+                 , MST.EVENT_NAME
+                 , CASE WHEN (SELECT COUNT(*)
+                     FROM MSS.MC_PRMMWIN
+                    WHERE STR_CD = '01'
+                      AND EVENT_CD = MST.EVENT_CD) <> 0  THEN '추첨완료'  ELSE '미완료' END AS EVENT
+                 , MST.EVENT_S_DT
+                 , MST.EVENT_E_DT
+              FROM DPS.PC_EVTMST MST, DPS.PC_STREVT STR
+             WHERE MST.EVENT_CD = STR.EVENT_CD
+               AND MST.EVENT_TYPE = '5'
+               AND STR.STR_CD = ?
+               AND ((? >= MST.EVENT_S_DT AND ? <= MST.EVENT_E_DT) OR
+                                        (? >= MST.EVENT_S_DT AND ? <= MST.EVENT_E_DT) OR
+                                        (MST.EVENT_S_DT >= ? AND MST.EVENT_S_DT <= ?) OR
+                                        (MST.EVENT_E_DT >= ? AND MST.EVENT_E_DT <= ?))
+               AND MST.EVENT_CD LIKE ? || '%' 
+          ORDER BY STR.STR_CD, MST.EVENT_CD
+        ]]>        
+    </query> 
+    
+    <query name="SEL_MASTER_EVENT">
+        <![CDATA[     
+            SELECT DISTINCT '' AS FLAG 
+			     , PRM.EVENT_CD
+			     , MST.EVENT_NAME
+			     , PRM.ENTRY_DT
+			  FROM MSS.MC_PRMMENTY PRM, DPS.PC_EVTMST MST
+			 WHERE PRM.EVENT_CD = MST.EVENT_CD
+			   AND MST.EVENT_TYPE = '5'
+			   AND PRM.STR_CD = ?
+			   AND PRM.EVENT_CD = ?
+          ORDER BY PRM.EVENT_CD
+        ]]>        
+    </query> 
+    
+    <query name="SEL_DETAIL">
+        <![CDATA[     
+            SELECT ENTY_NAME
+		         , DCS.SC_Crypto_FUN('DEC', SS_NO) AS SS_NO
+		         , DCS.SC_Crypto_FUN('DEC', PHONE1_NO) AS PHONE1_NO
+                 , DCS.SC_Crypto_FUN('DEC', PHONE2_NO) AS PHONE2_NO
+                 , DCS.SC_Crypto_FUN('DEC', PHONE3_NO) AS PHONE3_NO
+		         , DCS.SC_Crypto_FUN('DEC', HP1_NO) AS HP1_NO
+                 , DCS.SC_Crypto_FUN('DEC', HP2_NO) AS HP2_NO
+                 , DCS.SC_Crypto_FUN('DEC', HP3_NO) AS HP3_NO
+		         , ADDR
+		         , DCS.SC_Crypto_FUN('DEC', EMAIL) AS EMAIL
+		      FROM MSS.MC_PRMMENTY
+		     WHERE ENTRY_DT =?
+		       AND STR_CD =?
+		       AND EVENT_CD = ?
+		  ORDER BY ENTY_NAME
+        ]]>        
+    </query> 
+    
+    <query name="DEL_PRMMENTY">
+        <![CDATA[     
+            DELETE FROM MSS.MC_PRMMENTY
+             WHERE ENTRY_DT     = ?
+               AND STR_CD       = ?
+               AND EVENT_CD     = ? 
+        ]]>        
+    </query> 
+</service>

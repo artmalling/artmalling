@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 남형석
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.01.17
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  마감일자관리
+ -->
+<service name="/dmtc605.dc">
+
+    <gauce name="H_MASTER"> 
+        <column colName="CLOSE_YM"    colType="TB_STRING"  size="6"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CLOSE_YN"    colType="TB_STRING"  size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CLOSE_DT"    colType="TB_STRING"  size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOD_DATE"    colType="TB_STRING"  size="14"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="MOD_ID"      colType="TB_STRING"  size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="USER_NAME"   colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+     
+    <gauce name="H_DETAIL"> 
+        <column colName="CLOSE_YM"    colType="TB_STRING"  size="6"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CLOSE_YN"    colType="TB_STRING"  size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CLOSE_DT"    colType="TB_STRING"  size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="FLAG"        colType="TB_STRING"  size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+     
+
+    <!-- 마감일자관리 조회 -->    
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT A.CLOSE_YM
+                 , A.CLOSE_YN
+                 , A.CLOSE_DT
+                 , TO_CHAR(A.MOD_DATE, 'YYYYMMDDHH24MISS') AS MOD_DATE
+                 , A.MOD_ID
+                 , B.USER_NAME
+              FROM DCS.DC_CLOSING A
+                 , COM.TC_USRMST B
+             WHERE A.MOD_ID = B.USER_ID
+               AND A.CLOSE_YM BETWEEN  ? AND ?
+             ORDER BY A.CLOSE_YM DESC
+        ]]>        
+    </query>                   
+    
+    <!-- 마감일자관리 조회 -->    
+    <query name="SEL_CLOSING">   
+        <![CDATA[    
+            SELECT A.CLOSE_YM
+                 , A.CLOSE_YN
+                 , A.CLOSE_DT
+                 , 'U' AS FLAG
+              FROM DCS.DC_CLOSING A
+             WHERE A.CLOSE_YM = ?
+        ]]>        
+    </query> 
+           
+    <!-- 마감일자관리 등록 -->
+    <query name="INS_CLOSING">   
+        <![CDATA[                      
+            INSERT INTO DCS.DC_CLOSING (
+                                       CLOSE_YM
+                                     , CLOSE_YN
+                                     , CLOSE_DT
+                                     , REG_DATE
+                                     , REG_ID
+                                     , MOD_DATE
+                                     , MOD_ID    
+                                       )
+                                VALUES (
+                                       ?
+                                     , ?
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE
+                                     , ?   
+                                       )
+        ]]>        
+    </query>                                          
+                         
+    <!-- 마감일자관리 수정  -->
+    <query name="UPD_CLOSING">   
+        <![CDATA[                                              
+            UPDATE DCS.DC_CLOSING 
+               SET CLOSE_YN = ?
+                 , CLOSE_DT = ?
+                 , MOD_DATE = SYSDATE
+                 , MOD_ID   = ?
+             WHERE CLOSE_YM = ?     
+        ]]>        
+    </query> 
+    
+    <!-- 마감일자관리 수정  -->
+    <query name="SEL_CLOSE_YM_CHKYN">   
+        <![CDATA[                                              
+            SELECT DECODE(CLOSE_YM,NULL,'N','Y') AS CHK_YN
+              FROM DCS.DC_CLOSING
+             WHERE CLOSE_YM = ?
+        ]]>        
+    </query>                                                                      
+</service>

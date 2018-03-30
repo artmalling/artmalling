@@ -1,0 +1,1012 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!-- 
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 권한관리
+ -->
+<service name="/tcom104.tc">
+
+    <!-- 그룹정보 -->
+    <gauce name="H_SEL_PGROUP">
+        <column colName="GROUP_CD"  colType="TB_STRING" size="3"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="GROUP_NAME"  colType="TB_STRING" size="100" dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+    <!-- 그룹를 위한 쿼리  -->
+    <query name="SEL_PGROUP">
+        <![CDATA[  
+            SELECT GROUP_CD, GROUP_NAME
+              FROM COM.TC_GROUP
+             ORDER BY GROUP_CD
+        ]]>        
+    </query>
+    
+    
+    <!-- 트리뷰 -->
+    <gauce name="H_TREE_MAIN">
+        <column colName="LVL"  colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TXT"  colType="TB_STRING" size="50" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="CODE" colType="TB_STRING" size="16" dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>    
+    <!-- 트리뷰를 위한 쿼리  -->
+    <query name="SEL_TREE_VIEW">
+        <![CDATA[  
+            SELECT LVL
+                 , LNAME AS TXT
+                 , CODE
+              FROM (
+                        SELECT '2'                          LVL
+                             , LCODE                        CD1
+                             , '99'                         CD2
+                             , ''                           CD3
+                             , LNAME                        LNAME
+                             , SUB_SYSTEM                   SUB_SYSTEM
+                             , LCODE                        CODE
+                             , SEQ                          LSEQ
+                             , 0                            MSEQ
+                             , 0                            SSEQ
+                             , LPAD(NVL(SEQ ,0), 2,0 ) || LCODE  LVSEQ 
+                          FROM COM.TC_PGMLMENU      
+                         UNION
+                        SELECT '3'                          LVL
+                             , M.LCODE                      CD1
+                             , M.LCODE||M.MCODE             CD2
+                             , ''                           CD3
+                             , M.MNAME                      LNAME
+                             , L.SUB_SYSTEM                 SUB_SYSTEM
+                             , L.LCODE||'|'||M.MCODE        CODE
+                             , L.SEQ                        LSEQ
+                             , M.SEQ                        MSEQ
+                             , 0                            SSEQ
+                             ,    LPAD(NVL(L.SEQ,0), 2, 0 ) || L.LCODE 
+                              ||  LPAD(NVL(M.SEQ,0), 2, 0 ) || M.MCODE LVSEQ 
+                          FROM COM.TC_PGMMMENU M
+                             , COM.TC_PGMLMENU L
+                         WHERE L.LCODE = M.LCODE
+                         UNION
+                        SELECT '4'                          LVL
+                             , S.LCODE                      CD1 
+                             , S.LCODE||S.MCODE             CD2
+                             , S.SCODE                      CD3
+                             , S.SNAME                      LNAME
+                             , L.SUB_SYSTEM                 SUB_SYSTEM
+                             , S.LCODE||'|'||S.MCODE||'|'||S.SCODE    CODE
+                             , L.SEQ                        LSEQ
+                             , M.SEQ                        MSEQ
+                             , S.SEQ                        SSEQ 
+                             ,    LPAD(NVL(L.SEQ,0), 2, 0 ) || L.LCODE 
+                               || LPAD(NVL(M.SEQ,0), 2, 0 ) || M.MCODE   
+                               || LPAD(NVL(S.SEQ,0), 2, 0 ) LVESEQ   
+                          FROM COM.TC_PGMSMENU S
+                             , COM.TC_PGMLMENU L
+                             , COM.TC_PGMMMENU M
+                         WHERE S.LCODE = L.LCODE
+                           AND S.LCODE = M.LCODE
+                           AND S.MCODE = M.MCODE
+                   ) M
+             WHERE SUB_SYSTEM     =  ?
+             START WITH LVL       >= 2
+           CONNECT BY PRIOR CD2   = CD1
+             ORDER BY LVSEQ 
+        ]]>        
+    </query>
+    
+    <!-- 그룹별 사용자 조직 정보  -->
+    <gauce name="H_USRMST">
+        <column colName="USER_ID"       colType="TB_STRING" size="10"    dec="0" keyType="TB_KEY"    roundMode="" />       
+        <column colName="USER_NAME"     colType="TB_STRING" size="10"    dec="0" keyType="TB_KEY"    roundMode="" /> 
+        <column colName="GROUP_CD"      colType="TB_STRING" size="3"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="GROUP_NAME"    colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="ORG_FLAG"      colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />          
+        <column colName="STR_CD"        colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DEPT_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="TEAM_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="PC_CD"         colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="PC_NAME"       colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />     
+    </gauce> 
+    <!-- 사용자별 프로그램 사용권한 : 사용자리스트   -->
+    <query name="SEL_USER_LIST_TAB1">
+        <![CDATA[  
+            SELECT USER_ID                                                  -- 사용자아이디
+                 , USER_NAME                                                -- 사용자이름 
+                 , GROUP_CD                                                 -- 그룹코드
+                 , COM.FN_GET_GROUP_NAME(GROUP_CD)          AS GROUP_NAME   -- 그룹명
+                 , ORG_FLAG                                                 -- 조직구분
+                 , COM.FN_GET_COMM_NAME('D','P047', ORG_FLAG)   AS ORG_NAME     -- 조직명 
+                 , A.STR_CD                                                 -- 점코드 
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD)          AS STR_NAME     -- 점명
+                 , A.DEPT_CD                                                -- 부문코드    
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , '00','00','00')      AS DEPT_NAME    -- 부문명
+                 , A.TEAM_CD                                                -- 팀코드    
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , A.TEAM_CD
+                                     ,'00','00')            AS TEAM_NAME    -- 팀명 
+                 , A.PC_CD                                                  -- PC코드
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , A.TEAM_CD
+                                     , A.PC_CD
+                                     ,'00')                 AS PC_NAME      -- PC명 
+             FROM COM.TC_USRMST A 
+            WHERE 1=1   AND USE_YN = 'Y'
+        ]]>        
+    </query>
+    
+    <query name="SEL_USER_WHERE_ORG_FLAG">
+        <![CDATA[ 
+               AND A.ORG_FLAG    = ?
+        ]]>    
+    </query> 
+    <query name="SEL_USER_WHERE_STR_CD">
+        <![CDATA[ 
+               AND A.STR_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_DEPT_CD">
+        <![CDATA[
+               AND A.DEPT_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_TEAM_CD">
+        <![CDATA[
+               AND A.TEAM_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_PC_CD">
+        <![CDATA[
+               AND A.PC_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_GROUP_CD">
+        <![CDATA[ 
+               AND A.GROUP_CD  = ? 
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_USER_CD">
+        <![CDATA[ 
+               AND ( A.USER_ID LIKE ? || '%' OR A.USER_NAME LIKE '%' || ? || '%') 
+        ]]>    
+    </query>
+    
+    <query name="SEL_USER_ORDER">
+        <![CDATA[
+            ORDER BY A.USER_ID           
+        ]]>    
+    </query>
+    
+    
+    <!-- 조직권한 사용자 조직 정보 TAB3  -->
+    <gauce name="H_USRMST_J">
+        <column colName="USER_ID"       colType="TB_STRING" size="10"    dec="0" keyType="TB_KEY"    roundMode="" />       
+        <column colName="USER_NAME"     colType="TB_STRING" size="10"    dec="0" keyType="TB_KEY"    roundMode="" />   
+        <column colName="ORG_FLAG"      colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />          
+        <column colName="STR_CD"        colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DEPT_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="TEAM_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="PC_CD"         colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="PC_NAME"       colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" /> 
+    </gauce> 
+    
+    <!-- 조직권한 사용자리스트 : TAB3  -->
+    <query name="SEL_USER_LIST_TAB3">
+        <![CDATA[  
+            SELECT DISTINCT A.USER_ID                                           -- 사용자아이디
+                 , A.USER_NAME                                                  -- 사용자이름  
+                 , A.ORG_FLAG                                                   -- 조직구분
+                 , COM.FN_GET_COMM_NAME('D','P047', A.ORG_FLAG)AS ORG_NAME      -- 조직명 
+                 , A.STR_CD                                                     -- 점코드 
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD)          AS STR_NAME         -- 점명
+                 , A.DEPT_CD                                                    -- 부문코드    
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , '00','00','00')      AS DEPT_NAME        -- 부문명
+                 , A.TEAM_CD                                                    -- 팀코드    
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , A.TEAM_CD
+                                     ,'00','00')            AS TEAM_NAME        -- 팀명 
+                 , A.PC_CD                                                      -- PC코드
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , A.TEAM_CD
+                                     , A.PC_CD
+                                     ,'00')                 AS PC_NAME          -- PC명  
+             FROM COM.TC_USRMST     A  
+            WHERE 1=1 
+        ]]>        
+    </query>
+    
+    
+    
+    
+    <query name="SEL_USER_ORDER_TAB3">
+        <![CDATA[
+            ORDER BY A.USER_ID
+        ]]>    
+    </query>
+    
+    <!-- 프로그램 권한리스트  -->
+    <gauce name="H_USRPGM">
+        <column colName="CODE"          colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="PID"           colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="NAME"          colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_RET"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_NEW"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_DEL"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_SAVE"       colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_EXCEL"      colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_PRINT"      colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_CONFIRM"    colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_ALL"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="IS_RET_GB"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_NEW_GB"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_DEL_GB"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_SAVE_GB"    colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_EXCEL_GB"   colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_PRINT_GB"   colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_CONFIRM_GB" colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="GBN"           colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="SUB_SYSTEM"    colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="LNAME"         colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="MNAME"         colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="SNAME"         colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        SUB_SYSTEM
+    </gauce>   
+    <!--TAB1. 사용자별 프로그램 권한 조회하기  -->
+    <query name="SEL_USER_PGM">
+        <![CDATA[
+            SELECT A.USER_ID                                        AS CODE
+			     , A.PID                                            AS PID
+			     , B.PNAME1                                         AS NAME
+			     , REPLACE(REPLACE(A.IS_RET,'Y','T'),'N','F')       AS IS_RET
+			     , REPLACE(REPLACE(A.IS_NEW,'Y','T'),'N','F')       AS IS_NEW
+			     , REPLACE(REPLACE(A.IS_DEL,'Y','T'),'N','F')       AS IS_DEL
+			     , REPLACE(REPLACE(A.IS_SAVE,'Y','T'),'N','F')      AS IS_SAVE
+			     , REPLACE(REPLACE(A.IS_EXCEL,'Y','T'),'N','F')     AS IS_EXCEL
+			     , REPLACE(REPLACE(A.IS_PRINT,'Y','T'),'N','F')     AS IS_PRINT
+			     , REPLACE(REPLACE(A.IS_CONFIRM,'Y','T'),'N','F')   AS IS_CONFIRM
+			     , REPLACE(REPLACE(A.IS_ALL,'Y','T'),'N','F')       AS IS_ALL
+			     , B.IS_RET                                         AS IS_RET_GB
+			     , B.IS_NEW                                         AS IS_NEW_GB
+			     , B.IS_DEL                                         AS IS_DEL_GB
+			     , B.IS_SAVE                                        AS IS_SAVE_GB
+			     , B.IS_EXCEL                                       AS IS_EXCEL_GB
+			     , B.IS_PRINT                                       AS IS_PRINT_GB
+			     , B.IS_CONFIRM                                     AS IS_CONFIRM_GB 
+			     , 'N'                                              AS GBN
+			     , C.COMM_NAME1                                     AS SUB_SYSTEM
+                 , L.LNAME                                          AS LNAME
+                 , M.MNAME                                          AS MNAME
+                 , S.SNAME                                          AS SNAME
+			  FROM COM.TC_USRPGM A
+			     , COM.TC_PGMMST B
+                 , COM.TC_PGMSMENU S
+                 , COM.TC_PGMMMENU M
+                 , COM.TC_PGMLMENU L
+                 , COM.TC_COMMCODE C
+			 WHERE A.PID       = B.PID
+               AND A.USER_ID   = ?
+               AND B.SCODE     = S.SCODE
+               AND S.MCODE     = M.MCODE
+               AND S.LCODE     = M.LCODE
+               AND M.LCODE     = L.LCODE
+               AND C.SYS_PART  = 'D'
+               AND C.COMM_PART = 'TC01'
+               AND C.COMM_CODE = L.SUB_SYSTEM
+             ORDER BY PID
+        ]]>        
+    </query> 
+    
+    <!--TAB2. 그룹별 프로그램 권한 조회하기  -->
+    <query name="SEL_GROUP_PGM">
+        <![CDATA[          
+            SELECT A.GROUP_CD                                       AS CODE
+                 , A.PID                                            AS PID
+                 , B.PNAME1                                         AS NAME
+                 , REPLACE(REPLACE(A.IS_RET,'Y','T'),'N','F')       AS IS_RET
+                 , REPLACE(REPLACE(A.IS_NEW,'Y','T'),'N','F')       AS IS_NEW
+                 , REPLACE(REPLACE(A.IS_DEL,'Y','T'),'N','F')       AS IS_DEL
+                 , REPLACE(REPLACE(A.IS_SAVE,'Y','T'),'N','F')      AS IS_SAVE
+                 , REPLACE(REPLACE(A.IS_EXCEL,'Y','T'),'N','F')     AS IS_EXCEL
+                 , REPLACE(REPLACE(A.IS_PRINT,'Y','T'),'N','F')     AS IS_PRINT
+                 , REPLACE(REPLACE(A.IS_CONFIRM,'Y','T'),'N','F')   AS IS_CONFIRM
+                 , REPLACE(REPLACE(A.IS_ALL,'Y','T'),'N','F')       AS IS_ALL
+                 , B.IS_RET                                         AS IS_RET_GB
+                 , B.IS_NEW                                         AS IS_NEW_GB
+                 , B.IS_DEL                                         AS IS_DEL_GB
+                 , B.IS_SAVE                                        AS IS_SAVE_GB
+                 , B.IS_EXCEL                                       AS IS_EXCEL_GB
+                 , B.IS_PRINT                                       AS IS_PRINT_GB
+                 , B.IS_CONFIRM                                     AS IS_CONFIRM_GB 
+                 , 'N'                                              AS GBN
+                 , C.COMM_NAME1                                     AS SUB_SYSTEM
+                 , L.LNAME                                          AS LNAME
+                 , M.MNAME                                          AS MNAME
+                 , S.SNAME                                          AS SNAME
+              FROM COM.TC_GRPPGM A
+                 , COM.TC_PGMMST B
+                 , COM.TC_PGMSMENU S
+                 , COM.TC_PGMMMENU M
+                 , COM.TC_PGMLMENU L
+                 , COM.TC_COMMCODE C
+             WHERE A.PID      = B.PID
+               AND A.GROUP_CD = ?
+               AND B.SCODE     = S.SCODE
+               AND S.MCODE     = M.MCODE
+               AND S.LCODE     = M.LCODE
+               AND M.LCODE     = L.LCODE
+               AND C.SYS_PART  = 'D'
+               AND C.COMM_PART = 'TC01'
+               AND C.COMM_CODE = L.SUB_SYSTEM
+             ORDER BY PID  
+        ]]>        
+    </query> 
+    
+    
+    
+    <!-- 프로그램 -->
+    <gauce name="H_SEL_PGMMST">
+        <column colName="PID"           colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="PNAME1"        colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_RET"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_NEW"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_DEL"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_SAVE"       colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_EXCEL"      colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_PRINT"      colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_CONFIRM"    colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_RET_GB"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_NEW_GB"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_DEL_GB"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_SAVE_GB"    colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_EXCEL_GB"   colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_PRINT_GB"   colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="IS_CONFIRM_GB" colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="SUB_SYSTEM"    colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="LNAME"         colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="MNAME"         colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="SNAME"         colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+      <!-- 프로그램 추가를 위한 쿼리  -->
+    <query name="SEL_PGMMST">
+        <![CDATA[
+            SELECT A.PID
+                 , A.PNAME1
+                 , REPLACE(REPLACE(IS_RET,'Y','T'),'N','F')         AS IS_RET
+                 , REPLACE(REPLACE(IS_NEW,'Y','T'),'N','F')         AS IS_NEW
+                 , REPLACE(REPLACE(IS_DEL,'Y','T'),'N','F')         AS IS_DEL
+                 , REPLACE(REPLACE(IS_SAVE,'Y','T'),'N','F')        AS IS_SAVE
+                 , REPLACE(REPLACE(IS_EXCEL,'Y','T'),'N','F')       AS IS_EXCEL
+                 , REPLACE(REPLACE(IS_PRINT,'Y','T'),'N','F')       AS IS_PRINT
+                 , REPLACE(REPLACE(IS_CONFIRM,'Y','T'),'N','F')     AS IS_CONFIRM 
+                 , A.IS_RET                                         AS IS_RET_GB
+                 , A.IS_NEW                                         AS IS_NEW_GB
+                 , A.IS_DEL                                         AS IS_DEL_GB
+                 , A.IS_SAVE                                        AS IS_SAVE_GB
+                 , A.IS_EXCEL                                       AS IS_EXCEL_GB
+                 , A.IS_PRINT                                       AS IS_PRINT_GB
+                 , A.IS_CONFIRM                                     AS IS_CONFIRM_GB  
+                 , C.COMM_NAME1                                     AS SUB_SYSTEM
+                 , L.LNAME                                          AS LNAME
+                 , M.MNAME                                          AS MNAME
+                 , B.SNAME                                          AS SNAME
+            FROM COM.TC_PGMMST   A
+               , COM.TC_PGMSMENU B
+               , COM.TC_PGMMMENU M
+               , COM.TC_PGMLMENU L
+               , COM.TC_COMMCODE C
+           WHERE A.SCODE= B.SCODE
+             AND B.LCODE LIKE ? || '%'
+             AND B.MCODE LIKE ? || '%'
+             AND B.SCODE LIKE ? || '%'
+             AND B.MCODE     = M.MCODE
+             AND B.LCODE     = M.LCODE
+             AND M.LCODE     = L.LCODE
+             AND C.SYS_PART  = 'D'
+             AND C.COMM_PART = 'TC01'
+             AND C.COMM_CODE = L.SUB_SYSTEM
+           ORDER BY B.LCODE, B.MCODE, B.SEQ 
+        ]]>        
+    </query>
+    
+    <!-- TAB1. 사용자별 프로그램 권한  중복건수 조회  -->            
+    <query name="SEL_USRPGM_CNT">
+        <![CDATA[
+        SELECT COUNT(*) AS CNT 
+          FROM COM.TC_USRPGM
+         WHERE USER_ID      = ?
+           AND PID          = ?
+        ]]>
+    </query>  
+    
+    <!--TAB1. 사용자별 프로그램 권한 입력하기  -->
+    <query name="INS_USRPGM">
+        <![CDATA[
+            INSERT INTO COM.TC_USRPGM
+            ( 
+                    USER_ID
+                  , PID
+                  , IS_RET
+                  , IS_NEW
+                  , IS_DEL
+                  , IS_SAVE
+                  , IS_EXCEL
+                  , IS_PRINT
+                  , IS_CONFIRM
+                  , IS_ALL
+                  , REG_DATE
+                  , REG_ID
+            )
+            VALUES 
+            (
+                    ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , SYSDATE
+                  , ?
+            )
+        ]]>        
+    </query> 
+    
+    <!--TAB1. 사용자별 프로그램 권한 수정하기  -->
+    <query name="UPD_USRPGM">
+        <![CDATA[
+            UPDATE COM.TC_USRPGM
+               SET IS_RET       = ?
+                 , IS_NEW       = ?
+                 , IS_DEL       = ?
+                 , IS_SAVE      = ?
+                 , IS_EXCEL     = ?
+                 , IS_PRINT     = ?
+                 , IS_CONFIRM   = ?
+                 , IS_ALL       = ?
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE USER_ID      = ?
+               AND PID          = ?
+        ]]>        
+    </query>
+    
+    
+    <!--TAB1. 사용자별 프로그램 권한 삭제하기  -->
+    <query name="DEL_USRPGM">
+        <![CDATA[
+            DELETE COM.TC_USRPGM
+             WHERE USER_ID  = ?
+               AND PID      = ?
+        ]]>        
+    </query>
+    
+    
+    <!-- TAB2. 그룹별 프로그램 권한  중복건수 조회  -->            
+    <query name="SEL_GRPPGM_CNT">
+        <![CDATA[
+        SELECT COUNT(*) AS CNT 
+          FROM COM.TC_GRPPGM
+         WHERE GROUP_CD     = ?
+           AND PID          = ?
+        ]]>
+    </query>  
+    
+    
+    <!--TAB2. 그룹별 프로그램 권한 입력하기  -->
+    <query name="INS_GRPPGM">
+        <![CDATA[
+            INSERT INTO COM.TC_GRPPGM
+            ( 
+                    GROUP_CD
+                  , PID
+                  , IS_RET
+                  , IS_NEW
+                  , IS_DEL
+                  , IS_SAVE
+                  , IS_EXCEL
+                  , IS_PRINT
+                  , IS_CONFIRM
+                  , IS_ALL
+                  , REG_DATE
+                  , REG_ID
+            )
+            VALUES 
+            (
+                    ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , SYSDATE
+                  , ?
+            )
+        ]]>        
+    </query> 
+    
+    <!--TAB2. 그룹별 프로그램 권한 수정하기  -->
+    <query name="UPD_GRPPGM">
+        <![CDATA[
+            UPDATE COM.TC_GRPPGM
+               SET IS_RET       = ?
+                 , IS_NEW       = ?
+                 , IS_DEL       = ?
+                 , IS_SAVE      = ?
+                 , IS_EXCEL     = ?
+                 , IS_PRINT     = ?
+                 , IS_CONFIRM   = ?
+                 , IS_ALL       = ?
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE GROUP_CD     = ?
+               AND PID          = ?
+        ]]>        
+    </query>
+    
+    <!--TAB1. 사용자별 프로그램 권한 삭제하기  -->
+    <query name="DEL_GRPPGM">
+        <![CDATA[
+            DELETE COM.TC_GRPPGM
+             WHERE GROUP_CD  = ?
+               AND PID       = ?
+        ]]>        
+    </query>
+
+    <!--TAB2. 그룹그리드 더블클릭 시 팝업  -->
+    <query name="SEL_USRMST">
+        <![CDATA[
+            SELECT USER_ID                                                  -- 사용자아이디
+                 , USER_NAME                                                -- 사용자이름 
+                 , GROUP_CD                                                 -- 그룹코드
+                 , COM.FN_GET_GROUP_NAME(GROUP_CD)          AS GROUP_NAME   -- 그룹명
+                 , ORG_FLAG                                                 -- 조직구분
+                 , COM.FN_GET_COMM_NAME('D','P047', ORG_FLAG)   AS ORG_NAME     -- 조직명 
+                 , A.STR_CD                                                 -- 점코드 
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD)          AS STR_NAME     -- 점명
+                 , A.DEPT_CD                                                -- 부문코드    
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , '00','00','00')      AS DEPT_NAME    -- 부문명
+                 , A.TEAM_CD                                                -- 팀코드    
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , A.TEAM_CD
+                                     ,'00','00')            AS TEAM_NAME    -- 팀명 
+                 , A.PC_CD                                                  -- PC코드
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , A.TEAM_CD
+                                     , A.PC_CD
+                                     ,'00')                 AS PC_NAME      -- PC명 
+             FROM COM.TC_USRMST A 
+            WHERE GROUP_CD = ?
+            ORDER BY USER_ID
+        ]]>        
+    </query>
+ 
+    <!-- TAB3. 조직권한 정보  -->
+    <gauce name="H_JJAUTH">
+        <column colName="USER_ID"       colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />       
+        <column colName="SEQ"           colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="ORG_CD"        colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="ORG_LEVEL"     colType="TB_STRING" size="3"     dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="AUTH_LEVEL"    colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="ORG_FLAG"      colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="" />        
+        <column colName="STR_CD"        colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DEPT_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="TEAM_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="PC_CD"         colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="PC_NAME"       colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="PUMBUN_CD"     colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />        
+        <column colName="PUMBUN_NAME"   colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="GBN"           colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="ADD_GBN"       colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+    </gauce>
+    
+    <!-- TAB4. 조직권한 정보  -->
+    <gauce name="H_JJAUTH2">
+        <column colName="USER_ID"       colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />       
+        <column colName="SEQ"           colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="ORG_CD"        colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="ORG_LEVEL"     colType="TB_STRING" size="3"     dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="AUTH_LEVEL"    colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="ORG_FLAG"      colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="" />        
+        <column colName="STR_CD"        colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DEPT_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="TEAM_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="PC_CD"         colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="PC_NAME"       colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="PUMBUN_CD"     colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />        
+        <column colName="PUMBUN_NAME"   colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="GBN"           colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="ADD_GBN"       colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+    </gauce>
+    
+    <!-- 사용자별 조직 권한 조회하기  -->
+    <query name="SEL_JJAUTH">
+        <![CDATA[
+           SELECT USER_ID
+                 , SEQ
+                 , ORG_CD
+                 , ORG_LEVEL
+                 , AUTH_LEVEL                                                            -- 권한레벨 
+                 , ORG_FLAG                                                              -- 조직구분
+                 , STR_CD                                                                -- 점코드 
+                 , DPS.FN_GET_STORE_NAME(STR_CD)                        AS STR_NAME      -- 점명
+                 , DEPT_CD                                                               -- 부문코드    
+                 , CASE WHEN ORG_LEVEL < '2' THEN '' 
+                        ELSE DPS.FN_GET_ORG_NAME(STR_CD
+                                               , DEPT_CD
+                                               , '00','00','00')  END   AS DEPT_NAME      -- 부문명
+                 , TEAM_CD                                                                -- 팀코드     
+                 , CASE WHEN ORG_LEVEL < '3' THEN ''       
+                        ELSE DPS.FN_GET_ORG_NAME(STR_CD
+                                               , DEPT_CD
+                                               , TEAM_CD
+                                               ,'00','00')  END         AS TEAM_NAME      -- 팀명  
+                 , PC_CD                                                                  -- PC코드     
+                 , CASE WHEN ORG_LEVEL < '4' THEN ''       
+                        ELSE DPS.FN_GET_ORG_NAME(STR_CD
+                                               , DEPT_CD
+                                               , TEAM_CD
+                                               , PC_CD
+                                               ,'00')  END              AS PC_NAME        -- PC명 
+                 , PUMBUN_CD                                                              -- 품코드
+                 , CASE WHEN ORG_LEVEL > '4' THEN DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) 
+                        ELSE '' END AS PUMBUN_NAME                                        -- 품명 
+                 , 'N'                                                  AS GBN            -- 삭제FLAG
+                 , ORG_FLAG || AUTH_LEVEL  || ORG_CD || PUMBUN_CD       AS ADD_GBN        -- 행추가 시 비교컬럼
+             FROM COM.TC_USRORGAUTH  
+            WHERE USER_ID = ?
+            ORDER BY DECODE(AUTH_LEVEL,'S','0',AUTH_LEVEL), SEQ
+        ]]>        
+    </query>
+    
+    <!--TAB3 POPUP. 점정보 --> 
+    <gauce name="H_STR_CD">
+        <column colName="ORG_LEVEL"     colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL"     roundMode="" />  
+        <column colName="AUTH_LEVEL"    colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"     roundMode="" />   
+        <column colName="ORG_CD"        colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"     roundMode="" />   
+        <column colName="CHK"           colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"     roundMode="" />
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"     roundMode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"     roundMode="" />
+    </gauce>  
+    <query name="SEL_STR_CD">
+        <![CDATA[  
+            SELECT '1'                  AS ORG_LEVEL
+                 , 'A'                  AS AUTH_LEVEL
+                 , STR_CD || '00000000' AS ORG_CD
+                 , 'F'                  AS CHK
+                 , STR_CD
+                 , STR_NAME
+              FROM DPS.PC_STRMST
+             WHERE USE_YN = 'Y'
+             ORDER BY DISP_NO, STR_CD
+        ]]>
+    </query>  
+      
+    <!--TAB3 POPUP. 부문정보 --> 
+    <gauce name="H_DEPT_CD">
+        <column colName="ORG_LEVEL"     colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL"  roundMode="" />  
+        <column colName="AUTH_LEVEL"    colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />  
+        <column colName="ORG_CD"        colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="" />    
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="CHK"           colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    
+    <query name="SEL_DEPT_CD">
+        <![CDATA[  
+            SELECT DISTINCT   
+                   '2'                              AS ORG_LEVEL
+                 , 'B'                              AS AUTH_LEVEL
+                 , ORG_CD                           AS ORG_CD
+                 , STR_CD                           AS STR_CD
+                 , DPS.FN_GET_STORE_NAME(STR_CD)    AS STR_NAME
+                 , 'F'                              AS CHK
+                 , DEPT_CD                          AS DEPT_CD
+                 , ORG_SHORT_NAME                   AS DEPT_NAME
+              FROM DPS.PC_ORGMST 
+             WHERE ORG_LEVEL = '2'   
+               AND USE_YN    = 'Y'
+               AND STR_CD    = ?  
+               AND ORG_FLAG  = ?  
+              ORDER BY  DEPT_CD
+        ]]>
+    </query>  
+      
+    <!--TAB3 POPUP. TEAM정보 --> 
+    <gauce name="H_TEAM_CD">
+        <column colName="ORG_LEVEL"     colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL"  roundMode="" />  
+        <column colName="AUTH_LEVEL"    colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />   
+        <column colName="ORG_CD"        colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="" />   
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />  
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="CHK"           colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEAM_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce> 
+    <query name="SEL_TEAM_CD">
+        <![CDATA[  
+            SELECT DISTINCT   
+                   '3'                                  AS ORG_LEVEL
+                 , 'C'                                  AS AUTH_LEVEL
+                 , ORG_CD                           AS ORG_CD
+                 , STR_CD                               AS STR_CD
+                 , DPS.FN_GET_STORE_NAME(STR_CD)        AS STR_NAME
+                 , DEPT_CD                              AS DEPT_CD
+                 , DPS.FN_GET_ORG_NAME(STR_CD
+                                     , DEPT_CD
+                                     , '00','00','00')  AS DEPT_NAME
+                 , 'F'                                  AS CHK
+                 , TEAM_CD                              AS TEAM_CD
+                 , ORG_SHORT_NAME                       AS TEAM_NAME
+              FROM DPS.PC_ORGMST 
+             WHERE ORG_LEVEL = '3'   
+               AND USE_YN    = 'Y'
+               AND STR_CD    = ?  
+               AND ORG_FLAG  = ?  
+               AND DEPT_CD   = ?
+              ORDER BY TEAM_CD
+        ]]>
+    </query>   
+      
+    <!--TAB3 POPUP. PC정보 --> 
+    <gauce name="H_PC_CD">
+        <column colName="ORG_LEVEL"     colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL"  roundMode="" />  
+        <column colName="AUTH_LEVEL"    colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="ORG_CD"        colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="" />     
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />  
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEAM_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="CHK"           colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="PC_CD"         colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="PC_NAME"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce> 
+    <query name="SEL_PC_CD">
+        <![CDATA[  
+            SELECT DISTINCT   
+                   '4'                                  AS ORG_LEVEL
+                 , 'D'                                  AS AUTH_LEVEL
+                 , ORG_CD                               AS ORG_CD
+                 , STR_CD                               AS STR_CD
+                 , DPS.FN_GET_STORE_NAME(STR_CD)        AS STR_NAME
+                 , DEPT_CD                              AS DEPT_CD
+                 , DPS.FN_GET_ORG_NAME(STR_CD
+                                     , DEPT_CD
+                                     , '00','00','00')  AS DEPT_NAME
+                 , TEAM_CD                              AS TEAM_CD
+                 , DPS.FN_GET_ORG_NAME(STR_CD
+                                     , DEPT_CD
+                                     , TEAM_CD
+                                     , '00'
+                                     , '00')             AS TEAM_NAME
+                 , 'F'                                  AS CHK
+                 , PC_CD                                AS PC_CD
+                 , ORG_SHORT_NAME                       AS PC_NAME
+              FROM DPS.PC_ORGMST 
+             WHERE ORG_LEVEL = '4'   
+               AND USE_YN    = 'Y'
+               AND STR_CD    = ?  
+               AND ORG_FLAG  = ?  
+               AND DEPT_CD   = ? 
+               AND TEAM_CD   = ? 
+              ORDER BY TEAM_CD
+        ]]>
+    </query> 
+    
+    <!--TAB3 POPUP. 품번정보 --> 
+    <gauce name="H_PUMBUN_CD">
+        <column colName="ORG_LEVEL"     colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL"  roundMode="" />  
+        <column colName="AUTH_LEVEL"    colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />   
+        <column colName="ORG_CD"        colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="" />     
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />  
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEAM_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="PC_CD"         colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="PC_NAME"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="CHK"           colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="PUMBUN_CD"     colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="PUMBUN_NAME"   colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce> 
+   <query name="SEL_PUMBUN_CD">
+        <![CDATA[  
+            SELECT DISTINCT   
+                   '6'                                      AS ORG_LEVEL
+                 , 'F'                                      AS AUTH_LEVEL
+                 , A.ORG_CD                                 AS ORG_CD
+                 , A.STR_CD                                 AS STR_CD
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD)          AS STR_NAME
+                 , A.DEPT_CD                                AS DEPT_CD
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , '00','00','00')  AS DEPT_NAME
+                 , A.TEAM_CD                                AS TEAM_CD
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , A.TEAM_CD
+                                     , '00'
+                                     , '00')                AS TEAM_NAME
+                 , A.PC_CD                                  AS PC_CD
+                 , A.ORG_SHORT_NAME                         AS PC_NAME
+                 , 'F'                                      AS CHK
+                 , PUMBUN_CD                                AS PUMBUN_CD
+                 , PUMBUN_NAME                              AS PUMBUN_NAME
+              FROM DPS.PC_ORGMST A
+                 , DPS.PC_STRPBN B
+             WHERE A.ORG_CD = DECODE(?,'1',B.SALE_ORG_CD, B.BUY_ORG_CD) 
+               AND A.USE_YN    = 'Y' 
+               AND A.ORG_CD    = ?  
+               AND A.ORG_LEVEL ='4'
+              ORDER BY PUMBUN_CD
+        ]]>
+    </query> 
+    
+   <query name="SEL_PUMBUN_CD_SALE">
+        <![CDATA[  
+            SELECT DISTINCT   
+                   '6'                                      AS ORG_LEVEL
+                 , 'F'                                      AS AUTH_LEVEL
+                 , A.ORG_CD                                 AS ORG_CD
+                 , A.STR_CD                                 AS STR_CD
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD)          AS STR_NAME
+                 , A.DEPT_CD                                AS DEPT_CD
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , '00','00','00')  AS DEPT_NAME
+                 , A.TEAM_CD                                AS TEAM_CD
+                 , DPS.FN_GET_ORG_NAME(A.STR_CD
+                                     , A.DEPT_CD
+                                     , A.TEAM_CD
+                                     , '00'
+                                     , '00')                AS TEAM_NAME
+                 , A.PC_CD                                  AS PC_CD
+                 , A.ORG_SHORT_NAME                         AS PC_NAME
+                 , 'F'                                      AS CHK
+                 , PUMBUN_CD                                AS PUMBUN_CD
+                 , PUMBUN_NAME                              AS PUMBUN_NAME
+              FROM DPS.PC_ORGMST A
+                 , DPS.PC_STRPBN B
+             WHERE A.ORG_CD = DECODE(?,'1',B.SALE_ORG_CD, B.BUY_ORG_CD) 
+               AND A.USE_YN    = 'Y' 
+               AND A.ORG_CD    LIKE SUBSTR(?, 1, 8)||'%'  
+               AND A.ORG_LEVEL ='5'
+              ORDER BY PUMBUN_CD
+        ]]>
+    </query> 
+    
+    <!--TAB3 저장  -->
+    <query name="INS_JJAUTH">
+        <![CDATA[
+            INSERT INTO COM.TC_USRORGAUTH  
+            (
+                    USER_ID
+                  , SEQ
+                  , AUTH_LEVEL
+                  , ORG_CD
+                  , ORG_FLAG
+                  , STR_CD
+                  , DEPT_CD
+                  , TEAM_CD
+                  , PC_CD
+                  , PUMBUN_CD
+                  , ORG_LEVEL
+                  , REG_DATE
+                  , REG_ID
+            )
+            VALUES
+            (
+                    ?
+                  , ( SELECT NVL(MAX(SEQ),0) +1 FROM COM.TC_USRORGAUTH WHERE USER_ID = ? )
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , SYSDATE
+                  , ?   
+            )
+        ]]>        
+    </query> 
+    
+    <!--TAB3 삭제  -->
+    <query name="DEL_JJAUTH">
+        <![CDATA[
+            DELETE COM.TC_USRORGAUTH  
+             WHERE USER_ID = ?
+               AND SEQ     = ?
+        ]]>        
+    </query> 
+			
+	<!--TAB1 : 권한복사  -->
+	<gauce name="H_COPY_MAIN">
+		<column colName="T_USER_ID"	colType="TB_STRING" size="10"	dec="0" keyType="TB_NORMAL" roundMode="" />
+		<column colName="S_USER_ID"	colType="TB_STRING" size="10"	dec="0" keyType="TB_NORMAL" roundMode="" /> 
+	</gauce>
+			
+    <!-- TAB1 : 권한복사 : 피복사자권한삭제   -->
+    <query name="DEL_S_USER_AUTH">        
+        <![CDATA[
+            DELETE COM.TC_USRPGM
+             WHERE USER_ID = ?
+        ]]>        
+    </query>
+    
+    <!-- TAB1 : 권한복사 : 피복사자권한등록   -->
+    <query name="COPY_S_USER_AUTH">        
+        <![CDATA[ 
+			INSERT INTO COM.TC_USRPGM
+			SELECT ? , PID
+			     , IS_RET, IS_NEW, IS_DEL, IS_SAVE, IS_EXCEL, IS_PRINT,  IS_CONFIRM, IS_ALL
+			     , SYSDATE, ?, SYSDATE, ?
+			  FROM COM.TC_USRPGM
+			 WHERE USER_ID = ?
+        ]]>        
+    </query>
+
+
+    <!-- TAB3 : 권한복사 (조직): 피복사자권한삭제   -->
+    <query name="DEL_JOJIK_AUTH">        
+        <![CDATA[
+            DELETE COM.TC_USRORGAUTH
+             WHERE USER_ID = ?
+        ]]>        
+    </query>
+    
+    <!-- TAB3 : 권한복사(조직) : 피복사자권한등록   -->
+    <query name="COPY_JOJIK_AUTH">        
+        <![CDATA[ 
+			INSERT INTO COM.TC_USRORGAUTH
+			SELECT ? , SEQ
+			     , AUTH_LEVEL, ORG_CD, ORG_FLAG
+                 , STR_CD, DEPT_CD, TEAM_CD,  PC_CD, PUMBUN_CD, ORG_LEVEL
+			     , SYSDATE, ?, SYSDATE, ?
+			  FROM COM.TC_USRORGAUTH
+			 WHERE USER_ID = ?
+        ]]>        
+    </query>  
+    
+          
+</service>

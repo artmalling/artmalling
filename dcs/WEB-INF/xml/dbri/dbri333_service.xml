@@ -1,0 +1,777 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : kjy
+ * 회 사 명    : 
+ * 작 성 일    : 2017.05.18
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  지역별 회원 매출 현황
+ -->
+<service name="/dbri333.db">
+    <!-- 지역별 회원 매출 현황_GRIDHEADER  -->
+    <gauce name="H_AGE"> 
+        <column colName="GB" 					colType="TB_STRING"      size="1"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD" 			colType="TB_STRING"      size="8"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"      		colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_UNDER20M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_UNDER20F" 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_20M"	 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_20F" 			colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_30M"	 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_30F" 			colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_40M"	 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_40F" 			colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_50M"	 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_50F" 			colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_60M"	 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_60F" 			colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_70M"	 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_70F" 			colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_OVER80M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_OVER80F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_TOTM"	 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_TOTF" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RNK" 					colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+   	<!-- 매출기간내 해당 브랜드 구매 고객 리스트 -->
+    <query name="SEL_PUMB_CUST">        
+        <![CDATA[
+            WITH CUSTLIST AS
+		    (
+		    SELECT DISTINCT A.CUST_NO 
+		          , NVL(HNEW_ADDR1,HOME_ADDR1) ADDR
+		    FROM DPS.PS_DAYCUST A
+		       , DCS.DM_CUSTOMER B
+			    WHERE A.STR_CD= ?					-- 점코드
+			    AND A.SALE_DT BETWEEN ? AND ?		-- 고객 매출기간
+			    AND A.PUMBUN_CD= ?				-- 고객 구매 브랜드코드
+			    AND A.CUST_NO = B.CUST_ID
+		    ) ,
+              ]]>        
+    </query>
+    
+    <!-- 구매 고객중 매출기간내 구매건수 TOP5 브랜드 -->
+    <query name="SEL_CUST_CNT_TOP5">        
+        <![CDATA[
+            PBNLIST AS
+		    (
+			    SELECT PUMBUN_CD
+			     , CNT_RANK AS RNK
+			     --, AMT_RANK AS RNK
+			    FROM 
+			    (
+				    SELECT A.PUMBUN_CD
+				         , COUNT(A.CUST_NO) CNT
+				         , SUM(A.SALE_AMT)-SUM(A.RETURN_AMT) AMT
+				         , ROW_NUMBER() OVER (ORDER BY COUNT(A.CUST_NO) DESC) CNT_RANK
+				         , ROW_NUMBER() OVER (ORDER BY SUM(A.SALE_AMT)-SUM(A.RETURN_AMT) DESC) AMT_RANK
+				    FROM DPS.PS_DAYCUST A 
+				        ,CUSTLIST B
+				    WHERE A.STR_CD = ?					-- 점코드
+				    AND A.SALE_DT BETWEEN ? AND ?		-- 매출기간
+				    AND A.CUST_NO IN B.CUST_NO
+				    AND A.PUMBUN_CD <> ?				-- 조회브랜드는 TOP5에서 제외
+				    GROUP BY A.PUMBUN_CD
+			    )
+			    WHERE 1=1
+			    AND CNT_RANK <=5
+			    --AND AMT_RANK <=5
+		    )
+		    ,
+              ]]>        
+    </query>
+    
+    <!-- 구매 고객중 매출기간내 매출액 TOP5 브랜드 -->
+    <query name="SEL_CUST_AMT_TOP5">        
+        <![CDATA[
+            PBNLIST AS
+		    (
+			    SELECT PUMBUN_CD
+			     -- , CNT_RANK AS RNK
+			     , AMT_RANK AS RNK
+			    FROM 
+			    (
+				    SELECT A.PUMBUN_CD
+				         , COUNT(A.CUST_NO) CNT
+				         , SUM(A.SALE_AMT)-SUM(A.RETURN_AMT) AMT
+				         , ROW_NUMBER() OVER (ORDER BY COUNT(A.CUST_NO) DESC) CNT_RANK
+				         , ROW_NUMBER() OVER (ORDER BY SUM(A.SALE_AMT)-SUM(A.RETURN_AMT) DESC) AMT_RANK
+				    FROM DPS.PS_DAYCUST A 
+				        ,CUSTLIST B
+				    WHERE A.STR_CD = ?					-- 점코드
+				    AND A.SALE_DT BETWEEN ? AND ?		-- 매출기간
+				    AND A.CUST_NO IN B.CUST_NO
+				    AND A.PUMBUN_CD <> ?				-- 조회브랜드는 TOP5에서 제외
+				    GROUP BY A.PUMBUN_CD
+			    )
+			    WHERE 1=1
+			    -- AND CNT_RANK <=5
+			    AND AMT_RANK <=5
+		    )
+		    ,
+              ]]>        
+    </query>
+    
+    
+    <!-- 나이/성별 집계 쿼리 -->
+    <query name="SEL_AGE_SEX_STATSTC">        
+        <![CDATA[
+            STATILIST AS 
+            (
+		    SELECT PUMBUN_CD
+		    	 	--20대 미만
+        		 , SUM(CUST_CNT_UNDER20M) AS CUST_CNT_UNDER20M
+        		 , SUM(CUST_CNT_UNDER20F) AS CUST_CNT_UNDER20F
+        		 , SUM(CUST_AMT_UNDER20M) AS CUST_AMT_UNDER20M
+        		 , SUM(CUST_AMT_UNDER20F) AS CUST_AMT_UNDER20F        		 
+        		 	--20대
+        		 , SUM(CUST_CNT_20M) AS CUST_CNT_20M
+        		 , SUM(CUST_CNT_20F) AS CUST_CNT_20F
+                 , SUM(CUST_AMT_20M) AS CUST_AMT_20M
+        		 , SUM(CUST_AMT_20F) AS CUST_AMT_20F        		 
+					--30대
+         		 , SUM(CUST_CNT_30M) AS CUST_CNT_30M
+         		 , SUM(CUST_CNT_30F) AS CUST_CNT_30F
+        		 , SUM(CUST_AMT_30M) AS CUST_AMT_30M
+        		 , SUM(CUST_AMT_30F) AS CUST_AMT_30F         		 
+        			--40대
+        		 , SUM(CUST_CNT_40M) AS CUST_CNT_40M
+        		 , SUM(CUST_CNT_40F) AS CUST_CNT_40F
+        		 , SUM(CUST_AMT_40M) AS CUST_AMT_40M
+        		 , SUM(CUST_AMT_40F) AS CUST_AMT_40F        		 
+        			--50대
+        		 , SUM(CUST_CNT_50M) AS CUST_CNT_50M
+        		 , SUM(CUST_CNT_50F) AS CUST_CNT_50F
+        		 , SUM(CUST_AMT_50M) AS CUST_AMT_50M
+        		 , SUM(CUST_AMT_50F) AS CUST_AMT_50F        		 
+        		 	--60대
+          		 , SUM(CUST_CNT_60M) AS CUST_CNT_60M
+        		 , SUM(CUST_CNT_60F) AS CUST_CNT_60F
+				 , SUM(CUST_AMT_60M) AS CUST_AMT_60M
+        		 , SUM(CUST_AMT_60F) AS CUST_AMT_60F        		 
+        			--70대
+        		 , SUM(CUST_CNT_70M) AS CUST_CNT_70M
+        		 , SUM(CUST_CNT_70F) AS CUST_CNT_70F
+				 , SUM(CUST_AMT_70M) AS CUST_AMT_70M
+        		 , SUM(CUST_AMT_70F) AS CUST_AMT_70F        		 
+        			--80대 이상
+        		 , SUM(CUST_CNT_OVER80M) AS CUST_CNT_OVER80M
+        		 , SUM(CUST_CNT_OVER80F) AS CUST_CNT_OVER80F
+        		 , SUM(CUST_AMT_OVER80M) AS CUST_AMT_OVER80M
+        		 , SUM(CUST_AMT_OVER80F) AS CUST_AMT_OVER80F        		 
+					--계
+        		 , SUM(CUST_CNT_TOTM) AS CUST_CNT_TOTM
+        		 , SUM(CUST_CNT_TOTF) AS CUST_CNT_TOTF
+        		 , SUM(CUST_AMT_TOTM) AS CUST_AMT_TOTM
+        		 , SUM(CUST_AMT_TOTF) AS CUST_AMT_TOTF        		 
+                	--순위
+        		 , MIN(RNK) AS RNK
+     		FROM
+    		(
+			    SELECT PUMBUN_CD
+			          -- 20대 미만
+			         , CASE WHEN CUST_AGE < 20 THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_UNDER20M
+			         , CASE WHEN CUST_AGE < 20 THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_UNDER20F
+			         , CASE WHEN CUST_AGE < 20 THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_UNDER20M
+			         , CASE WHEN CUST_AGE < 20 THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_UNDER20F
+			          -- 20대
+			         , CASE WHEN CUST_AGE BETWEEN 20 AND 29 THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_20M
+			         , CASE WHEN CUST_AGE BETWEEN 20 AND 29 THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_20F
+			         , CASE WHEN CUST_AGE BETWEEN 20 AND 29  THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_20M
+			         , CASE WHEN CUST_AGE BETWEEN 20 AND 29 THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_20F
+			          -- 30대 
+			         , CASE WHEN CUST_AGE BETWEEN 30 AND 39 THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_30M
+			         , CASE WHEN CUST_AGE BETWEEN 30 AND 39 THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_30F
+			         , CASE WHEN CUST_AGE BETWEEN 30 AND 39  THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_30M
+			         , CASE WHEN CUST_AGE BETWEEN 30 AND 39 THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_30F
+			          -- 40대 
+			         , CASE WHEN CUST_AGE BETWEEN 40 AND 49 THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_40M
+			         , CASE WHEN CUST_AGE BETWEEN 40 AND 49 THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_40F
+			         , CASE WHEN CUST_AGE BETWEEN 40 AND 49  THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_40M
+			         , CASE WHEN CUST_AGE BETWEEN 40 AND 49 THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_40F
+			          -- 50대 
+			         , CASE WHEN CUST_AGE BETWEEN 50 AND 59 THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_50M
+			         , CASE WHEN CUST_AGE BETWEEN 50 AND 59 THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_50F
+			         , CASE WHEN CUST_AGE BETWEEN 50 AND 59  THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_50M
+			         , CASE WHEN CUST_AGE BETWEEN 50 AND 59 THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_50F           
+			          -- 60대 
+			         , CASE WHEN CUST_AGE BETWEEN 60 AND 69 THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_60M
+			         , CASE WHEN CUST_AGE BETWEEN 60 AND 69 THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_60F
+			         , CASE WHEN CUST_AGE BETWEEN 60 AND 69  THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_60M
+			         , CASE WHEN CUST_AGE BETWEEN 60 AND 69 THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_60F           
+			          -- 70대 
+			         , CASE WHEN CUST_AGE BETWEEN 70 AND 79 THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_70M
+			         , CASE WHEN CUST_AGE BETWEEN 70 AND 79 THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_70F
+			         , CASE WHEN CUST_AGE BETWEEN 70 AND 79  THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_70M
+			         , CASE WHEN CUST_AGE BETWEEN 70 AND 79 THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_70F           
+			          -- 기타 
+			         , CASE WHEN CUST_AGE > 79 THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_OVER80M
+			         , CASE WHEN CUST_AGE > 79 THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_OVER80F
+			         , CASE WHEN CUST_AGE > 79  THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_OVER80M
+			         , CASE WHEN CUST_AGE > 79 THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_OVER80F
+			            -- 계
+			         , COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL)) CUST_CNT_TOTM
+			         , COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL)) CUST_CNT_TOTF
+			         , SUM(DECODE(CUST_SEX,'M',AMT,0)) CUST_AMT_TOTM
+			         , SUM(DECODE(CUST_SEX,'F',AMT,0)) CUST_AMT_TOTF
+			         	-- 순위
+			         , MIN(RNK) RNK
+			      FROM
+    			( 
+				    SELECT A.PUMBUN_CD
+				         , A.CUST_NO
+				         , A.CUST_SEX
+				         , A.CUST_AGE
+				         , A.SALE_AMT - RETURN_AMT AS AMT
+				         , C.RNK
+				        FROM DPS.PS_DAYCUST A
+				           , CUSTLIST B
+				           , PBNLIST C
+				        WHERE A.STR_CD= ?				-- 점코드
+				        AND A.SALE_DT BETWEEN ? AND ?	-- 매출기간
+				        AND A.PUMBUN_CD IN C.PUMBUN_CD
+				        AND A.CUST_NO IN B.CUST_NO
+    			)    
+   				 GROUP BY PUMBUN_CD,CUST_AGE
+    		) 
+    		GROUP BY PUMBUN_CD
+    	)
+              ]]>        
+    </query>
+    
+    
+    <!-- 나이/성별 메인 쿼리 -->
+    <query name="SEL_AGE_SEX_QUERY">        
+        <![CDATA[
+            SELECT 0 AS GB   --구매건수
+			        , PUMBUN_CD
+			        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+			        , TO_CHAR( CUST_CNT_UNDER20M ,'FM999,999,999,990') CUST_CNT_UNDER20M
+			        , TO_CHAR( CUST_CNT_UNDER20F ,'FM999,999,999,990') CUST_CNT_UNDER20F
+			        , TO_CHAR( CUST_CNT_20M ,'FM999,999,999,990') CUST_CNT_20M
+			        , TO_CHAR( CUST_CNT_20F ,'FM999,999,999,990') CUST_CNT_20F
+			        , TO_CHAR( CUST_CNT_30M ,'FM999,999,999,990') CUST_CNT_30M
+			        , TO_CHAR( CUST_CNT_30F ,'FM999,999,999,990') CUST_CNT_30F
+			        , TO_CHAR( CUST_CNT_40M ,'FM999,999,999,990') CUST_CNT_40M
+			        , TO_CHAR( CUST_CNT_40F ,'FM999,999,999,990') CUST_CNT_40F
+			        , TO_CHAR( CUST_CNT_50M ,'FM999,999,999,990') CUST_CNT_50M
+			        , TO_CHAR( CUST_CNT_50F ,'FM999,999,999,990') CUST_CNT_50F
+			        , TO_CHAR( CUST_CNT_60M ,'FM999,999,999,990') CUST_CNT_60M
+			        , TO_CHAR( CUST_CNT_60F ,'FM999,999,999,990') CUST_CNT_60F
+			        , TO_CHAR( CUST_CNT_70M ,'FM999,999,999,990') CUST_CNT_70M
+			        , TO_CHAR( CUST_CNT_70F ,'FM999,999,999,990') CUST_CNT_70F
+			        , TO_CHAR( CUST_CNT_OVER80M ,'FM999,999,999,990') CUST_CNT_OVER80M
+			        , TO_CHAR( CUST_CNT_OVER80F ,'FM999,999,999,990') CUST_CNT_OVER80F
+			        , TO_CHAR( CUST_CNT_TOTM ,'FM999,999,999,990') CUST_CNT_TOTM
+			        , TO_CHAR( CUST_CNT_TOTF ,'FM999,999,999,990') CUST_CNT_TOTF
+			        , RNK
+			    FROM STATILIST
+			    UNION ALL
+			    SELECT 1 AS GB  -- 구성비
+			        , PUMBUN_CD
+			        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+			        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_UNDER20M / CUST_CNT_TOTM)*100,2) ) ) 
+			        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_UNDER20F / CUST_CNT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_20M / CUST_CNT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_20F / CUST_CNT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_30M / CUST_CNT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_30F / CUST_CNT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_40M / CUST_CNT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_40F / CUST_CNT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_50M / CUST_CNT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_50F / CUST_CNT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_60M / CUST_CNT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_60F / CUST_CNT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_70M / CUST_CNT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_70F / CUST_CNT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_OVER80M / CUST_CNT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_OVER80F / CUST_CNT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_TOTM / CUST_CNT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_TOTF / CUST_CNT_TOTF)*100,2) ) )
+			        , RNK
+			    FROM STATILIST
+			    UNION ALL
+			    SELECT 2 AS GB   --매출
+			        , PUMBUN_CD
+			        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+			        , TO_CHAR( CUST_AMT_UNDER20M ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_UNDER20F ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_20M ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_20F ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_30M ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_30F ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_40M ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_40F ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_50M ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_50F ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_60M ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_60F ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_70M ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_70F ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_OVER80M ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_OVER80F ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_TOTM ,'FM999,999,999,990')
+			        , TO_CHAR( CUST_AMT_TOTF ,'FM999,999,999,990')
+			        , RNK
+			    FROM STATILIST
+			    UNION ALL
+			    SELECT 3 AS GB  -- 구성비
+			        , PUMBUN_CD
+			        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+			        , TO_CHAR(DECODE( CUST_AMT_TOTM , 0, 0, ROUND((CUST_AMT_UNDER20M / CUST_AMT_TOTM)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTF , 0, 0, ROUND((CUST_AMT_UNDER20F / CUST_AMT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTM , 0, 0, ROUND((CUST_AMT_20M / CUST_AMT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTF , 0, 0, ROUND((CUST_AMT_20F / CUST_AMT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTM , 0, 0, ROUND((CUST_AMT_30M / CUST_AMT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTF , 0, 0, ROUND((CUST_AMT_30F / CUST_AMT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTM , 0, 0, ROUND((CUST_AMT_40M / CUST_AMT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTF , 0, 0, ROUND((CUST_AMT_40F / CUST_AMT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTM , 0, 0, ROUND((CUST_AMT_50M / CUST_AMT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTF , 0, 0, ROUND((CUST_AMT_50F / CUST_AMT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTM , 0, 0, ROUND((CUST_AMT_60M / CUST_AMT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTF , 0, 0, ROUND((CUST_AMT_60F / CUST_AMT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTM , 0, 0, ROUND((CUST_AMT_70M / CUST_AMT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTF , 0, 0, ROUND((CUST_AMT_70F / CUST_AMT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTM , 0, 0, ROUND((CUST_AMT_OVER80M / CUST_AMT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTF , 0, 0, ROUND((CUST_AMT_OVER80F / CUST_AMT_TOTF)*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTM , 0, 0, ROUND((CUST_AMT_TOTM / CUST_AMT_TOTM )*100,2) ) )
+			        , TO_CHAR(DECODE( CUST_AMT_TOTF , 0, 0, ROUND((CUST_AMT_TOTF / CUST_AMT_TOTF)*100,2) ) )
+			        , RNK
+			    FROM STATILIST
+			    UNION ALL
+			    SELECT 4 AS GB  -- 객단가
+			        , PUMBUN_CD
+			        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+			        , TO_CHAR( DECODE(CUST_CNT_UNDER20M,0,0, CUST_AMT_UNDER20M / CUST_CNT_UNDER20M),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_UNDER20F,0,0, CUST_AMT_UNDER20F / CUST_CNT_UNDER20F),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_20M,0,0, CUST_AMT_20M / CUST_CNT_20M ),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_20F,0,0, CUST_AMT_20F / CUST_CNT_20F),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_30M,0,0, CUST_AMT_30M / CUST_CNT_30M ),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_30F,0,0, CUST_AMT_30F / CUST_CNT_30F),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_40M,0,0, CUST_AMT_40M / CUST_CNT_40M ),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_40F,0,0, CUST_AMT_40F / CUST_CNT_40F),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_50M,0,0, CUST_AMT_50M / CUST_CNT_50M ),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_50F,0,0, CUST_AMT_50F / CUST_CNT_50F),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_60M,0,0, CUST_AMT_60M / CUST_CNT_60M ),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_60F,0,0, CUST_AMT_60F / CUST_CNT_60F),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_70M,0,0, CUST_AMT_70M / CUST_CNT_70M ),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_70F,0,0, CUST_AMT_70F / CUST_CNT_70F),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_OVER80M,0,0, CUST_AMT_OVER80M / CUST_CNT_OVER80M ),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_OVER80F,0,0, CUST_AMT_OVER80F / CUST_CNT_OVER80F),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_TOTM,0,0, CUST_AMT_TOTM / CUST_CNT_TOTM ),'FM999,999,999,990')
+			        , TO_CHAR( DECODE(CUST_CNT_TOTF,0,0, CUST_AMT_TOTF / CUST_CNT_TOTF),'FM999,999,999,990')
+			        , RNK
+			    FROM STATILIST
+			    ORDER BY RNK, GB
+              ]]>        
+    </query>
+    
+    
+    
+    <!-- 지역별 회원 매출 현황_GRIDDETAIL  -->
+    <gauce name="H_ADDR"> 
+        <column colName="GB" 					colType="TB_STRING"      size="1"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD" 			colType="TB_STRING"      size="8"  	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"      		colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR1M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR1F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR2M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR2F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR3M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR3F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR4M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR4F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR5M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR5F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR6M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR6F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR7M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR7F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR8M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR8F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR9M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR9F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR10M"	 	colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_ADDR10F" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_TOTM"	 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_TOTF" 		colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RNK" 					colType="TB_STRING"      size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    
+    <!-- 주소/성별 집계 쿼리 -->
+    <query name="SEL_ADDR_SEX_STATSTC">        
+        <![CDATA[
+            STATILIST AS 
+            (    
+    			SELECT PUMBUN_CD
+       		  	, SUM(CUST_CNT_ADDR1M) AS CUST_CNT_ADDR1M
+        		, SUM(CUST_CNT_ADDR1F) AS CUST_CNT_ADDR1F
+        		, SUM(CUST_AMT_ADDR1M) AS CUST_AMT_ADDR1M
+        		, SUM(CUST_AMT_ADDR1F) AS CUST_AMT_ADDR1F        		
+        
+        		, SUM(CUST_CNT_ADDR2M) AS CUST_CNT_ADDR2M
+        		, SUM(CUST_CNT_ADDR2F) AS CUST_CNT_ADDR2F
+        		, SUM(CUST_AMT_ADDR2M) AS CUST_AMT_ADDR2M
+        		, SUM(CUST_AMT_ADDR2F) AS CUST_AMT_ADDR2F        		
+        
+        		, SUM(CUST_CNT_ADDR3M) AS CUST_CNT_ADDR3M
+		        , SUM(CUST_CNT_ADDR3F) AS CUST_CNT_ADDR3F
+        		, SUM(CUST_AMT_ADDR3M) AS CUST_AMT_ADDR3M
+        		, SUM(CUST_AMT_ADDR3F) AS CUST_AMT_ADDR3F
+        
+        		, SUM(CUST_CNT_ADDR4M) AS CUST_CNT_ADDR4M
+        		, SUM(CUST_CNT_ADDR4F) AS CUST_CNT_ADDR4F
+        		, SUM(CUST_AMT_ADDR4M) AS CUST_AMT_ADDR4M
+        		, SUM(CUST_AMT_ADDR4F) AS CUST_AMT_ADDR4F
+        
+        		, SUM(CUST_CNT_ADDR5M) AS CUST_CNT_ADDR5M
+        		, SUM(CUST_CNT_ADDR5F) AS CUST_CNT_ADDR5F
+        		, SUM(CUST_AMT_ADDR5M) AS CUST_AMT_ADDR5M
+        		, SUM(CUST_AMT_ADDR5F) AS CUST_AMT_ADDR5F
+        
+        		, SUM(CUST_CNT_ADDR6M) AS CUST_CNT_ADDR6M
+        		, SUM(CUST_CNT_ADDR6F) AS CUST_CNT_ADDR6F
+        		, SUM(CUST_AMT_ADDR6M) AS CUST_AMT_ADDR6M
+        		, SUM(CUST_AMT_ADDR6F) AS CUST_AMT_ADDR6F
+        
+        		, SUM(CUST_CNT_ADDR7M) AS CUST_CNT_ADDR7M
+        		, SUM(CUST_CNT_ADDR7F) AS CUST_CNT_ADDR7F
+        		, SUM(CUST_AMT_ADDR7M) AS CUST_AMT_ADDR7M
+        		, SUM(CUST_AMT_ADDR7F) AS CUST_AMT_ADDR7F
+        
+        		, SUM(CUST_CNT_ADDR8M) AS CUST_CNT_ADDR8M
+        		, SUM(CUST_CNT_ADDR8F) AS CUST_CNT_ADDR8F
+        		, SUM(CUST_AMT_ADDR8M) AS CUST_AMT_ADDR8M
+        		, SUM(CUST_AMT_ADDR8F) AS CUST_AMT_ADDR8F
+        
+        		, SUM(CUST_CNT_ADDR9M) AS CUST_CNT_ADDR9M
+        		, SUM(CUST_CNT_ADDR9F) AS CUST_CNT_ADDR9F
+        		, SUM(CUST_AMT_ADDR9M) AS CUST_AMT_ADDR9M
+        		, SUM(CUST_AMT_ADDR9F) AS CUST_AMT_ADDR9F
+        
+        		, SUM(CUST_CNT_ADDR10M) AS CUST_CNT_ADDR10M
+        		, SUM(CUST_CNT_ADDR10F) AS CUST_CNT_ADDR10F
+        		, SUM(CUST_AMT_ADDR10M) AS CUST_AMT_ADDR10M
+        		, SUM(CUST_AMT_ADDR10F) AS CUST_AMT_ADDR10F
+
+        		, SUM(CUST_CNT_TOTM) AS CUST_CNT_TOTM
+        		, SUM(CUST_CNT_TOTF) AS CUST_CNT_TOTF
+        		, SUM(CUST_AMT_TOTM) AS CUST_AMT_TOTM
+        		, SUM(CUST_AMT_TOTF) AS CUST_AMT_TOTF        		
+
+        		, MIN(RNK) AS RNK
+		    FROM
+		    (
+			    SELECT PUMBUN_CD
+			          -- 하단동
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR1M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR1F
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR1M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR1F
+			           -- 명지동
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR2M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR2F
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR2M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR2F
+			           -- 다대동
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR3M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR3F
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR3M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR3F
+			           
+			           -- 당리동
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR4M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR4F
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR4M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR4F
+			           
+			           -- 신평동
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR5M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR5F
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR5M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR5F
+			           
+			           -- 괴정동
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR6M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR6F
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR6M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR6F
+			           
+			           -- 장림동
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR7M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR7F
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR7M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR7F
+			           
+			           -- 엄궁동
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR8M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR8F
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR8M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR8F
+			           
+			           -- 신호동
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR9M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR9F
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR9M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR9F
+			           
+			           -- 감천동
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR10M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL))
+			           ELSE 0 END CUST_CNT_ADDR10F
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'M',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR10M
+			         , CASE WHEN ADDR LIKE '%'||?||'%' THEN SUM(DECODE(CUST_SEX,'F',AMT,0))
+			           ELSE 0 END CUST_AMT_ADDR10F
+			           
+			           -- 계
+			         , COUNT(DECODE(CUST_SEX,'M',CUST_NO,NULL)) CUST_CNT_TOTM
+			         , COUNT(DECODE(CUST_SEX,'F',CUST_NO,NULL)) CUST_CNT_TOTF
+			         , SUM(DECODE(CUST_SEX,'M',AMT,0)) CUST_AMT_TOTM
+			         , SUM(DECODE(CUST_SEX,'F',AMT,0)) CUST_AMT_TOTF
+			         , MIN(RNK) RNK  
+			     FROM
+				(   
+				     SELECT A.PUMBUN_CD
+				         , A.CUST_NO
+				         , A.CUST_SEX
+				         , A.CUST_AGE
+				         , A.SALE_AMT - RETURN_AMT AS AMT
+				         , C.RNK
+				         , B.ADDR
+				        FROM DPS.PS_DAYCUST A
+				           , CUSTLIST B
+				           , PBNLIST C
+				        WHERE A.STR_CD= ?
+				        AND A.SALE_DT BETWEEN ? AND ?
+				        AND A.PUMBUN_CD IN C.PUMBUN_CD
+				        AND A.CUST_NO IN B.CUST_NO
+				        --AND REGEXP_LIKE (B.ADDR, '하단동|명지동|다대동|당리동|신평동|괴정동|장림동|엄궁동|신호동|감천동')
+				        AND REGEXP_LIKE (B.ADDR, ?)
+    			)   
+     			GROUP BY PUMBUN_CD, ADDR
+    	 	)
+     		GROUP BY PUMBUN_CD
+     	)
+              ]]>        
+    </query>
+    
+    
+    <!-- 나이/성별 메인 쿼리 -->
+    <query name="SEL_ADDR_SEX_QUERY">        
+        <![CDATA[
+            SELECT 0 AS GB   --구매건수
+		        , PUMBUN_CD
+		        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+		        , TO_CHAR( CUST_CNT_ADDR1M ,'FM999,999,999,990') CUST_CNT_ADDR1M
+		        , TO_CHAR( CUST_CNT_ADDR1F ,'FM999,999,999,990') CUST_CNT_ADDR1F
+		        , TO_CHAR( CUST_CNT_ADDR2M ,'FM999,999,999,990') CUST_CNT_ADDR2M
+		        , TO_CHAR( CUST_CNT_ADDR2F ,'FM999,999,999,990') CUST_CNT_ADDR2F
+		        , TO_CHAR( CUST_CNT_ADDR3M ,'FM999,999,999,990') CUST_CNT_ADDR3M
+		        , TO_CHAR( CUST_CNT_ADDR3F ,'FM999,999,999,990') CUST_CNT_ADDR3F
+		        , TO_CHAR( CUST_CNT_ADDR4M ,'FM999,999,999,990') CUST_CNT_ADDR4M
+		        , TO_CHAR( CUST_CNT_ADDR4F ,'FM999,999,999,990') CUST_CNT_ADDR4F
+		        , TO_CHAR( CUST_CNT_ADDR5M ,'FM999,999,999,990') CUST_CNT_ADDR5M
+		        , TO_CHAR( CUST_CNT_ADDR5F ,'FM999,999,999,990') CUST_CNT_ADDR5F
+		        , TO_CHAR( CUST_CNT_ADDR6M ,'FM999,999,999,990') CUST_CNT_ADDR6M
+		        , TO_CHAR( CUST_CNT_ADDR6F ,'FM999,999,999,990') CUST_CNT_ADDR6F
+		        , TO_CHAR( CUST_CNT_ADDR7M ,'FM999,999,999,990') CUST_CNT_ADDR7M
+		        , TO_CHAR( CUST_CNT_ADDR7F ,'FM999,999,999,990') CUST_CNT_ADDR7F
+		        , TO_CHAR( CUST_CNT_ADDR8M ,'FM999,999,999,990') CUST_CNT_ADDR8M
+		        , TO_CHAR( CUST_CNT_ADDR8F ,'FM999,999,999,990') CUST_CNT_ADDR8F
+		        , TO_CHAR( CUST_CNT_ADDR9M ,'FM999,999,999,990') CUST_CNT_ADDR9M
+		        , TO_CHAR( CUST_CNT_ADDR9F ,'FM999,999,999,990') CUST_CNT_ADDR9F
+		        , TO_CHAR( CUST_CNT_ADDR10M ,'FM999,999,999,990') CUST_CNT_ADDR10M
+		        , TO_CHAR( CUST_CNT_ADDR10F ,'FM999,999,999,990') CUST_CNT_ADDR10F
+		        , TO_CHAR( CUST_CNT_TOTM ,'FM999,999,999,990') CUST_CNT_TOTM
+		        , TO_CHAR( CUST_CNT_TOTF ,'FM999,999,999,990') CUST_CNT_TOTF
+		        , RNK
+		    FROM STATILIST A
+		    UNION ALL
+		    SELECT 1 AS GB  -- 구성비
+		        , PUMBUN_CD
+		        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_ADDR1M / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_ADDR1F / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_ADDR2M / CUST_CNT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_ADDR2F / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_ADDR3M / CUST_CNT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_ADDR3F / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_ADDR4M / CUST_CNT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_ADDR4F / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_ADDR5M / CUST_CNT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_ADDR5F / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_ADDR6M / CUST_CNT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_ADDR6F / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_ADDR7M / CUST_CNT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_ADDR7F / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_ADDR8M / CUST_CNT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_ADDR8F / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_ADDR9M / CUST_CNT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_ADDR9F / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_ADDR10M / CUST_CNT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_ADDR10F / CUST_CNT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_CNT_TOTM / CUST_CNT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_CNT_TOTF / CUST_CNT_TOTF)*100,2)))
+		        , RNK
+		    FROM STATILIST A
+		    UNION ALL
+		    SELECT 2 AS GB   --매출
+		        , PUMBUN_CD
+		        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+		        , TO_CHAR( CUST_AMT_ADDR1M,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR1F,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR2M,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR2F,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR3M,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR3F,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR4M,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR4F,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR5M,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR5F,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR6M,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR6F,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR7M,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR7F,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR8M,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR8F,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR9M,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR9F,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR10M,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_ADDR10F,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_TOTM,'FM999,999,999,990')
+		        , TO_CHAR( CUST_AMT_TOTF,'FM999,999,999,990')
+		        , RNK
+		    FROM STATILIST A
+		    UNION ALL
+		    SELECT 3 AS GB  -- 구성비
+		        , PUMBUN_CD
+		        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_ADDR1M / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_ADDR1F / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_ADDR2M / CUST_AMT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_ADDR2F / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_ADDR3M / CUST_AMT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_ADDR3F / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_ADDR4M / CUST_AMT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_ADDR4F / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_ADDR5M / CUST_AMT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_ADDR5F / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_ADDR6M / CUST_AMT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_ADDR6F / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_ADDR7M / CUST_AMT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_ADDR7F / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_ADDR8M / CUST_AMT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_ADDR8F / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_ADDR9M / CUST_AMT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_ADDR9F / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_ADDR10M / CUST_AMT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_ADDR10F / CUST_AMT_TOTF)*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTM , 0, 0, ROUND((CUST_AMT_TOTM / CUST_AMT_TOTM )*100,2)))
+		        , TO_CHAR(DECODE( CUST_CNT_TOTF , 0, 0, ROUND((CUST_AMT_TOTF / CUST_AMT_TOTF)*100,2)))
+		        , RNK
+		    FROM STATILIST A
+		    UNION ALL
+		    SELECT 4 AS GB  -- 객단가
+		        , PUMBUN_CD
+		        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR1M,0,0, CUST_AMT_ADDR1M / CUST_CNT_ADDR1M),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR1F,0,0, CUST_AMT_ADDR1F / CUST_CNT_ADDR1F),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR2M,0,0, CUST_AMT_ADDR2M / CUST_CNT_ADDR2M ),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR2F,0,0, CUST_AMT_ADDR2F / CUST_CNT_ADDR2F),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR3M,0,0, CUST_AMT_ADDR3M / CUST_CNT_ADDR3M ),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR3F,0,0, CUST_AMT_ADDR3F / CUST_CNT_ADDR3F),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR4M,0,0, CUST_AMT_ADDR4M / CUST_CNT_ADDR4M ),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR4F,0,0, CUST_AMT_ADDR4F / CUST_CNT_ADDR4F),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR5M,0,0, CUST_AMT_ADDR5M / CUST_CNT_ADDR5M ),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR5F,0,0, CUST_AMT_ADDR5F / CUST_CNT_ADDR5F),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR6M,0,0, CUST_AMT_ADDR6M / CUST_CNT_ADDR6M ),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR6F,0,0, CUST_AMT_ADDR6F / CUST_CNT_ADDR6F),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR7M,0,0, CUST_AMT_ADDR7M / CUST_CNT_ADDR7M ),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR7F,0,0, CUST_AMT_ADDR7F / CUST_CNT_ADDR7F),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR8M,0,0, CUST_AMT_ADDR8M / CUST_CNT_ADDR8M),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR8F,0,0, CUST_AMT_ADDR8F / CUST_CNT_ADDR8F),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR9M,0,0, CUST_AMT_ADDR9M / CUST_CNT_ADDR9M),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR9F,0,0, CUST_AMT_ADDR9F / CUST_CNT_ADDR9F),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR10M,0,0, CUST_AMT_ADDR10M / CUST_CNT_ADDR10M),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_ADDR10F,0,0, CUST_AMT_ADDR10F / CUST_CNT_ADDR10F),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_TOTM,0,0, CUST_AMT_TOTM / CUST_CNT_TOTM ),'FM999,999,999,990')
+		        , TO_CHAR(DECODE(CUST_CNT_TOTF,0,0, CUST_AMT_TOTF / CUST_CNT_TOTF),'FM999,999,999,990')
+		        , RNK
+		    FROM STATILIST A
+		    ORDER BY RNK, GB
+              ]]>        
+    </query>  
+</service>

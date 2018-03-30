@@ -1,0 +1,2740 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 최재형
+ * 회 사 명 : 
+ * 작 성 일 : 2011.06.17
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영계획보고서조회
+ -->
+<service name="/meis043.me">
+
+     <!--  SQL : 전체  -->
+    <query name="SEL_ALLGB">
+        <![CDATA[
+           SELECT '%'           AS CODE 
+                , '전체'        AS NAME
+                , '%'			AS STR_CD 
+                , '%'			AS DEPT_CD 
+                , '%'			AS TEAM_CD 
+                , '%'			AS PC_CD 
+                , '%'			AS CORNER_CD 
+                , '%'			AS ORG_CD 
+             FROM DUAL
+           UNION ALL
+        ]]>
+    </query>
+
+    <!-- 매출계획분석항목 헤더  -->
+    <gauce name="H_SEL_ORG">
+  		<column colName="CODE"			colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+  		<column colName="NAME"			colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+  		<column colName="STR_CD"		colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+  		<column colName="DEPT_CD"		colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+  		<column colName="TEAM_CD"		colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+  		<column colName="PC_CD"			colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+  		<column colName="CORNER_CD"		colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />  
+    	<column colName="ORG_CD"		colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    </gauce>
+
+    <!-- 경영실적의 조직 조회 -->
+    <query name="SEL_ORG">
+    <![CDATA[
+		SELECT MA.CODE
+          		,MA.NAME
+		       	,MA.STR_CD
+		       	,MA.DEPT_CD
+		       	,MA.TEAM_CD
+		       	,MA.PC_CD
+		       	,MA.CORNER_CD
+		       	,MA.ORG_CD
+   		FROM (    
+				SELECT DISTINCT 
+		        		DECODE(A.ORG_LEVEL, '1', A.STR_CD, '2', A.DEPT_CD, '3', A.TEAM_CD, '4', A.PC_CD, '5', A.CORNER_CD)     AS CODE  
+		       			,A.ORG_SHORT_NAME        AS NAME
+		       			,A.STR_CD
+		       			,A.DEPT_CD
+		       			,A.TEAM_CD
+		       			,A.PC_CD
+		       			,A.CORNER_CD
+		       			,A.ORG_CD
+				FROM DPS.PC_ORGMST A 
+				WHERE 1 = 1 
+				AND A.STR_CD LIKE ?
+				AND A.DEPT_CD LIKE ?
+				AND A.TEAM_CD LIKE ?
+				AND A.PC_CD LIKE ?
+				AND A.ORG_LEVEL = ? 
+    			ORDER BY A.STR_CD, A.ORG_FLAG
+   		) MA		
+    ]]>
+    </query>
+
+    <!-- 매출계획분석항목 헤더  -->
+    <gauce name="H_SEL_TAB1">
+        <column colName="ORG_CD"					colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="ORG_NAME"					colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SUM_GUBUN"					colType="TB_STRING" 	size="1"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_SALES_AMT"				colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_SALES_AMT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SALES_GROWTH_RATE"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_SALES_PROFIT_AMT"      colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_SALES_PROFIT_AMT"     colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SALES_PROFIT_GROWTH_RATE"	colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_SALES_PROFIT_RATE"     colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_SALES_PROFIT_RATE"    colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SALES_PROFIT_DIFFERENT"    colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="GROUP_GUBUN"				colType="TB_STRING" 	size="4"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="STR_CD"					colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="DEPT_CD"					colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="TEAM_CD"					colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PC_CD"						colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />      
+    </gauce>    	
+
+    <!-- 점별 매출계획분석 조회 -->
+    <query name="SEL_TAB1_STR">
+        <![CDATA[
+        	/*****
+        	* 점별 매출계획분석 조회
+        	*****/        
+			SELECT MMA.ORG_CD
+			       ,NVL((SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD), '합계')       AS ORG_NAME
+			       ,DECODE(GROUP_GUBUN, '1', '0', '2')          AS SUM_GUBUN
+			       ,MMA.PRE_SALES_AMT     		AS PRE_SALES_AMT
+			       ,MMA.PLAN_SALES_AMT			AS PLAN_SALES_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_AMT - MMA.PRE_SALES_AMT)/MMA.PLAN_SALES_AMT * 100,2)
+			        END                                                                       AS SALES_GROWTH_RATE       
+			       ,MMA.PRE_SALES_PROFIT_AMT		AS PRE_SALES_PROFIT_AMT
+			       ,MMA.PLAN_SALES_PROFIT_AMT	AS PLAN_SALES_PROFIT_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_PROFIT_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_PROFIT_AMT - MMA.PRE_SALES_PROFIT_AMT)/MMA.PLAN_SALES_PROFIT_AMT * 100,2)
+			        END                                                                       AS SALES_PROFIT_GROWTH_RATE
+			        ,CASE
+			           WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			        END                                                                       AS PRE_SALES_PROFIT_RATE
+			        ,CASE
+			           WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			        END                                                                       AS PLAN_SALES_PROFIT_RATE
+			        ,(
+			          CASE
+			              WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			              ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			          END        
+			         ) - (
+			              CASE
+			                  WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			                  ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			                  END          
+			           )                                                                     AS SALES_PROFIT_DIFFERENT       
+			       ,MMA.GROUP_GUBUN
+             	   ,SUBSTR(MMA.ORG_CD, 1, 2)                                                 AS STR_CD
+             	   ,SUBSTR(MMA.ORG_CD, 3, 2)                                                 AS DEPT_CD
+             	   ,SUBSTR(MMA.ORG_CD, 5, 2)                                                 AS TEAM_CD
+             	   ,SUBSTR(MMA.ORG_CD, 7, 2)                                                 AS PC_CD			       
+			FROM (
+			      SELECT RPAD(MA.STR_CD, 10, '00')     AS ORG_CD
+			          ,SUM(MA.PRE_SALES_AMT)           AS PRE_SALES_AMT
+			          ,SUM(MA.PLAN_SALES_AMT)          AS PLAN_SALES_AMT
+			          ,SUM(MA.PRE_SALES_PROFIT_AMT)    AS PRE_SALES_PROFIT_AMT    
+			          ,SUM(MA.PLAN_SALES_PROFIT_AMT)   AS PLAN_SALES_PROFIT_AMT
+			          ,GROUPING(MA.STR_CD)             AS GROUP_GUBUN
+			      FROM (
+			           /* 전년실적 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT 
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?  
+			             
+			           UNION ALL
+			           
+			           /* 전년실적 매출이익 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')      
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출이익액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?
+			          ) MA
+			      WHERE 1 = 1 
+			      --AND MA.STR_CD LIKE '%'
+			      GROUP BY  ROLLUP(MA.STR_CD)
+			    ) MMA
+			WHERE MMA.GROUP_GUBUN NOT LIKE '%1%'   
+        ]]>
+    </query>
+
+    <!-- 팀별 매출계획분석 조회 -->
+    <query name="SEL_TAB1_TEAM">
+        <![CDATA[
+        	/*****
+        	* 팀별 매출계획분석 조회
+        	*****/         
+			SELECT DECODE(GROUP_GUBUN, '11', '', MMA.ORG_CD)   AS ORG_CD
+			       ,DECODE(GROUP_GUBUN, '11', '합계', (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD)) AS ORG_NAME                                        
+			       ,DECODE(GROUP_GUBUN, '11', '0', '2')          AS SUM_GUBUN
+			       ,MMA.PRE_SALES_AMT					 AS PRE_SALES_AMT
+			       ,MMA.PLAN_SALES_AMT					 AS PLAN_SALES_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_AMT - MMA.PRE_SALES_AMT)/MMA.PLAN_SALES_AMT * 100,2)
+			        END                                                                       AS SALES_GROWTH_RATE       
+			       ,MMA.PRE_SALES_PROFIT_AMT				AS PRE_SALES_PROFIT_AMT
+			       ,MMA.PLAN_SALES_PROFIT_AMT				AS PLAN_SALES_PROFIT_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_PROFIT_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_PROFIT_AMT - MMA.PRE_SALES_PROFIT_AMT)/MMA.PLAN_SALES_PROFIT_AMT * 100,2)
+			        END                                                                       AS SALES_PROFIT_GROWTH_RATE
+			        ,CASE
+			           WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			        END                                                                       AS PRE_SALES_PROFIT_RATE
+			        ,CASE
+			           WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			        END                                                                       AS PLAN_SALES_PROFIT_RATE
+			        ,(
+			          CASE
+			              WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			              ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			          END        
+			         ) - (
+			              CASE
+			                  WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			                  ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			                  END          
+			           )                                                                     AS SALES_PROFIT_DIFFERENT       
+			       ,MMA.GROUP_GUBUN
+             	   ,SUBSTR(MMA.ORG_CD, 1, 2)                                                 AS STR_CD
+             	   ,SUBSTR(MMA.ORG_CD, 3, 2)                                                 AS DEPT_CD
+             	   ,SUBSTR(MMA.ORG_CD, 5, 2)                                                 AS TEAM_CD
+             	   ,SUBSTR(MMA.ORG_CD, 7, 2)                                                 AS PC_CD				       
+			FROM (
+			      SELECT RPAD(MA.STR_CD || MA.DEPT_CD || MA.TEAM_CD, 10, '00') AS ORG_CD
+			          ,SUM(MA.PRE_SALES_AMT)           AS PRE_SALES_AMT
+			          ,SUM(MA.PLAN_SALES_AMT)          AS PLAN_SALES_AMT
+			          ,SUM(MA.PRE_SALES_PROFIT_AMT)    AS PRE_SALES_PROFIT_AMT    
+			          ,SUM(MA.PLAN_SALES_PROFIT_AMT)   AS PLAN_SALES_PROFIT_AMT
+			          ,GROUPING(MA.DEPT_CD)||GROUPING(MA.TEAM_CD)             AS GROUP_GUBUN
+			      FROM (
+			           /* 전년실적 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+			           AND RPT.ORG_LEVEL >= 3
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT 
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?   
+			           AND RPT.ORG_LEVEL >= 3
+			             
+			           UNION ALL
+			           
+			           /* 전년실적 매출이익 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')      
+			           AND RPT.ORG_LEVEL >= 3
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출이익액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?
+			           AND RPT.ORG_LEVEL >= 3
+			           
+			          ) MA
+			      WHERE 1 = 1 
+			      AND MA.STR_CD = ?
+			      GROUP BY  MA.STR_CD,ROLLUP(MA.DEPT_CD,MA.TEAM_CD)
+			     ) MMA
+			--WHERE MMA.GROUP_GUBUN != '01'
+			WHERE MMA.GROUP_GUBUN NOT LIKE '%1%'   			
+        ]]>
+    </query>
+    
+    <!-- PC별 매출계획분석 조회 -->
+    <query name="SEL_TAB1_PC">
+        <![CDATA[
+        	/*****
+        	* PC별 매출계획분석 조회
+        	*****/          
+			SELECT DECODE(GROUP_GUBUN, '000',MMA.ORG_CD, '')      AS ORG_CD
+						 ,DECODE(GROUP_GUBUN, '111', '합계'
+			                          , '001', '소계'
+			                                 , (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD))        AS ORG_NAME                                        
+						 ,DECODE(GROUP_GUBUN, '111', '0','001', '1', '2')          AS SUM_GUBUN
+			       ,MMA.PRE_SALES_AMT				AS PRE_SALES_AMT
+			       ,MMA.PLAN_SALES_AMT				AS PLAN_SALES_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_AMT - MMA.PRE_SALES_AMT)/MMA.PLAN_SALES_AMT * 100,2)
+			        END                                                                       AS SALES_GROWTH_RATE       
+			       ,MMA.PRE_SALES_PROFIT_AMT		AS PRE_SALES_PROFIT_AMT
+			       ,MMA.PLAN_SALES_PROFIT_AMT		AS PLAN_SALES_PROFIT_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_PROFIT_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_PROFIT_AMT - MMA.PRE_SALES_PROFIT_AMT)/MMA.PLAN_SALES_PROFIT_AMT * 100,2)
+			        END                                                                       AS SALES_PROFIT_GROWTH_RATE
+			        ,CASE
+			           WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			        END                                                                       AS PRE_SALES_PROFIT_RATE
+			        ,CASE
+			           WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			        END                                                                       AS PLAN_SALES_PROFIT_RATE
+			        ,(
+			          CASE
+			              WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			              ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			          END        
+			         ) - (
+			              CASE
+			                  WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			                  ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			                  END          
+			           )                                                                     AS SALES_PROFIT_DIFFERENT       
+			       ,MMA.GROUP_GUBUN
+             	   ,SUBSTR(MMA.ORG_CD, 1, 2)                                                 AS STR_CD
+             	   ,SUBSTR(MMA.ORG_CD, 3, 2)                                                 AS DEPT_CD
+             	   ,SUBSTR(MMA.ORG_CD, 5, 2)                                                 AS TEAM_CD
+             	   ,SUBSTR(MMA.ORG_CD, 7, 2)                                                 AS PC_CD				       
+			FROM (
+			      SELECT RPAD(MA.STR_CD || MA.DEPT_CD || MA.TEAM_CD || MA.PC_CD, 10, '00') AS ORG_CD
+			          ,SUM(MA.PRE_SALES_AMT)           AS PRE_SALES_AMT
+			          ,SUM(MA.PLAN_SALES_AMT)          AS PLAN_SALES_AMT
+			          ,SUM(MA.PRE_SALES_PROFIT_AMT)    AS PRE_SALES_PROFIT_AMT    
+			          ,SUM(MA.PLAN_SALES_PROFIT_AMT)   AS PLAN_SALES_PROFIT_AMT
+			          ,GROUPING(MA.DEPT_CD)||GROUPING(MA.TEAM_CD)||GROUPING(MA.PC_CD)             AS GROUP_GUBUN
+			      FROM (
+			           /* 전년실적 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+			           AND RPT.ORG_LEVEL >= 3
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT 
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?
+			           AND RPT.ORG_LEVEL >= 3    
+			             
+			           UNION ALL
+			           
+			           /* 전년실적 매출이익 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')      
+			           AND RPT.ORG_LEVEL >= 3
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출이익액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?
+			           AND RPT.ORG_LEVEL >= 3
+			          ) MA
+			      WHERE 1 = 1 
+			      AND MA.STR_CD = ?
+			      GROUP BY  MA.STR_CD,ROLLUP(MA.DEPT_CD,MA.TEAM_CD,MA.PC_CD)
+			     ) MMA
+			--WHERE MMA.GROUP_GUBUN != '011'
+			WHERE MMA.GROUP_GUBUN NOT LIKE '%1%'   			        
+        ]]>
+    </query>    
+
+    <!-- 점별 매출계획분석 엑셀조회 헤더  -->
+    <gauce name="H_SEL_TAB1_EXCEL">
+        <column colName="ORG_CD"					colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="ORG_NAME"					colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SUM_GUBUN"					colType="TB_STRING" 	size="1"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_SALES_AMT"				colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_SALES_AMT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SALES_GROWTH_RATE"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_SALES_PROFIT_AMT"      colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_SALES_PROFIT_AMT"     colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SALES_PROFIT_GROWTH_RATE"	colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_SALES_PROFIT_RATE"     colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_SALES_PROFIT_RATE"    colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SALES_PROFIT_DIFFERENT"    colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="GROUP_GUBUN"				colType="TB_STRING" 	size="4"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />      
+        <column colName="STR_CD"					colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="DEPT_CD"					colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="TEAM_CD"					colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PC_CD"						colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />      
+    </gauce>
+
+    <!-- 점별 매출계획분석 엑셀조회 -->
+    <query name="SEL_TAB1_EXCEL">
+    <![CDATA[
+    	/*******
+    	* 점별 매출계획분석 엑셀조회
+    	*******/
+		SELECT DECODE(GROUP_GUBUN, '000',MMA.ORG_CD, '')      AS ORG_CD
+		       ,DECODE(GROUP_GUBUN, '000', (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD)
+		                          , '111', '합계'
+		                          , '소계' 
+		              )                                                                      AS ORG_NAME
+		       ,DECODE(GROUP_GUBUN, '000', '2', '111', '0', '1')                             AS SUM_GUBUN
+		       ,MMA.PRE_SALES_AMT
+		       ,MMA.PLAN_SALES_AMT
+		       ,CASE
+		            WHEN  MMA.PLAN_SALES_AMT = 0 THEN 0
+		            ELSE ROUND((MMA.PLAN_SALES_AMT - MMA.PRE_SALES_AMT)/MMA.PLAN_SALES_AMT * 100,2)
+		        END                                                                       AS SALES_GROWTH_RATE       
+		       ,MMA.PRE_SALES_PROFIT_AMT
+		       ,MMA.PLAN_SALES_PROFIT_AMT
+		       ,CASE
+		            WHEN  MMA.PLAN_SALES_PROFIT_AMT = 0 THEN 0
+		            ELSE ROUND((MMA.PLAN_SALES_PROFIT_AMT - MMA.PRE_SALES_PROFIT_AMT)/MMA.PLAN_SALES_PROFIT_AMT * 100,2)
+		        END                                                                       AS SALES_PROFIT_GROWTH_RATE
+		       ,CASE
+		            WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+		            ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+		        END                                                                       AS PRE_SALES_PROFIT_RATE
+		       ,CASE
+		            WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+		            ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+		        END                                                                       AS PLAN_SALES_PROFIT_RATE
+		       ,(
+		         CASE
+		             WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+		             ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+		         END        
+		        ) - (
+		             CASE
+		                 WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+		                 ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+		             END          
+		            )                                                                     AS SALES_PROFIT_DIFFERENT       
+		       ,MMA.GROUP_GUBUN
+               ,SUBSTR(MMA.ORG_CD, 1, 2)                                                 AS STR_CD
+               ,SUBSTR(MMA.ORG_CD, 3, 2)                                                 AS DEPT_CD
+               ,SUBSTR(MMA.ORG_CD, 5, 2)                                                 AS TEAM_CD
+               ,SUBSTR(MMA.ORG_CD, 7, 2)                                                 AS PC_CD	
+		FROM (
+		      SELECT RPAD(MA.STR_CD || MA.DEPT_CD || MA.TEAM_CD || MA.PC_CD, 10, '00') AS ORG_CD
+		             ,SUM(MA.PRE_SALES_AMT)           AS PRE_SALES_AMT
+		             ,SUM(MA.PLAN_SALES_AMT)          AS PLAN_SALES_AMT
+		             ,SUM(MA.PRE_SALES_PROFIT_AMT)    AS PRE_SALES_PROFIT_AMT    
+		             ,SUM(MA.PLAN_SALES_PROFIT_AMT)   AS PLAN_SALES_PROFIT_AMT
+		             ,GROUPING(MA.DEPT_CD)||GROUPING(MA.TEAM_CD)||GROUPING(MA.PC_CD)             AS GROUP_GUBUN
+		      FROM (
+		            /* 전년실적 매출액 */
+		            SELECT RPT.STR_CD
+		                   ,RPT.DEPT_CD
+		                   ,RPT.TEAM_CD
+		                   ,RPT.PC_CD
+		                   ,RPT.ORG_CD
+		                   ,RPT.ORG_FLAG
+		                   ,RPT.ORG_LEVEL
+		                   ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+		                   ,0                                               AS PLAN_SALES_AMT
+		                   ,0                                               AS PRE_SALES_PROFIT_AMT
+		                   ,0                                               AS PLAN_SALES_PROFIT_AMT
+		            FROM MSS.ME_BIZRSLTRPT RPT
+		            WHERE EXISTS (
+		                          SELECT 1
+		                          FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                          AND A.SYS_PART = 'D'
+		                          AND A.COMM_PART = 'M104'
+		                          AND A.COMM_CODE = '1'   /* 총매출 */
+		                          AND A.REFER_CODE = RPT.BIZ_CD
+		                         )
+		            AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		            
+		            UNION ALL
+		            
+		            /* 계획 매출액 */
+		            SELECT RPT.STR_CD
+		                   ,RPT.DEPT_CD
+		                   ,RPT.TEAM_CD
+		                   ,RPT.PC_CD
+		                   ,RPT.ORG_CD
+		                   ,RPT.ORG_FLAG
+		                   ,RPT.ORG_LEVEL
+		                   ,0                                               AS PRE_SALES_AMT
+		                   ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+		                   ,0                                               AS PRE_SALES_PROFIT_AMT
+		                   ,0                                               AS PLAN_SALES_PROFIT_AMT
+		            FROM MSS.ME_BIZPLANRPT RPT 
+		            WHERE EXISTS (
+		                          SELECT 1
+		                          FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                          AND A.SYS_PART = 'D'
+		                          AND A.COMM_PART = 'M104'
+		                          AND A.COMM_CODE = '1'   /* 총매출 */
+		                          AND A.REFER_CODE = RPT.BIZ_CD
+		                         )
+		            AND RPT.BIZ_PLAN_YEAR = ?
+		            
+		            UNION ALL
+		            
+		            /* 전년실적 매출이익 */
+		            SELECT RPT.STR_CD
+		                   ,RPT.DEPT_CD
+		                   ,RPT.TEAM_CD
+		                   ,RPT.PC_CD
+		                   ,RPT.ORG_CD
+		                   ,RPT.ORG_FLAG
+		                   ,RPT.ORG_LEVEL
+		                   ,0                                               AS PRE_SALES_AMT
+		                   ,0                                               AS PLAN_SALES_AMT
+		                   ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+		                   ,0                                               AS PLAN_SALES_PROFIT_AMT
+		            FROM MSS.ME_BIZRSLTRPT RPT
+		            WHERE EXISTS (
+		                          SELECT 1
+		                          FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                          AND A.SYS_PART = 'D'
+		                          AND A.COMM_PART = 'M104'
+		                          AND A.COMM_CODE = '3'   /* 매출이익 */
+		                          AND A.REFER_CODE = RPT.BIZ_CD
+		                         )
+		            AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')   
+		            
+		            UNION ALL
+		            
+		            /* 계획 매출이익액 */
+		            SELECT RPT.STR_CD
+		                   ,RPT.DEPT_CD
+		                   ,RPT.TEAM_CD
+		                   ,RPT.PC_CD
+		                   ,RPT.ORG_CD
+		                   ,RPT.ORG_FLAG
+		                   ,RPT.ORG_LEVEL
+		                   ,0                                               AS PRE_SALES_AMT
+		                   ,0                                               AS PLAN_SALES_AMT
+		                   ,0                                               AS PRE_SALES_PROFIT_AMT
+		                   ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+		            FROM MSS.ME_BIZPLANRPT RPT
+		            WHERE EXISTS (
+		                          SELECT 1
+		                          FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                          AND A.SYS_PART = 'D'
+		                          AND A.COMM_PART = 'M104'
+		                          AND A.COMM_CODE = '3'   /* 매출이익 */
+		                          AND A.REFER_CODE = RPT.BIZ_CD
+		                         )
+		            AND RPT.BIZ_PLAN_YEAR = ?
+		            
+		           ) MA
+		      WHERE 1 = 1
+		      AND MA.STR_CD LIKE ?
+		      GROUP BY MA.STR_CD, ROLLUP(MA.DEPT_CD,MA.TEAM_CD,MA.PC_CD) 
+		     ) MMA
+		WHERE 1 = 1
+		-- AND MMA.GROUP_GUBUN != '011'
+		AND MMA.GROUP_GUBUN NOT LIKE '%1%'    
+    ]]>
+    </query>
+
+     <!-- 매출구성계획분석항목 헤더  -->
+    <gauce name="H_SEL_TAB2">
+        <column colName="ORG_CD"					colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="ORG_NAME"					colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SUM_GUBUN"					colType="TB_STRING" 	size="1"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_SALES_RATIO"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_SALES_RATIO"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SALES_DIFFERENT"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_SALES_PROFIT_RATIO"	colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_SALES_PROFIT_RATIO"	colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SALES_PROFIT_DIFFERENT"	colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="GROUP_GUBUN"				colType="TB_STRING" 	size="4"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="HD_ORG_CD"					colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="STR_CD"					colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="BIZ_PLAN_YEAR"				colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="ORG_LEVEL"					colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="DEPT_CD"					colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="TEAM_CD"					colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PC_CD"						colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />      
+        
+        <column colName="PRE_SALES_AMT"				colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="TOT_PRE_SALES_AMT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_SALES_AMT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="TOT_PLAN_SALES_AMT"		colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_SALES_PROFIT_AMT"		colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="TOT_PRE_SALES_PROFIT_AMT"	colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_SALES_PROFIT_AMT"		colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="TOT_PLAN_SALES_PROFIT_AMT"	colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    </gauce>	
+    
+    
+    <!-- 점별 매출구성계획분석 조회 -->
+    <query name="SEL_TAB2_STR">
+    <![CDATA[
+    	/*******
+    	* 점별 매출구성계획분석 조회
+    	*******/
+		SELECT MMA.ORG_CD
+		      ,NVL((SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD), '합계')                      AS ORG_NAME
+		      ,DECODE(GROUP_GUBUN, '1', '0', '2')                                                                           AS SUM_GUBUN
+		      ,DECODE(TOT_PRE_SALES_AMT, 0, 0,ROUND((MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT) * 100,2))                     AS PRE_SALES_RATIO
+		      ,DECODE(TOT_PLAN_SALES_AMT, 0, 0, ROUND((MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT) * 100,2))                 AS PLAN_SALES_RATIO
+		      ,DECODE(TOT_PLAN_SALES_AMT, 0, 0, ROUND((MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT) * 100,2))
+		         - DECODE(TOT_PRE_SALES_AMT, 0, 0,ROUND((MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT) * 100,2))                 AS SALES_DIFFERENT
+		      ,DECODE(TOT_PRE_SALES_PROFIT_AMT, 0, 0
+		                                      , ROUND((MMA.PRE_SALES_PROFIT_AMT/MMA.TOT_PRE_SALES_PROFIT_AMT) * 100,2))     AS PRE_SALES_PROFIT_RATIO
+		      ,DECODE(TOT_PLAN_SALES_PROFIT_AMT, 0, 0
+		                                       , ROUND((MMA.PLAN_SALES_PROFIT_AMT/MMA.TOT_PLAN_SALES_PROFIT_AMT) * 100,2))  AS PLAN_SALES_PROFIT_RATIO
+		      ,DECODE(TOT_PLAN_SALES_PROFIT_AMT, 0, 0
+		                                       , ROUND((MMA.PLAN_SALES_PROFIT_AMT/MMA.TOT_PLAN_SALES_PROFIT_AMT) * 100,2))
+		         - DECODE(TOT_PRE_SALES_PROFIT_AMT, 0, 0
+		                                      , ROUND((MMA.PRE_SALES_PROFIT_AMT/MMA.TOT_PRE_SALES_PROFIT_AMT) * 100,2))     AS SALES_PROFIT_DIFFERENT
+		      ,MMA.GROUP_GUBUN
+		      ,MMA.HD_ORG_CD
+		      ,?	AS STR_CD
+		      ,?	AS BIZ_PLAN_YEAR
+		      ,?	AS ORG_LEVEL
+               --,SUBSTR(MMA.ORG_CD, 1, 2)                                                 AS STR_CD
+               ,SUBSTR(MMA.ORG_CD, 3, 2)                                                 AS DEPT_CD
+               ,SUBSTR(MMA.ORG_CD, 5, 2)                                                 AS TEAM_CD
+               ,SUBSTR(MMA.ORG_CD, 7, 2)                                                 AS PC_CD
+
+               ,MMA.PRE_SALES_AMT
+               ,MMA.TOT_PRE_SALES_AMT
+               ,MMA.PLAN_SALES_AMT
+               ,MMA.TOT_PLAN_SALES_AMT
+               ,MMA.PRE_SALES_PROFIT_AMT
+               ,MMA.TOT_PRE_SALES_PROFIT_AMT
+               ,MMA.PLAN_SALES_PROFIT_AMT
+               ,MMA.TOT_PLAN_SALES_PROFIT_AMT	
+               			      
+		FROM (
+		      SELECT RPAD(XXA.STR_CD, 10, '00')               AS ORG_CD
+		             ,SUM(XXA.PRE_SALES_AMT)                  AS PRE_SALES_AMT
+		             ,AVG(XXA.TOT_PRE_SALES_AMT)              AS TOT_PRE_SALES_AMT
+		             ,SUM(XXA.PLAN_SALES_AMT)                 AS PLAN_SALES_AMT
+		             ,AVG(XXA.TOT_PLAN_SALES_AMT)             AS TOT_PLAN_SALES_AMT
+		             ,SUM(XXA.PRE_SALES_PROFIT_AMT)           AS PRE_SALES_PROFIT_AMT
+		             ,AVG(XXA.TOT_PRE_SALES_PROFIT_AMT)       AS TOT_PRE_SALES_PROFIT_AMT
+		             ,SUM(XXA.PLAN_SALES_PROFIT_AMT)          AS PLAN_SALES_PROFIT_AMT
+		             ,AVG(XXA.TOT_PLAN_SALES_PROFIT_AMT)      AS TOT_PLAN_SALES_PROFIT_AMT
+		             ,GROUPING(XXA.STR_CD)                    AS GROUP_GUBUN
+		             ,RPAD(NVL(XXA.STR_CD, '00'), 10, '00')    AS HD_ORG_CD
+		      FROM (
+		            SELECT XA.STR_CD
+		                   ,XA.PRE_SALES_AMT
+		                   ,SUM(XA.PRE_SALES_AMT) OVER()           AS TOT_PRE_SALES_AMT
+		                   ,XA.PLAN_SALES_AMT
+		                   ,SUM(XA.PLAN_SALES_AMT) OVER()          AS TOT_PLAN_SALES_AMT
+		                   ,XA.PRE_SALES_PROFIT_AMT
+		                   ,SUM(XA.PRE_SALES_PROFIT_AMT) OVER()    AS TOT_PRE_SALES_PROFIT_AMT
+		                   ,XA.PLAN_SALES_PROFIT_AMT
+		                   ,SUM(XA.PLAN_SALES_PROFIT_AMT) OVER()   AS TOT_PLAN_SALES_PROFIT_AMT
+		            FROM (
+		                  SELECT MA.STR_CD
+		                         ,SUM(MA.PRE_SALES_AMT)            AS PRE_SALES_AMT
+		                         ,SUM(MA.PLAN_SALES_AMT)           AS PLAN_SALES_AMT
+		                         ,SUM(MA.PRE_SALES_PROFIT_AMT)     AS PRE_SALES_PROFIT_AMT
+		                         ,SUM(MA.PLAN_SALES_PROFIT_AMT)    AS PLAN_SALES_PROFIT_AMT
+		                  FROM (
+		                        /* 전년실적 매출액 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+		                               ,0                                               AS PLAN_SALES_AMT
+		                               ,0                                               AS PRE_SALES_PROFIT_AMT
+		                               ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZRSLTRPT RPT
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '1'   /* 총매출 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		                        
+		                        UNION ALL
+		                        
+		                        /* 계획 매출액 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,0                                               AS PRE_SALES_AMT
+		                               ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+		                               ,0                                               AS PRE_SALES_PROFIT_AMT
+		                               ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZPLANRPT RPT 
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '1'   /* 총매출 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND RPT.BIZ_PLAN_YEAR = ?
+		                          
+		                        UNION ALL
+		                        
+		                        /* 전년실적 매출이익 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,0                                               AS PRE_SALES_AMT
+		                               ,0                                               AS PLAN_SALES_AMT
+		                               ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+		                               ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZRSLTRPT RPT
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '3'   /* 매출이익 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')      
+		                        
+		                        UNION ALL
+		                        
+		                        /* 계획 매출이익액 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,0                                               AS PRE_SALES_AMT
+		                               ,0                                               AS PLAN_SALES_AMT
+		                               ,0                                               AS PRE_SALES_PROFIT_AMT
+		                               ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZPLANRPT RPT
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '3'   /* 매출이익 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND RPT.BIZ_PLAN_YEAR = ?
+		                       ) MA
+		                  GROUP BY MA.STR_CD
+		                 ) XA
+		            ) XXA
+		      GROUP BY ROLLUP(XXA.STR_CD)
+		      ) MMA
+		WHERE MMA.GROUP_GUBUN NOT LIKE '%1%'		                
+    ]]>
+    </query>    
+
+    <!-- 팀별 매출구성계획분석 조회 -->
+    <query name="SEL_TAB2_TEAM">
+    <![CDATA[
+    	/******
+    	* 팀별 매출구성계획분석 조회
+    	******/
+		SELECT DECODE(GROUP_GUBUN, '11', '', MMA.ORG_CD)   AS ORG_CD
+		       ,DECODE(GROUP_GUBUN, '11', '합계', (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD)) AS ORG_NAME                                        
+					 ,DECODE(GROUP_GUBUN, '11', '0', '2')          AS SUM_GUBUN
+		      ,DECODE(TOT_PRE_SALES_AMT, 0, 0,ROUND((MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT) * 100,2))                     AS PRE_SALES_RATIO
+		      ,DECODE(TOT_PLAN_SALES_AMT, 0, 0, ROUND((MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT) * 100,2))                 AS PLAN_SALES_RATIO
+		      ,DECODE(TOT_PLAN_SALES_AMT, 0, 0, ROUND((MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT) * 100,2))
+		         - DECODE(TOT_PRE_SALES_AMT, 0, 0,ROUND((MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT) * 100,2))                 AS SALES_DIFFERENT
+		      ,DECODE(TOT_PRE_SALES_PROFIT_AMT, 0, 0
+		                                      , ROUND((MMA.PRE_SALES_PROFIT_AMT/MMA.TOT_PRE_SALES_PROFIT_AMT) * 100,2))     AS PRE_SALES_PROFIT_RATIO
+		      ,DECODE(TOT_PLAN_SALES_PROFIT_AMT, 0, 0
+		                                       , ROUND((MMA.PLAN_SALES_PROFIT_AMT/MMA.TOT_PLAN_SALES_PROFIT_AMT) * 100,2))  AS PLAN_SALES_PROFIT_RATIO
+		      ,DECODE(TOT_PLAN_SALES_PROFIT_AMT, 0, 0
+		                                       , ROUND((MMA.PLAN_SALES_PROFIT_AMT/MMA.TOT_PLAN_SALES_PROFIT_AMT) * 100,2))
+		         - DECODE(TOT_PRE_SALES_PROFIT_AMT, 0, 0
+		                                      , ROUND((MMA.PRE_SALES_PROFIT_AMT/MMA.TOT_PRE_SALES_PROFIT_AMT) * 100,2))     AS SALES_PROFIT_DIFFERENT
+			  ,MMA.GROUP_GUBUN
+			  ,MMA.HD_ORG_CD
+		      ,?	AS STR_CD
+		      ,?	AS BIZ_PLAN_YEAR
+		      ,?	AS ORG_LEVEL
+               --,SUBSTR(MMA.ORG_CD, 1, 2)                                                 AS STR_CD
+               ,SUBSTR(MMA.ORG_CD, 3, 2)                                                 AS DEPT_CD
+               ,SUBSTR(MMA.ORG_CD, 5, 2)                                                 AS TEAM_CD
+               ,SUBSTR(MMA.ORG_CD, 7, 2)                                                 AS PC_CD
+
+               ,MMA.PRE_SALES_AMT
+               ,MMA.TOT_PRE_SALES_AMT
+               ,MMA.PLAN_SALES_AMT
+               ,MMA.TOT_PLAN_SALES_AMT
+               ,MMA.PRE_SALES_PROFIT_AMT
+               ,MMA.TOT_PRE_SALES_PROFIT_AMT
+               ,MMA.PLAN_SALES_PROFIT_AMT
+               ,MMA.TOT_PLAN_SALES_PROFIT_AMT	               
+               			      		      				      
+		FROM (
+		      SELECT RPAD(XXA.STR_CD || XXA.DEPT_CD || XXA.TEAM_CD, 10, '00') AS ORG_CD
+		             ,SUM(XXA.PRE_SALES_AMT)                  AS PRE_SALES_AMT
+		             ,AVG(XXA.TOT_PRE_SALES_AMT)              AS TOT_PRE_SALES_AMT
+		             ,SUM(XXA.PLAN_SALES_AMT)                 AS PLAN_SALES_AMT
+		             ,AVG(XXA.TOT_PLAN_SALES_AMT)             AS TOT_PLAN_SALES_AMT
+		             ,SUM(XXA.PRE_SALES_PROFIT_AMT)           AS PRE_SALES_PROFIT_AMT
+		             ,AVG(XXA.TOT_PRE_SALES_PROFIT_AMT)       AS TOT_PRE_SALES_PROFIT_AMT
+		             ,SUM(XXA.PLAN_SALES_PROFIT_AMT)          AS PLAN_SALES_PROFIT_AMT
+		             ,AVG(XXA.TOT_PLAN_SALES_PROFIT_AMT)      AS TOT_PLAN_SALES_PROFIT_AMT
+		             ,GROUPING(XXA.DEPT_CD)||GROUPING(XXA.TEAM_CD)             AS GROUP_GUBUN
+		             ,RPAD(NVL(XXA.STR_CD,'00') || XXA.DEPT_CD || XXA.TEAM_CD, 10, '00')    AS HD_ORG_CD
+		      FROM (
+		            SELECT XA.STR_CD
+		                   ,XA.DEPT_CD
+		                   ,XA.TEAM_CD
+		                   ,XA.PRE_SALES_AMT
+		                   ,SUM(XA.PRE_SALES_AMT) OVER()           AS TOT_PRE_SALES_AMT
+		                   ,XA.PLAN_SALES_AMT
+		                   ,SUM(XA.PLAN_SALES_AMT) OVER()          AS TOT_PLAN_SALES_AMT
+		                   ,XA.PRE_SALES_PROFIT_AMT
+		                   ,SUM(XA.PRE_SALES_PROFIT_AMT) OVER()    AS TOT_PRE_SALES_PROFIT_AMT
+		                   ,XA.PLAN_SALES_PROFIT_AMT
+		                   ,SUM(XA.PLAN_SALES_PROFIT_AMT) OVER()   AS TOT_PLAN_SALES_PROFIT_AMT
+		            FROM (
+		                  SELECT MA.STR_CD
+		                         ,MA.DEPT_CD
+		                         ,MA.TEAM_CD
+		                         ,SUM(MA.PRE_SALES_AMT)            AS PRE_SALES_AMT
+		                         ,SUM(MA.PLAN_SALES_AMT)           AS PLAN_SALES_AMT
+		                         ,SUM(MA.PRE_SALES_PROFIT_AMT)     AS PRE_SALES_PROFIT_AMT
+		                         ,SUM(MA.PLAN_SALES_PROFIT_AMT)    AS PLAN_SALES_PROFIT_AMT
+		                  FROM (
+		                        /* 전년실적 매출액 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+		                               ,0                                               AS PLAN_SALES_AMT
+		                               ,0                                               AS PRE_SALES_PROFIT_AMT
+		                               ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZRSLTRPT RPT
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '1'   /* 총매출 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		                        AND RPT.ORG_LEVEL >= 3
+		                        
+		                        UNION ALL
+		                        
+		                        /* 계획 매출액 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,0                                               AS PRE_SALES_AMT
+		                               ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+		                               ,0                                               AS PRE_SALES_PROFIT_AMT
+		                               ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZPLANRPT RPT 
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '1'   /* 총매출 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND RPT.BIZ_PLAN_YEAR = ?
+		                        AND RPT.ORG_LEVEL >= 3
+		                          
+		                        UNION ALL
+		                        
+		                        /* 전년실적 매출이익 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,0                                               AS PRE_SALES_AMT
+		                               ,0                                               AS PLAN_SALES_AMT
+		                               ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+		                               ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZRSLTRPT RPT
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '3'   /* 매출이익 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY') 
+		                        AND RPT.ORG_LEVEL >= 3     
+		                        
+		                        UNION ALL
+		                        
+		                        /* 계획 매출이익액 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,0                                               AS PRE_SALES_AMT
+		                               ,0                                               AS PLAN_SALES_AMT
+		                               ,0                                               AS PRE_SALES_PROFIT_AMT
+		                               ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZPLANRPT RPT
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '3'   /* 매출이익 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND RPT.BIZ_PLAN_YEAR = ?
+		                        AND RPT.ORG_LEVEL >= 3
+		                       ) MA
+		                  WHERE 1 = 1
+		                  AND MA.STR_CD = ?     
+		                  GROUP BY MA.STR_CD,MA.DEPT_CD,MA.TEAM_CD
+		                 ) XA
+		            ) XXA
+		      GROUP BY XXA.STR_CD,ROLLUP(XXA.DEPT_CD,XXA.TEAM_CD)
+		      ) MMA   
+		-- WHERE MMA.GROUP_GUBUN != '01'
+		WHERE MMA.GROUP_GUBUN NOT LIKE '%1%'		                		      
+    ]]>
+    </query>
+
+    <!-- PC별 매출구성계획분석 조회 -->
+    <query name="SEL_TAB2_PC">
+    <![CDATA[
+    	/******
+    	* PC별 매출구성계획분석 조회
+    	******/
+		SELECT DECODE(GROUP_GUBUN, '000',MMA.ORG_CD, '')      AS ORG_CD
+					,DECODE(GROUP_GUBUN, '111', '합계'
+					                   , '001', '소계'
+					                          , (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD))        AS ORG_NAME                                        
+					,DECODE(GROUP_GUBUN, '111', '0','001', '1', '2')          AS SUM_GUBUN
+		      ,DECODE(TOT_PRE_SALES_AMT, 0, 0,ROUND((MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT) * 100,2))                     AS PRE_SALES_RATIO
+		      ,DECODE(TOT_PLAN_SALES_AMT, 0, 0, ROUND((MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT) * 100,2))                 AS PLAN_SALES_RATIO
+		      ,DECODE(TOT_PLAN_SALES_AMT, 0, 0, ROUND((MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT) * 100,2))
+		         - DECODE(TOT_PRE_SALES_AMT, 0, 0,ROUND((MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT) * 100,2))                 AS SALES_DIFFERENT
+		      ,DECODE(TOT_PRE_SALES_PROFIT_AMT, 0, 0
+		                                      , ROUND((MMA.PRE_SALES_PROFIT_AMT/MMA.TOT_PRE_SALES_PROFIT_AMT) * 100,2))     AS PRE_SALES_PROFIT_RATIO
+		      ,DECODE(TOT_PLAN_SALES_PROFIT_AMT, 0, 0
+		                                       , ROUND((MMA.PLAN_SALES_PROFIT_AMT/MMA.TOT_PLAN_SALES_PROFIT_AMT) * 100,2))  AS PLAN_SALES_PROFIT_RATIO
+		      ,DECODE(TOT_PLAN_SALES_PROFIT_AMT, 0, 0
+		                                       , ROUND((MMA.PLAN_SALES_PROFIT_AMT/MMA.TOT_PLAN_SALES_PROFIT_AMT) * 100,2))
+		         - DECODE(TOT_PRE_SALES_PROFIT_AMT, 0, 0
+		                                      , ROUND((MMA.PRE_SALES_PROFIT_AMT/MMA.TOT_PRE_SALES_PROFIT_AMT) * 100,2))     AS SALES_PROFIT_DIFFERENT
+			  ,MMA.GROUP_GUBUN
+			  ,MMA.HD_ORG_CD
+		      ,?	AS STR_CD
+		      ,?	AS BIZ_PLAN_YEAR
+		      ,?	AS ORG_LEVEL
+               --,SUBSTR(MMA.ORG_CD, 1, 2)                                                 AS STR_CD
+               ,SUBSTR(MMA.ORG_CD, 3, 2)                                                 AS DEPT_CD
+               ,SUBSTR(MMA.ORG_CD, 5, 2)                                                 AS TEAM_CD
+               ,SUBSTR(MMA.ORG_CD, 7, 2)                                                 AS PC_CD	
+               
+               ,MMA.PRE_SALES_AMT
+               ,MMA.TOT_PRE_SALES_AMT
+               ,MMA.PLAN_SALES_AMT
+               ,MMA.TOT_PLAN_SALES_AMT
+               ,MMA.PRE_SALES_PROFIT_AMT
+               ,MMA.TOT_PRE_SALES_PROFIT_AMT
+               ,MMA.PLAN_SALES_PROFIT_AMT
+               ,MMA.TOT_PLAN_SALES_PROFIT_AMT	               
+               		      		      				  
+		FROM (
+		      SELECT RPAD(XXA.STR_CD || XXA.DEPT_CD || XXA.TEAM_CD || XXA.PC_CD, 10, '00') AS ORG_CD
+		             ,SUM(XXA.PRE_SALES_AMT)                  AS PRE_SALES_AMT
+		             ,AVG(XXA.TOT_PRE_SALES_AMT)              AS TOT_PRE_SALES_AMT
+		             ,SUM(XXA.PLAN_SALES_AMT)                 AS PLAN_SALES_AMT
+		             ,AVG(XXA.TOT_PLAN_SALES_AMT)             AS TOT_PLAN_SALES_AMT
+		             ,SUM(XXA.PRE_SALES_PROFIT_AMT)           AS PRE_SALES_PROFIT_AMT
+		             ,AVG(XXA.TOT_PRE_SALES_PROFIT_AMT)       AS TOT_PRE_SALES_PROFIT_AMT
+		             ,SUM(XXA.PLAN_SALES_PROFIT_AMT)          AS PLAN_SALES_PROFIT_AMT
+		             ,AVG(XXA.TOT_PLAN_SALES_PROFIT_AMT)      AS TOT_PLAN_SALES_PROFIT_AMT
+		             ,GROUPING(XXA.DEPT_CD)||GROUPING(XXA.TEAM_CD)||GROUPING(XXA.PC_CD)             AS GROUP_GUBUN
+		             ,RPAD(NVL(XXA.STR_CD,'00') || XXA.DEPT_CD || XXA.TEAM_CD || XXA.PC_CD, 10, '00')    AS HD_ORG_CD
+		      FROM (
+		            SELECT XA.STR_CD
+		                   ,XA.DEPT_CD
+		                   ,XA.TEAM_CD
+		                   ,XA.PC_CD
+		                   ,XA.PRE_SALES_AMT
+		                   ,SUM(XA.PRE_SALES_AMT) OVER()           AS TOT_PRE_SALES_AMT
+		                   ,XA.PLAN_SALES_AMT
+		                   ,SUM(XA.PLAN_SALES_AMT) OVER()          AS TOT_PLAN_SALES_AMT
+		                   ,XA.PRE_SALES_PROFIT_AMT
+		                   ,SUM(XA.PRE_SALES_PROFIT_AMT) OVER()    AS TOT_PRE_SALES_PROFIT_AMT
+		                   ,XA.PLAN_SALES_PROFIT_AMT
+		                   ,SUM(XA.PLAN_SALES_PROFIT_AMT) OVER()   AS TOT_PLAN_SALES_PROFIT_AMT
+		            FROM (
+		                  SELECT MA.STR_CD
+		                         ,MA.DEPT_CD
+		                         ,MA.TEAM_CD
+		                         ,MA.PC_CD
+		                         ,SUM(MA.PRE_SALES_AMT)            AS PRE_SALES_AMT
+		                         ,SUM(MA.PLAN_SALES_AMT)           AS PLAN_SALES_AMT
+		                         ,SUM(MA.PRE_SALES_PROFIT_AMT)     AS PRE_SALES_PROFIT_AMT
+		                         ,SUM(MA.PLAN_SALES_PROFIT_AMT)    AS PLAN_SALES_PROFIT_AMT
+		                  FROM (
+		                        /* 전년실적 매출액 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+		                               ,0                                               AS PLAN_SALES_AMT
+		                               ,0                                               AS PRE_SALES_PROFIT_AMT
+		                               ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZRSLTRPT RPT
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '1'   /* 총매출 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		                        AND RPT.ORG_LEVEL >= 3
+		                        
+		                        UNION ALL
+		                        
+		                        /* 계획 매출액 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,0                                               AS PRE_SALES_AMT
+		                               ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+		                               ,0                                               AS PRE_SALES_PROFIT_AMT
+		                               ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZPLANRPT RPT 
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '1'   /* 총매출 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND RPT.BIZ_PLAN_YEAR = ?  
+		                        AND RPT.ORG_LEVEL >= 3
+		                          
+		                        UNION ALL
+		                        
+		                        /* 전년실적 매출이익 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,0                                               AS PRE_SALES_AMT
+		                               ,0                                               AS PLAN_SALES_AMT
+		                               ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+		                               ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZRSLTRPT RPT
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '3'   /* 매출이익 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY') 
+		                        AND RPT.ORG_LEVEL >= 3     
+		                        
+		                        UNION ALL
+		                        
+		                        /* 계획 매출이익액 */
+		                        SELECT RPT.STR_CD
+		                               ,RPT.DEPT_CD
+		                               ,RPT.TEAM_CD
+		                               ,RPT.PC_CD
+		                               ,RPT.ORG_CD
+		                               ,RPT.ORG_FLAG
+		                               ,RPT.ORG_LEVEL
+		                               ,0                                               AS PRE_SALES_AMT
+		                               ,0                                               AS PLAN_SALES_AMT
+		                               ,0                                               AS PRE_SALES_PROFIT_AMT
+		                               ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+		                        FROM MSS.ME_BIZPLANRPT RPT
+		                        WHERE EXISTS (
+		                                      SELECT 1
+		                                      FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                      AND A.SYS_PART = 'D'
+		                                      AND A.COMM_PART = 'M104'
+		                                      AND A.COMM_CODE = '3'   /* 매출이익 */
+		                                      AND A.REFER_CODE = RPT.BIZ_CD
+		                                     )
+		                        AND RPT.BIZ_PLAN_YEAR = ?
+		                        AND RPT.ORG_LEVEL >= 3
+		                       ) MA
+		                  WHERE 1 = 1
+		                  AND MA.STR_CD = ?     
+		                  GROUP BY MA.STR_CD,MA.DEPT_CD,MA.TEAM_CD,MA.PC_CD
+		                 ) XA
+		            ) XXA
+		      GROUP BY XXA.STR_CD,ROLLUP(XXA.DEPT_CD,XXA.TEAM_CD,XXA.PC_CD)
+		      ) MMA   
+		--WHERE MMA.GROUP_GUBUN != '011' 
+		WHERE MMA.GROUP_GUBUN NOT LIKE '%1%'		                		     
+    ]]>
+    </query>    
+
+    <!-- 매출구성비계획분석 엑셀조회 -->
+    <query name="SEL_TAB2_EXCEL">
+    <![CDATA[
+		/******
+		* 매출구성비계획분석 엑셀조회
+		******/
+		SELECT DECODE(GROUP_GUBUN, '000',MMA.ORG_CD, '')      AS ORG_CD
+		       ,DECODE(GROUP_GUBUN, '111', '합계'
+		                          , '001', '소계'
+		                          , (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD))        AS ORG_NAME                                        
+		       ,DECODE(GROUP_GUBUN, '111', '0','001', '1', '2')          AS SUM_GUBUN
+		       ,DECODE(TOT_PRE_SALES_AMT, 0, 0,ROUND((MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT) * 100,2))                     AS PRE_SALES_RATIO
+		       ,DECODE(TOT_PLAN_SALES_AMT, 0, 0, ROUND((MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT) * 100,2))                 AS PLAN_SALES_RATIO
+		       ,DECODE(TOT_PLAN_SALES_AMT, 0, 0, ROUND((MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT) * 100,2))
+		           - DECODE(TOT_PRE_SALES_AMT, 0, 0,ROUND((MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT) * 100,2))                 AS SALES_DIFFERENT
+		       ,DECODE(TOT_PRE_SALES_PROFIT_AMT, 0, 0
+		                                          , ROUND((MMA.PRE_SALES_PROFIT_AMT/MMA.TOT_PRE_SALES_PROFIT_AMT) * 100,2))     AS PRE_SALES_PROFIT_RATIO
+		       ,DECODE(TOT_PLAN_SALES_PROFIT_AMT, 0, 0
+		                                           , ROUND((MMA.PLAN_SALES_PROFIT_AMT/MMA.TOT_PLAN_SALES_PROFIT_AMT) * 100,2))  AS PLAN_SALES_PROFIT_RATIO
+		       ,DECODE(TOT_PLAN_SALES_PROFIT_AMT, 0, 0
+		                                           , ROUND((MMA.PLAN_SALES_PROFIT_AMT/MMA.TOT_PLAN_SALES_PROFIT_AMT) * 100,2))
+		             - DECODE(TOT_PRE_SALES_PROFIT_AMT, 0, 0
+		                                                 , ROUND((MMA.PRE_SALES_PROFIT_AMT/MMA.TOT_PRE_SALES_PROFIT_AMT) * 100,2))     AS SALES_PROFIT_DIFFERENT
+		       ,MMA.GROUP_GUBUN
+		       ,MMA.HD_ORG_CD
+		       ,?	AS STR_CD
+		       ,?	AS BIZ_PLAN_YEAR
+		       ,?	AS ORG_LEVEL
+
+               --,SUBSTR(MMA.ORG_CD, 1, 2)                                                 AS STR_CD
+               ,SUBSTR(MMA.ORG_CD, 3, 2)                                                 AS DEPT_CD
+               ,SUBSTR(MMA.ORG_CD, 5, 2)                                                 AS TEAM_CD
+               ,SUBSTR(MMA.ORG_CD, 7, 2)                                                 AS PC_CD	
+               
+               ,MMA.PRE_SALES_AMT
+               ,MMA.TOT_PRE_SALES_AMT
+               ,MMA.PLAN_SALES_AMT
+               ,MMA.TOT_PLAN_SALES_AMT
+               ,MMA.PRE_SALES_PROFIT_AMT
+               ,MMA.TOT_PRE_SALES_PROFIT_AMT
+               ,MMA.PLAN_SALES_PROFIT_AMT
+               ,MMA.TOT_PLAN_SALES_PROFIT_AMT	
+		       				  
+		FROM (
+		      SELECT RPAD(XXA.STR_CD || XXA.DEPT_CD || XXA.TEAM_CD || XXA.PC_CD, 10, '00') AS ORG_CD
+		             ,SUM(XXA.PRE_SALES_AMT)                  AS PRE_SALES_AMT
+		             ,AVG(XXA.TOT_PRE_SALES_AMT)              AS TOT_PRE_SALES_AMT
+		             ,SUM(XXA.PLAN_SALES_AMT)                 AS PLAN_SALES_AMT
+		             ,AVG(XXA.TOT_PLAN_SALES_AMT)             AS TOT_PLAN_SALES_AMT
+		             ,SUM(XXA.PRE_SALES_PROFIT_AMT)           AS PRE_SALES_PROFIT_AMT
+		             ,AVG(XXA.TOT_PRE_SALES_PROFIT_AMT)       AS TOT_PRE_SALES_PROFIT_AMT
+		             ,SUM(XXA.PLAN_SALES_PROFIT_AMT)          AS PLAN_SALES_PROFIT_AMT
+		             ,AVG(XXA.TOT_PLAN_SALES_PROFIT_AMT)      AS TOT_PLAN_SALES_PROFIT_AMT
+		             ,GROUPING(XXA.DEPT_CD)||GROUPING(XXA.TEAM_CD)||GROUPING(XXA.PC_CD)             AS GROUP_GUBUN
+		             ,RPAD(NVL(XXA.STR_CD,'00') || XXA.DEPT_CD || XXA.TEAM_CD || XXA.PC_CD, 10, '00')    AS HD_ORG_CD
+		      FROM (
+		            SELECT XA.STR_CD
+		                   ,XA.DEPT_CD
+		                   ,XA.TEAM_CD
+		                   ,XA.PC_CD
+		                   ,XA.PRE_SALES_AMT
+		                   ,SUM(XA.PRE_SALES_AMT) OVER()           AS TOT_PRE_SALES_AMT
+		                   ,XA.PLAN_SALES_AMT
+		                   ,SUM(XA.PLAN_SALES_AMT) OVER()          AS TOT_PLAN_SALES_AMT
+		                   ,XA.PRE_SALES_PROFIT_AMT
+		                   ,SUM(XA.PRE_SALES_PROFIT_AMT) OVER()    AS TOT_PRE_SALES_PROFIT_AMT
+		                   ,XA.PLAN_SALES_PROFIT_AMT
+		                   ,SUM(XA.PLAN_SALES_PROFIT_AMT) OVER()   AS TOT_PLAN_SALES_PROFIT_AMT
+		            FROM (
+		                  SELECT MA.STR_CD
+		                         ,MA.DEPT_CD
+		                         ,MA.TEAM_CD
+		                         ,MA.PC_CD
+		                         ,ROUND(SUM(MA.PRE_SALES_AMT)/1000000)            AS PRE_SALES_AMT
+		                         ,ROUND(SUM(MA.PLAN_SALES_AMT)/1000000)           AS PLAN_SALES_AMT
+		                         ,ROUND(SUM(MA.PRE_SALES_PROFIT_AMT)/1000000)     AS PRE_SALES_PROFIT_AMT
+		                         ,ROUND(SUM(MA.PLAN_SALES_PROFIT_AMT)/1000000)    AS PLAN_SALES_PROFIT_AMT
+		                  FROM (
+		                  /* 전년실적 매출액 */
+		                  SELECT RPT.STR_CD
+		                         ,RPT.DEPT_CD
+		                         ,RPT.TEAM_CD
+		                         ,RPT.PC_CD
+		                         ,RPT.ORG_CD
+		                         ,RPT.ORG_FLAG
+		                         ,RPT.ORG_LEVEL
+		                         ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+		                         ,0                                               AS PLAN_SALES_AMT
+		                         ,0                                               AS PRE_SALES_PROFIT_AMT
+		                         ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                  FROM MSS.ME_BIZRSLTRPT RPT
+		                  WHERE EXISTS (
+		                                SELECT 1
+		                                FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                AND A.SYS_PART = 'D'
+		                                AND A.COMM_PART = 'M104'
+		                                AND A.COMM_CODE = '1'   /* 총매출 */
+		                                AND A.REFER_CODE = RPT.BIZ_CD
+		                               )
+		                  AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		                  
+		                  UNION ALL
+		                  
+		                  /* 계획 매출액 */
+		                  SELECT RPT.STR_CD
+		                         ,RPT.DEPT_CD
+		                         ,RPT.TEAM_CD
+		                         ,RPT.PC_CD
+		                         ,RPT.ORG_CD
+		                         ,RPT.ORG_FLAG
+		                         ,RPT.ORG_LEVEL
+		                         ,0                                               AS PRE_SALES_AMT
+		                         ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+		                         ,0                                               AS PRE_SALES_PROFIT_AMT
+		                         ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                  FROM MSS.ME_BIZPLANRPT RPT 
+		                  WHERE EXISTS (
+		                                SELECT 1
+		                                FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                AND A.SYS_PART = 'D'
+		                                AND A.COMM_PART = 'M104'
+		                                AND A.COMM_CODE = '1'   /* 총매출 */
+		                                AND A.REFER_CODE = RPT.BIZ_CD
+		                               )
+		                  AND RPT.BIZ_PLAN_YEAR = ?
+		                    
+		                  UNION ALL
+		                  
+		                  /* 전년실적 매출이익 */
+		                  SELECT RPT.STR_CD
+		                         ,RPT.DEPT_CD
+		                         ,RPT.TEAM_CD
+		                         ,RPT.PC_CD
+		                         ,RPT.ORG_CD
+		                         ,RPT.ORG_FLAG
+		                         ,RPT.ORG_LEVEL
+		                         ,0                                               AS PRE_SALES_AMT
+		                         ,0                                               AS PLAN_SALES_AMT
+		                         ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+		                         ,0                                               AS PLAN_SALES_PROFIT_AMT
+		                  FROM MSS.ME_BIZRSLTRPT RPT
+		                  WHERE EXISTS (
+		                                SELECT 1
+		                                FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                AND A.SYS_PART = 'D'
+		                                AND A.COMM_PART = 'M104'
+		                                AND A.COMM_CODE = '3'   /* 매출이익 */
+		                                AND A.REFER_CODE = RPT.BIZ_CD
+		                               )
+		                  AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY') 
+		                  
+		                  UNION ALL
+		                  
+		                  /* 계획 매출이익액 */
+		                  SELECT RPT.STR_CD
+		                         ,RPT.DEPT_CD
+		                         ,RPT.TEAM_CD
+		                         ,RPT.PC_CD
+		                         ,RPT.ORG_CD
+		                         ,RPT.ORG_FLAG
+		                         ,RPT.ORG_LEVEL
+		                         ,0                                               AS PRE_SALES_AMT
+		                         ,0                                               AS PLAN_SALES_AMT
+		                         ,0                                               AS PRE_SALES_PROFIT_AMT
+		                         ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+		                  FROM MSS.ME_BIZPLANRPT RPT
+		                  WHERE EXISTS (
+		                                SELECT 1
+		                                FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                AND A.SYS_PART = 'D'
+		                                AND A.COMM_PART = 'M104'
+		                                AND A.COMM_CODE = '3'   /* 매출이익 */
+		                                AND A.REFER_CODE = RPT.BIZ_CD
+		                               )
+		                  AND RPT.BIZ_PLAN_YEAR = ?
+		
+		                 ) MA
+		            WHERE 1 = 1
+		            AND MA.STR_CD LIKE ?
+		            GROUP BY MA.STR_CD,MA.DEPT_CD,MA.TEAM_CD,MA.PC_CD
+		           ) XA
+		      ) XXA
+		GROUP BY XXA.STR_CD,ROLLUP(XXA.DEPT_CD,XXA.TEAM_CD,XXA.PC_CD)
+		) MMA   
+		-- WHERE MMA.GROUP_GUBUN != '011'
+		WHERE MMA.GROUP_GUBUN NOT LIKE '%1%'    
+    ]]>
+    </query>
+
+    <!-- 점별 매출구성계획분석 차트 조회 -->
+    <query name="SEL_TAB2_CHART_STR">
+    <![CDATA[
+    	/*******
+    	* 점별 매출구성계획분석 차트 조회
+    	*******/
+		SELECT MMA.BIZ_CD
+		       ,(SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = MMA.BIZ_CD) AS BIZ_CD_NM
+		       ,DECODE(MMA.TOT_PRE_SALES_AMT, 0, 0, ROUND(MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT*100,2))         AS PRE_SALES_RATIO
+		       ,DECODE(MMA.TOT_PLAN_SALES_AMT, 0, 0, ROUND(MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT*100,2))         AS PLAN_SALES_RATIO
+		FROM (
+		      SELECT MA.BIZ_CD
+		             ,MA.PRE_SALES_AMT
+		             ,MA.PLAN_SALES_AMT
+		             ,SUM(MA.PRE_SALES_AMT) OVER()  AS TOT_PRE_SALES_AMT
+		             ,SUM(MA.PLAN_SALES_AMT) OVER()  AS TOT_PLAN_SALES_AMT
+		      FROM (
+		            SELECT AA.BIZ_CD
+		                   ,ROUND(SUM(AA.PRE_SALES_AMT)/1000000)   AS PRE_SALES_AMT
+		                   ,ROUND(SUM(AA.PLAN_SALES_AMT)/1000000)  AS PLAN_SALES_AMT
+		            FROM (
+		                  /* 전년실적 매출액 */
+		                  SELECT RPT.STR_CD
+		                         ,RPT.DEPT_CD
+		                         ,RPT.TEAM_CD
+		                         ,RPT.PC_CD
+		                         ,RPT.ORG_CD
+		                         ,RPT.ORG_FLAG
+		                         ,RPT.ORG_LEVEL
+		                         ,RPT.BIZ_CD
+		                         ,(NVL(RPT.RSLT_AMT,0)) AS PRE_SALES_AMT
+		                         ,0                                               AS PLAN_SALES_AMT
+		                  FROM MSS.ME_BIZRSLTRPT RPT
+		                  WHERE EXISTS (
+		                                SELECT 1
+		                                FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                AND A.SYS_PART = 'D'
+		                                AND A.COMM_PART = 'M104'
+		                                AND A.COMM_CODE = ?   /* 총매출 or 총매출이익*/
+		                                AND SUBSTR(A.REFER_CODE, 1, 2) = SUBSTR(RPT.BIZ_CD, 1, 2)
+		                               )
+		                  AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		                  AND SUBSTR(RPT.BIZ_CD, 5, 2) = '00'
+		                  AND NVL(RPT.RSLT_AMT,0) != 0
+		                  
+		                  UNION ALL
+		                  
+		                  /* 계획 매출액 */
+		                  SELECT RPT.STR_CD
+		                         ,RPT.DEPT_CD
+		                         ,RPT.TEAM_CD
+		                         ,RPT.PC_CD
+		                         ,RPT.ORG_CD
+		                         ,RPT.ORG_FLAG
+		                         ,RPT.ORG_LEVEL
+		                         ,RPT.BIZ_CD
+		                         ,0                                               AS PRE_SALES_AMT
+		                         ,(NVL(RPT.PLAN_AMT,0)) AS PLAN_SALES_AMT
+		                  FROM MSS.ME_BIZPLANRPT RPT 
+		                  WHERE EXISTS (
+		                                SELECT 1
+		                                FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                AND A.SYS_PART = 'D'
+		                                AND A.COMM_PART = 'M104'
+		                                AND A.COMM_CODE = ?   /* 총매출 or 총매출이익*/
+		                                AND SUBSTR(A.REFER_CODE, 1, 2) = SUBSTR(RPT.BIZ_CD, 1, 2)
+		                               )
+		                  AND RPT.BIZ_PLAN_YEAR = ?
+		                  AND SUBSTR(RPT.BIZ_CD, 5, 2) = '00'
+		                  AND NVL(RPT.PLAN_AMT,0) != 0
+		                  
+		                 ) AA
+		            WHERE 1 = 1
+		            AND AA.STR_CD LIKE ?
+		            GROUP BY AA.BIZ_CD
+		           ) MA
+		     ) MMA    
+    ]]>
+    </query>
+
+    <!-- 팀별 매출구성계획분석 차트 조회 -->
+    <query name="SEL_TAB2_CHART_TEAM">
+    <![CDATA[
+    	/*******
+    	* 팀별 매출구성계획분석 차트 조회
+    	*******/
+		SELECT MMA.BIZ_CD
+		       ,(SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = MMA.BIZ_CD) AS BIZ_CD_NM
+		       ,DECODE(MMA.TOT_PRE_SALES_AMT, 0, 0, ROUND(MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT*100,2))         AS PRE_SALES_RATIO
+		       ,DECODE(MMA.TOT_PLAN_SALES_AMT, 0, 0, ROUND(MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT*100,2))         AS PLAN_SALES_RATIO
+		FROM (
+		      SELECT MA.BIZ_CD
+		             ,MA.PRE_SALES_AMT
+		             ,MA.PLAN_SALES_AMT
+		             ,SUM(MA.PRE_SALES_AMT) OVER()  AS TOT_PRE_SALES_AMT
+		             ,SUM(MA.PLAN_SALES_AMT) OVER()  AS TOT_PLAN_SALES_AMT
+		      FROM (
+		            SELECT AA.BIZ_CD
+		                   ,ROUND(SUM(AA.PRE_SALES_AMT)/1000000)   AS PRE_SALES_AMT
+		                   ,ROUND(SUM(AA.PLAN_SALES_AMT)/1000000)  AS PLAN_SALES_AMT
+		            FROM (
+		                  /* 전년실적 매출액 */
+		                  SELECT RPT.STR_CD
+		                         ,RPT.DEPT_CD
+		                         ,RPT.TEAM_CD
+		                         ,RPT.PC_CD
+		                         ,RPT.ORG_CD
+		                         ,RPT.ORG_FLAG
+		                         ,RPT.ORG_LEVEL
+		                         ,RPT.BIZ_CD
+		                         ,(NVL(RPT.RSLT_AMT,0)) AS PRE_SALES_AMT
+		                         ,0                                               AS PLAN_SALES_AMT
+		                  FROM MSS.ME_BIZRSLTRPT RPT
+		                  WHERE EXISTS (
+		                                SELECT 1
+		                                FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                AND A.SYS_PART = 'D'
+		                                AND A.COMM_PART = 'M104'
+		                                AND A.COMM_CODE = ?   /* 총매출 or 총매출이익*/
+		                                AND SUBSTR(A.REFER_CODE, 1, 2) = SUBSTR(RPT.BIZ_CD, 1, 2)
+		                               )
+		                  AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		                  AND SUBSTR(RPT.BIZ_CD, 5, 2) = '00'
+		                  AND NVL(RPT.RSLT_AMT,0) != 0
+		                  
+		                  UNION ALL
+		                  
+		                  /* 계획 매출액 */
+		                  SELECT RPT.STR_CD
+		                         ,RPT.DEPT_CD
+		                         ,RPT.TEAM_CD
+		                         ,RPT.PC_CD
+		                         ,RPT.ORG_CD
+		                         ,RPT.ORG_FLAG
+		                         ,RPT.ORG_LEVEL
+		                         ,RPT.BIZ_CD
+		                         ,0                                               AS PRE_SALES_AMT
+		                         ,(NVL(RPT.PLAN_AMT,0)) AS PLAN_SALES_AMT
+		                  FROM MSS.ME_BIZPLANRPT RPT 
+		                  WHERE EXISTS (
+		                                SELECT 1
+		                                FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                AND A.SYS_PART = 'D'
+		                                AND A.COMM_PART = 'M104'
+		                                AND A.COMM_CODE = ?  /* 총매출 or 총매출이익*/
+		                                AND SUBSTR(A.REFER_CODE, 1, 2) = SUBSTR(RPT.BIZ_CD, 1, 2)
+		                               )
+		                  AND RPT.BIZ_PLAN_YEAR = ?
+		                  AND SUBSTR(RPT.BIZ_CD, 5, 2) = '00'
+		                  AND NVL(RPT.PLAN_AMT,0) != 0
+		                  
+		                 ) AA
+		            WHERE 1 = 1
+		            AND AA.STR_CD || AA.DEPT_CD || AA.TEAM_CD LIKE ?
+		            GROUP BY AA.BIZ_CD
+		           ) MA
+		     ) MMA    
+    ]]>
+    </query>
+
+    <!-- PC별 매출구성계획분석 차트 조회 -->
+    <query name="SEL_TAB2_CHART_PC">
+    <![CDATA[
+    	/*******
+    	* PC별 매출구성계획분석 차트 조회
+    	*******/
+		SELECT MMA.BIZ_CD
+		       ,(SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = MMA.BIZ_CD) AS BIZ_CD_NM
+		       ,DECODE(MMA.TOT_PRE_SALES_AMT, 0, 0, ROUND(MMA.PRE_SALES_AMT/MMA.TOT_PRE_SALES_AMT*100,2))         AS PRE_SALES_RATIO
+		       ,DECODE(MMA.TOT_PLAN_SALES_AMT, 0, 0, ROUND(MMA.PLAN_SALES_AMT/MMA.TOT_PLAN_SALES_AMT*100,2))         AS PLAN_SALES_RATIO
+		FROM (
+		      SELECT MA.BIZ_CD
+		             ,MA.PRE_SALES_AMT
+		             ,MA.PLAN_SALES_AMT
+		             ,SUM(MA.PRE_SALES_AMT) OVER()  AS TOT_PRE_SALES_AMT
+		             ,SUM(MA.PLAN_SALES_AMT) OVER()  AS TOT_PLAN_SALES_AMT
+		      FROM (
+		            SELECT AA.BIZ_CD
+		                   ,ROUND(SUM(AA.PRE_SALES_AMT)/1000000)   AS PRE_SALES_AMT
+		                   ,ROUND(SUM(AA.PLAN_SALES_AMT)/1000000)  AS PLAN_SALES_AMT
+		            FROM (
+		                  /* 전년실적 매출액 */
+		                  SELECT RPT.STR_CD
+		                         ,RPT.DEPT_CD
+		                         ,RPT.TEAM_CD
+		                         ,RPT.PC_CD
+		                         ,RPT.ORG_CD
+		                         ,RPT.ORG_FLAG
+		                         ,RPT.ORG_LEVEL
+		                         ,RPT.BIZ_CD
+		                         ,(NVL(RPT.RSLT_AMT,0)) AS PRE_SALES_AMT
+		                         ,0                                               AS PLAN_SALES_AMT
+		                  FROM MSS.ME_BIZRSLTRPT RPT
+		                  WHERE EXISTS (
+		                                SELECT 1
+		                                FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                AND A.SYS_PART = 'D'
+		                                AND A.COMM_PART = 'M104'
+		                                AND A.COMM_CODE = ?   /* 총매출 or 총매출이익*/
+		                                AND SUBSTR(A.REFER_CODE, 1, 2) = SUBSTR(RPT.BIZ_CD, 1, 2)
+		                               )
+		                  AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		                  AND SUBSTR(RPT.BIZ_CD, 5, 2) = '00'
+		                  AND NVL(RPT.RSLT_AMT,0) != 0
+		                  
+		                  UNION ALL
+		                  
+		                  /* 계획 매출액 */
+		                  SELECT RPT.STR_CD
+		                         ,RPT.DEPT_CD
+		                         ,RPT.TEAM_CD
+		                         ,RPT.PC_CD
+		                         ,RPT.ORG_CD
+		                         ,RPT.ORG_FLAG
+		                         ,RPT.ORG_LEVEL
+		                         ,RPT.BIZ_CD
+		                         ,0                                               AS PRE_SALES_AMT
+		                         ,(NVL(RPT.PLAN_AMT,0)) AS PLAN_SALES_AMT
+		                  FROM MSS.ME_BIZPLANRPT RPT 
+		                  WHERE EXISTS (
+		                                SELECT 1
+		                                FROM COM.TC_COMMCODE A WHERE 1 = 1
+		                                AND A.SYS_PART = 'D'
+		                                AND A.COMM_PART = 'M104'
+		                                AND A.COMM_CODE = ?   /* 총매출 or 총매출이익*/
+		                                AND SUBSTR(A.REFER_CODE, 1, 2) = SUBSTR(RPT.BIZ_CD, 1, 2)
+		                               )
+		                  AND RPT.BIZ_PLAN_YEAR = ?
+		                  AND SUBSTR(RPT.BIZ_CD, 5, 2) = '00'
+		                  AND NVL(RPT.PLAN_AMT,0) != 0
+		                  
+		                 ) AA
+		            WHERE 1 = 1
+		            AND AA.STR_CD || AA.DEPT_CD || AA.TEAM_CD || AA.PC_CD LIKE ?
+		            GROUP BY AA.BIZ_CD
+		           ) MA
+		     ) MMA    
+    ]]>
+    </query>    
+
+    <!-- 손익계획분석 헤더  -->
+    <gauce name="H_SEL_TAB3">
+    	<column colName="BIZ_CD"			colType="TB_STRING" 	size="6"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"			colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_RSLT_AMT"		colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_AMT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="INC_DEC_RATIO"		colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="GROUP_ID"			colType="TB_STRING" 	size="6"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    </gauce>
+
+    <!-- 손익계획분석 조회 -->
+    <query name="SEL_TAB3">
+    <![CDATA[
+    	/*******
+    	* 손익계획분석 조회
+    	*******/
+		SELECT MMA.BIZ_CD
+		       ,DECODE(MMA.GROUP_ID, '1', '합계',(SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = MMA.BIZ_CD)) AS BIZ_CD_NM
+		       ,MMA.PRE_RSLT_AMT		AS PRE_RSLT_AMT
+		       ,MMA.PLAN_AMT			AS PLAN_AMT
+		       ,ROUND(DECODE(MMA.PRE_RSLT_AMT, 0, 0, (MMA.PLAN_AMT - MMA.PRE_RSLT_AMT)/MMA.PRE_RSLT_AMT*100),2) AS INC_DEC_RATIO
+		       ,MMA.GROUP_ID
+		FROM (
+		      SELECT MA.BIZ_CD
+		             ,SUM(MA.PRE_RSLT_AMT)  AS PRE_RSLT_AMT
+		             ,SUM(MA.PLAN_AMT)      AS PLAN_AMT
+		             ,GROUPING(MA.BIZ_CD)   AS GROUP_ID
+		      FROM (
+		            SELECT RPT.BIZ_CD
+		                   ,NVL(RPT.RSLT_AMT, 0) + NVL(RPT.SUB_RSLT_AMT, 0)  AS PRE_RSLT_AMT
+		                   ,0                                                AS PLAN_AMT
+		            FROM MSS.ME_BIZRSLTRPT RPT WHERE 1 = 1
+		            AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		            AND RPT.STR_CD  LIKE ?
+		            AND RPT.DEPT_CD LIKE ?
+		            AND RPT.TEAM_CD LIKE ?
+		            AND RPT.PC_CD   LIKE ?
+		            AND SUBSTR(RPT.BIZ_CD, 3, 4) = '0000'
+		            UNION ALL
+		            SELECT RPT.BIZ_CD
+		                   , 0                                                AS PRE_RSLT_AMT
+		                   , NVL(RPT.PLAN_AMT, 0) + NVL(RPT.SUB_PLAN_AMT, 0)  AS PLAN_AMT
+		            FROM MSS.ME_BIZPLANRPT RPT WHERE 1 = 1
+		            AND RPT.BIZ_PLAN_YEAR = ?
+		            AND RPT.STR_CD  LIKE ?
+		            AND RPT.DEPT_CD LIKE ?
+		            AND RPT.TEAM_CD LIKE ?
+		            AND RPT.PC_CD   LIKE ?
+		            AND SUBSTR(RPT.BIZ_CD, 3, 4) = '0000'
+		           ) MA
+		      GROUP BY ROLLUP(MA.BIZ_CD)
+		     ) MMA
+		WHERE MMA.GROUP_ID NOT LIKE '%1%'		         
+    ]]>
+    </query>
+
+    <!-- 손익계획분석 조회 -->
+    <query name="SEL_TAB3_CHART">
+    <![CDATA[
+    	/*******
+    	* 손익계획분석 조회
+    	*******/
+		SELECT MMA.BIZ_CD
+		       ,DECODE(MMA.GROUP_ID, '1', '합계',(SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = MMA.BIZ_CD)) AS BIZ_CD_NM
+		       ,MMA.PRE_RSLT_AMT		AS PRE_RSLT_AMT
+		       ,MMA.PLAN_AMT			AS PLAN_AMT
+		       ,ROUND(DECODE(MMA.PRE_RSLT_AMT, 0, 0, (MMA.PLAN_AMT - MMA.PRE_RSLT_AMT)/MMA.PRE_RSLT_AMT*100),2) AS INC_DEC_RATIO
+		       ,MMA.GROUP_ID
+		FROM (
+		      SELECT MA.BIZ_CD
+		             ,ROUND(SUM(MA.PRE_RSLT_AMT)/1000000)  AS PRE_RSLT_AMT
+		             ,ROUND(SUM(MA.PLAN_AMT)/1000000)      AS PLAN_AMT
+		             ,GROUPING(MA.BIZ_CD)   AS GROUP_ID
+		      FROM (
+		            SELECT RPT.BIZ_CD
+		                   ,NVL(RPT.RSLT_AMT, 0) + NVL(RPT.SUB_RSLT_AMT, 0)  AS PRE_RSLT_AMT
+		                   ,0                                                AS PLAN_AMT
+		            FROM MSS.ME_BIZRSLTRPT RPT WHERE 1 = 1
+		            AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		            AND RPT.STR_CD  LIKE ?
+		            AND RPT.DEPT_CD LIKE ?
+		            AND RPT.TEAM_CD LIKE ?
+		            AND RPT.PC_CD   LIKE ?
+		            AND SUBSTR(RPT.BIZ_CD, 3, 4) = '0000'
+		            UNION ALL
+		            SELECT RPT.BIZ_CD
+		                   , 0                                                AS PRE_RSLT_AMT
+		                   , NVL(RPT.PLAN_AMT, 0) + NVL(RPT.SUB_PLAN_AMT, 0)  AS PLAN_AMT
+		            FROM MSS.ME_BIZPLANRPT RPT WHERE 1 = 1
+		            AND RPT.BIZ_PLAN_YEAR = ?
+		            AND RPT.STR_CD  LIKE ?
+		            AND RPT.DEPT_CD LIKE ?
+		            AND RPT.TEAM_CD LIKE ?
+		            AND RPT.PC_CD   LIKE ?
+		            AND SUBSTR(RPT.BIZ_CD, 3, 4) = '0000'
+		           ) MA
+		      GROUP BY ROLLUP(MA.BIZ_CD)
+		     ) MMA
+		WHERE MMA.GROUP_ID NOT LIKE '%1%'		         
+    ]]>
+    </query>
+
+
+    <!-- 손익계획분석 헤더  -->
+    <gauce name="H_SEL_TAB3_EXCEL">
+    	<column colName="ORG_CD"			colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="ORG_NAME"			colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="BIZ_CD"			colType="TB_STRING" 	size="6"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"			colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_RSLT_AMT"		colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_AMT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="INC_DEC_RATIO"		colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="GROUP_ID"			colType="TB_STRING" 	size="6"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    </gauce>
+
+    <!-- 손익계획분석 엑셀조회 -->
+    <query name="SEL_TAB3_EXCEL">
+    <![CDATA[
+		/*******
+		* 손익계획분석 엑셀조회
+		*******/
+		SELECT MMA.ORG_CD
+		     ,(SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD)  AS ORG_NAME
+		     ,MMA.BIZ_CD
+		     ,DECODE(MMA.GROUP_ID, '1', '소계',(SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = MMA.BIZ_CD)) AS BIZ_CD_NM
+		     ,MMA.PRE_RSLT_AMT
+		     ,MMA.PLAN_AMT
+		     ,ROUND(DECODE(MMA.PRE_RSLT_AMT, 0, 0, (MMA.PLAN_AMT - MMA.PRE_RSLT_AMT)/MMA.PRE_RSLT_AMT*100),2) AS INC_DEC_RATIO
+		     ,MMA.GROUP_ID
+		FROM (
+		      SELECT XA.ORG_CD
+		             ,XA.BIZ_CD
+		             ,SUM(XA.PRE_RSLT_AMT)   AS PRE_RSLT_AMT
+		             ,SUM(XA.PLAN_AMT)       AS PLAN_AMT
+		             ,GROUPING(XA.BIZ_CD) AS GROUP_ID
+		      FROM (
+		      		      SELECT RPAD(MA.STR_CD || MA.DEPT_CD || MA.TEAM_CD || MA.PC_CD, 10, '00') AS ORG_CD
+		                       ,MA.BIZ_CD
+		      		             ,ROUND(SUM(MA.PRE_RSLT_AMT)/1000000)  AS PRE_RSLT_AMT
+		      		             ,ROUND(SUM(MA.PLAN_AMT)/1000000)      AS PLAN_AMT
+		      		      FROM (
+		      		            SELECT RPT.STR_CD
+		                             ,RPT.DEPT_CD
+		                             ,RPT.TEAM_CD
+		                             ,RPT.PC_CD
+		                             ,RPT.BIZ_CD
+		      		                   ,NVL(RPT.RSLT_AMT, 0) + NVL(RPT.SUB_RSLT_AMT, 0)  AS PRE_RSLT_AMT
+		      		                   ,0                                                AS PLAN_AMT
+		      		            FROM MSS.ME_BIZRSLTRPT RPT WHERE 1 = 1
+		      		            AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		      		            AND RPT.STR_CD  LIKE ?
+		      		            AND SUBSTR(RPT.BIZ_CD, 3, 4) = '0000'
+		      		            UNION ALL
+		      		            SELECT RPT.STR_CD
+		                             ,RPT.DEPT_CD
+		                             ,RPT.TEAM_CD
+		                             ,RPT.PC_CD
+		                             ,RPT.BIZ_CD
+		      		                   , 0                                                AS PRE_RSLT_AMT
+		      		                   , NVL(RPT.PLAN_AMT, 0) + NVL(RPT.SUB_PLAN_AMT, 0)  AS PLAN_AMT
+		      		            FROM MSS.ME_BIZPLANRPT RPT WHERE 1 = 1
+		      		            AND RPT.BIZ_PLAN_YEAR = ?
+		      		            AND RPT.STR_CD  LIKE ?
+		      		            AND SUBSTR(RPT.BIZ_CD, 3, 4) = '0000'
+		      		           ) MA
+		              GROUP BY MA.STR_CD, MA.DEPT_CD, MA.TEAM_CD, MA.PC_CD, MA.BIZ_CD
+		         ) XA
+		      GROUP BY XA.ORG_CD, ROLLUP(XA.BIZ_CD)
+		      ORDER BY XA.ORG_CD, XA.BIZ_CD
+		     ) MMA    
+    ]]>
+    </query>
+
+
+    <!-- 판관비계획분석 헤더  -->
+    <gauce name="H_SEL_TAB4">
+    	<column colName="BIZ_CD"			colType="TB_STRING" 	size="6"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"			colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_RSLT_AMT"		colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_AMT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="INC_DEC_RATIO"		colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="GROUP_ID"			colType="TB_STRING" 	size="6"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	
+    	<column colName="BIZ_PLAN_YEAR"		colType="TB_STRING" 	size="4"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="STR_CD"			colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="DEPT_CD"			colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="TEAM_CD"			colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="PC_CD"				colType="TB_STRING" 	size="2"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    </gauce>  
+
+    <!-- 판관비중분류계획분석 조회 -->
+    <query name="SEL_TAB4_M">
+    <![CDATA[
+    	/*******
+    	* 판관비중분류계획분석 조회
+    	*******/
+		SELECT MMA.BIZ_CD
+		       ,DECODE(MMA.GROUP_ID, '1', '합계',(SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = MMA.BIZ_CD)) AS BIZ_CD_NM
+		       ,MMA.PRE_RSLT_AMT		AS PRE_RSLT_AMT
+		       ,MMA.PLAN_AMT			AS PLAN_AMT
+		       ,ROUND(DECODE(MMA.PRE_RSLT_AMT, 0, 0, (MMA.PLAN_AMT - MMA.PRE_RSLT_AMT)/MMA.PRE_RSLT_AMT*100),2) AS INC_DEC_RATIO
+		       ,MMA.GROUP_ID
+		       ,?	AS BIZ_PLAN_YEAR
+		       ,?	AS STR_CD
+		       ,?	AS DEPT_CD
+		       ,?	AS TEAM_CD
+		       ,?	AS PC_CD
+		FROM (
+		      SELECT MA.BIZ_CD
+		             ,SUM(MA.PRE_RSLT_AMT)  AS PRE_RSLT_AMT
+		             ,SUM(MA.PLAN_AMT)      AS PLAN_AMT
+		             ,GROUPING(MA.BIZ_CD)   AS GROUP_ID
+		      FROM (
+		            SELECT RPT.BIZ_CD
+		                   , DECODE(SUBSTR(RPT.BIZ_CD, 3, 2),'00', NVL(RPT.RSLT_AMT, 0)
+		                                                         , NVL(RPT.RSLT_AMT, 0) + NVL(RPT.SUB_RSLT_AMT, 0))  AS PRE_RSLT_AMT
+		                   ,0                                                AS PLAN_AMT
+		            FROM MSS.ME_BIZRSLTRPT RPT WHERE 1 = 1
+		            AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		            AND RPT.STR_CD  LIKE ?
+		            AND RPT.DEPT_CD  LIKE ?
+		            AND RPT.TEAM_CD LIKE ?
+		            AND RPT.PC_CD   LIKE ?
+		            AND SUBSTR(RPT.BIZ_CD, 1, 2) = (
+		                                            SELECT SUBSTR(A.REFER_CODE, 1, 2)
+		                                            FROM COM.TC_COMMCODE A 
+		                                            WHERE 1 = 1
+		                                            AND A.SYS_PART = 'D'
+		                                            AND A.COMM_PART = 'M104'
+		                                            AND A.COMM_CODE = '5'
+		                                           )
+		            AND SUBSTR(RPT.BIZ_CD, 5, 2) = '00'
+		            UNION ALL
+		            SELECT RPT.BIZ_CD
+		                   , 0                                                                                        AS PRE_RSLT_AMT
+		                   , DECODE(SUBSTR(RPT.BIZ_CD, 3, 2),'00', NVL(RPT.PLAN_AMT, 0)
+		                                                         , NVL(RPT.PLAN_AMT, 0) + NVL(RPT.SUB_PLAN_AMT, 0))   AS PLAN_AMT
+		            FROM MSS.ME_BIZPLANRPT RPT WHERE 1 = 1
+		            AND RPT.BIZ_PLAN_YEAR = ?
+		            AND RPT.STR_CD  LIKE ?
+		            AND RPT.DEPT_CD  LIKE ?
+		            AND RPT.TEAM_CD LIKE ?
+		            AND RPT.PC_CD   LIKE ?
+		            AND SUBSTR(RPT.BIZ_CD, 1, 2) = (
+		                                            SELECT SUBSTR(A.REFER_CODE, 1, 2)
+		                                            FROM COM.TC_COMMCODE A 
+		                                            WHERE 1 = 1
+		                                            AND A.SYS_PART = 'D'
+		                                            AND A.COMM_PART = 'M104'
+		                                            AND A.COMM_CODE = '5'
+		                                           )
+		            AND SUBSTR(RPT.BIZ_CD, 5, 2) = '00'
+		           ) MA
+		      GROUP BY ROLLUP(MA.BIZ_CD)
+		      HAVING SUM(MA.PRE_RSLT_AMT) + SUM(MA.PLAN_AMT) > 0
+		     ) MMA
+		WHERE MMA.GROUP_ID NOT LIKE '%1%'		        
+    ]]>
+    </query>
+
+    <!-- 판관비중분류계획분석 조회 -->
+    <query name="SEL_TAB4_CHART">
+    <![CDATA[
+    	/*******
+    	* 판관비중분류계획분석 차트조회
+    	*******/
+		SELECT MMA.BIZ_CD
+		       ,DECODE(MMA.GROUP_ID, '1', '합계',(SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = MMA.BIZ_CD)) AS BIZ_CD_NM
+		       ,MMA.PRE_RSLT_AMT		AS PRE_RSLT_AMT
+		       ,MMA.PLAN_AMT			AS PLAN_AMT
+		       ,ROUND(DECODE(MMA.PRE_RSLT_AMT, 0, 0, (MMA.PLAN_AMT - MMA.PRE_RSLT_AMT)/MMA.PRE_RSLT_AMT*100),2) AS INC_DEC_RATIO
+		       ,MMA.GROUP_ID
+		       ,?	AS BIZ_PLAN_YEAR
+		       ,?	AS STR_CD
+		       ,?	AS DEPT_CD
+		       ,?	AS TEAM_CD
+		       ,?	AS PC_CD
+		FROM (
+		      SELECT MA.BIZ_CD
+		             ,ROUND(SUM(MA.PRE_RSLT_AMT)/1000000)  AS PRE_RSLT_AMT
+		             ,ROUND(SUM(MA.PLAN_AMT)/1000000)      AS PLAN_AMT
+		             ,GROUPING(MA.BIZ_CD)   AS GROUP_ID
+		      FROM (
+		            SELECT RPT.BIZ_CD
+		                   , DECODE(SUBSTR(RPT.BIZ_CD, 3, 2),'00', NVL(RPT.RSLT_AMT, 0)
+		                                                         , NVL(RPT.RSLT_AMT, 0) + NVL(RPT.SUB_RSLT_AMT, 0))  AS PRE_RSLT_AMT
+		                   ,0                                                AS PLAN_AMT
+		            FROM MSS.ME_BIZRSLTRPT RPT WHERE 1 = 1
+		            AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		            AND RPT.STR_CD  LIKE ?
+		            AND RPT.DEPT_CD  LIKE ?
+		            AND RPT.TEAM_CD LIKE ?
+		            AND RPT.PC_CD   LIKE ?
+		            AND SUBSTR(RPT.BIZ_CD, 1, 2) = (
+		                                            SELECT SUBSTR(A.REFER_CODE, 1, 2)
+		                                            FROM COM.TC_COMMCODE A 
+		                                            WHERE 1 = 1
+		                                            AND A.SYS_PART = 'D'
+		                                            AND A.COMM_PART = 'M104'
+		                                            AND A.COMM_CODE = '5'
+		                                           )
+		            AND SUBSTR(RPT.BIZ_CD, 5, 2) = '00'
+		            UNION ALL
+		            SELECT RPT.BIZ_CD
+		                   , 0                                                                                        AS PRE_RSLT_AMT
+		                   , DECODE(SUBSTR(RPT.BIZ_CD, 3, 2),'00', NVL(RPT.PLAN_AMT, 0)
+		                                                         , NVL(RPT.PLAN_AMT, 0) + NVL(RPT.SUB_PLAN_AMT, 0))   AS PLAN_AMT
+		            FROM MSS.ME_BIZPLANRPT RPT WHERE 1 = 1
+		            AND RPT.BIZ_PLAN_YEAR = ?
+		            AND RPT.STR_CD  LIKE ?
+		            AND RPT.DEPT_CD  LIKE ?
+		            AND RPT.TEAM_CD LIKE ?
+		            AND RPT.PC_CD   LIKE ?
+		            AND SUBSTR(RPT.BIZ_CD, 1, 2) = (
+		                                            SELECT SUBSTR(A.REFER_CODE, 1, 2)
+		                                            FROM COM.TC_COMMCODE A 
+		                                            WHERE 1 = 1
+		                                            AND A.SYS_PART = 'D'
+		                                            AND A.COMM_PART = 'M104'
+		                                            AND A.COMM_CODE = '5'
+		                                           )
+		            AND SUBSTR(RPT.BIZ_CD, 5, 2) = '00'
+		           ) MA
+		      GROUP BY ROLLUP(MA.BIZ_CD)
+		      HAVING SUM(MA.PRE_RSLT_AMT) + SUM(MA.PLAN_AMT) > 0
+		     ) MMA
+		WHERE MMA.GROUP_ID NOT LIKE '%1%'		        
+    ]]>
+    </query>
+
+
+    
+    <!-- 판관비소분류계획분석 조회 -->
+    <query name="SEL_TAB4_S">
+    <![CDATA[
+		/*******
+		* 판관비소분류계획분석 조회
+		*******/
+		SELECT MMA.BIZ_CD
+		       ,DECODE(MMA.GROUP_ID, '1', '합계',(SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = MMA.BIZ_CD)) AS BIZ_CD_NM
+		       ,MMA.PRE_RSLT_AMT	AS PRE_RSLT_AMT
+		       ,MMA.PLAN_AMT		AS PLAN_AMT
+		       ,ROUND(DECODE(MMA.PRE_RSLT_AMT, 0, 0, (MMA.PLAN_AMT - MMA.PRE_RSLT_AMT)/MMA.PRE_RSLT_AMT*100),2) AS INC_DEC_RATIO
+		       ,MMA.GROUP_ID
+		       ,?	AS BIZ_PLAN_YEAR
+		       ,?	AS STR_CD
+		       ,?	AS DEPT_CD
+		       ,?	AS TEAM_CD
+		       ,?	AS PC_CD       
+		FROM (
+		      SELECT MA.BIZ_CD
+		             ,SUM(MA.PRE_RSLT_AMT)  AS PRE_RSLT_AMT
+		             ,SUM(MA.PLAN_AMT)      AS PLAN_AMT
+		             ,GROUPING(MA.BIZ_CD)   AS GROUP_ID
+		      FROM (
+		            SELECT RPT.BIZ_CD
+		                   , DECODE(SUBSTR(RPT.BIZ_CD, 5, 2),'00', NVL(RPT.RSLT_AMT, 0)
+		                                                         , NVL(RPT.RSLT_AMT, 0) + NVL(RPT.SUB_RSLT_AMT, 0))  AS PRE_RSLT_AMT
+		                   ,0                                                AS PLAN_AMT
+		            FROM MSS.ME_BIZRSLTRPT RPT WHERE 1 = 1
+		            AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		            AND RPT.STR_CD  LIKE ?
+		            AND RPT.DEPT_CD  LIKE ?
+		            AND RPT.TEAM_CD LIKE ?
+		            AND RPT.PC_CD   LIKE ?
+		            AND SUBSTR(RPT.BIZ_CD, 1, 4) = SUBSTR(?,1,4)
+		            AND SUBSTR(RPT.BIZ_CD, 3, 2) != '00'
+		            
+		            UNION ALL      
+		            
+		            SELECT RPT.BIZ_CD
+		                   , 0                                                                                        AS PRE_RSLT_AMT
+		                   , DECODE(SUBSTR(RPT.BIZ_CD, 5, 2),'00', NVL(RPT.PLAN_AMT, 0)
+		                                                         , NVL(RPT.PLAN_AMT, 0) + NVL(RPT.SUB_PLAN_AMT, 0))   AS PLAN_AMT
+		            FROM MSS.ME_BIZPLANRPT RPT WHERE 1 = 1
+		            AND RPT.BIZ_PLAN_YEAR = ?
+		            AND RPT.STR_CD  LIKE ?
+		            AND RPT.DEPT_CD  LIKE ?
+		            AND RPT.TEAM_CD LIKE ?
+		            AND RPT.PC_CD   LIKE ?
+		            AND SUBSTR(RPT.BIZ_CD, 1, 4) = SUBSTR(?,1,4)
+		            AND SUBSTR(RPT.BIZ_CD, 3, 2) != '00'
+		           ) MA
+		      GROUP BY ROLLUP(MA.BIZ_CD)
+		      HAVING SUM(MA.PRE_RSLT_AMT) + SUM(MA.PLAN_AMT) > 0
+		     ) MMA   
+		WHERE MMA.GROUP_ID NOT LIKE '%1%'		      
+    ]]>
+    </query>    
+
+    <!-- 판관비계획분석 엑셀 조회 헤더  -->
+    <gauce name="H_SEL_TAB4_EXCEL">
+    	<column colName="ORG_CD"			colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="ORG_NAME"			colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="BIZ_CD"			colType="TB_STRING" 	size="6"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"			colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PRE_RSLT_AMT"		colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="PLAN_AMT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="INC_DEC_RATIO"		colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+		<column colName="GROUP_ID"			colType="TB_STRING" 	size="6"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    </gauce>  
+
+    <!-- 판관비계획분석 엑셀 조회 -->
+    <query name="SEL_TAB4_EXCEL">
+    <![CDATA[
+    	/*******
+    	* 판관비계획분석 엑셀 조회
+    	*******/
+		SELECT MMA.ORG_CD
+		       ,(SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD)  AS ORG_NAME
+		       ,DECODE(MMA.GROUP_ID, '00', MMA.BIZ_CD, '')			AS BIZ_CD
+		       ,DECODE(MMA.GROUP_ID, '11', '총계'
+		                           , '01', (SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = RPAD(MMA.BIZ_CD,6,'00')) || '계'
+		                           , (SELECT A.BIZ_CD_NM FROM MSS.ME_BIZCDMST A WHERE A.BIZ_CD = RPAD(MMA.BIZ_CD,6,'00'))
+		              )            AS BIZ_CD_NM
+		       ,MMA.PRE_RSLT_AMT
+		       ,MMA.PLAN_AMT
+		       ,ROUND(DECODE(MMA.PRE_RSLT_AMT, 0, 0, (MMA.PLAN_AMT - MMA.PRE_RSLT_AMT)/MMA.PRE_RSLT_AMT*100),2) AS INC_DEC_RATIO
+		       ,MMA.GROUP_ID
+		FROM (
+		      SELECT XA.ORG_CD
+		             ,XA.L_BIZ_CD || XA.M_BIZ_CD || XA.S_BIZ_CD AS BIZ_CD
+		             ,SUM(XA.PRE_RSLT_AMT)  AS PRE_RSLT_AMT
+		             ,SUM(XA.PLAN_AMT)      AS PLAN_AMT
+		             ,GROUPING(XA.M_BIZ_CD) || GROUPING(XA.S_BIZ_CD)           AS GROUP_ID
+		      FROM (
+		            SELECT MA.ORG_CD
+		                   ,SUBSTR(MA.BIZ_CD, 1, 2) AS L_BIZ_CD
+		                   ,SUBSTR(MA.BIZ_CD, 3, 2) AS M_BIZ_CD
+		                   ,SUBSTR(MA.BIZ_CD, 5, 2) AS S_BIZ_CD
+		                   ,SUM(MA.PRE_RSLT_AMT) AS PRE_RSLT_AMT
+		                   ,SUM(MA.PLAN_AMT)     AS PLAN_AMT
+		            FROM (
+		                  SELECT RPT.ORG_CD
+		                         ,RPT.BIZ_CD
+		                         ,DECODE(SUBSTR(RPT.BIZ_CD, 3, 2),'00',NVL(RPT.RSLT_AMT, 0)
+		                                                         ,DECODE(SUBSTR(RPT.BIZ_CD, 5, 2),'00',NVL(RPT.RSLT_AMT, 0)
+		                                                                                              ,NVL(RPT.RSLT_AMT, 0) + NVL(RPT.SUB_RSLT_AMT, 0)))  AS PRE_RSLT_AMT
+		                         ,0                                                AS PLAN_AMT
+		                  FROM MSS.ME_BIZRSLTRPT RPT 
+		                  WHERE 1 = 1
+		                  AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+		                  AND RPT.STR_CD  LIKE ?
+		                  AND SUBSTR(RPT.BIZ_CD, 1, 2) = (
+		                                                  SELECT SUBSTR(A.REFER_CODE, 1, 2)
+		                                                  FROM COM.TC_COMMCODE A 
+		                                                  WHERE 1 = 1
+		                                                  AND A.SYS_PART = 'D'
+		                                                  AND A.COMM_PART = 'M104'
+		                                                  AND A.COMM_CODE = '5'
+		                                                 )
+		                  UNION ALL
+		                  SELECT RPT.ORG_CD
+		                         ,RPT.BIZ_CD
+		                         ,0                                                                                        AS PRE_RSLT_AMT
+		                         ,DECODE(SUBSTR(RPT.BIZ_CD, 3, 2),'00',NVL(RPT.PLAN_AMT, 0)
+		                                                         ,DECODE(SUBSTR(RPT.BIZ_CD, 5, 2),'00',NVL(RPT.PLAN_AMT, 0)
+		                                                                                              ,NVL(RPT.PLAN_AMT, 0) + NVL(RPT.SUB_PLAN_AMT, 0)))   AS PLAN_AMT
+		                  FROM MSS.ME_BIZPLANRPT RPT 
+		                  WHERE 1 = 1
+		                  AND RPT.BIZ_PLAN_YEAR = ?
+		                  AND RPT.STR_CD  LIKE ?
+		                  AND SUBSTR(RPT.BIZ_CD, 1, 2) = (
+		                                                  SELECT SUBSTR(A.REFER_CODE, 1, 2)
+		                                                  FROM COM.TC_COMMCODE A 
+		                                                  WHERE 1 = 1
+		                                                  AND A.SYS_PART = 'D'
+		                                                  AND A.COMM_PART = 'M104'
+		                                                  AND A.COMM_CODE = '5'
+		                                                 )
+		                 ) MA
+		            GROUP BY MA.ORG_CD, MA.BIZ_CD
+		            HAVING SUM(MA.PRE_RSLT_AMT) + SUM(MA.PLAN_AMT) > 0
+		           ) XA
+		      GROUP BY XA.ORG_CD, XA.L_BIZ_CD, ROLLUP(XA.M_BIZ_CD, XA.S_BIZ_CD)
+		     ) MMA    
+    ]]>
+    </query>
+
+    <!-- 점별 매출계획분석 조회 -->
+    <query name="SEL_TAB1_STR_PRINT">
+        <![CDATA[
+        	/*****
+        	* 점별 매출계획분석 조회
+        	*****/        
+			SELECT MMA.ORG_CD
+			       ,NVL((SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD), '합계')       AS ORG_NAME
+			       ,DECODE(GROUP_GUBUN, '1', '0', '2')          AS SUM_GUBUN
+			       ,ROUND(MMA.PRE_SALES_AMT)     		AS PRE_SALES_AMT
+			       ,ROUND(MMA.PLAN_SALES_AMT)			AS PLAN_SALES_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_AMT - MMA.PRE_SALES_AMT)/MMA.PLAN_SALES_AMT * 100,2)
+			        END                                                                       AS SALES_GROWTH_RATE       
+			       ,ROUND(MMA.PRE_SALES_PROFIT_AMT)		AS PRE_SALES_PROFIT_AMT
+			       ,ROUND(MMA.PLAN_SALES_PROFIT_AMT)	AS PLAN_SALES_PROFIT_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_PROFIT_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_PROFIT_AMT - MMA.PRE_SALES_PROFIT_AMT)/MMA.PLAN_SALES_PROFIT_AMT * 100,2)
+			        END                                                                       AS SALES_PROFIT_GROWTH_RATE
+			        ,CASE
+			           WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			        END                                                                       AS PRE_SALES_PROFIT_RATE
+			        ,CASE
+			           WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			        END                                                                       AS PLAN_SALES_PROFIT_RATE
+			        ,(
+			          CASE
+			              WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			              ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			          END        
+			         ) - (
+			              CASE
+			                  WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			                  ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			                  END          
+			           )                                                                     AS SALES_PROFIT_DIFFERENT       
+			       ,MMA.GROUP_GUBUN
+			FROM (
+			      SELECT RPAD(MA.STR_CD, 10, '00')     AS ORG_CD
+			          ,ROUND(SUM(MA.PRE_SALES_AMT)/1000000)           AS PRE_SALES_AMT
+			          ,ROUND(SUM(MA.PLAN_SALES_AMT)/1000000)          AS PLAN_SALES_AMT
+			          ,ROUND(SUM(MA.PRE_SALES_PROFIT_AMT)/1000000)    AS PRE_SALES_PROFIT_AMT    
+			          ,ROUND(SUM(MA.PLAN_SALES_PROFIT_AMT)/1000000)   AS PLAN_SALES_PROFIT_AMT
+			          ,GROUPING(MA.STR_CD)             AS GROUP_GUBUN
+			      FROM (
+			           /* 전년실적 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT 
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?  
+			             
+			           UNION ALL
+			           
+			           /* 전년실적 매출이익 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')      
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출이익액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?
+			          ) MA
+			      WHERE 1 = 1 
+			      --AND MA.STR_CD LIKE '%'
+			      GROUP BY  ROLLUP(MA.STR_CD)
+			    ) MMA        
+        ]]>
+    </query>
+
+    <!-- 팀별 매출계획분석 조회 -->
+    <query name="SEL_TAB1_TEAM_PRINT">
+        <![CDATA[
+        	/*****
+        	* 팀별 매출계획분석 조회
+        	*****/         
+			SELECT DECODE(GROUP_GUBUN, '11', '', MMA.ORG_CD)   AS ORG_CD
+			       ,DECODE(GROUP_GUBUN, '11', '합계', (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD)) AS ORG_NAME                                        
+			       ,DECODE(GROUP_GUBUN, '11', '0', '2')          AS SUM_GUBUN
+			       ,MMA.PRE_SALES_AMT					 AS PRE_SALES_AMT
+			       ,MMA.PLAN_SALES_AMT					 AS PLAN_SALES_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_AMT - MMA.PRE_SALES_AMT)/MMA.PLAN_SALES_AMT * 100,2)
+			        END                                                                       AS SALES_GROWTH_RATE       
+			       ,MMA.PRE_SALES_PROFIT_AMT				AS PRE_SALES_PROFIT_AMT
+			       ,MMA.PLAN_SALES_PROFIT_AMT				AS PLAN_SALES_PROFIT_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_PROFIT_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_PROFIT_AMT - MMA.PRE_SALES_PROFIT_AMT)/MMA.PLAN_SALES_PROFIT_AMT * 100,2)
+			        END                                                                       AS SALES_PROFIT_GROWTH_RATE
+			        ,CASE
+			           WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			        END                                                                       AS PRE_SALES_PROFIT_RATE
+			        ,CASE
+			           WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			        END                                                                       AS PLAN_SALES_PROFIT_RATE
+			        ,(
+			          CASE
+			              WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			              ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			          END        
+			         ) - (
+			              CASE
+			                  WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			                  ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			                  END          
+			           )                                                                     AS SALES_PROFIT_DIFFERENT       
+			       ,MMA.GROUP_GUBUN
+			FROM (
+			      SELECT RPAD(MA.STR_CD || MA.DEPT_CD || MA.TEAM_CD, 10, '00') AS ORG_CD
+			          ,ROUND(SUM(MA.PRE_SALES_AMT)/1000000)           AS PRE_SALES_AMT
+			          ,ROUND(SUM(MA.PLAN_SALES_AMT)/1000000)          AS PLAN_SALES_AMT
+			          ,ROUND(SUM(MA.PRE_SALES_PROFIT_AMT)/1000000)    AS PRE_SALES_PROFIT_AMT    
+			          ,ROUND(SUM(MA.PLAN_SALES_PROFIT_AMT)/1000000)   AS PLAN_SALES_PROFIT_AMT
+			          ,GROUPING(MA.DEPT_CD)||GROUPING(MA.TEAM_CD)             AS GROUP_GUBUN
+			      FROM (
+			           /* 전년실적 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+			           AND RPT.ORG_LEVEL >= 3
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT 
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?   
+			           AND RPT.ORG_LEVEL >= 3
+			             
+			           UNION ALL
+			           
+			           /* 전년실적 매출이익 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')      
+			           AND RPT.ORG_LEVEL >= 3
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출이익액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?
+			           AND RPT.ORG_LEVEL >= 3
+			           
+			          ) MA
+			      WHERE 1 = 1 
+			      AND MA.STR_CD = ?
+			      GROUP BY  MA.STR_CD,ROLLUP(MA.DEPT_CD,MA.TEAM_CD)
+			     ) MMA
+			WHERE MMA.GROUP_GUBUN != '01'
+        ]]>
+    </query>
+    
+    <!-- PC별 매출계획분석 조회 -->
+    <query name="SEL_TAB1_PC_PRINT">
+        <![CDATA[
+        	/*****
+        	* PC별 매출계획분석 조회
+        	*****/          
+			SELECT DECODE(GROUP_GUBUN, '000',MMA.ORG_CD, '')      AS ORG_CD
+						 ,DECODE(GROUP_GUBUN, '111', '합계'
+			                          , '001', '소계'
+			                                 , (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = MMA.ORG_CD))        AS ORG_NAME                                        
+						 ,DECODE(GROUP_GUBUN, '111', '0','001', '1', '2')          AS SUM_GUBUN
+			       ,MMA.PRE_SALES_AMT				AS PRE_SALES_AMT
+			       ,MMA.PLAN_SALES_AMT				AS PLAN_SALES_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_AMT - MMA.PRE_SALES_AMT)/MMA.PLAN_SALES_AMT * 100,2)
+			        END                                                                       AS SALES_GROWTH_RATE       
+			       ,MMA.PRE_SALES_PROFIT_AMT		AS PRE_SALES_PROFIT_AMT
+			       ,MMA.PLAN_SALES_PROFIT_AMT		AS PLAN_SALES_PROFIT_AMT
+			       ,CASE
+			           WHEN  MMA.PLAN_SALES_PROFIT_AMT = 0 THEN 0
+			           ELSE ROUND((MMA.PLAN_SALES_PROFIT_AMT - MMA.PRE_SALES_PROFIT_AMT)/MMA.PLAN_SALES_PROFIT_AMT * 100,2)
+			        END                                                                       AS SALES_PROFIT_GROWTH_RATE
+			        ,CASE
+			           WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			        END                                                                       AS PRE_SALES_PROFIT_RATE
+			        ,CASE
+			           WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			           ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			        END                                                                       AS PLAN_SALES_PROFIT_RATE
+			        ,(
+			          CASE
+			              WHEN MMA.PLAN_SALES_AMT = 0 THEN 0
+			              ELSE ROUND(MMA.PLAN_SALES_PROFIT_AMT/MMA.PLAN_SALES_AMT*100,2)
+			          END        
+			         ) - (
+			              CASE
+			                  WHEN MMA.PRE_SALES_AMT = 0 THEN 0
+			                  ELSE ROUND(MMA.PRE_SALES_PROFIT_AMT/MMA.PRE_SALES_AMT*100,2)
+			                  END          
+			           )                                                                     AS SALES_PROFIT_DIFFERENT       
+			       ,MMA.GROUP_GUBUN
+			FROM (
+			      SELECT RPAD(MA.STR_CD || MA.DEPT_CD || MA.TEAM_CD || MA.PC_CD, 10, '00') AS ORG_CD
+			          ,ROUND(SUM(MA.PRE_SALES_AMT)/1000000)           AS PRE_SALES_AMT
+			          ,ROUND(SUM(MA.PLAN_SALES_AMT)/1000000)          AS PLAN_SALES_AMT
+			          ,ROUND(SUM(MA.PRE_SALES_PROFIT_AMT)/1000000)    AS PRE_SALES_PROFIT_AMT    
+			          ,ROUND(SUM(MA.PLAN_SALES_PROFIT_AMT)/1000000)   AS PLAN_SALES_PROFIT_AMT
+			          ,GROUPING(MA.DEPT_CD)||GROUPING(MA.TEAM_CD)||GROUPING(MA.PC_CD)             AS GROUP_GUBUN
+			      FROM (
+			           /* 전년실적 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')
+			           AND RPT.ORG_LEVEL >= 3
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT 
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '1'   /* 총매출 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?
+			           AND RPT.ORG_LEVEL >= 3    
+			             
+			           UNION ALL
+			           
+			           /* 전년실적 매출이익 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,(NVL(RPT.RSLT_AMT,0) + NVL(RPT.SUB_RSLT_AMT,0)) AS PRE_SALES_PROFIT_AMT
+			                  ,0                                               AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZRSLTRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND SUBSTR(RPT.BIZ_RSLT_YM,1,4) = TO_CHAR(TO_DATE(?, 'YYYY') + NUMTOYMINTERVAL (-1, 'year'), 'YYYY')      
+			           AND RPT.ORG_LEVEL >= 3
+			           
+			           UNION ALL
+			           
+			           /* 계획 매출이익액 */
+			           SELECT RPT.STR_CD
+			                  ,RPT.DEPT_CD
+			                  ,RPT.TEAM_CD
+			                  ,RPT.PC_CD
+			                  ,RPT.ORG_CD
+			                  ,RPT.ORG_FLAG
+			                  ,RPT.ORG_LEVEL
+			                  ,0                                               AS PRE_SALES_AMT
+			                  ,0                                               AS PLAN_SALES_AMT
+			                  ,0                                               AS PRE_SALES_PROFIT_AMT
+			                  ,(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)) AS PLAN_SALES_PROFIT_AMT
+			           FROM MSS.ME_BIZPLANRPT RPT
+			           WHERE EXISTS (
+			                         SELECT 1
+			                         FROM COM.TC_COMMCODE A WHERE 1 = 1
+			                         AND A.SYS_PART = 'D'
+			                         AND A.COMM_PART = 'M104'
+			                         AND A.COMM_CODE = '3'   /* 매출이익 */
+			                         AND A.REFER_CODE = RPT.BIZ_CD
+			                        )
+			           AND RPT.BIZ_PLAN_YEAR = ?
+			           AND RPT.ORG_LEVEL >= 3
+			          ) MA
+			      WHERE 1 = 1 
+			      AND MA.STR_CD = ?
+			      GROUP BY  MA.STR_CD,ROLLUP(MA.DEPT_CD,MA.TEAM_CD,MA.PC_CD)
+			     ) MMA
+			WHERE MMA.GROUP_GUBUN != '011'        
+        ]]>
+    </query>    
+
+
+</service>

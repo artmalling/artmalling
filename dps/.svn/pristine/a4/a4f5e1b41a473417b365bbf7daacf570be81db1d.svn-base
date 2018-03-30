@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 이어울림
+ * 작 성 일 : 2016.10.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 무인정산자료 비교표조회한다.
+ -->
+<service name="/psal610.ps">
+    
+    <!-- 무인정산자료 비교표 HEADER -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NM"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMM_CODE"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMM_NAME"      colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_AMT"        colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_AMT"  colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIFF_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 무인정산자료 비교표 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT A.STR_CD
+			     , A.POS_NO
+			     , B.POS_NAME AS POS_NM
+			     , A.COMM_CODE
+			     , '(' || A.COMM_CODE || ') ' || A.COMM_NAME	AS COMM_NAME
+			     , SUM(A.CAL_AMT)        AS CAL_AMT
+			     , SUM(A.NORM_TRAN_AMT)  AS NORM_TRAN_AMT
+			     , SUM(A.CAL_AMT) 
+			     - SUM(A.NORM_TRAN_AMT)  AS DIFF_AMT
+			  FROM (
+			        -- 정산기
+			        SELECT ?                      AS STR_CD
+			             , A.POS_NO               AS POS_NO
+			             , B.COMM_CODE            AS COMM_CODE      /* 정산항목(D132)  */
+			             , B.COMM_NAME1           AS COMM_NAME
+			             , NVL(A.CAL_AMT, 0)      AS CAL_AMT        /* 정산금액  */
+			             , 0                      AS NORM_TRAN_AMT 
+			          FROM DPS.PS_VALEXCAL A
+			             , (
+			                SELECT SYS_PART
+			                     , COMM_PART 
+			                     , COMM_CODE 
+			                     , COMM_NAME1 
+			                     , USE_YN
+			                  FROM COM.TC_COMMCODE
+			                 WHERE COMM_PART = 'D132'
+			                   AND SYS_PART  = 'D'
+			                   AND USE_YN    = 'Y'
+			               ) B
+			         WHERE 1 = 1
+			           AND A.STR_CD  = ?
+			           AND A.SALE_DT BETWEEN ? AND ?
+			           AND A.POS_NO LIKE '%' || ? || '%'
+			           AND A.CAL_CD(+) = B.COMM_CODE
+			
+			        -- 시스템
+			         UNION ALL
+			        SELECT A.STR_CD 
+			             , A.POS_NO
+			             , B.COMM_CODE
+			             , B.COMM_NAME1
+			             , 0
+			             , A.NORM_TRAN_AMT
+			          FROM (
+							SELECT A.STR_CD
+							     , A.SALE_DT
+							     , A.POS_NO
+							     , A.COMM_CODE
+							     , SUM(A.NORM_TRAN_AMT) AS NORM_TRAN_AMT
+							  FROM (
+							        SELECT STR_CD 
+							             , SALE_DT
+							             --, SUBSTR(POS_NO, 1, 3) || '1' AS POS_NO
+							             , POS_NO
+							             , BALANCE_FLAG
+							             , CASE WHEN BALANCE_FLAG IN ('101', '102', '113', '116') THEN '01' /* 현금       */
+							                    WHEN BALANCE_FLAG IN ('111', '112', '115')        THEN '11' /* 자사상품권 */
+							                    WHEN BALANCE_FLAG IN ('114')                      THEN '21' /* 타사상품권 */
+							               END COMM_CODE
+							             , CASE WHEN BALANCE_FLAG IN ('102', '113', '116', '112', '115') THEN NVL(A.NORM_TRAN_AMT, 0) * (-1)
+							                                                                             ELSE NVL(A.NORM_TRAN_AMT, 0)
+							               END AS NORM_TRAN_AMT
+							          FROM DPS.PS_TRTOTAL A
+					                 WHERE A.STR_CD     = ?
+					                   AND A.SALE_DT    BETWEEN ? AND ?
+					                   AND A.POS_NO LIKE '%' || ? || '%'
+					                   AND A.TOTAL_FLAG = '02'	-- 02로 바꿔야됨
+							       ) A
+							 WHERE A.COMM_CODE IN ('01', '11', '21')
+							 GROUP BY A.STR_CD
+							        , A.SALE_DT
+							        , A.POS_NO
+							        , A.COMM_CODE
+			               ) A
+			             , (
+			                SELECT SYS_PART
+			                     , COMM_PART 
+			                     , COMM_CODE 
+			                     , COMM_NAME1 
+			                     , USE_YN
+			                  FROM COM.TC_COMMCODE
+			                 WHERE COMM_PART = 'D132'
+			                   AND SYS_PART  = 'D'
+			                   AND USE_YN    = 'Y'
+			               ) B
+			         WHERE 1 = 1
+			           AND A.COMM_CODE(+) = B.COMM_CODE
+			       ) A 
+			       , DPS.PC_POSMST B
+			   WHERE A.STR_CD = B.STR_CD
+			     AND A.POS_NO = B.POS_NO
+			     AND A.POS_NO NOT IN ('8001', '8002', '8003', '9001', '9002')
+			GROUP BY A.STR_CD
+			       , A.POS_NO
+			       , B.POS_NAME
+			       , A.COMM_CODE
+			       , A.COMM_NAME
+			ORDER BY A.STR_CD
+			       , A.POS_NO
+			       , A.COMM_CODE
+        ]]>
+    </query>
+    
+    
+    <!-- 무인정산자료 비교표 조회 상세 DETAIL -->
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"      colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"    colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 무인정산자료 비교표 조회 상세 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+			SELECT A.STR_CD
+			     , A.SALE_DT
+			     , A.POS_NO
+			     , C.PUMBUN_CD
+			     , D.PUMBUN_NAME
+			     , SUM(A.PAY_AMT * DECODE(B.TRAN_FLAG, '0', 1, -1)) AS SALE_AMT
+			  FROM DPS.PS_TRPAID   A
+			     , DPS.PS_TRHEADER B
+			     , DPS.PS_TRITEM   C
+			     , DPS.PC_STRPBN   D
+			 WHERE A.STR_CD    = B.STR_CD
+			   AND A.SALE_DT   = B.SALE_DT
+			   AND A.POS_NO    = B.POS_NO
+			   AND A.TRAN_NO   = B.TRAN_NO
+			   AND A.STR_CD    = C.STR_CD
+			   AND A.SALE_DT   = C.SALE_DT
+			   AND A.POS_NO    = C.POS_NO
+			   AND A.TRAN_NO   = C.TRAN_NO
+			   AND A.SEQ_NO    = C.SEQ_NO
+			   AND C.STR_CD    = D.STR_CD
+			   AND C.PUMBUN_CD = D.PUMBUN_CD
+			   AND A.STR_CD    = ?
+			   AND A.SALE_DT   BETWEEN ? AND ?
+			   AND A.POS_NO    = ?
+			   AND A.PAY_TYPE  = '00'	-- 현금
+			 GROUP BY A.STR_CD
+			        , A.SALE_DT
+			        , A.POS_NO
+			        , C.PUMBUN_CD
+			        , D.PUMBUN_NAME
+			 ORDER BY A.SALE_DT
+			        , C.PUMBUN_CD
+        ]]>
+    </query>
+    
+    
+</service>

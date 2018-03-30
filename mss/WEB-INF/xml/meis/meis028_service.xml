@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.05.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  항목별비용계획조회
+ -->
+<service name="/meis028.me">
+    
+    <!-- 계정항목 헤더  -->
+    <gauce name="H_SEL_BIZ">
+        <column colName="STR_CD"        colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_PLAN_YEAR" colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="BIZ_CD"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="BIZ_NM"        colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLAN_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 조직 헤더  -->
+    <gauce name="H_SEL_ORG">
+        <column colName="STR_CD"        colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_PLAN_YEAR" colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_FLAG"      colType="TB_STRING"  size="1"  dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="ORG_CD"        colType="TB_STRING"  size="10" dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="ORG_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NM"       colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_NM"       colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NM"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLAN_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 월별 헤더  -->
+    <gauce name="H_SEL_MONTH">
+        <column colName="STR_CD"        colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_PLAN_YEAR" colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"        colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_PLAN_YM"   colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MONTH"         colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLAN_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 엑셀출력 헤더  -->
+    <gauce name="H_BIZPLAN_EXCEL">
+        <column colName="STR_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"     colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"     colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_NM"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"     colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NM"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLAN_YM"    colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"        colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 계정별 비용계획조회쿼리-->
+    <query name="SEL_BIZ">
+        <![CDATA[
+        SELECT X.STR_CD
+             , X.BIZ_PLAN_YEAR
+             , X.BIZ_CD
+             , X.BIZ_NM
+             , SUM(X.PLAN_AMT) AS PLAN_AMT
+          FROM ( SELECT BIZ.BIZ_PLAN_YEAR
+                      , BIZ.STR_CD
+                      , BIZ.BIZ_CD
+                      , ( SELECT BIZ_CD_NM
+                            FROM MSS.ME_BIZCDMST
+                           WHERE BIZ_CD = BIZ.BIZ_CD ) AS BIZ_NM
+                      , BIZ.PLAN_AMT
+                   FROM MSS.ME_BIZPLAN BIZ
+                  WHERE BIZ.STR_CD        = ?
+                    AND BIZ.BIZ_PLAN_YEAR = ? ) X 
+         GROUP BY 
+               X.BIZ_PLAN_YEAR
+             , X.STR_CD
+             , X.BIZ_CD
+             , X.BIZ_NM
+         ORDER BY X.BIZ_CD
+        ]]>
+    </query>
+    
+    <!-- 조직별 비용계획조회-->
+    <query name="SEL_ORG">
+        <![CDATA[
+        SELECT ORG.STR_CD
+             , BIZ.BIZ_PLAN_YEAR
+             , BIZ.BIZ_CD
+             , BIZ.ORG_FLAG
+             , BIZ.ORG_CD
+             , ORG.ORG_NAME
+             , CASE WHEN ORG.ORG_LEVEL >= '2' 
+                        THEN DPS.FN_GET_ORG_SHORT_NAME(ORG.STR_CD, ORG.DEPT_CD, '00', '00', '00') 
+                    ELSE '' END AS DEPT_NM
+             , CASE WHEN ORG.ORG_LEVEL >= '3' 
+                        THEN DPS.FN_GET_ORG_SHORT_NAME(ORG.STR_CD, ORG.DEPT_CD, ORG.TEAM_CD, '00', '00') 
+                    ELSE '' END AS TEAM_NM
+             , CASE WHEN ORG.ORG_LEVEL >= '4' 
+                        THEN DPS.FN_GET_ORG_SHORT_NAME(ORG.STR_CD, ORG.DEPT_CD, ORG.TEAM_CD, ORG.PC_CD, '00') 
+                    ELSE '' END AS PC_NM
+             , SUM(BIZ.PLAN_AMT) AS PLAN_AMT
+          FROM MSS.ME_BIZPLAN BIZ
+             , DPS.PC_ORGMST ORG
+         WHERE BIZ.ORG_CD = ORG.ORG_CD
+           AND BIZ.STR_CD        = ?
+           AND BIZ.BIZ_PLAN_YEAR = ?
+           AND BIZ.BIZ_CD        = ?
+         GROUP BY
+               BIZ.BIZ_PLAN_YEAR
+             , BIZ.BIZ_CD
+             , BIZ.ORG_FLAG
+             , BIZ.ORG_CD
+             , ORG.STR_CD
+             , ORG.DEPT_CD
+             , ORG.TEAM_CD
+             , ORG.PC_CD
+             , ORG.ORG_NAME
+             , ORG.ORG_LEVEL
+         ORDER BY BIZ.ORG_CD
+        ]]>
+    </query>
+    
+   
+    <!-- 월별 비용계획조회-->
+    <query name="SEL_MONTH">
+        <![CDATA[
+        SELECT ? AS STR_CD
+             , ? AS BIZ_PLAN_YEAR
+             , ? AS BIZ_CD
+             , ? AS ORG_CD
+             , MON.BIZ_PLAN_YM
+             , MON.MONTH
+             , BIZ.PLAN_AMT
+          FROM ( SELECT ?||'01' AS BIZ_PLAN_YM, '01월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'02' AS BIZ_PLAN_YM, '02월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'03' AS BIZ_PLAN_YM, '03월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'04' AS BIZ_PLAN_YM, '04월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'05' AS BIZ_PLAN_YM, '05월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'06' AS BIZ_PLAN_YM, '06월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'07' AS BIZ_PLAN_YM, '07월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'08' AS BIZ_PLAN_YM, '08월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'09' AS BIZ_PLAN_YM, '09월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'10' AS BIZ_PLAN_YM, '10월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'11' AS BIZ_PLAN_YM, '11월' AS MONTH FROM DUAL UNION ALL
+                 SELECT ?||'12' AS BIZ_PLAN_YM, '12월' AS MONTH FROM DUAL) MON
+             , MSS.ME_BIZPLAN BIZ
+         WHERE MON.BIZ_PLAN_YM      = BIZ.BIZ_PLAN_YM(+)
+           AND BIZ.STR_CD(+)        = ?
+           AND BIZ.BIZ_PLAN_YEAR(+) = ?
+           AND BIZ.BIZ_CD(+)        = ?
+           AND BIZ.ORG_CD(+)        = ?
+         ORDER BY MON.BIZ_PLAN_YM
+        ]]>
+    </query>
+    
+    <!-- 엑셀데이터 조회-->
+    <query name="SEL_EXCEL">
+        <![CDATA[
+        SELECT BIZ.STR_CD
+             , DPS.FN_GET_STORE_NAME(BIZ.STR_CD)       AS STR_NM
+             , BIZ.BIZ_CD
+             , ( SELECT BIZ_CD_NM
+                   FROM MSS.ME_BIZCDMST
+                  WHERE BIZ_CD = BIZ.BIZ_CD ) AS BIZ_NM
+             , BIZ.ORG_CD
+             , ORG.ORG_NAME                            AS ORG_NM
+             , BIZ.BIZ_PLAN_YM
+             , BIZ.PLAN_AMT
+          FROM MSS.ME_BIZPLAN BIZ
+             , DPS.PC_ORGMST  ORG
+         WHERE BIZ.ORG_CD        = ORG.ORG_CD
+           AND BIZ.STR_CD        = ?
+           AND BIZ.BIZ_PLAN_YEAR = ?
+         ORDER BY 
+               BIZ_CD
+             , BIZ.ORG_CD
+             , BIZ_PLAN_YM
+        ]]>
+    </query>
+    
+</service>

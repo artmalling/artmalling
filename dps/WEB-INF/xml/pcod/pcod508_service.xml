@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  신선단품정보를 조회한다.
+ -->
+<service name="/pcod508.pc">
+
+  <gauce name="H_SEL_MASTER">   
+        <column colName="STYLE_CD"        colType="TB_STRING" size="54"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="COLOR_CD"        colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="SIZE_CD"         colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />          
+        <column colName="SKU_CD"          colType="TB_STRING" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="SKU_NAME"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RECP_NAME"       colType="TB_STRING" size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="INPUT_PLU_CD"    colType="TB_STRING" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+        <column colName="PUMMOK_CD"       colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PUMMOK_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_AREA_CD"  colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MODEL_NO"        colType="TB_STRING" size="24"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />              
+        <column colName="SALE_UNIT_CD"    colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BAS_SPEC_CD"     colType="TB_DECIMAL" size="8"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BAS_SPEC_UNIT"   colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMP_SPEC_CD"     colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="CMP_SPEC_UNIT"   colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />               
+        <column colName="MAKER_CD"        colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"          colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="REMARK"          colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_SKUMST">
+        <![CDATA[
+            SELECT SKU.STYLE_CD         , SKU.COLOR_CD        , SKU.SIZE_CD        , SKU.SKU_CD           , SKU.SKU_NAME
+                 , SKU.RECP_NAME        , SKU.INPUT_PLU_CD    , SKU.PUMMOK_CD      , PMK.PUMMOK_NAME      , SKU.ORIGIN_AREA_CD
+                 , SKU.MODEL_NO         , SKU.SALE_UNIT_CD    , SKU.BAS_SPEC_CD    , SKU.BAS_SPEC_UNIT    , SKU.CMP_SPEC_CD
+                 , SKU.CMP_SPEC_UNIT    , SKU.MAKER_CD        , SKU.USE_YN         , SKU.REMARK
+              FROM DPS.PC_SKUMST SKU
+                 , DPS.PC_STYLEMST STY
+                 , DPS.PC_PMKMST PMK
+             WHERE SKU.PUMBUN_CD = STY.PUMBUN_CD
+               AND SKU.STYLE_CD  = STY.STYLE_CD
+               AND SKU.PUMMOK_CD = PMK.PUMMOK_CD 
+        ]]>     
+    </query>
+    <query name="SEL_SKUMST_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND SKU.PUMBUN_CD     = ?
+        ]]>
+    </query> 
+    <query name="SEL_SKUMST_WHERE_PUMMOK_CD">
+        <![CDATA[
+               AND SKU.PUMMOK_CD     = ?
+        ]]> 
+    </query>
+    <query name="SEL_SKUMST_WHERE_LIKE_SKU_CD">
+        <![CDATA[
+               AND SKU.SKU_CD        LIKE ?||'%'
+               AND SKU.SKU_NAME      LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_STYLE_CD">
+        <![CDATA[
+               AND STY.STYLE_CD     LIKE  ?||'%'
+               AND STY.STYLE_NAME   LIKE  '%'||?||'%'
+        ]]> 
+    </query> 
+    <query name="SEL_SKUMST_WHERE_BRAND_CD">
+        <![CDATA[
+               AND STY.BRAND_CD      = ?
+        ]]> 
+    </query>
+    <query name="SEL_SKUMST_WHERE_SUB_BRD_CD">
+        <![CDATA[
+               AND STY.SUB_BRD_CD    = ?
+        ]]> 
+    </query>
+    <query name="SEL_SKUMST_WHERE_PLAN_YEAR">
+        <![CDATA[
+               AND STY.PLAN_YEAR     = ?
+        ]]>
+    </query> 
+    <query name="SEL_SKUMST_WHERE_SEASON_CD">
+        <![CDATA[
+               AND STY.SEASON_CD     = ?
+        ]]> 
+    </query>
+    <query name="SEL_SKUMST_WHERE_ITEM_CD">
+        <![CDATA[
+               AND STY.ITEM_CD       = ?
+        ]]> 
+    </query>
+    <query name="SEL_SKUMST_WHERE_MNG_CD1">
+        <![CDATA[
+               AND STY.MNG_CD1       = ?
+        ]]>   
+    </query>
+    <query name="SEL_SKUMST_WHERE_MNG_CD2">
+        <![CDATA[
+               AND STY.MNG_CD2       = ?
+        ]]> 
+    </query> 
+    <query name="SEL_SKUMST_WHERE_MNG_CD3">
+        <![CDATA[
+               AND STY.MNG_CD3       = ?
+        ]]>  
+    </query>
+    <query name="SEL_SKUMST_WHERE_MNG_CD4">
+        <![CDATA[
+               AND STY.MNG_CD4       = ?
+        ]]> 
+    </query>
+    <query name="SEL_SKUMST_WHERE_MNG_CD5">
+        <![CDATA[
+               AND STY.MNG_CD5       = ?
+        ]]>   
+    </query>
+    <query name="SEL_SKUMST_ORDER">
+        <![CDATA[
+            ORDER BY SKU.STYLE_CD
+                   , SKU.COLOR_CD
+                   , SKU.SIZE_CD
+        ]]>
+    </query>
+    
+</service>

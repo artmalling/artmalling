@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 오형규
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  약속변경이력조회
+ -->
+<service name="/mpro103.mp">
+    <!-- master head -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STRCD" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAKE_DT" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAKE_SEQ" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+    </gauce>
+    
+    <gauce name="H_DETAIL"> 
+        <column colName="MOD_LIST" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_PROM" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_PROM" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_REASON" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_TAKE_DT" colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO" colType="TB_STRING" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+    </gauce>
+    
+    <!-- 약속대장 조회 / 접수일자 기준  -->
+    <query name="SEL_TAKE_DT">
+        <![CDATA[
+            SELECT      STR_CD STR_CD,
+                        DPS.FN_GET_STORE_NAME(STR_CD) STRCD,
+                        TAKE_DT TAKE_DT,
+                        LPAD(TAKE_SEQ, 3, 0) TAKE_SEQ
+            FROM        MSS.MP_PROMISECERT 
+            WHERE       PROM_TYPE  LIKE ? || '%'
+            AND         CUST_NM LIKE '%' || ? || '%'
+			AND         PUMBUN_CD LIKE ? || '%'
+			AND         STR_CD = ?            
+			AND         TAKE_DT  >= ? 
+			AND         TAKE_DT <= ?  
+			ORDER BY TAKE_DT       
+        ]]>
+    </query>  
+    
+    <!-- 약속대장 조회 / 입고예정일 기준  -->
+    <query name="SEL_IN_DELI_DT">
+        <![CDATA[
+            SELECT      STR_CD STR_CD,
+                        DPS.FN_GET_STORE_NAME(STR_CD) STRCD,
+                        TAKE_DT TAKE_DT,
+                        LPAD(TAKE_SEQ, 3, 0) TAKE_SEQ
+            FROM        MSS.MP_PROMISECERT 
+            WHERE       PROM_TYPE  LIKE ? || '%'
+            AND         CUST_NM LIKE '%' || ? || '%'
+            AND         PUMBUN_CD LIKE ? || '%'
+            AND         STR_CD = ?            
+            AND         IN_DELI_DT  >= ? 
+            AND         IN_DELI_DT <= ?       
+            ORDER BY TAKE_DT  
+        ]]>
+    </query>
+    
+    <!-- 약속대장 조회 /  약속일자 기준  -->
+    <query name="SEL_FRST_PROM_DT">
+        <![CDATA[
+            SELECT      STR_CD STR_CD,
+                        DPS.FN_GET_STORE_NAME(STR_CD) STRCD,
+                        TAKE_DT TAKE_DT,
+                        LPAD(TAKE_SEQ, 3, 0) TAKE_SEQ
+            FROM        MSS.MP_PROMISECERT 
+            WHERE       PROM_TYPE  LIKE ? || '%'
+            AND         CUST_NM LIKE '%' || ? || '%'
+            AND         PUMBUN_CD LIKE ? || '%'
+            AND         STR_CD = ?            
+            AND         FRST_PROM_DT  >= ? 
+            AND         FRST_PROM_DT <= ?
+            ORDER BY TAKE_DT         
+        ]]>
+    </query>
+    
+    
+    <!-- 약속대장 HIT 상세 조회  -->
+    <query name="SEL_PROMISEHIT">
+        <![CDATA[
+            SELECT              COM.FN_GET_COMM_NAME('D','M063', B.MOD_LIST) MOD_LIST,
+					           ( CASE  MOD_LIST WHEN '01' THEN TO_CHAR(TO_DATE(B.ORG_PROM_DT), 'YYYY/MM/DD') 
+				                               WHEN '02' THEN TO_CHAR(TO_DATE(B.ORG_IN_DELI_DT), 'YYYY/MM/DD')
+				                               WHEN '03' THEN DPS.FN_GET_STORE_NAME(B.ORG_DELI_STR ) 
+				                               WHEN '04' THEN COM.FN_GET_COMM_NAME('D','M022', B.ORG_DELI_TYPE ) 
+				                               ELSE ' '
+				                               END 
+                                ) ORG_PROM,
+					            ( CASE MOD_LIST WHEN '01' THEN TO_CHAR(TO_DATE(B.MOD_PROM_DT), 'YYYY/MM/DD')
+	                                            WHEN '02' THEN TO_CHAR(TO_DATE(B.MOD_IN_DELI_DT), 'YYYY/MM/DD')
+	                                            WHEN '03' THEN  DPS.FN_GET_STORE_NAME(B.MOD_DELI_STR )
+	                                            WHEN '04' THEN  COM.FN_GET_COMM_NAME('D','M022', B.MOD_DELI_TYPE )
+	                                            ELSE ' '
+	                                            END
+	                            ) MOD_PROM ,
+	                            COM.FN_GET_COMM_NAME('D','M023', B.MOD_REASON ) MOD_REASON,
+	                            TO_CHAR(B.MOD_TAKE_DT, 'YYYYMMDD') MOD_TAKE_DT,
+	                            LPAD(B.SEQ_NO, 3, 0) SEQ_NO
+			FROM                MSS.MP_PROMISECERT  A, MSS.MP_PROMISEHIS B
+			WHERE               A.TAKE_DT = B.TAKE_DT
+			AND                 A.TAKE_SEQ = B.TAKE_SEQ
+			AND                 A.STR_CD = B.STR_CD
+			AND                 A.TAKE_SEQ = ?
+			AND                 A.STR_CD = ?
+			AND                 A.TAKE_DT = ?       
+        ]]>
+    </query>         
+    
+        
+       
+    
+</service>

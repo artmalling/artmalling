@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.18
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  행사코드를 관리한다.
+ -->
+<service name="/pcod704.pc">
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="EVENT_THME_CD"       colType="TB_STRING" size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_THME_NAME"     colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_YM"            colType="TB_STRING" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"            colType="TB_STRING" size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"          colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"              colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"            colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"          colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"          colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                
+        <column colName="EVENT_TYPE"          colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_TYPE_NAME"     colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLU_FLAG"      colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLU_FLAG_NAME" colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_MNG_FLAG"      colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_MNG_FLAG_NAME" colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_ORG_CD"        colType="TB_STRING" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_ORG_NAME"      colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="EVENT_CHAR_ID"       colType="TB_STRING" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CHAR_NAME"     colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_EVTMST">
+        <![CDATA[
+            SELECT EVT.EVENT_THME_CD     
+                 , ETM.EVENT_THME_NAME    
+                 , EVT.EVENT_YM         
+                 , EVT.EVENT_CD           
+                 , EVT.EVENT_NAME  
+                 , SEV.STR_CD
+                 , DPS.FN_GET_STORE_NAME(SEV.STR_CD)                     AS STR_NAME   
+                 , SEV.EVENT_S_DT        
+                 , SEV.EVENT_E_DT         
+                 , EVT.EVENT_TYPE       
+                 , COM.FN_GET_COMM_NAME('D','P072',EVT.EVENT_TYPE)       AS EVENT_TYPE_NAME
+                 , EVT.EVENT_PLU_FLAG     
+                 , COM.FN_GET_COMM_NAME('D','P071',EVT.EVENT_PLU_FLAG)   AS EVENT_PLU_FLAG_NAME
+                 , EVT.EVENT_MNG_FLAG     
+                 , COM.FN_GET_COMM_NAME('D','P073',EVT.EVENT_MNG_FLAG)   AS EVENT_MNG_FLAG_NAME
+                 , EVT.EVENT_ORG_CD      
+                 , DPS.FN_GET_ORG_NAME(SUBSTR(EVT.EVENT_ORG_CD,1,2)
+                                       , SUBSTR(EVT.EVENT_ORG_CD,3,2)
+                                       , SUBSTR(EVT.EVENT_ORG_CD,5,2)
+                                       , SUBSTR(EVT.EVENT_ORG_CD,7,2)
+                                       , SUBSTR(EVT.EVENT_ORG_CD,9,2))   AS EVENT_ORG_NAME
+                 , EVT.EVENT_CHAR_ID       
+                 , COM.FN_GET_USER_NAME(EVT.EVENT_CHAR_ID)               AS EVENT_CHAR_NAME
+              FROM DPS.PC_EVTMST     EVT
+                 , DPS.PC_EVTTHMEMST ETM
+                 , DPS.PC_STREVT     SEV
+             WHERE SEV.EVENT_CD        =  EVT.EVENT_CD
+               AND EVT.EVENT_THME_CD   =  ETM.EVENT_THME_CD  
+               AND EVT.EVENT_CD        != '00000000000'
+               AND SEV.EVENT_E_DT      >= ?
+               AND SEV.EVENT_S_DT      <= ?
+               AND EXISTS (SELECT MYORG.USER_ID
+                             FROM COM.V_MYORG MYORG
+                            WHERE MYORG.STR_CD      = SEV.STR_CD
+                              AND MYORG.ORG_FLAG    = ?
+                              AND MYORG.USER_ID     = ?
+                              AND ROWNUM            = 1
+                          )
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_STR_CD">
+        <![CDATA[
+               AND SEV.STR_CD          =  ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_CD">
+        <![CDATA[
+               AND EVT.EVENT_CD        LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_NAME">
+        <![CDATA[
+               AND EVT.EVENT_NAME      LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_TYPE">
+        <![CDATA[
+               AND EVT.EVENT_TYPE      =  ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_MNG_FLAG">
+        <![CDATA[
+               AND EVT.EVENT_MNG_FLAG  =  ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_L_CD">
+        <![CDATA[
+               AND ETM.EVENT_L_CD      =  ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_M_CD">
+        <![CDATA[
+               AND ETM.EVENT_M_CD      =  ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_S_CD">
+        <![CDATA[
+               AND ETM.EVENT_S_CD      =  ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_ORDER">
+        <![CDATA[
+             ORDER BY EVT.EVENT_CD, SEV.STR_CD, EVT.EVENT_THME_CD, SEV.EVENT_S_DT 
+        ]]>
+    </query>
+</service>

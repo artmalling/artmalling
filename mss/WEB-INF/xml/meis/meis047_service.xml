@@ -1,0 +1,1096 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 최재형
+ * 회 사 명 : 
+ * 작 성 일 : 2011.06.29
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  조직별매출계획상세조회
+ -->
+<service name="/meis047.me">
+
+    <!-- 매출계획조회 헤더  -->
+    <gauce name="H_SEL_SALES_PLAN_DTL">
+    	<column colName="ORG_CD"			colType="TB_STRING" 	size="10"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="ORG_NAME"			colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="GROUP_ID"			colType="TB_STRING" 	size="1"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="SORT_NO"			colType="TB_STRING" 	size="1"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="BIZ_CD"			colType="TB_STRING" 	size="6"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="BIZ_CD_NM"			colType="TB_STRING" 	size="60"	dec="0" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="YEAR_TOT"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_01"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_02"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_03"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_04"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_05"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_06"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_UPPER_HALF"	colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_07"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_08"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_09"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_10"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_11"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_12"			colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    	<column colName="AMT_LOWER_HALF"	colType="TB_DECIMAL"	size="13"	dec="2" keyType="TB_NORMAL"    roundMode="ROUND" />
+    </gauce>
+
+    <!-- 점별매출계획상세조회 -->
+    <query name="SEL_SALES_PLAN_DTL_STR">
+    <![CDATA[
+    	/*******
+    	* 점별매출계획상세조회
+    	*******/
+		SELECT TA.ORG_CD
+		       ,DECODE(GROUP_ID, '0', (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = TA.ORG_CD), '합계')  AS ORG_NAME
+		       ,DECODE(TA.GROUP_ID, '1', '2', '0')                                     AS GROUP_ID
+		       ,TA.SORT_NO
+		       ,TA.BIZ_CD
+		       ,NVL((SELECT MST.BIZ_CD_NM FROM MSS.ME_BIZCDMST MST WHERE MST.BIZ_CD = TA.BIZ_CD),'매출이익율')               AS BIZ_CD_NM
+		       ,TA.YEAR_TOT
+		       ,TA.AMT_01
+		       ,TA.AMT_02
+		       ,TA.AMT_03
+		       ,TA.AMT_04
+		       ,TA.AMT_05
+		       ,TA.AMT_06
+		       ,TA.AMT_UPPER_HALF
+		       ,TA.AMT_07
+		       ,TA.AMT_08
+		       ,TA.AMT_09
+		       ,TA.AMT_10
+		       ,TA.AMT_11
+		       ,TA.AMT_12
+		       ,TA.AMT_LOWER_HALF
+		FROM (
+		      SELECT RPAD(MMA.STR_CD, 10, '00')                    AS ORG_CD
+		             ,MMA.GROUP_ID
+		             ,S.SORT_NO
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_CD, 2, MMA.SALES_PROFIT_CD, '')  AS BIZ_CD
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_TOT, 2, MMA.SALES_PROFIT_AMT_TOT, MMA.SALES_PROFIT_RATE_TOT)  AS YEAR_TOT
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_01, 2, MMA.SALES_PROFIT_AMT_01, MMA.SALES_PROFIT_RATE_01)  AS AMT_01
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_02, 2, MMA.SALES_PROFIT_AMT_02, MMA.SALES_PROFIT_RATE_02)  AS AMT_02
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_03, 2, MMA.SALES_PROFIT_AMT_03, MMA.SALES_PROFIT_RATE_03)  AS AMT_03
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_04, 2, MMA.SALES_PROFIT_AMT_04, MMA.SALES_PROFIT_RATE_04)  AS AMT_04
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_05, 2, MMA.SALES_PROFIT_AMT_05, MMA.SALES_PROFIT_RATE_05)  AS AMT_05
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_06, 2, MMA.SALES_PROFIT_AMT_06, MMA.SALES_PROFIT_RATE_06)  AS AMT_06
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_UPPER_HALF, 2, MMA.SALES_PROFIT_AMT_UPPER_HALF, MMA.SALES_PROFIT_RATE_UPPER_HALF)  AS AMT_UPPER_HALF
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_07, 2, MMA.SALES_PROFIT_AMT_07, MMA.SALES_PROFIT_RATE_07)  AS AMT_07
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_08, 2, MMA.SALES_PROFIT_AMT_08, MMA.SALES_PROFIT_RATE_08)  AS AMT_08
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_09, 2, MMA.SALES_PROFIT_AMT_09, MMA.SALES_PROFIT_RATE_09)  AS AMT_09
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_10, 2, MMA.SALES_PROFIT_AMT_10, MMA.SALES_PROFIT_RATE_10)  AS AMT_10
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_11, 2, MMA.SALES_PROFIT_AMT_11, MMA.SALES_PROFIT_RATE_11)  AS AMT_11
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_12, 2, MMA.SALES_PROFIT_AMT_12, MMA.SALES_PROFIT_RATE_12)  AS AMT_12
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_LOWER_HALF, 2, MMA.SALES_PROFIT_AMT_LOWER_HALF, MMA.SALES_PROFIT_RATE_LOWER_HALF)  AS AMT_LOWER_HALF
+		             
+		             
+		      FROM (
+		            SELECT T.STR_CD
+		                   ,T.GROUP_ID
+		                   ,T.SALES_AMT_CD
+		                   ,T.SALES_PROFIT_CD
+		                   ,ROWNUM           AS NUM
+		                   /* 매출액 */
+		                   ,T.SALES_AMT_TOT
+		                   ,T.SALES_AMT_01
+		                   ,T.SALES_AMT_02
+		                   ,T.SALES_AMT_03
+		                   ,T.SALES_AMT_04
+		                   ,T.SALES_AMT_05
+		                   ,T.SALES_AMT_06
+		                   ,T.SALES_AMT_UPPER_HALF
+		                   ,T.SALES_AMT_07
+		                   ,T.SALES_AMT_08
+		                   ,T.SALES_AMT_09
+		                   ,T.SALES_AMT_10
+		                   ,T.SALES_AMT_11
+		                   ,T.SALES_AMT_12
+		                   ,T.SALES_AMT_LOWER_HALF
+		                   /* 매출이익액 */
+		                   ,T.SALES_PROFIT_AMT_TOT
+		                   ,T.SALES_PROFIT_AMT_01
+		                   ,T.SALES_PROFIT_AMT_02
+		                   ,T.SALES_PROFIT_AMT_03
+		                   ,T.SALES_PROFIT_AMT_04
+		                   ,T.SALES_PROFIT_AMT_05
+		                   ,T.SALES_PROFIT_AMT_06
+		                   ,T.SALES_PROFIT_AMT_UPPER_HALF
+		                   ,T.SALES_PROFIT_AMT_07
+		                   ,T.SALES_PROFIT_AMT_08
+		                   ,T.SALES_PROFIT_AMT_09
+		                   ,T.SALES_PROFIT_AMT_10
+		                   ,T.SALES_PROFIT_AMT_11
+		                   ,T.SALES_PROFIT_AMT_12
+		                   ,T.SALES_PROFIT_AMT_LOWER_HALF       
+		                   /* 매출이익율 */
+		                   ,DECODE(T.SALES_AMT_TOT, 0, 0, ROUND(T.SALES_PROFIT_AMT_TOT/T.SALES_AMT_TOT*100,2)) AS SALES_PROFIT_RATE_TOT
+		                   ,DECODE(T.SALES_AMT_01, 0, 0, ROUND(T.SALES_PROFIT_AMT_01/T.SALES_AMT_01*100,2)) AS SALES_PROFIT_RATE_01
+		                   ,DECODE(T.SALES_AMT_02, 0, 0, ROUND(T.SALES_PROFIT_AMT_02/T.SALES_AMT_02*100,2)) AS SALES_PROFIT_RATE_02
+		                   ,DECODE(T.SALES_AMT_03, 0, 0, ROUND(T.SALES_PROFIT_AMT_03/T.SALES_AMT_03*100,2)) AS SALES_PROFIT_RATE_03
+		                   ,DECODE(T.SALES_AMT_04, 0, 0, ROUND(T.SALES_PROFIT_AMT_04/T.SALES_AMT_04*100,2)) AS SALES_PROFIT_RATE_04
+		                   ,DECODE(T.SALES_AMT_05, 0, 0, ROUND(T.SALES_PROFIT_AMT_05/T.SALES_AMT_05*100,2)) AS SALES_PROFIT_RATE_05
+		                   ,DECODE(T.SALES_AMT_06, 0, 0, ROUND(T.SALES_PROFIT_AMT_06/T.SALES_AMT_06*100,2)) AS SALES_PROFIT_RATE_06
+		                   ,DECODE(T.SALES_AMT_UPPER_HALF, 0, 0, ROUND(T.SALES_PROFIT_AMT_UPPER_HALF/T.SALES_AMT_UPPER_HALF*100,2)) AS SALES_PROFIT_RATE_UPPER_HALF
+		                   ,DECODE(T.SALES_AMT_07, 0, 0, ROUND(T.SALES_PROFIT_AMT_07/T.SALES_AMT_07*100,2)) AS SALES_PROFIT_RATE_07
+		                   ,DECODE(T.SALES_AMT_08, 0, 0, ROUND(T.SALES_PROFIT_AMT_08/T.SALES_AMT_08*100,2)) AS SALES_PROFIT_RATE_08
+		                   ,DECODE(T.SALES_AMT_09, 0, 0, ROUND(T.SALES_PROFIT_AMT_09/T.SALES_AMT_09*100,2)) AS SALES_PROFIT_RATE_09
+		                   ,DECODE(T.SALES_AMT_10, 0, 0, ROUND(T.SALES_PROFIT_AMT_10/T.SALES_AMT_10*100,2)) AS SALES_PROFIT_RATE_10
+		                   ,DECODE(T.SALES_AMT_11, 0, 0, ROUND(T.SALES_PROFIT_AMT_11/T.SALES_AMT_11*100,2)) AS SALES_PROFIT_RATE_11
+		                   ,DECODE(T.SALES_AMT_12, 0, 0, ROUND(T.SALES_PROFIT_AMT_12/T.SALES_AMT_12*100,2)) AS SALES_PROFIT_RATE_12      
+		                   ,DECODE(T.SALES_AMT_LOWER_HALF, 0, 0, ROUND(T.SALES_PROFIT_AMT_LOWER_HALF/T.SALES_AMT_LOWER_HALF*100,2)) AS SALES_PROFIT_RATE_LOWER_HALF       
+		                   
+		            FROM (
+		                  SELECT XXA.STR_CD                                         AS STR_CD
+		                        ,GROUPING(XXA.STR_CD)                               AS GROUP_ID
+		                        ,MAX(XXA.SALES_AMT_CD)                              AS SALES_AMT_CD
+		                        ,MAX(XXA.SALES_PROFIT_CD)                           AS SALES_PROFIT_CD
+		                        
+		                        ,SUM(XXA.SALES_AMT_TOT)                             AS SALES_AMT_TOT
+		                        ,SUM(XXA.SALES_AMT_01)                              AS SALES_AMT_01
+		                        ,SUM(XXA.SALES_AMT_02)                              AS SALES_AMT_02
+		                        ,SUM(XXA.SALES_AMT_03)                              AS SALES_AMT_03
+		                        ,SUM(XXA.SALES_AMT_04)                              AS SALES_AMT_04
+		                        ,SUM(XXA.SALES_AMT_05)                              AS SALES_AMT_05
+		                        ,SUM(XXA.SALES_AMT_06)                              AS SALES_AMT_06
+		                        ,SUM(XXA.SALES_AMT_UPPER_HALF)                      AS SALES_AMT_UPPER_HALF
+		                        ,SUM(XXA.SALES_AMT_07)                              AS SALES_AMT_07
+		                        ,SUM(XXA.SALES_AMT_08)                              AS SALES_AMT_08
+		                        ,SUM(XXA.SALES_AMT_09)                              AS SALES_AMT_09
+		                        ,SUM(XXA.SALES_AMT_10)                              AS SALES_AMT_10
+		                        ,SUM(XXA.SALES_AMT_11)                              AS SALES_AMT_11
+		                        ,SUM(XXA.SALES_AMT_12)                              AS SALES_AMT_12
+		                        ,SUM(XXA.SALES_AMT_LOWER_HALF)                      AS SALES_AMT_LOWER_HALF
+		                        
+		                        ,SUM(XXA.SALES_PROFIT_AMT_TOT)                      AS SALES_PROFIT_AMT_TOT
+		                        ,SUM(XXA.SALES_PROFIT_AMT_01)                       AS SALES_PROFIT_AMT_01
+		                        ,SUM(XXA.SALES_PROFIT_AMT_02)                       AS SALES_PROFIT_AMT_02
+		                        ,SUM(XXA.SALES_PROFIT_AMT_03)                       AS SALES_PROFIT_AMT_03
+		                        ,SUM(XXA.SALES_PROFIT_AMT_04)                       AS SALES_PROFIT_AMT_04
+		                        ,SUM(XXA.SALES_PROFIT_AMT_05)                       AS SALES_PROFIT_AMT_05
+		                        ,SUM(XXA.SALES_PROFIT_AMT_06)                       AS SALES_PROFIT_AMT_06
+		                        ,SUM(XXA.SALES_PROFIT_AMT_UPPER_HALF)               AS SALES_PROFIT_AMT_UPPER_HALF
+		                        ,SUM(XXA.SALES_PROFIT_AMT_07)                       AS SALES_PROFIT_AMT_07
+		                        ,SUM(XXA.SALES_PROFIT_AMT_08)                       AS SALES_PROFIT_AMT_08
+		                        ,SUM(XXA.SALES_PROFIT_AMT_09)                       AS SALES_PROFIT_AMT_09
+		                        ,SUM(XXA.SALES_PROFIT_AMT_10)                       AS SALES_PROFIT_AMT_10
+		                        ,SUM(XXA.SALES_PROFIT_AMT_11)                       AS SALES_PROFIT_AMT_11
+		                        ,SUM(XXA.SALES_PROFIT_AMT_12)                       AS SALES_PROFIT_AMT_12
+		                        ,SUM(XXA.SALES_PROFIT_AMT_LOWER_HALF)               AS SALES_PROFIT_AMT_LOWER_HALF
+		                  
+		                  FROM (
+		                        SELECT SUBSTR(XA.ORG_CD,1,2)  AS STR_CD
+		                              ,SUBSTR(XA.ORG_CD,3,2)  AS DEPT_CD
+		                              ,SUBSTR(XA.ORG_CD,5,2)  AS TEAM_CD
+		                              ,SUBSTR(XA.ORG_CD,7,2)  AS PC_CD
+		                              ,XA.SALES_AMT_CD
+		                              ,XA.SALES_PROFIT_CD
+		                              /* 매출액 */
+		                              ,XA.SALES_AMT_TOT
+		                              ,XA.SALES_AMT_01
+		                              ,XA.SALES_AMT_02
+		                              ,XA.SALES_AMT_03
+		                              ,XA.SALES_AMT_04
+		                              ,XA.SALES_AMT_05
+		                              ,XA.SALES_AMT_06
+		                              ,XA.SALES_AMT_UPPER_HALF
+		                              ,XA.SALES_AMT_07
+		                              ,XA.SALES_AMT_08
+		                              ,XA.SALES_AMT_09
+		                              ,XA.SALES_AMT_10
+		                              ,XA.SALES_AMT_11
+		                              ,XA.SALES_AMT_12
+		                              ,XA.SALES_AMT_LOWER_HALF
+		                              /* 매출이익액 */
+		                              ,XA.SALES_PROFIT_AMT_TOT
+		                              ,XA.SALES_PROFIT_AMT_01
+		                              ,XA.SALES_PROFIT_AMT_02
+		                              ,XA.SALES_PROFIT_AMT_03
+		                              ,XA.SALES_PROFIT_AMT_04
+		                              ,XA.SALES_PROFIT_AMT_05
+		                              ,XA.SALES_PROFIT_AMT_06
+		                              ,XA.SALES_PROFIT_AMT_UPPER_HALF
+		                              ,XA.SALES_PROFIT_AMT_07
+		                              ,XA.SALES_PROFIT_AMT_08
+		                              ,XA.SALES_PROFIT_AMT_09
+		                              ,XA.SALES_PROFIT_AMT_10
+		                              ,XA.SALES_PROFIT_AMT_11
+		                              ,XA.SALES_PROFIT_AMT_12
+		                              ,XA.SALES_PROFIT_AMT_LOWER_HALF
+		                        FROM (
+		                              SELECT MA.ORG_CD
+		                                     ,MAX(MA.SALES_AMT_CD)                                AS SALES_AMT_CD
+		                                     ,MAX(MA.SALES_PROFIT_CD)                             AS SALES_PROFIT_CD
+		                                     /* 매출액 */
+		                                    ,SUM(MA.SALES_AMT_TOT)		                            AS SALES_AMT_TOT
+		                                    ,SUM(MA.SALES_AMT_01)		                              AS SALES_AMT_01
+		                                    ,SUM(MA.SALES_AMT_02)		                              AS SALES_AMT_02
+		                                    ,SUM(MA.SALES_AMT_03)		                              AS SALES_AMT_03
+		                                    ,SUM(MA.SALES_AMT_04)		                              AS SALES_AMT_04
+		                                    ,SUM(MA.SALES_AMT_05)		                              AS SALES_AMT_05
+		                                    ,SUM(MA.SALES_AMT_06)		                              AS SALES_AMT_06
+		                                    ,SUM(MA.SALES_AMT_UPPER_HALF)	                        AS SALES_AMT_UPPER_HALF
+		                                    ,SUM(MA.SALES_AMT_07)		                              AS SALES_AMT_07
+		                                    ,SUM(MA.SALES_AMT_08)		                              AS SALES_AMT_08
+		                                    ,SUM(MA.SALES_AMT_09)		                              AS SALES_AMT_09
+		                                    ,SUM(MA.SALES_AMT_10)		                              AS SALES_AMT_10
+		                                    ,SUM(MA.SALES_AMT_11)		                              AS SALES_AMT_11
+		                                    ,SUM(MA.SALES_AMT_12)		                              AS SALES_AMT_12
+		                                    ,SUM(MA.SALES_AMT_LOWER_HALF)	                        AS SALES_AMT_LOWER_HALF
+		                                    /* 매출이익액 */
+		                                    ,SUM(MA.SALES_PROFIT_AMT_TOT)	                        AS SALES_PROFIT_AMT_TOT
+		                                    ,SUM(MA.SALES_PROFIT_AMT_01)		                      AS SALES_PROFIT_AMT_01
+		                                    ,SUM(MA.SALES_PROFIT_AMT_02)		                      AS SALES_PROFIT_AMT_02
+		                                    ,SUM(MA.SALES_PROFIT_AMT_03)		                      AS SALES_PROFIT_AMT_03
+		                                    ,SUM(MA.SALES_PROFIT_AMT_04)		                      AS SALES_PROFIT_AMT_04
+		                                    ,SUM(MA.SALES_PROFIT_AMT_05)		                      AS SALES_PROFIT_AMT_05
+		                                    ,SUM(MA.SALES_PROFIT_AMT_06)		                      AS SALES_PROFIT_AMT_06
+		                                    ,SUM(MA.SALES_PROFIT_AMT_UPPER_HALF)	                AS SALES_PROFIT_AMT_UPPER_HALF
+		                                    ,SUM(MA.SALES_PROFIT_AMT_07)		                      AS SALES_PROFIT_AMT_07
+		                                    ,SUM(MA.SALES_PROFIT_AMT_08)		                      AS SALES_PROFIT_AMT_08
+		                                    ,SUM(MA.SALES_PROFIT_AMT_09)		                      AS SALES_PROFIT_AMT_09
+		                                    ,SUM(MA.SALES_PROFIT_AMT_10)		                      AS SALES_PROFIT_AMT_10
+		                                    ,SUM(MA.SALES_PROFIT_AMT_11)		                      AS SALES_PROFIT_AMT_11
+		                                    ,SUM(MA.SALES_PROFIT_AMT_12)		                      AS SALES_PROFIT_AMT_12
+		                                    ,SUM(MA.SALES_PROFIT_AMT_LOWER_HALF)	                AS SALES_PROFIT_AMT_LOWER_HALF
+		                                    
+		                              FROM (
+		                                    SELECT RPT.ORG_CD
+		                                           ,MAX(RPT.BIZ_CD)                                                                                    AS SALES_AMT_CD
+		                                           ,''                                                                                                 AS SALES_PROFIT_CD
+		                                           ,SUM(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0))                                                 AS SALES_AMT_TOT
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '01', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_01
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '02', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_02
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '03', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_03
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '04', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_04
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '05', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_05
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '06', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_06
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '01' AND '06' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_AMT_UPPER_HALF
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '07', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_07
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '08', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_08
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '09', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_09
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '10', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_10
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '11', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_11
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '12', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_12
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '07' AND '12' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_AMT_LOWER_HALF
+		                                           
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_TOT
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_01
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_02
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_03
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_04
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_05
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_06
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_UPPER_HALF
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_07
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_08
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_09
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_10
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_11
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_12
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_LOWER_HALF      
+		                                                   
+		                                    FROM MSS.ME_BIZPLANRPT RPT
+		                                    WHERE EXISTS (
+		                                                  SELECT 1
+		                                                  FROM COM.TC_COMMCODE A
+		                                                  WHERE A.SYS_PART = 'D'
+		                                                  AND A.COMM_PART = 'M104'
+		                                                  AND A.COMM_CODE = '1'   /* 매출액 */
+		                                                  AND A.REFER_CODE = RPT.BIZ_CD
+		                                                 )
+		                                    AND RPT.BIZ_PLAN_YEAR = ?
+		                                    GROUP BY RPT.ORG_CD
+		                                    
+		                                    UNION ALL
+		                                    
+		                                    SELECT RPT.ORG_CD
+		                                           ,''                                                                                                 AS SALES_AMT_CD
+		                                           ,MAX(RPT.BIZ_CD)                                                                                    AS SALES_PROFIT_CD
+		                                           
+		                                           ,0                                                                                                  AS SALES_AMT_TOT
+		                                           ,0                                                                                                  AS SALES_AMT_01
+		                                           ,0                                                                                                  AS SALES_AMT_02
+		                                           ,0                                                                                                  AS SALES_AMT_03
+		                                           ,0                                                                                                  AS SALES_AMT_04
+		                                           ,0                                                                                                  AS SALES_AMT_05
+		                                           ,0                                                                                                  AS SALES_AMT_06
+		                                           ,0                                                                                                  AS SALES_AMT_UPPER_HALF
+		                                           ,0                                                                                                  AS SALES_AMT_07
+		                                           ,0                                                                                                  AS SALES_AMT_08
+		                                           ,0                                                                                                  AS SALES_AMT_09
+		                                           ,0                                                                                                  AS SALES_AMT_10
+		                                           ,0                                                                                                  AS SALES_AMT_11
+		                                           ,0                                                                                                  AS SALES_AMT_12
+		                                           ,0                                                                                                  AS SALES_AMT_LOWER_HALF   
+		                                           
+		                                           ,SUM(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0))                                                 AS SALES_PROFIT_AMT_TOT
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '01', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_01
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '02', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_02
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '03', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_03
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '04', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_04
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '05', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_05
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '06', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_06
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '01' AND '06' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_PROFIT_AMT_UPPER_HALF
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '07', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_07
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '08', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_08
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '09', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_09
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '10', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_10
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '11', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_11
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '12', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_12
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '07' AND '12' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_PROFIT_AMT_LOWER_HALF       
+		                                    FROM MSS.ME_BIZPLANRPT RPT
+		                                    WHERE EXISTS (
+		                                                  SELECT 1
+		                                                  FROM COM.TC_COMMCODE A
+		                                                  WHERE A.SYS_PART = 'D'
+		                                                  AND A.COMM_PART = 'M104'
+		                                                  AND A.COMM_CODE = '3'   /* 매출이익액 */
+		                                                  AND A.REFER_CODE = RPT.BIZ_CD
+		                                                 )
+		                                    AND RPT.BIZ_PLAN_YEAR = ?
+		                                    GROUP BY RPT.ORG_CD
+		                                   ) MA
+		                              GROUP BY MA.ORG_CD
+		                             ) XA
+		                       ) XXA
+		                  GROUP BY ROLLUP(XXA.STR_CD)
+		                 ) T
+		           ) MMA, (
+		                   SELECT ROWNUM AS SORT_NO
+		                   FROM DUAL
+		                   CONNECT BY LEVEL <= 3     
+		                  ) S
+		      ORDER BY MMA.NUM, S.SORT_NO
+		     ) TA
+    ]]>
+    </query>
+    
+    <!-- 팀별매출계획상세조회 -->
+    <query name="SEL_SALES_PLAN_DTL_TEAM">
+    <![CDATA[
+    	/*******
+    	* 팀별매출계획상세조회
+    	*******/
+		SELECT DECODE(TA.GROUP_ID,'11', '',TA.ORG_CD)                                                                            AS ORG_CD
+			   ,DECODE(TA.GROUP_ID, '11', '합계', (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = TA.ORG_CD) ) AS ORG_NAME
+			   ,DECODE(TA.GROUP_ID, '11', '2', '0')                                                                            AS GROUP_ID
+		       
+		       ,TA.SORT_NO
+		       ,TA.BIZ_CD
+		       ,NVL((SELECT MST.BIZ_CD_NM FROM MSS.ME_BIZCDMST MST WHERE MST.BIZ_CD = TA.BIZ_CD),'매출이익율')               AS BIZ_CD_NM
+		       ,TA.YEAR_TOT
+		       ,TA.AMT_01
+		       ,TA.AMT_02
+		       ,TA.AMT_03
+		       ,TA.AMT_04
+		       ,TA.AMT_05
+		       ,TA.AMT_06
+		       ,TA.AMT_UPPER_HALF
+		       ,TA.AMT_07
+		       ,TA.AMT_08
+		       ,TA.AMT_09
+		       ,TA.AMT_10
+		       ,TA.AMT_11
+		       ,TA.AMT_12
+		       ,TA.AMT_LOWER_HALF
+		FROM (
+		      SELECT RPAD(MMA.STR_CD||MMA.DEPT_CD||MMA.TEAM_CD, 10, '00')                    AS ORG_CD
+		             ,MMA.GROUP_ID
+		             ,S.SORT_NO
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_CD, 2, MMA.SALES_PROFIT_CD, '')  AS BIZ_CD
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_TOT, 2, MMA.SALES_PROFIT_AMT_TOT, MMA.SALES_PROFIT_RATE_TOT)  AS YEAR_TOT
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_01, 2, MMA.SALES_PROFIT_AMT_01, MMA.SALES_PROFIT_RATE_01)  AS AMT_01
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_02, 2, MMA.SALES_PROFIT_AMT_02, MMA.SALES_PROFIT_RATE_02)  AS AMT_02
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_03, 2, MMA.SALES_PROFIT_AMT_03, MMA.SALES_PROFIT_RATE_03)  AS AMT_03
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_04, 2, MMA.SALES_PROFIT_AMT_04, MMA.SALES_PROFIT_RATE_04)  AS AMT_04
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_05, 2, MMA.SALES_PROFIT_AMT_05, MMA.SALES_PROFIT_RATE_05)  AS AMT_05
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_06, 2, MMA.SALES_PROFIT_AMT_06, MMA.SALES_PROFIT_RATE_06)  AS AMT_06
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_UPPER_HALF, 2, MMA.SALES_PROFIT_AMT_UPPER_HALF, MMA.SALES_PROFIT_RATE_UPPER_HALF)  AS AMT_UPPER_HALF
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_07, 2, MMA.SALES_PROFIT_AMT_07, MMA.SALES_PROFIT_RATE_07)  AS AMT_07
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_08, 2, MMA.SALES_PROFIT_AMT_08, MMA.SALES_PROFIT_RATE_08)  AS AMT_08
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_09, 2, MMA.SALES_PROFIT_AMT_09, MMA.SALES_PROFIT_RATE_09)  AS AMT_09
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_10, 2, MMA.SALES_PROFIT_AMT_10, MMA.SALES_PROFIT_RATE_10)  AS AMT_10
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_11, 2, MMA.SALES_PROFIT_AMT_11, MMA.SALES_PROFIT_RATE_11)  AS AMT_11
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_12, 2, MMA.SALES_PROFIT_AMT_12, MMA.SALES_PROFIT_RATE_12)  AS AMT_12
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_LOWER_HALF, 2, MMA.SALES_PROFIT_AMT_LOWER_HALF, MMA.SALES_PROFIT_RATE_LOWER_HALF)  AS AMT_LOWER_HALF
+		             
+		             
+		      FROM (
+		            SELECT T.STR_CD
+		                   ,T.DEPT_CD
+		                   ,T.TEAM_CD
+		                   ,T.GROUP_ID
+		                   ,T.SALES_AMT_CD
+		                   ,T.SALES_PROFIT_CD
+		                   ,ROWNUM           AS NUM
+		                   /* 매출액 */
+		                   ,T.SALES_AMT_TOT
+		                   ,T.SALES_AMT_01
+		                   ,T.SALES_AMT_02
+		                   ,T.SALES_AMT_03
+		                   ,T.SALES_AMT_04
+		                   ,T.SALES_AMT_05
+		                   ,T.SALES_AMT_06
+		                   ,T.SALES_AMT_UPPER_HALF
+		                   ,T.SALES_AMT_07
+		                   ,T.SALES_AMT_08
+		                   ,T.SALES_AMT_09
+		                   ,T.SALES_AMT_10
+		                   ,T.SALES_AMT_11
+		                   ,T.SALES_AMT_12
+		                   ,T.SALES_AMT_LOWER_HALF
+		                   /* 매출이익액 */
+		                   ,T.SALES_PROFIT_AMT_TOT
+		                   ,T.SALES_PROFIT_AMT_01
+		                   ,T.SALES_PROFIT_AMT_02
+		                   ,T.SALES_PROFIT_AMT_03
+		                   ,T.SALES_PROFIT_AMT_04
+		                   ,T.SALES_PROFIT_AMT_05
+		                   ,T.SALES_PROFIT_AMT_06
+		                   ,T.SALES_PROFIT_AMT_UPPER_HALF
+		                   ,T.SALES_PROFIT_AMT_07
+		                   ,T.SALES_PROFIT_AMT_08
+		                   ,T.SALES_PROFIT_AMT_09
+		                   ,T.SALES_PROFIT_AMT_10
+		                   ,T.SALES_PROFIT_AMT_11
+		                   ,T.SALES_PROFIT_AMT_12
+		                   ,T.SALES_PROFIT_AMT_LOWER_HALF       
+		                   /* 매출이익율 */
+		                   ,DECODE(T.SALES_AMT_TOT, 0, 0, ROUND(T.SALES_PROFIT_AMT_TOT/T.SALES_AMT_TOT*100,2)) AS SALES_PROFIT_RATE_TOT
+		                   ,DECODE(T.SALES_AMT_01, 0, 0, ROUND(T.SALES_PROFIT_AMT_01/T.SALES_AMT_01*100,2)) AS SALES_PROFIT_RATE_01
+		                   ,DECODE(T.SALES_AMT_02, 0, 0, ROUND(T.SALES_PROFIT_AMT_02/T.SALES_AMT_02*100,2)) AS SALES_PROFIT_RATE_02
+		                   ,DECODE(T.SALES_AMT_03, 0, 0, ROUND(T.SALES_PROFIT_AMT_03/T.SALES_AMT_03*100,2)) AS SALES_PROFIT_RATE_03
+		                   ,DECODE(T.SALES_AMT_04, 0, 0, ROUND(T.SALES_PROFIT_AMT_04/T.SALES_AMT_04*100,2)) AS SALES_PROFIT_RATE_04
+		                   ,DECODE(T.SALES_AMT_05, 0, 0, ROUND(T.SALES_PROFIT_AMT_05/T.SALES_AMT_05*100,2)) AS SALES_PROFIT_RATE_05
+		                   ,DECODE(T.SALES_AMT_06, 0, 0, ROUND(T.SALES_PROFIT_AMT_06/T.SALES_AMT_06*100,2)) AS SALES_PROFIT_RATE_06
+		                   ,DECODE(T.SALES_AMT_UPPER_HALF, 0, 0, ROUND(T.SALES_PROFIT_AMT_UPPER_HALF/T.SALES_AMT_UPPER_HALF*100,2)) AS SALES_PROFIT_RATE_UPPER_HALF
+		                   ,DECODE(T.SALES_AMT_07, 0, 0, ROUND(T.SALES_PROFIT_AMT_07/T.SALES_AMT_07*100,2)) AS SALES_PROFIT_RATE_07
+		                   ,DECODE(T.SALES_AMT_08, 0, 0, ROUND(T.SALES_PROFIT_AMT_08/T.SALES_AMT_08*100,2)) AS SALES_PROFIT_RATE_08
+		                   ,DECODE(T.SALES_AMT_09, 0, 0, ROUND(T.SALES_PROFIT_AMT_09/T.SALES_AMT_09*100,2)) AS SALES_PROFIT_RATE_09
+		                   ,DECODE(T.SALES_AMT_10, 0, 0, ROUND(T.SALES_PROFIT_AMT_10/T.SALES_AMT_10*100,2)) AS SALES_PROFIT_RATE_10
+		                   ,DECODE(T.SALES_AMT_11, 0, 0, ROUND(T.SALES_PROFIT_AMT_11/T.SALES_AMT_11*100,2)) AS SALES_PROFIT_RATE_11
+		                   ,DECODE(T.SALES_AMT_12, 0, 0, ROUND(T.SALES_PROFIT_AMT_12/T.SALES_AMT_12*100,2)) AS SALES_PROFIT_RATE_12      
+		                   ,DECODE(T.SALES_AMT_LOWER_HALF, 0, 0, ROUND(T.SALES_PROFIT_AMT_LOWER_HALF/T.SALES_AMT_LOWER_HALF*100,2)) AS SALES_PROFIT_RATE_LOWER_HALF       
+		                   
+		            FROM (
+		                  SELECT XXA.STR_CD                                         AS STR_CD
+		                        ,XXA.DEPT_CD                                        AS DEPT_CD
+		                        ,XXA.TEAM_CD                                        AS TEAM_CD
+		                        ,GROUPING(XXA.DEPT_CD) || GROUPING(XXA.TEAM_CD)     AS GROUP_ID
+		                        ,MAX(XXA.SALES_AMT_CD)                              AS SALES_AMT_CD
+		                        ,MAX(XXA.SALES_PROFIT_CD)                           AS SALES_PROFIT_CD
+		                        
+		                        ,SUM(XXA.SALES_AMT_TOT)                             AS SALES_AMT_TOT
+		                        ,SUM(XXA.SALES_AMT_01)                              AS SALES_AMT_01
+		                        ,SUM(XXA.SALES_AMT_02)                              AS SALES_AMT_02
+		                        ,SUM(XXA.SALES_AMT_03)                              AS SALES_AMT_03
+		                        ,SUM(XXA.SALES_AMT_04)                              AS SALES_AMT_04
+		                        ,SUM(XXA.SALES_AMT_05)                              AS SALES_AMT_05
+		                        ,SUM(XXA.SALES_AMT_06)                              AS SALES_AMT_06
+		                        ,SUM(XXA.SALES_AMT_UPPER_HALF)                      AS SALES_AMT_UPPER_HALF
+		                        ,SUM(XXA.SALES_AMT_07)                              AS SALES_AMT_07
+		                        ,SUM(XXA.SALES_AMT_08)                              AS SALES_AMT_08
+		                        ,SUM(XXA.SALES_AMT_09)                              AS SALES_AMT_09
+		                        ,SUM(XXA.SALES_AMT_10)                              AS SALES_AMT_10
+		                        ,SUM(XXA.SALES_AMT_11)                              AS SALES_AMT_11
+		                        ,SUM(XXA.SALES_AMT_12)                              AS SALES_AMT_12
+		                        ,SUM(XXA.SALES_AMT_LOWER_HALF)                      AS SALES_AMT_LOWER_HALF
+		                        
+		                        ,SUM(XXA.SALES_PROFIT_AMT_TOT)                      AS SALES_PROFIT_AMT_TOT
+		                        ,SUM(XXA.SALES_PROFIT_AMT_01)                       AS SALES_PROFIT_AMT_01
+		                        ,SUM(XXA.SALES_PROFIT_AMT_02)                       AS SALES_PROFIT_AMT_02
+		                        ,SUM(XXA.SALES_PROFIT_AMT_03)                       AS SALES_PROFIT_AMT_03
+		                        ,SUM(XXA.SALES_PROFIT_AMT_04)                       AS SALES_PROFIT_AMT_04
+		                        ,SUM(XXA.SALES_PROFIT_AMT_05)                       AS SALES_PROFIT_AMT_05
+		                        ,SUM(XXA.SALES_PROFIT_AMT_06)                       AS SALES_PROFIT_AMT_06
+		                        ,SUM(XXA.SALES_PROFIT_AMT_UPPER_HALF)               AS SALES_PROFIT_AMT_UPPER_HALF
+		                        ,SUM(XXA.SALES_PROFIT_AMT_07)                       AS SALES_PROFIT_AMT_07
+		                        ,SUM(XXA.SALES_PROFIT_AMT_08)                       AS SALES_PROFIT_AMT_08
+		                        ,SUM(XXA.SALES_PROFIT_AMT_09)                       AS SALES_PROFIT_AMT_09
+		                        ,SUM(XXA.SALES_PROFIT_AMT_10)                       AS SALES_PROFIT_AMT_10
+		                        ,SUM(XXA.SALES_PROFIT_AMT_11)                       AS SALES_PROFIT_AMT_11
+		                        ,SUM(XXA.SALES_PROFIT_AMT_12)                       AS SALES_PROFIT_AMT_12
+		                        ,SUM(XXA.SALES_PROFIT_AMT_LOWER_HALF)               AS SALES_PROFIT_AMT_LOWER_HALF
+		                  
+		                  FROM (
+		                        SELECT SUBSTR(XA.ORG_CD,1,2)  AS STR_CD
+		                              ,SUBSTR(XA.ORG_CD,3,2)  AS DEPT_CD
+		                              ,SUBSTR(XA.ORG_CD,5,2)  AS TEAM_CD
+		                              ,SUBSTR(XA.ORG_CD,7,2)  AS PC_CD
+		                              ,XA.SALES_AMT_CD
+		                              ,XA.SALES_PROFIT_CD
+		                              /* 매출액 */
+		                              ,XA.SALES_AMT_TOT
+		                              ,XA.SALES_AMT_01
+		                              ,XA.SALES_AMT_02
+		                              ,XA.SALES_AMT_03
+		                              ,XA.SALES_AMT_04
+		                              ,XA.SALES_AMT_05
+		                              ,XA.SALES_AMT_06
+		                              ,XA.SALES_AMT_UPPER_HALF
+		                              ,XA.SALES_AMT_07
+		                              ,XA.SALES_AMT_08
+		                              ,XA.SALES_AMT_09
+		                              ,XA.SALES_AMT_10
+		                              ,XA.SALES_AMT_11
+		                              ,XA.SALES_AMT_12
+		                              ,XA.SALES_AMT_LOWER_HALF
+		                              /* 매출이익액 */
+		                              ,XA.SALES_PROFIT_AMT_TOT
+		                              ,XA.SALES_PROFIT_AMT_01
+		                              ,XA.SALES_PROFIT_AMT_02
+		                              ,XA.SALES_PROFIT_AMT_03
+		                              ,XA.SALES_PROFIT_AMT_04
+		                              ,XA.SALES_PROFIT_AMT_05
+		                              ,XA.SALES_PROFIT_AMT_06
+		                              ,XA.SALES_PROFIT_AMT_UPPER_HALF
+		                              ,XA.SALES_PROFIT_AMT_07
+		                              ,XA.SALES_PROFIT_AMT_08
+		                              ,XA.SALES_PROFIT_AMT_09
+		                              ,XA.SALES_PROFIT_AMT_10
+		                              ,XA.SALES_PROFIT_AMT_11
+		                              ,XA.SALES_PROFIT_AMT_12
+		                              ,XA.SALES_PROFIT_AMT_LOWER_HALF
+		                        FROM (
+		                              SELECT MA.ORG_CD
+		                                     ,MAX(MA.SALES_AMT_CD)                                AS SALES_AMT_CD
+		                                     ,MAX(MA.SALES_PROFIT_CD)                             AS SALES_PROFIT_CD
+		                                     /* 매출액 */
+		                                    ,SUM(MA.SALES_AMT_TOT)		                            AS SALES_AMT_TOT
+		                                    ,SUM(MA.SALES_AMT_01)		                              AS SALES_AMT_01
+		                                    ,SUM(MA.SALES_AMT_02)		                              AS SALES_AMT_02
+		                                    ,SUM(MA.SALES_AMT_03)		                              AS SALES_AMT_03
+		                                    ,SUM(MA.SALES_AMT_04)		                              AS SALES_AMT_04
+		                                    ,SUM(MA.SALES_AMT_05)		                              AS SALES_AMT_05
+		                                    ,SUM(MA.SALES_AMT_06)		                              AS SALES_AMT_06
+		                                    ,SUM(MA.SALES_AMT_UPPER_HALF)	                        AS SALES_AMT_UPPER_HALF
+		                                    ,SUM(MA.SALES_AMT_07)		                              AS SALES_AMT_07
+		                                    ,SUM(MA.SALES_AMT_08)		                              AS SALES_AMT_08
+		                                    ,SUM(MA.SALES_AMT_09)		                              AS SALES_AMT_09
+		                                    ,SUM(MA.SALES_AMT_10)		                              AS SALES_AMT_10
+		                                    ,SUM(MA.SALES_AMT_11)		                              AS SALES_AMT_11
+		                                    ,SUM(MA.SALES_AMT_12)		                              AS SALES_AMT_12
+		                                    ,SUM(MA.SALES_AMT_LOWER_HALF)	                        AS SALES_AMT_LOWER_HALF
+		                                    /* 매출이익액 */
+		                                    ,SUM(MA.SALES_PROFIT_AMT_TOT)	                        AS SALES_PROFIT_AMT_TOT
+		                                    ,SUM(MA.SALES_PROFIT_AMT_01)		                      AS SALES_PROFIT_AMT_01
+		                                    ,SUM(MA.SALES_PROFIT_AMT_02)		                      AS SALES_PROFIT_AMT_02
+		                                    ,SUM(MA.SALES_PROFIT_AMT_03)		                      AS SALES_PROFIT_AMT_03
+		                                    ,SUM(MA.SALES_PROFIT_AMT_04)		                      AS SALES_PROFIT_AMT_04
+		                                    ,SUM(MA.SALES_PROFIT_AMT_05)		                      AS SALES_PROFIT_AMT_05
+		                                    ,SUM(MA.SALES_PROFIT_AMT_06)		                      AS SALES_PROFIT_AMT_06
+		                                    ,SUM(MA.SALES_PROFIT_AMT_UPPER_HALF)	                AS SALES_PROFIT_AMT_UPPER_HALF
+		                                    ,SUM(MA.SALES_PROFIT_AMT_07)		                      AS SALES_PROFIT_AMT_07
+		                                    ,SUM(MA.SALES_PROFIT_AMT_08)		                      AS SALES_PROFIT_AMT_08
+		                                    ,SUM(MA.SALES_PROFIT_AMT_09)		                      AS SALES_PROFIT_AMT_09
+		                                    ,SUM(MA.SALES_PROFIT_AMT_10)		                      AS SALES_PROFIT_AMT_10
+		                                    ,SUM(MA.SALES_PROFIT_AMT_11)		                      AS SALES_PROFIT_AMT_11
+		                                    ,SUM(MA.SALES_PROFIT_AMT_12)		                      AS SALES_PROFIT_AMT_12
+		                                    ,SUM(MA.SALES_PROFIT_AMT_LOWER_HALF)	                AS SALES_PROFIT_AMT_LOWER_HALF
+		                                    
+		                              FROM (
+		                                    SELECT RPT.ORG_CD
+		                                           ,MAX(RPT.BIZ_CD)                                                                                    AS SALES_AMT_CD
+		                                           ,''                                                                                                 AS SALES_PROFIT_CD
+		                                           ,SUM(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0))                                                 AS SALES_AMT_TOT
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '01', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_01
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '02', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_02
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '03', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_03
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '04', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_04
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '05', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_05
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '06', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_06
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '01' AND '06' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_AMT_UPPER_HALF
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '07', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_07
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '08', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_08
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '09', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_09
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '10', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_10
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '11', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_11
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '12', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_12
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '07' AND '12' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_AMT_LOWER_HALF
+		                                           
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_TOT
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_01
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_02
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_03
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_04
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_05
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_06
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_UPPER_HALF
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_07
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_08
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_09
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_10
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_11
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_12
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_LOWER_HALF      
+		                                                   
+		                                    FROM MSS.ME_BIZPLANRPT RPT
+		                                    WHERE EXISTS (
+		                                                  SELECT 1
+		                                                  FROM COM.TC_COMMCODE A
+		                                                  WHERE A.SYS_PART = 'D'
+		                                                  AND A.COMM_PART = 'M104'
+		                                                  AND A.COMM_CODE = '1'   /* 매출액 */
+		                                                  AND A.REFER_CODE = RPT.BIZ_CD
+		                                                 )
+		                                    AND RPT.BIZ_PLAN_YEAR = ?
+		                                    GROUP BY RPT.ORG_CD
+		                                    
+		                                    UNION ALL
+		                                    
+		                                    SELECT RPT.ORG_CD
+		                                           ,''                                                                                                 AS SALES_AMT_CD
+		                                           ,MAX(RPT.BIZ_CD)                                                                                    AS SALES_PROFIT_CD
+		                                           
+		                                           ,0                                                                                                  AS SALES_AMT_TOT
+		                                           ,0                                                                                                  AS SALES_AMT_01
+		                                           ,0                                                                                                  AS SALES_AMT_02
+		                                           ,0                                                                                                  AS SALES_AMT_03
+		                                           ,0                                                                                                  AS SALES_AMT_04
+		                                           ,0                                                                                                  AS SALES_AMT_05
+		                                           ,0                                                                                                  AS SALES_AMT_06
+		                                           ,0                                                                                                  AS SALES_AMT_UPPER_HALF
+		                                           ,0                                                                                                  AS SALES_AMT_07
+		                                           ,0                                                                                                  AS SALES_AMT_08
+		                                           ,0                                                                                                  AS SALES_AMT_09
+		                                           ,0                                                                                                  AS SALES_AMT_10
+		                                           ,0                                                                                                  AS SALES_AMT_11
+		                                           ,0                                                                                                  AS SALES_AMT_12
+		                                           ,0                                                                                                  AS SALES_AMT_LOWER_HALF   
+		                                           
+		                                           ,SUM(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0))                                                 AS SALES_PROFIT_AMT_TOT
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '01', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_01
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '02', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_02
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '03', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_03
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '04', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_04
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '05', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_05
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '06', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_06
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '01' AND '06' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_PROFIT_AMT_UPPER_HALF
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '07', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_07
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '08', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_08
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '09', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_09
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '10', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_10
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '11', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_11
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '12', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_12
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '07' AND '12' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_PROFIT_AMT_LOWER_HALF       
+		                                    FROM MSS.ME_BIZPLANRPT RPT
+		                                    WHERE EXISTS (
+		                                                  SELECT 1
+		                                                  FROM COM.TC_COMMCODE A
+		                                                  WHERE A.SYS_PART = 'D'
+		                                                  AND A.COMM_PART = 'M104'
+		                                                  AND A.COMM_CODE = '3'   /* 매출이익액 */
+		                                                  AND A.REFER_CODE = RPT.BIZ_CD
+		                                                 )
+		                                    AND RPT.BIZ_PLAN_YEAR = ?
+		                                    GROUP BY RPT.ORG_CD
+		                                   ) MA
+		                              GROUP BY MA.ORG_CD
+		                             ) XA
+		                       
+		                       ) XXA
+		                  WHERE XXA.STR_CD = ?
+		                  GROUP BY XXA.STR_CD, ROLLUP(XXA.DEPT_CD, XXA.TEAM_CD)
+		                 ) T
+		           WHERE T.GROUP_ID != '01'      
+		           ) MMA, (
+		                   SELECT ROWNUM AS SORT_NO
+		                   FROM DUAL
+		                   CONNECT BY LEVEL <= 3     
+		                  ) S
+		      ORDER BY MMA.NUM, S.SORT_NO
+		     ) TA   
+    ]]>
+    </query>    
+
+    <!-- PC별매출계획상세조회 -->
+    <query name="SEL_SALES_PLAN_DTL_PC">
+    <![CDATA[
+    	/*******
+    	* PC별매출계획상세조회
+    	*******/
+		SELECT DECODE(TA.GROUP_ID,'000', TA.ORG_CD, '')                                                                           AS ORG_CD
+			   ,DECODE(TA.GROUP_ID, '111', '합계'
+				                  , '001', (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = TA.ORG_CD)|| ' 소계' 
+				                         , (SELECT ORG.ORG_NAME FROM DPS.PC_ORGMST ORG WHERE ORG.ORG_CD = TA.ORG_CD))                 AS ORG_NAME
+			   ,DECODE(TA.GROUP_ID, '111', '2', '000', '0', '1')                                                                             AS GROUP_ID
+		       
+		       ,TA.SORT_NO
+		       ,TA.BIZ_CD
+		       ,NVL((SELECT MST.BIZ_CD_NM FROM MSS.ME_BIZCDMST MST WHERE MST.BIZ_CD = TA.BIZ_CD),'매출이익율')               AS BIZ_CD_NM
+		       ,TA.YEAR_TOT
+		       ,TA.AMT_01
+		       ,TA.AMT_02
+		       ,TA.AMT_03
+		       ,TA.AMT_04
+		       ,TA.AMT_05
+		       ,TA.AMT_06
+		       ,TA.AMT_UPPER_HALF
+		       ,TA.AMT_07
+		       ,TA.AMT_08
+		       ,TA.AMT_09
+		       ,TA.AMT_10
+		       ,TA.AMT_11
+		       ,TA.AMT_12
+		       ,TA.AMT_LOWER_HALF
+		FROM (
+		      SELECT RPAD(MMA.STR_CD||MMA.DEPT_CD||MMA.TEAM_CD||MMA.PC_CD, 10, '00')                    AS ORG_CD
+		             ,MMA.GROUP_ID
+		             ,S.SORT_NO
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_CD, 2, MMA.SALES_PROFIT_CD, '')  AS BIZ_CD
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_TOT, 2, MMA.SALES_PROFIT_AMT_TOT, MMA.SALES_PROFIT_RATE_TOT)  AS YEAR_TOT
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_01, 2, MMA.SALES_PROFIT_AMT_01, MMA.SALES_PROFIT_RATE_01)  AS AMT_01
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_02, 2, MMA.SALES_PROFIT_AMT_02, MMA.SALES_PROFIT_RATE_02)  AS AMT_02
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_03, 2, MMA.SALES_PROFIT_AMT_03, MMA.SALES_PROFIT_RATE_03)  AS AMT_03
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_04, 2, MMA.SALES_PROFIT_AMT_04, MMA.SALES_PROFIT_RATE_04)  AS AMT_04
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_05, 2, MMA.SALES_PROFIT_AMT_05, MMA.SALES_PROFIT_RATE_05)  AS AMT_05
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_06, 2, MMA.SALES_PROFIT_AMT_06, MMA.SALES_PROFIT_RATE_06)  AS AMT_06
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_UPPER_HALF, 2, MMA.SALES_PROFIT_AMT_UPPER_HALF, MMA.SALES_PROFIT_RATE_UPPER_HALF)  AS AMT_UPPER_HALF
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_07, 2, MMA.SALES_PROFIT_AMT_07, MMA.SALES_PROFIT_RATE_07)  AS AMT_07
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_08, 2, MMA.SALES_PROFIT_AMT_08, MMA.SALES_PROFIT_RATE_08)  AS AMT_08
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_09, 2, MMA.SALES_PROFIT_AMT_09, MMA.SALES_PROFIT_RATE_09)  AS AMT_09
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_10, 2, MMA.SALES_PROFIT_AMT_10, MMA.SALES_PROFIT_RATE_10)  AS AMT_10
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_11, 2, MMA.SALES_PROFIT_AMT_11, MMA.SALES_PROFIT_RATE_11)  AS AMT_11
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_12, 2, MMA.SALES_PROFIT_AMT_12, MMA.SALES_PROFIT_RATE_12)  AS AMT_12
+		             
+		             ,DECODE(S.SORT_NO, 1, MMA.SALES_AMT_LOWER_HALF, 2, MMA.SALES_PROFIT_AMT_LOWER_HALF, MMA.SALES_PROFIT_RATE_LOWER_HALF)  AS AMT_LOWER_HALF
+		             
+		             
+		      FROM (
+		            SELECT T.STR_CD
+		                   ,T.DEPT_CD
+		                   ,T.TEAM_CD
+		                   ,T.PC_CD
+		                   ,T.GROUP_ID
+		                   ,T.SALES_AMT_CD
+		                   ,T.SALES_PROFIT_CD
+		                   ,ROWNUM           AS NUM
+		                   /* 매출액 */
+		                   ,T.SALES_AMT_TOT
+		                   ,T.SALES_AMT_01
+		                   ,T.SALES_AMT_02
+		                   ,T.SALES_AMT_03
+		                   ,T.SALES_AMT_04
+		                   ,T.SALES_AMT_05
+		                   ,T.SALES_AMT_06
+		                   ,T.SALES_AMT_UPPER_HALF
+		                   ,T.SALES_AMT_07
+		                   ,T.SALES_AMT_08
+		                   ,T.SALES_AMT_09
+		                   ,T.SALES_AMT_10
+		                   ,T.SALES_AMT_11
+		                   ,T.SALES_AMT_12
+		                   ,T.SALES_AMT_LOWER_HALF
+		                   /* 매출이익액 */
+		                   ,T.SALES_PROFIT_AMT_TOT
+		                   ,T.SALES_PROFIT_AMT_01
+		                   ,T.SALES_PROFIT_AMT_02
+		                   ,T.SALES_PROFIT_AMT_03
+		                   ,T.SALES_PROFIT_AMT_04
+		                   ,T.SALES_PROFIT_AMT_05
+		                   ,T.SALES_PROFIT_AMT_06
+		                   ,T.SALES_PROFIT_AMT_UPPER_HALF
+		                   ,T.SALES_PROFIT_AMT_07
+		                   ,T.SALES_PROFIT_AMT_08
+		                   ,T.SALES_PROFIT_AMT_09
+		                   ,T.SALES_PROFIT_AMT_10
+		                   ,T.SALES_PROFIT_AMT_11
+		                   ,T.SALES_PROFIT_AMT_12
+		                   ,T.SALES_PROFIT_AMT_LOWER_HALF       
+		                   /* 매출이익율 */
+		                   ,DECODE(T.SALES_AMT_TOT, 0, 0, ROUND(T.SALES_PROFIT_AMT_TOT/T.SALES_AMT_TOT*100,2)) AS SALES_PROFIT_RATE_TOT
+		                   ,DECODE(T.SALES_AMT_01, 0, 0, ROUND(T.SALES_PROFIT_AMT_01/T.SALES_AMT_01*100,2)) AS SALES_PROFIT_RATE_01
+		                   ,DECODE(T.SALES_AMT_02, 0, 0, ROUND(T.SALES_PROFIT_AMT_02/T.SALES_AMT_02*100,2)) AS SALES_PROFIT_RATE_02
+		                   ,DECODE(T.SALES_AMT_03, 0, 0, ROUND(T.SALES_PROFIT_AMT_03/T.SALES_AMT_03*100,2)) AS SALES_PROFIT_RATE_03
+		                   ,DECODE(T.SALES_AMT_04, 0, 0, ROUND(T.SALES_PROFIT_AMT_04/T.SALES_AMT_04*100,2)) AS SALES_PROFIT_RATE_04
+		                   ,DECODE(T.SALES_AMT_05, 0, 0, ROUND(T.SALES_PROFIT_AMT_05/T.SALES_AMT_05*100,2)) AS SALES_PROFIT_RATE_05
+		                   ,DECODE(T.SALES_AMT_06, 0, 0, ROUND(T.SALES_PROFIT_AMT_06/T.SALES_AMT_06*100,2)) AS SALES_PROFIT_RATE_06
+		                   ,DECODE(T.SALES_AMT_UPPER_HALF, 0, 0, ROUND(T.SALES_PROFIT_AMT_UPPER_HALF/T.SALES_AMT_UPPER_HALF*100,2)) AS SALES_PROFIT_RATE_UPPER_HALF
+		                   ,DECODE(T.SALES_AMT_07, 0, 0, ROUND(T.SALES_PROFIT_AMT_07/T.SALES_AMT_07*100,2)) AS SALES_PROFIT_RATE_07
+		                   ,DECODE(T.SALES_AMT_08, 0, 0, ROUND(T.SALES_PROFIT_AMT_08/T.SALES_AMT_08*100,2)) AS SALES_PROFIT_RATE_08
+		                   ,DECODE(T.SALES_AMT_09, 0, 0, ROUND(T.SALES_PROFIT_AMT_09/T.SALES_AMT_09*100,2)) AS SALES_PROFIT_RATE_09
+		                   ,DECODE(T.SALES_AMT_10, 0, 0, ROUND(T.SALES_PROFIT_AMT_10/T.SALES_AMT_10*100,2)) AS SALES_PROFIT_RATE_10
+		                   ,DECODE(T.SALES_AMT_11, 0, 0, ROUND(T.SALES_PROFIT_AMT_11/T.SALES_AMT_11*100,2)) AS SALES_PROFIT_RATE_11
+		                   ,DECODE(T.SALES_AMT_12, 0, 0, ROUND(T.SALES_PROFIT_AMT_12/T.SALES_AMT_12*100,2)) AS SALES_PROFIT_RATE_12      
+		                   ,DECODE(T.SALES_AMT_LOWER_HALF, 0, 0, ROUND(T.SALES_PROFIT_AMT_LOWER_HALF/T.SALES_AMT_LOWER_HALF*100,2)) AS SALES_PROFIT_RATE_LOWER_HALF       
+		                   
+		            FROM (
+		                  SELECT XXA.STR_CD                                         AS STR_CD
+		                        ,XXA.DEPT_CD                                        AS DEPT_CD
+		                        ,XXA.TEAM_CD                                        AS TEAM_CD
+		                        ,XXA.PC_CD                                          AS PC_CD
+		                        ,GROUPING(XXA.DEPT_CD) || GROUPING(XXA.TEAM_CD) || GROUPING(XXA.PC_CD)     AS GROUP_ID
+		                        ,MAX(XXA.SALES_AMT_CD)                              AS SALES_AMT_CD
+		                        ,MAX(XXA.SALES_PROFIT_CD)                           AS SALES_PROFIT_CD
+		                        
+		                        ,SUM(XXA.SALES_AMT_TOT)                             AS SALES_AMT_TOT
+		                        ,SUM(XXA.SALES_AMT_01)                              AS SALES_AMT_01
+		                        ,SUM(XXA.SALES_AMT_02)                              AS SALES_AMT_02
+		                        ,SUM(XXA.SALES_AMT_03)                              AS SALES_AMT_03
+		                        ,SUM(XXA.SALES_AMT_04)                              AS SALES_AMT_04
+		                        ,SUM(XXA.SALES_AMT_05)                              AS SALES_AMT_05
+		                        ,SUM(XXA.SALES_AMT_06)                              AS SALES_AMT_06
+		                        ,SUM(XXA.SALES_AMT_UPPER_HALF)                      AS SALES_AMT_UPPER_HALF
+		                        ,SUM(XXA.SALES_AMT_07)                              AS SALES_AMT_07
+		                        ,SUM(XXA.SALES_AMT_08)                              AS SALES_AMT_08
+		                        ,SUM(XXA.SALES_AMT_09)                              AS SALES_AMT_09
+		                        ,SUM(XXA.SALES_AMT_10)                              AS SALES_AMT_10
+		                        ,SUM(XXA.SALES_AMT_11)                              AS SALES_AMT_11
+		                        ,SUM(XXA.SALES_AMT_12)                              AS SALES_AMT_12
+		                        ,SUM(XXA.SALES_AMT_LOWER_HALF)                      AS SALES_AMT_LOWER_HALF
+		                        
+		                        ,SUM(XXA.SALES_PROFIT_AMT_TOT)                      AS SALES_PROFIT_AMT_TOT
+		                        ,SUM(XXA.SALES_PROFIT_AMT_01)                       AS SALES_PROFIT_AMT_01
+		                        ,SUM(XXA.SALES_PROFIT_AMT_02)                       AS SALES_PROFIT_AMT_02
+		                        ,SUM(XXA.SALES_PROFIT_AMT_03)                       AS SALES_PROFIT_AMT_03
+		                        ,SUM(XXA.SALES_PROFIT_AMT_04)                       AS SALES_PROFIT_AMT_04
+		                        ,SUM(XXA.SALES_PROFIT_AMT_05)                       AS SALES_PROFIT_AMT_05
+		                        ,SUM(XXA.SALES_PROFIT_AMT_06)                       AS SALES_PROFIT_AMT_06
+		                        ,SUM(XXA.SALES_PROFIT_AMT_UPPER_HALF)               AS SALES_PROFIT_AMT_UPPER_HALF
+		                        ,SUM(XXA.SALES_PROFIT_AMT_07)                       AS SALES_PROFIT_AMT_07
+		                        ,SUM(XXA.SALES_PROFIT_AMT_08)                       AS SALES_PROFIT_AMT_08
+		                        ,SUM(XXA.SALES_PROFIT_AMT_09)                       AS SALES_PROFIT_AMT_09
+		                        ,SUM(XXA.SALES_PROFIT_AMT_10)                       AS SALES_PROFIT_AMT_10
+		                        ,SUM(XXA.SALES_PROFIT_AMT_11)                       AS SALES_PROFIT_AMT_11
+		                        ,SUM(XXA.SALES_PROFIT_AMT_12)                       AS SALES_PROFIT_AMT_12
+		                        ,SUM(XXA.SALES_PROFIT_AMT_LOWER_HALF)               AS SALES_PROFIT_AMT_LOWER_HALF
+		                  
+		                  FROM (
+		                        SELECT SUBSTR(XA.ORG_CD,1,2)  AS STR_CD
+		                              ,SUBSTR(XA.ORG_CD,3,2)  AS DEPT_CD
+		                              ,SUBSTR(XA.ORG_CD,5,2)  AS TEAM_CD
+		                              ,SUBSTR(XA.ORG_CD,7,2)  AS PC_CD
+		                              ,XA.SALES_AMT_CD
+		                              ,XA.SALES_PROFIT_CD
+		                              /* 매출액 */
+		                              ,XA.SALES_AMT_TOT
+		                              ,XA.SALES_AMT_01
+		                              ,XA.SALES_AMT_02
+		                              ,XA.SALES_AMT_03
+		                              ,XA.SALES_AMT_04
+		                              ,XA.SALES_AMT_05
+		                              ,XA.SALES_AMT_06
+		                              ,XA.SALES_AMT_UPPER_HALF
+		                              ,XA.SALES_AMT_07
+		                              ,XA.SALES_AMT_08
+		                              ,XA.SALES_AMT_09
+		                              ,XA.SALES_AMT_10
+		                              ,XA.SALES_AMT_11
+		                              ,XA.SALES_AMT_12
+		                              ,XA.SALES_AMT_LOWER_HALF
+		                              /* 매출이익액 */
+		                              ,XA.SALES_PROFIT_AMT_TOT
+		                              ,XA.SALES_PROFIT_AMT_01
+		                              ,XA.SALES_PROFIT_AMT_02
+		                              ,XA.SALES_PROFIT_AMT_03
+		                              ,XA.SALES_PROFIT_AMT_04
+		                              ,XA.SALES_PROFIT_AMT_05
+		                              ,XA.SALES_PROFIT_AMT_06
+		                              ,XA.SALES_PROFIT_AMT_UPPER_HALF
+		                              ,XA.SALES_PROFIT_AMT_07
+		                              ,XA.SALES_PROFIT_AMT_08
+		                              ,XA.SALES_PROFIT_AMT_09
+		                              ,XA.SALES_PROFIT_AMT_10
+		                              ,XA.SALES_PROFIT_AMT_11
+		                              ,XA.SALES_PROFIT_AMT_12
+		                              ,XA.SALES_PROFIT_AMT_LOWER_HALF
+		                        FROM (
+		                              SELECT MA.ORG_CD
+		                                     ,MAX(MA.SALES_AMT_CD)                                AS SALES_AMT_CD
+		                                     ,MAX(MA.SALES_PROFIT_CD)                             AS SALES_PROFIT_CD
+		                                     /* 매출액 */
+		                                    ,SUM(MA.SALES_AMT_TOT)		                            AS SALES_AMT_TOT
+		                                    ,SUM(MA.SALES_AMT_01)		                              AS SALES_AMT_01
+		                                    ,SUM(MA.SALES_AMT_02)		                              AS SALES_AMT_02
+		                                    ,SUM(MA.SALES_AMT_03)		                              AS SALES_AMT_03
+		                                    ,SUM(MA.SALES_AMT_04)		                              AS SALES_AMT_04
+		                                    ,SUM(MA.SALES_AMT_05)		                              AS SALES_AMT_05
+		                                    ,SUM(MA.SALES_AMT_06)		                              AS SALES_AMT_06
+		                                    ,SUM(MA.SALES_AMT_UPPER_HALF)	                        AS SALES_AMT_UPPER_HALF
+		                                    ,SUM(MA.SALES_AMT_07)		                              AS SALES_AMT_07
+		                                    ,SUM(MA.SALES_AMT_08)		                              AS SALES_AMT_08
+		                                    ,SUM(MA.SALES_AMT_09)		                              AS SALES_AMT_09
+		                                    ,SUM(MA.SALES_AMT_10)		                              AS SALES_AMT_10
+		                                    ,SUM(MA.SALES_AMT_11)		                              AS SALES_AMT_11
+		                                    ,SUM(MA.SALES_AMT_12)		                              AS SALES_AMT_12
+		                                    ,SUM(MA.SALES_AMT_LOWER_HALF)	                        AS SALES_AMT_LOWER_HALF
+		                                    /* 매출이익액 */
+		                                    ,SUM(MA.SALES_PROFIT_AMT_TOT)	                        AS SALES_PROFIT_AMT_TOT
+		                                    ,SUM(MA.SALES_PROFIT_AMT_01)		                      AS SALES_PROFIT_AMT_01
+		                                    ,SUM(MA.SALES_PROFIT_AMT_02)		                      AS SALES_PROFIT_AMT_02
+		                                    ,SUM(MA.SALES_PROFIT_AMT_03)		                      AS SALES_PROFIT_AMT_03
+		                                    ,SUM(MA.SALES_PROFIT_AMT_04)		                      AS SALES_PROFIT_AMT_04
+		                                    ,SUM(MA.SALES_PROFIT_AMT_05)		                      AS SALES_PROFIT_AMT_05
+		                                    ,SUM(MA.SALES_PROFIT_AMT_06)		                      AS SALES_PROFIT_AMT_06
+		                                    ,SUM(MA.SALES_PROFIT_AMT_UPPER_HALF)	                AS SALES_PROFIT_AMT_UPPER_HALF
+		                                    ,SUM(MA.SALES_PROFIT_AMT_07)		                      AS SALES_PROFIT_AMT_07
+		                                    ,SUM(MA.SALES_PROFIT_AMT_08)		                      AS SALES_PROFIT_AMT_08
+		                                    ,SUM(MA.SALES_PROFIT_AMT_09)		                      AS SALES_PROFIT_AMT_09
+		                                    ,SUM(MA.SALES_PROFIT_AMT_10)		                      AS SALES_PROFIT_AMT_10
+		                                    ,SUM(MA.SALES_PROFIT_AMT_11)		                      AS SALES_PROFIT_AMT_11
+		                                    ,SUM(MA.SALES_PROFIT_AMT_12)		                      AS SALES_PROFIT_AMT_12
+		                                    ,SUM(MA.SALES_PROFIT_AMT_LOWER_HALF)	                AS SALES_PROFIT_AMT_LOWER_HALF
+		                                    
+		                              FROM (
+		                                    SELECT RPT.ORG_CD
+		                                           ,MAX(RPT.BIZ_CD)                                                                                    AS SALES_AMT_CD
+		                                           ,''                                                                                                 AS SALES_PROFIT_CD
+		                                           ,SUM(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0))                                                 AS SALES_AMT_TOT
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '01', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_01
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '02', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_02
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '03', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_03
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '04', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_04
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '05', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_05
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '06', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_06
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '01' AND '06' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_AMT_UPPER_HALF
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '07', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_07
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '08', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_08
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '09', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_09
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '10', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_10
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '11', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_11
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '12', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_AMT_12
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '07' AND '12' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_AMT_LOWER_HALF
+		                                           
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_TOT
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_01
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_02
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_03
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_04
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_05
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_06
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_UPPER_HALF
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_07
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_08
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_09
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_10
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_11
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_12
+		                                           ,0                                                                                                  AS SALES_PROFIT_AMT_LOWER_HALF      
+		                                                   
+		                                    FROM MSS.ME_BIZPLANRPT RPT
+		                                    WHERE EXISTS (
+		                                                  SELECT 1
+		                                                  FROM COM.TC_COMMCODE A
+		                                                  WHERE A.SYS_PART = 'D'
+		                                                  AND A.COMM_PART = 'M104'
+		                                                  AND A.COMM_CODE = '1'   /* 매출액 */
+		                                                  AND A.REFER_CODE = RPT.BIZ_CD
+		                                                 )
+		                                    AND RPT.BIZ_PLAN_YEAR = ?
+		                                    GROUP BY RPT.ORG_CD
+		                                    
+		                                    UNION ALL
+		                                    
+		                                    SELECT RPT.ORG_CD
+		                                           ,''                                                                                                 AS SALES_AMT_CD
+		                                           ,MAX(RPT.BIZ_CD)                                                                                    AS SALES_PROFIT_CD
+		                                           
+		                                           ,0                                                                                                  AS SALES_AMT_TOT
+		                                           ,0                                                                                                  AS SALES_AMT_01
+		                                           ,0                                                                                                  AS SALES_AMT_02
+		                                           ,0                                                                                                  AS SALES_AMT_03
+		                                           ,0                                                                                                  AS SALES_AMT_04
+		                                           ,0                                                                                                  AS SALES_AMT_05
+		                                           ,0                                                                                                  AS SALES_AMT_06
+		                                           ,0                                                                                                  AS SALES_AMT_UPPER_HALF
+		                                           ,0                                                                                                  AS SALES_AMT_07
+		                                           ,0                                                                                                  AS SALES_AMT_08
+		                                           ,0                                                                                                  AS SALES_AMT_09
+		                                           ,0                                                                                                  AS SALES_AMT_10
+		                                           ,0                                                                                                  AS SALES_AMT_11
+		                                           ,0                                                                                                  AS SALES_AMT_12
+		                                           ,0                                                                                                  AS SALES_AMT_LOWER_HALF   
+		                                           
+		                                           ,SUM(NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0))                                                 AS SALES_PROFIT_AMT_TOT
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '01', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_01
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '02', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_02
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '03', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_03
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '04', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_04
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '05', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_05
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '06', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_06
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '01' AND '06' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_PROFIT_AMT_UPPER_HALF
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '07', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_07
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '08', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_08
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '09', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_09
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '10', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_10
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '11', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_11
+		                                           ,SUM(DECODE(SUBSTR(RPT.BIZ_PLAN_YM,5,2), '12', NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0), 0))   AS SALES_PROFIT_AMT_12
+		                                           ,SUM(CASE
+		                                                WHEN SUBSTR(RPT.BIZ_PLAN_YM,5,2) BETWEEN '07' AND '12' THEN NVL(RPT.PLAN_AMT,0) + NVL(RPT.SUB_PLAN_AMT,0)
+		                                                ELSE 0
+		                                            END)                                                                                               AS SALES_PROFIT_AMT_LOWER_HALF       
+		                                    FROM MSS.ME_BIZPLANRPT RPT
+		                                    WHERE EXISTS (
+		                                                  SELECT 1
+		                                                  FROM COM.TC_COMMCODE A
+		                                                  WHERE A.SYS_PART = 'D'
+		                                                  AND A.COMM_PART = 'M104'
+		                                                  AND A.COMM_CODE = '3'   /* 매출이익액 */
+		                                                  AND A.REFER_CODE = RPT.BIZ_CD
+		                                                 )
+		                                    AND RPT.BIZ_PLAN_YEAR = ?
+		                                    GROUP BY RPT.ORG_CD
+		                                   ) MA
+		                              GROUP BY MA.ORG_CD
+		                             ) XA
+		                       
+		                       ) XXA
+		                  WHERE XXA.STR_CD = ?
+		                  GROUP BY XXA.STR_CD, ROLLUP(XXA.DEPT_CD, XXA.TEAM_CD, XXA.PC_CD)
+		                 ) T
+		           WHERE T.GROUP_ID != '011'      
+		           ) MMA, (
+		                   SELECT ROWNUM AS SORT_NO
+		                   FROM DUAL
+		                   CONNECT BY LEVEL <= 3     
+		                  ) S
+		      ORDER BY MMA.NUM, S.SORT_NO
+		     ) TA    
+    ]]>
+    </query>
+
+</service>

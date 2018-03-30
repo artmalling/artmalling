@@ -1,0 +1,379 @@
+/*
+ * Copyright (c) 2010 한국후지쯔. All rights reserved.
+ *
+ * This software is the confidential and proprietary information of 한국후지쯔.
+ * You shall not disclose such Confidential Information and shall use it
+ * only in accordance with the terms of the license agreement you entered into
+ * with 한국후지쯔
+ */
+
+package ecom.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import kr.fujitsu.ffw.control.ActionForm;
+import kr.fujitsu.ffw.control.cfg.svc.Service;
+import kr.fujitsu.ffw.model.AbstractDAO;
+import kr.fujitsu.ffw.model.AbstractDAO2;
+import kr.fujitsu.ffw.model.SqlWrapper;
+import kr.fujitsu.ffw.util.String2;
+import ecom.util.Util;
+import ecom.vo.SessionInfo2;
+
+
+/**
+ * <p>
+ * 로그인 체크
+ * </p>
+ *
+ * @created on 1.0, 2010/12/10
+ * @created by 정지인(FUJITSU KOREA LTD.)
+ *
+ * @modified on
+ * @modified by
+ * @caused by
+ */
+
+public class ECom001DAO extends AbstractDAO2{
+
+	/**
+	 * 사용자 조회
+	 *
+	 * @param string
+	 *
+	 * @param svc
+	 * @return Map
+	 */
+	public AbstractDAO absDAO = null;
+	public List chkID(ActionForm form, SessionInfo2 sessionInfo, HttpServletRequest request) throws Exception {
+		List list = null;
+		SqlWrapper sql = null;
+		Service svc = null;
+		int i = 0;
+		Util util = new Util();
+
+		try {
+
+			svc = (Service) form.getService();
+			sql = new SqlWrapper();
+
+			String usr_cd     = String2.nvl(form.getParam("userid"));
+			String strcd 	  = String2.nvl(form.getParam("strcd"));
+			String org 	      = String2.nvl(form.getParam("org"));
+			String erny_pwd   = util.encryptedPasswd(String2.nvl(form.getParam("pwd")));
+			String pwd 	      = String2.nvl(form.getParam("pwd"));
+
+			connect("pot");
+
+			if( "1".equals(org) ){			//협력사
+				sql.put(svc.getQuery("SEL_VEN"));
+				sql.setString(++i, strcd);
+				sql.setString(++i, usr_cd);
+				sql.setString(++i, pwd);
+				sql.setString(++i, erny_pwd);
+				sql.setString(++i, strcd);
+				sql.setString(++i, usr_cd);
+				sql.setString(++i, pwd);
+				sql.setString(++i, erny_pwd);
+			}else {							//품번
+				sql.put(svc.getQuery("SEL_PUMBUN"));
+				sql.setString(++i, strcd);
+				sql.setString(++i, usr_cd);
+				sql.setString(++i, pwd);
+				sql.setString(++i, erny_pwd);
+			}
+
+
+			list = executeQuery(sql);
+
+		} catch (Exception e) {
+			throw e;
+		}
+		return list;
+	}
+
+	public int conn_dt(ActionForm form,Map map) throws Exception {
+		SqlWrapper sql = null;
+		Service svc = null;
+		int i = 0;
+		int ret = 0;
+		try{
+			svc = (Service) form.getService();
+			sql = new SqlWrapper();
+			String strcd = map.get("STR_CD").toString();
+			String userid = map.get("USER_ID").toString();
+
+			connect("pot");
+			begin();
+
+			sql.put(svc.getQuery("UPD_CONN_DT"));
+			sql.setString(++i, strcd);
+			sql.setString(++i, userid);
+
+			ret = executeUpdate(sql);
+
+		}catch(Exception e){
+			throw e;
+		}finally{
+			end();
+		}
+		return ret;
+	}
+
+	/**
+	 * 비밀번호 에러시 증가, 증가 값 가져오기
+	 *
+	 * @param string
+	 *
+	 * @param svc
+	 * @return Map
+	 */
+	public int idUpSelect(ActionForm form) throws Exception{
+		SqlWrapper sql = null;
+		Service svc = null;
+		int ret = 0;
+
+		try {
+
+			String id = String2.nvl(form.getParam("userId"));
+			String strcd  = String2.nvl(form.getParam("strcd"));
+
+			begin();
+			connect("pot");
+
+			svc = (Service) form.getService();
+			sql = new SqlWrapper();
+			sql.put(svc.getQuery("UPD_USER_CNT"));
+			sql.setString(1, strcd);
+			sql.setString(2, id);
+
+			ret = executeUpdate(sql);
+
+			sql.close();
+
+		} catch (Exception e) {
+			rollback();
+			throw e;
+		} finally {
+			end();
+		}
+		return ret;
+	}
+
+	/**
+	 * 
+	 * @param form
+	 * @return
+	 * @throws Exception
+	 */
+	public Map sel_pwd_cnt(ActionForm form) throws Exception {
+		SqlWrapper sql = null;
+		Service svc = null;
+		Map map = null;
+
+		try{
+			sql = new SqlWrapper();
+			svc = (Service) form.getService();
+
+			String id = String2.nvl(form.getParam("id"));
+			String strcd  = String2.nvl(form.getParam("strcd"));
+
+			connect("pot");
+
+			sql.put(svc.getQuery("SEL_USER_CNT"));
+			sql.setString(1, strcd);
+			sql.setString(2, id);
+
+			map = executeQueryByMap(sql);
+
+
+		}catch(Exception e){
+			throw e;
+		}
+		return map;
+	}
+
+	/**
+	 * 점코드
+	 *
+	 * @param string
+	 *
+	 * @param svc
+	 * @return Map
+	 */
+	public StringBuffer getStrcd(ActionForm form) throws Exception{
+
+		StringBuffer sb = null;
+		SqlWrapper sql = null;
+		Service svc = null;
+
+		try{
+			connect("pot");
+			sql = new SqlWrapper();
+			svc = (Service)form.getService();
+
+			sql.put(svc.getQuery("SEL_STRCD"));
+			sb = executeQueryByAjax(sql);
+
+
+		}catch(Exception e){
+			 throw e;
+		}
+
+		return sb;
+	}
+
+	/**
+	 * 시스템관리자
+	 *
+	 * @param string
+	 *
+	 * @param svc
+	 * @return Map
+	 */
+	public StringBuffer getSystem(ActionForm form) throws Exception{
+
+		StringBuffer sb = null;
+		SqlWrapper sql = null;
+		Service svc = null;
+
+		try{
+			connect("pot");
+			sql = new SqlWrapper();
+			svc = (Service)form.getService();
+
+			sql.put(svc.getQuery("SEL_SYSTEM"));
+			sb = executeQueryByAjax(sql);
+
+		}catch(Exception e){
+			 throw e;
+		}
+
+		return sb;
+	}
+
+	/**
+	 * 
+	 * @param form
+	 * @return
+	 * @throws Exception
+	 */
+	public StringBuffer brandNm( ActionForm form ) throws Exception {
+		StringBuffer sb = new StringBuffer();
+		SqlWrapper sql = null;
+		Service svc = null;
+		String query = "";
+		int i = 0;
+
+		try{
+			sql = new SqlWrapper();
+			svc = (Service)form.getService();
+
+			connect("pot");
+
+			String orgCode = String2.nvl(form.getParam("orgCode"));
+			//String strcd = String2.nvl(form.getParam("strcd"));
+			String userId = String2.nvl(form.getParam("userId"));
+
+			if( "2".equals(orgCode) ){
+				query = svc.getQuery("SEL_PUM_BLAND");
+			}else if( "1".equals(orgCode) ){
+				query = svc.getQuery("SEL_VEN_BLAND");
+			}
+
+			sql.put(query);
+			sql.setString(++i, userId);
+
+			sb = executeQueryByAjax(sql);
+
+		}catch(Exception e){
+			throw e;
+		}
+
+
+		return sb;
+	}
+
+	/**
+	 * 
+	 * @param form
+	 * @param userid
+	 * @return
+	 * @throws Exception
+	 */
+	public int pwdSave(ActionForm form, String userid) throws Exception{
+
+		SqlWrapper sql = null;
+		Service svc = null;
+		int i = 0;
+		int ret = 0;
+		try{
+
+			sql = new SqlWrapper();
+			svc = (Service) form.getService();
+
+			String strcd = String2.nvl(form.getParam("strcd")).trim();
+			String pwd = Util.encryptedPasswd(String2.nvl(form.getParam("pwd3"))).trim();
+
+			connect("pot");
+			begin();
+
+			sql.put(svc.getQuery("UPD_PWD"));
+			sql.setString(++i, pwd);
+			sql.setString(++i, userid);
+			sql.setString(++i, strcd);
+			sql.setString(++i, userid);
+
+			ret = executeUpdate(sql);
+			sql.close();
+
+		}catch(Exception e){
+			rollback();
+            throw e;
+		}finally{
+			end();
+		}
+
+		return ret;
+	}
+
+	/**
+	 * 
+	 * @param form
+	 * @return
+	 * @throws Exception
+	 */
+	public StringBuffer getGBN( ActionForm form ) throws Exception {
+		StringBuffer sb = new StringBuffer();
+		SqlWrapper sql = null;
+		Service svc = null;
+		String query = "";
+		int i = 0;
+
+		try{
+			sql = new SqlWrapper();
+			svc = (Service)form.getService();
+
+			connect("pot");
+
+			String strUser 	= String2.nvl(form.getParam("strUser"));
+			String strcd 	= String2.nvl(form.getParam("strcd"));
+
+			query = svc.getQuery("SEL_GUBUN");
+			sql.put(query);
+			sql.setString(++i, strUser);
+			sql.setString(++i, strcd);
+
+			sb = executeQueryByAjax(sql);
+
+		}catch(Exception e){
+			throw e;
+		}
+
+
+		return sb;
+	}
+}

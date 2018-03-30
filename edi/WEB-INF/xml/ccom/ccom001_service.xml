@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.22
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/ccom001.cc">    
+    
+    <!-- 점별브랜드 (콤보) 협력사 -->
+    <query name="SEL_PUMBUNCOMBO">
+        <![CDATA[   
+        SELECT SPN.PUMBUN_CD AS PUMBUN_CD
+             , SPN.PUMBUN_NAME AS PUMBUN_NAME
+          FROM DPS.PC_PBNMST   PBN
+             , DPS.PC_STRPBN   SPN
+         WHERE SPN.PUMBUN_CD  = PBN.PUMBUN_CD
+          --AND SPN.EDI_YN          = 'Y' 
+           AND SPN.USE_YN           = 'Y'
+           AND SPN.STR_CD           = ?
+           AND SPN.VEN_CD           = ?
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+        ]]>        
+    </query>
+    
+    <query name="SEL_SKUFLAG_WHERE">
+        <![CDATA[   
+           AND SPN.BIZ_TYPE         = '2'
+           AND SPN.SKU_FLAG         = ?      /* 단품구분 : 1(단품), 2(비단품) */ 
+           AND SPN.SALE_BUY_FLAG    = '1'    /* 판매분매입구분 : 1(사전), 2(판매분매입) */
+        ]]>        
+    </query>
+    
+    <query name="SEL_PUMBUNTYPE_WHERE1">
+        <![CDATA[   
+           AND PBN.SKU_TYPE    = '1'             /* 단품종류 (1:규격단품)  */ 
+           AND PBN.PUMBUN_TYPE IN ('0','4')      /* 브랜드형태 : 정상(0), F&B(4) */
+        ]]>        
+    </query>
+    <query name="SEL_PUMBUNTYPE_WHERE2">
+        <![CDATA[   
+           AND PBN.PUMBUN_TYPE = '0'            /* 브랜드형태 : 정상(0) */
+        ]]>        
+    </query>
+    
+    <query name="SEL_PUMBUNCD_WHERE">
+        <![CDATA[   
+           AND PBN.PUMBUN_CD = ?              /* 브랜드 */
+        ]]>        
+    </query>
+     
+    <query name="SEL_PUMBUNCOMBO_ORDER">
+        <![CDATA[   
+           ORDER BY SPN.PUMBUN_CD, SPN.PUMBUN_NAME 
+        ]]>        
+    </query>
+    
+    <!-- 브랜드 일 경우 -->
+    <query name="SEL_PUMBUN">
+        <![CDATA[   
+           AND SPN.PUMBUN_CD = ?
+        ]]>        
+    </query>
+    
+    <!-- 단품구분(재고조회용) -->
+    <query name="SEL_SKU_FLAG">
+        <![CDATA[   
+           AND SPN.SKU_FLAG         = ?             /* 단품구분 : 1(단품), 2(비단품) */ 
+        ]]>        
+    </query>
+    <!-- 단품종류(재고조회용) -->
+    <query name="SEL_SKU_TYPE">
+        <![CDATA[   
+           AND PBN.SKU_TYPE         = ?             /* 단품종류 (1:규격단품)  */  
+        ]]>        
+    </query>
+    
+    <!-- 공통코드 -->
+    <query name="SEL_ETCCODE">
+        <![CDATA[   
+        SELECT COMM_CODE    AS CODE
+             , COMM_NAME1   AS NAME
+             , INQR_ORDER   AS SORT
+          FROM COM.TC_COMMCODE
+         WHERE SYS_PART  = ?
+           AND COMM_PART = ?
+           AND USE_YN = 'Y'
+         ORDER BY SORT, CODE
+        ]]>        
+    </query>
+    
+    <!-- 현재일 -->
+    <query name="SEL_TODAYDB">
+        <![CDATA[   
+        SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') FROM DUAL
+        ]]>        
+    </query>
+    
+    <!-- 현재일시간분초 -->
+    <query name="SEL_TODAYTimeDB">
+        <![CDATA[   
+        SELECT TO_CHAR(SYSDATE, 'HH24 : MI : SS') ||  '  현재' FROM DUAL
+        ]]>        
+    </query>
+    
+     <!-- 품목 조회-->
+    <query name="SEL_SKU_SALE_PRC">
+        <![CDATA[
+        SELECT PMK.PUMMOK_CD
+             , PMK.PUMMOK_NAME
+             , PMK.UNIT_CD
+             , PPK.TAG_FLAG
+             , PPK.TAG_PRT_OWN_FLAG
+          FROM DPS.PC_PMKMST PMK
+             , DPS.PC_PBNPMK PPK
+         WHERE PPK.PUMMOK_CD = PMK.PUMMOK_CD
+           AND PPK.PUMBUN_CD = ?
+           AND PPK.PUMMOK_CD = ?
+      ORDER BY PPK.PUMMOK_CD
+        ]]>
+    </query> 
+    
+     <!-- 품목단축코드 조회-->
+    <query name="SEL_PMKSRT_SALE_PRC">
+        <![CDATA[
+        SELECT PMK.PUMMOK_SRT_CD
+             , PMK.PUMMOK_CD
+             , PMK.PUMMOK_NAME
+             , PMK.UNIT_CD
+             , PPK.TAG_FLAG
+             , PPK.TAG_PRT_OWN_FLAG
+          FROM DPS.PC_PMKMST PMK
+             , DPS.PC_PBNPMK PPK
+         WHERE PPK.PUMMOK_CD = PMK.PUMMOK_CD
+           AND PPK.PUMBUN_CD = ?
+           AND PMK.PUMMOK_LEVEL = '4'
+      ORDER BY PMK.PUMMOK_SRT_CD
+             , PMK.PUMMOK_CD
+        ]]>
+    </query> 
+
+    <!-- 마감체크 SQL -->
+    <query name="SEL_CLOSECHECK">
+        <![CDATA[ 
+        SELECT DPS.FN_GET_CLOSECHECK( ? , ? , ? , ? , ? , ? ) AS V_RETURN
+          FROM DUAL
+        ]]>
+    </query>
+    
+    <!-- 품목코드조회 SQL -->
+    <query name="SEL_PBNPMK">
+        <![CDATA[                                        
+        SELECT 'F'        AS SEL
+             , PMK.PUMMOK_CD
+             , PMK.PUMMOK_NAME
+             , PMK.RECP_NAME
+             , PMK.PUMMOK_LEVEL
+             , PMK.L_CD
+             , PMK.M_CD
+             , PMK.S_CD
+             , PMK.D_CD
+             , PMK.UNIT_CD
+             , PPK.TAG_FLAG
+             , PPK.TAG_PRT_OWN_FLAG
+          FROM DPS.PC_PMKMST PMK
+             , DPS.PC_PBNPMK PPK
+         WHERE PPK.PUMMOK_CD = PMK.PUMMOK_CD
+           AND PPK.PUMBUN_CD = ?
+        ]]>
+    </query>
+    <query name="SEL_PBNPMK_WHERE_PUMMOK_CD">
+        <![CDATA[
+           AND PMK.PUMMOK_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_PBNPMK_ORDER">
+        <![CDATA[
+      ORDER BY PPK.PUMMOK_CD
+        ]]>
+    </query>
+
+    <!-- 품목단축코드조회 SQL -->
+    <query name="SEL_PBNPMKSRT">
+        <![CDATA[                                        
+        SELECT 'F'        AS SEL
+             , PMK.PUMMOK_SRT_CD
+             , PMK.PUMMOK_CD
+             , PMK.PUMMOK_NAME
+             , PMK.RECP_NAME
+             , PMK.PUMMOK_LEVEL
+             , PMK.L_CD
+             , PMK.M_CD
+             , PMK.S_CD
+             , PMK.D_CD
+             , PMK.UNIT_CD
+             , PPK.TAG_FLAG
+             , PPK.TAG_PRT_OWN_FLAG
+          FROM DPS.PC_PMKMST PMK
+             , DPS.PC_PBNPMK PPK
+         WHERE PPK.PUMMOK_CD = PMK.PUMMOK_CD
+           AND PPK.PUMBUN_CD = ?
+           AND PMK.PUMMOK_LEVEL = '4'
+        ]]>
+    </query>
+    <query name="SEL_PBNPMKSRT_WHERE_PMKSRT_CD">
+        <![CDATA[
+           AND PMK.PUMMOK_SRT_CD LIKE ? || '%'
+        ]]>
+    </query>
+    <query name="SEL_PBNPMKSRT_ORDER">
+        <![CDATA[
+      ORDER BY PMK.PUMMOK_SRT_CD
+             , PMK.PUMMOK_CD
+        ]]>
+    </query>    
+     <!-- 협력사 거래형태 -->
+    <query name="SEL_BIZTYPE">
+        <![CDATA[ 
+        SELECT BIZ_TYPE
+          FROM DPS.PC_STRVENMST
+         WHERE USE_YN = 'Y'
+         --AND BIZ_TYPE < 4
+         --AND EDI_YN = 'Y'
+           AND STR_CD = ?
+           AND VEN_CD = ?    
+        ]]>
+    </query>
+    
+    <!-- 점코드  매장 점 모두 조회-->
+    <query name="SEL_STR_CD">
+        <![CDATA[ 
+        SELECT STR_CD
+             , STR_NAME
+          FROM DPS.PC_STRMST
+          WHERE FCL_FLAG = '1'
+            AND STR_FLAG = '1'
+            AND MNG_FLAG = '0'
+            AND USE_YN = 'Y'  
+        ]]>
+    </query>
+
+    <!-- 협력사별 반올림 구분  -->
+    <query name="SEL_ROUNDFLAG">
+        <![CDATA[
+        SELECT RUND_FLAG AS V_RETURN
+          FROM DPS.PC_STRVENMST
+         WHERE STR_CD = ?
+           AND VEN_CD = ?
+           AND USE_YN = 'Y'
+        ]]>
+    </query> 
+    <query name="SEL_SLIP_PROC_STAT">
+        <![CDATA[
+            SELECT STR_CD
+                 , SLIP_NO
+                 , SLIP_PROC_STAT
+              FROM DPS.PO_SLPMST
+             WHERE STR_CD  = ?
+               AND SLIP_NO = ?  
+               AND SLIP_PROC_STAT <> '00'    /* 전표입력상태 아닌것 체크  리턴값이 1이면 수정못함, 리턴값이 0이면 수정가능 */
+        ]]>    
+    </query>
+    
+</service>

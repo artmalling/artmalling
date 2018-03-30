@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/pord214.po">
+     
+    <!-- 발주결재라인  Master -->
+    <gauce name="H_MASTER"> 
+        <column colName="ROWID"             colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BIZ_TYPE"          colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SLIP_FLAG"         colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="APP_S_DT"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="APP_E_DT"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ORD_REG_YN"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SM_CONF_YN"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STEAM_CONF_YN"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_CONF_YN"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BUYER_CONF_YN"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_CONF_YN"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BTEAM_CONF_YN"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_CONF_YN"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <!-- 발주결재라인  Detail -->
+    <gauce name="H_DETAIL"> 
+        <column colName="ROWID"             colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BIZ_TYPE"          colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SLIP_FLAG"         colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="APP_S_DT"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="APP_E_DT"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ORD_REG_YN"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SM_CONF_YN"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STEAM_CONF_YN"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_CONF_YN"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BUYER_CONF_YN"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_CONF_YN"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BTEAM_CONF_YN"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_CONF_YN"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHK_DATE"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHK_DATA"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <!-- 발주결재라인  RESULT -->
+    <gauce name="H_RESULT"> 
+        <column colName="RESULTCOUNT"       colType="TB_INT"     size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="MAXDATE"           colType="TB_STRING"  size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+     <!-- 발주결재라인 관리 마스터 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+            SELECT ROWID
+                 , A.BIZ_TYPE
+                 , A.SLIP_FLAG
+                 , A.APP_S_DT
+                 , A.APP_E_DT
+                 , ORD_REG_YN
+                 , SM_CONF_YN
+                 , STEAM_CONF_YN
+                 , STR_CONF_YN
+                 , BUYER_CONF_YN
+                 , ACC_CONF_YN
+                 , BTEAM_CONF_YN
+                 , CHK_CONF_YN         
+             FROM  DPS.PO_ORDCONFSTP    A
+            WHERE  A.BIZ_TYPE LIKE ? || '%'
+              AND  A.APP_E_DT = '99991231'
+            ORDER  BY A.BIZ_TYPE
+                    , A.SLIP_FLAG
+        ]]>
+    </query> 
+
+     <!-- 발주결재라인 관리 마스터 삭제 -->
+    <query name="DEL_MASTER">
+        <![CDATA[
+            DELETE DPS.PO_ORDCONFSTP
+             WHERE BIZ_TYPE  = ?
+               AND SLIP_FLAG = ?
+               AND APP_S_DT  = ?
+               AND APP_E_DT  = ?
+        ]]>
+    </query> 
+
+     <!-- 발주결재라인 관리 마스터 삭제시 하위 데이터 적용종료일 업데이트 -->
+    <query name="UPD_MASTER">
+        <![CDATA[
+            UPDATE DPS.PO_ORDCONFSTP
+               SET APP_E_DT = '99991231'
+             WHERE BIZ_TYPE  = ?
+               AND SLIP_FLAG = ?
+               AND APP_S_DT  = (
+                                SELECT MAX(APP_S_DT) 
+                                  FROM DPS.PO_ORDCONFSTP 
+                                 WHERE BIZ_TYPE  = ?
+                                   AND SLIP_FLAG = ?
+                                   AND APP_E_DT  <>'99991231'
+                                )
+               AND APP_E_DT  <> '99991231'
+        ]]>
+    </query> 
+
+     <!-- 발주결재라인 관리 디테일 조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+			SELECT ROWID
+			     , A.BIZ_TYPE          
+			     , A.SLIP_FLAG
+			     , A.APP_S_DT
+			     , A.APP_E_DT
+			     , A.ORD_REG_YN
+			     , A.SM_CONF_YN
+			     , A.STEAM_CONF_YN
+			     , A.STR_CONF_YN
+			     , A.BUYER_CONF_YN
+			     , A.ACC_CONF_YN
+			     , A.BTEAM_CONF_YN
+			     , A.CHK_CONF_YN
+			     , DECODE(SIGN(TO_DATE(TO_CHAR(SYSDATE,'YYYYMMDD'),'YYYYMMDD') 
+			                    - TO_DATE(A.APP_S_DT, 'YYYYMMDD')), -1, 0, 1)   AS CHK_DATE
+			     , (
+			        SELECT COUNT(B.BIZ_TYPE)
+			          FROM DPS.PO_ORDCONFSTP B
+			         WHERE B.BIZ_TYPE  = A.BIZ_TYPE
+			           AND B.SLIP_FLAG = A.SLIP_FLAG
+			           AND B.APP_S_DT  > A.APP_S_DT 
+			       ) +     
+			       DECODE(SIGN(TO_DATE(TO_CHAR(SYSDATE,'YYYYMMDD'),'YYYYMMDD') 
+			                    - TO_DATE(A.APP_S_DT, 'YYYYMMDD')), -1, 0, 1)   AS CHK_DATA
+			  FROM DPS.PO_ORDCONFSTP    A
+			 WHERE A.BIZ_TYPE  = ?
+			   AND A.SLIP_FLAG = ?
+			 ORDER BY A.APP_S_DT DESC
+        ]]>
+    </query> 
+
+     <!-- 발주결재라인 관리 마스터 카운트 조회 -->
+    <query name="SEL_COUNT_MASTER">
+        <![CDATA[
+            SELECT COUNT(*) AS RESULTCOUNT
+                 , MAX(APP_S_DT)  AS  MAXDATE
+              FROM DPS.PO_ORDCONFSTP
+             WHERE BIZ_TYPE     = ? 
+               AND SLIP_FLAG    = ? 
+               AND APP_E_DT     = '99991231'
+        ]]>
+    </query>  
+
+     <!-- 발주결재라인 관리 디테일 조회 -->
+    <query name="SEL_COUNT_DETAIL">
+        <![CDATA[
+            SELECT COUNT(*) AS RESULTCOUNT
+                 , MAX(APP_S_DT)  AS  MAXDATE
+              FROM DPS.PO_ORDCONFSTP
+             WHERE BIZ_TYPE     = ? 
+               AND SLIP_FLAG    = ? 
+               AND APP_S_DT    >= ?
+        ]]>
+    </query>  
+
+     <!-- 발주결재라인 관리 마스터 등록 -->
+    <query name="INS_MASTER">
+        <![CDATA[
+            INSERT INTO DPS.PO_ORDCONFSTP (
+                                          BIZ_TYPE,     SLIP_FLAG,      APP_S_DT,       APP_E_DT,   ORD_REG_YN
+                                        , SM_CONF_YN,   STEAM_CONF_YN,  STR_CONF_YN,    BUYER_CONF_YN
+                                        , ACC_CONF_YN,  BTEAM_CONF_YN,  CHK_CONF_YN,    REG_DATE,   REG_ID
+                                        , MOD_DATE   ,  MOD_ID
+                                          )
+                                   VALUES (
+                                          ?,             ?,               ?,               ?,        ?
+                                        , ?,             ?,               ?,               ?
+                                        , ?,             ?,               ?,               SYSDATE,  ?
+                                        , SYSDATE,       ?
+                                          )
+        ]]>
+    </query> 
+
+     <!-- 발주결재라인 관리 디테일  등록 -->
+    <query name="INS_DETAIL">
+        <![CDATA[
+            INSERT INTO DPS.PO_ORDCONFSTP (
+                                          BIZ_TYPE,     SLIP_FLAG,      APP_S_DT,       APP_E_DT,   ORD_REG_YN
+                                        , SM_CONF_YN,   STEAM_CONF_YN,  STR_CONF_YN,    BUYER_CONF_YN
+                                        , ACC_CONF_YN,  BTEAM_CONF_YN,  CHK_CONF_YN,    REG_DATE,   REG_ID
+                                        , MOD_DATE   ,  MOD_ID
+                                          )
+                                   VALUES (
+                                          ?,             ?,               ?,               ?,        ?
+                                        , ?,             ?,               ?,               ?
+                                        , ?,             ?,               ?,               SYSDATE,  ?
+                                        , SYSDATE,       ?
+                                          )
+        ]]>
+    </query> 
+
+     <!-- 발주결재라인 디테일  수정 -->
+    <query name="UPD_DETAIL_DATA">
+        <![CDATA[
+			UPDATE  DPS.PO_ORDCONFSTP    A
+			   SET  A.APP_S_DT        = ?
+			     ,  A.ORD_REG_YN      = ?
+			     ,  A.SM_CONF_YN      = ?
+			     ,  A.STEAM_CONF_YN   = ?
+			     ,  A.STR_CONF_YN     = ?
+			     ,  A.BUYER_CONF_YN   = ?
+			     ,  A.ACC_CONF_YN     = ?
+			     ,  A.BTEAM_CONF_YN   = ?
+			     ,  A.CHK_CONF_YN     = ?
+			     ,  A.MOD_DATE        = SYSDATE
+			     ,  A.MOD_ID          = ?
+			 WHERE  A.BIZ_TYPE        = ?
+			   AND  A.SLIP_FLAG       = ?
+			   AND  A.ROWID           = ?
+        ]]>
+    </query> 
+
+     <!-- 발주결재라인 디테일 적용종료일 업데이트 -->
+    <query name="UPD_BEFORE_DETAIL">
+        <![CDATA[
+            UPDATE DPS.PO_ORDCONFSTP A
+               SET A.APP_E_DT  = ?
+             WHERE A.BIZ_TYPE  = ?
+               AND A.SLIP_FLAG = ?
+               AND A.APP_S_DT  =(
+                                   SELECT MAX(B.APP_S_DT)
+                                     FROM DPS.PO_ORDCONFSTP B
+                                    WHERE B.BIZ_TYPE   = A.BIZ_TYPE
+                                      AND B.SLIP_FLAG  = A.SLIP_FLAG
+                                      AND B.APP_S_DT   < ?
+                                 )
+        ]]>
+    </query> 
+    
+</service>

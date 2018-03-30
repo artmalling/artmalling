@@ -1,0 +1,852 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal412.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="ORG_CD"                   colType="TB_STRING"      size="10"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"                 colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CRATE"                    colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT0"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_AMT0"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT0"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CRATE0"                   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT1"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_AMT1"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT1"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CRATE1"                   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT2"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_AMT2"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT2"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CRATE2"                   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT3"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_AMT3"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT3"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CRATE3"                   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT4"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_AMT4"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT4"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CRATE4"                   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT5"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_AMT5"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT5"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CRATE5"                   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT6"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_AMT6"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT6"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CRATE6"                   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_WEEK_DEPT2">        
+        <![CDATA[
+            SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                AS ORG_NAME
+                 , SUM(A.NORM_AMT)                                 AS NORM_AMT
+                 , SUM(A.EVENT_AMT)                                AS EVENT_AMT
+                 , SUM(A.TOT_AMT)                                  AS TOT_AMT
+                 , 0                                               AS CRATE
+                 , SUM(A.NORM_AMT0)                                AS NORM_AMT0
+                 , SUM(A.EVENT_AMT0)                               AS EVENT_AMT0
+                 , SUM(A.TOT_AMT0)                                 AS TOT_AMT0
+                 , 0                                               AS CRATE0
+                 , SUM(A.NORM_AMT1)                                AS NORM_AMT1
+                 , SUM(A.EVENT_AMT1)                               AS EVENT_AMT1
+                 , SUM(A.TOT_AMT1)                                 AS TOT_AMT1
+                 , 0                                               AS CRATE1
+                 , SUM(A.NORM_AMT2)                                AS NORM_AMT2
+                 , SUM(A.EVENT_AMT2)                               AS EVENT_AMT2
+                 , SUM(A.TOT_AMT2)                                 AS TOT_AMT2
+                 , 0                                               AS CRATE2
+                 , SUM(A.NORM_AMT3)                                AS NORM_AMT3
+                 , SUM(A.EVENT_AMT3)                               AS EVENT_AMT3
+                 , SUM(A.TOT_AMT3)                                 AS TOT_AMT3
+                 , 0                                               AS CRATE3
+                 , SUM(A.NORM_AMT4)                                AS NORM_AMT4
+                 , SUM(A.EVENT_AMT4)                               AS EVENT_AMT4
+                 , SUM(A.TOT_AMT4)                                 AS TOT_AMT4
+                 , 0                                               AS CRATE4
+                 , SUM(A.NORM_AMT5)                                AS NORM_AMT5
+                 , SUM(A.EVENT_AMT5)                               AS EVENT_AMT5
+                 , SUM(A.TOT_AMT5)                                 AS TOT_AMT5
+                 , 0                                               AS CRATE5
+                 , SUM(A.NORM_AMT6)                                AS NORM_AMT6
+                 , SUM(A.EVENT_AMT6)                               AS EVENT_AMT6
+                 , SUM(A.TOT_AMT6)                                 AS TOT_AMT6
+                 , 0                                               AS CRATE6
+              FROM (
+                    SELECT LPAD( C.BUY_ORG_CD,4) || '000000'                                                               AS ORG_CD
+                         , SUM(A.NORM_SALE_AMT)                                                                     AS NORM_AMT
+                         , SUM(A.EVT_SALE_AMT)                                                                      AS EVENT_AMT
+                         , SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT)                                               AS TOT_AMT
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT6
+                      FROM DPS.PS_DAYNOREVT     A
+                         , DPS.PC_ORGMST        B
+                         , DPS.PC_STRPBN    C
+                     WHERE B.ORG_CD     = C.BUY_ORG_CD
+                       AND A.STR_CD     = C.STR_CD  
+                       AND A.PUMBUN_CD  = C.PUMBUN_CD
+                       AND A.STR_CD           = ?
+                       AND B.DEPT_CD          LIKE ? || '%'
+                       AND B.TEAM_CD          LIKE ? || '%'
+                       AND B.PC_CD            LIKE ? || '%'
+                       AND A.PUMBUN_CD        LIKE ? || '%'
+                       AND A.SALE_DT          >= ?
+                       AND A.SALE_DT          <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = B.STR_CD
+                                       AND MYORG.DEPT_CD     = B.DEPT_CD
+                                       AND MYORG.TEAM_CD     = B.TEAM_CD
+                                       AND MYORG.PC_CD       = B.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )
+                     GROUP BY 
+                           LPAD(C.BUY_ORG_CD,4)
+                         , A.SALE_DT
+                     ORDER BY SALE_DT
+                   )             A
+                 , DPS.PC_ORGMST B
+             WHERE A.ORG_CD = B.ORG_CD      
+             GROUP BY
+                   A.ORG_CD
+                 , B.ORG_SHORT_NAME
+        
+     ]]>        
+    </query>
+    
+    <query name="SEL_SALE_WEEK_DEPT">        
+        <![CDATA[
+            SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                AS ORG_NAME
+                 , SUM(A.NORM_AMT)                                 AS NORM_AMT
+                 , SUM(A.EVENT_AMT)                                AS EVENT_AMT
+                 , SUM(A.TOT_AMT)                                  AS TOT_AMT
+                 , 0                                               AS CRATE
+                 , SUM(A.NORM_AMT0)                                AS NORM_AMT0
+                 , SUM(A.EVENT_AMT0)                               AS EVENT_AMT0
+                 , SUM(A.TOT_AMT0)                                 AS TOT_AMT0
+                 , 0                                               AS CRATE0
+                 , SUM(A.NORM_AMT1)                                AS NORM_AMT1
+                 , SUM(A.EVENT_AMT1)                               AS EVENT_AMT1
+                 , SUM(A.TOT_AMT1)                                 AS TOT_AMT1
+                 , 0                                               AS CRATE1
+                 , SUM(A.NORM_AMT2)                                AS NORM_AMT2
+                 , SUM(A.EVENT_AMT2)                               AS EVENT_AMT2
+                 , SUM(A.TOT_AMT2)                                 AS TOT_AMT2
+                 , 0                                               AS CRATE2
+                 , SUM(A.NORM_AMT3)                                AS NORM_AMT3
+                 , SUM(A.EVENT_AMT3)                               AS EVENT_AMT3
+                 , SUM(A.TOT_AMT3)                                 AS TOT_AMT3
+                 , 0                                               AS CRATE3
+                 , SUM(A.NORM_AMT4)                                AS NORM_AMT4
+                 , SUM(A.EVENT_AMT4)                               AS EVENT_AMT4
+                 , SUM(A.TOT_AMT4)                                 AS TOT_AMT4
+                 , 0                                               AS CRATE4
+                 , SUM(A.NORM_AMT5)                                AS NORM_AMT5
+                 , SUM(A.EVENT_AMT5)                               AS EVENT_AMT5
+                 , SUM(A.TOT_AMT5)                                 AS TOT_AMT5
+                 , 0                                               AS CRATE5
+                 , SUM(A.NORM_AMT6)                                AS NORM_AMT6
+                 , SUM(A.EVENT_AMT6)                               AS EVENT_AMT6
+                 , SUM(A.TOT_AMT6)                                 AS TOT_AMT6
+                 , 0                                               AS CRATE6
+              FROM (
+                    SELECT LPAD( C.SALE_ORG_CD,4) || '000000'                                                               AS ORG_CD
+                         , SUM(A.NORM_SALE_AMT)                                                                     AS NORM_AMT
+                         , SUM(A.EVT_SALE_AMT)                                                                      AS EVENT_AMT
+                         , SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT)                                               AS TOT_AMT
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT6
+                      FROM DPS.PS_DAYNOREVT     A
+                         , DPS.PC_ORGMST        B
+                         , DPS.PC_STRPBN    C
+                     WHERE B.ORG_CD     = C.SALE_ORG_CD
+                       AND A.STR_CD     = C.STR_CD  
+                       AND A.PUMBUN_CD  = C.PUMBUN_CD
+                       AND A.STR_CD           = ?
+                       AND B.DEPT_CD          LIKE ? || '%'
+                       AND B.TEAM_CD          LIKE ? || '%'
+                       AND B.PC_CD            LIKE ? || '%'
+                       AND A.PUMBUN_CD        LIKE ? || '%'
+                       AND A.SALE_DT          >= ?
+                       AND A.SALE_DT          <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = B.STR_CD
+                                       AND MYORG.DEPT_CD     = B.DEPT_CD
+                                       AND MYORG.TEAM_CD     = B.TEAM_CD
+                                       AND MYORG.PC_CD       = B.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )
+                     GROUP BY 
+                           LPAD(C.SALE_ORG_CD,4)
+                         , A.SALE_DT
+                     ORDER BY SALE_DT
+                   )             A
+                 , DPS.PC_ORGMST B
+             WHERE A.ORG_CD = B.ORG_CD      
+             GROUP BY
+                   A.ORG_CD
+                 , B.ORG_SHORT_NAME
+
+       ]]>        
+    </query>
+    
+    <query name="SEL_SALE_WEEK_TEAM">        
+        <![CDATA[
+        	SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                AS ORG_NAME
+                 , SUM(A.NORM_AMT)                                 AS NORM_AMT
+                 , SUM(A.EVENT_AMT)                                AS EVENT_AMT
+                 , SUM(A.TOT_AMT)                                  AS TOT_AMT
+                 , 0                                               AS CRATE
+                 , SUM(A.NORM_AMT0)                                AS NORM_AMT0
+                 , SUM(A.EVENT_AMT0)                               AS EVENT_AMT0
+                 , SUM(A.TOT_AMT0)                                 AS TOT_AMT0
+                 , 0                                               AS CRATE0
+                 , SUM(A.NORM_AMT1)                                AS NORM_AMT1
+                 , SUM(A.EVENT_AMT1)                               AS EVENT_AMT1
+                 , SUM(A.TOT_AMT1)                                 AS TOT_AMT1
+                 , 0                                               AS CRATE1
+                 , SUM(A.NORM_AMT2)                                AS NORM_AMT2
+                 , SUM(A.EVENT_AMT2)                               AS EVENT_AMT2
+                 , SUM(A.TOT_AMT2)                                 AS TOT_AMT2
+                 , 0                                               AS CRATE2
+                 , SUM(A.NORM_AMT3)                                AS NORM_AMT3
+                 , SUM(A.EVENT_AMT3)                               AS EVENT_AMT3
+                 , SUM(A.TOT_AMT3)                                 AS TOT_AMT3
+                 , 0                                               AS CRATE3
+                 , SUM(A.NORM_AMT4)                                AS NORM_AMT4
+                 , SUM(A.EVENT_AMT4)                               AS EVENT_AMT4
+                 , SUM(A.TOT_AMT4)                                 AS TOT_AMT4
+                 , 0                                               AS CRATE4
+                 , SUM(A.NORM_AMT5)                                AS NORM_AMT5
+                 , SUM(A.EVENT_AMT5)                               AS EVENT_AMT5
+                 , SUM(A.TOT_AMT5)                                 AS TOT_AMT5
+                 , 0                                               AS CRATE5
+                 , SUM(A.NORM_AMT6)                                AS NORM_AMT6
+                 , SUM(A.EVENT_AMT6)                               AS EVENT_AMT6
+                 , SUM(A.TOT_AMT6)                                 AS TOT_AMT6
+                 , 0                                               AS CRATE6
+              FROM (
+                    SELECT LPAD(C.SALE_ORG_CD,6) || '0000'                                                               AS ORG_CD
+                         , SUM(A.NORM_SALE_AMT)                                                                     AS NORM_AMT
+                         , SUM(A.EVT_SALE_AMT)                                                                      AS EVENT_AMT
+                         , SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT)                                               AS TOT_AMT
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT6
+                      FROM DPS.PS_DAYNOREVT     A
+                             , DPS.PC_ORGMST    B
+                             , DPS.PC_STRPBN    C
+                     WHERE B.ORG_CD     = C.SALE_ORG_CD
+                       AND A.STR_CD     = C.STR_CD  
+                       AND A.PUMBUN_CD  = C.PUMBUN_CD
+                       AND A.STR_CD           = ?
+                       AND B.DEPT_CD          LIKE ? || '%'
+                       AND B.TEAM_CD          LIKE ? || '%'
+                       AND B.PC_CD            LIKE ? || '%'
+                       AND A.PUMBUN_CD        LIKE ? || '%'
+                       AND A.SALE_DT          >= ?
+                       AND A.SALE_DT          <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = B.STR_CD
+                                       AND MYORG.DEPT_CD     = B.DEPT_CD
+                                       AND MYORG.TEAM_CD     = B.TEAM_CD
+                                       AND MYORG.PC_CD       = B.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )
+                     GROUP BY 
+                           LPAD(C.SALE_ORG_CD,6)
+                         , A.SALE_DT
+                     ORDER BY SALE_DT
+                   )   A
+                  , DPS.PC_ORGMST    B
+             WHERE A.ORG_CD = B.ORG_CD      
+             GROUP BY
+                   A.ORG_CD
+                 , B.ORG_SHORT_NAME
+             ORDER BY
+                   A.ORG_CD
+        	
+    ]]>        
+    </query>
+    <query name="SEL_SALE_WEEK_TEAM2">        
+        <![CDATA[
+        	SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                AS ORG_NAME
+                 , SUM(A.NORM_AMT)                                 AS NORM_AMT
+                 , SUM(A.EVENT_AMT)                                AS EVENT_AMT
+                 , SUM(A.TOT_AMT)                                  AS TOT_AMT
+                 , 0                                               AS CRATE
+                 , SUM(A.NORM_AMT0)                                AS NORM_AMT0
+                 , SUM(A.EVENT_AMT0)                               AS EVENT_AMT0
+                 , SUM(A.TOT_AMT0)                                 AS TOT_AMT0
+                 , 0                                               AS CRATE0
+                 , SUM(A.NORM_AMT1)                                AS NORM_AMT1
+                 , SUM(A.EVENT_AMT1)                               AS EVENT_AMT1
+                 , SUM(A.TOT_AMT1)                                 AS TOT_AMT1
+                 , 0                                               AS CRATE1
+                 , SUM(A.NORM_AMT2)                                AS NORM_AMT2
+                 , SUM(A.EVENT_AMT2)                               AS EVENT_AMT2
+                 , SUM(A.TOT_AMT2)                                 AS TOT_AMT2
+                 , 0                                               AS CRATE2
+                 , SUM(A.NORM_AMT3)                                AS NORM_AMT3
+                 , SUM(A.EVENT_AMT3)                               AS EVENT_AMT3
+                 , SUM(A.TOT_AMT3)                                 AS TOT_AMT3
+                 , 0                                               AS CRATE3
+                 , SUM(A.NORM_AMT4)                                AS NORM_AMT4
+                 , SUM(A.EVENT_AMT4)                               AS EVENT_AMT4
+                 , SUM(A.TOT_AMT4)                                 AS TOT_AMT4
+                 , 0                                               AS CRATE4
+                 , SUM(A.NORM_AMT5)                                AS NORM_AMT5
+                 , SUM(A.EVENT_AMT5)                               AS EVENT_AMT5
+                 , SUM(A.TOT_AMT5)                                 AS TOT_AMT5
+                 , 0                                               AS CRATE5
+                 , SUM(A.NORM_AMT6)                                AS NORM_AMT6
+                 , SUM(A.EVENT_AMT6)                               AS EVENT_AMT6
+                 , SUM(A.TOT_AMT6)                                 AS TOT_AMT6
+                 , 0                                               AS CRATE6
+              FROM (
+                    SELECT LPAD(C.BUY_ORG_CD,6) || '0000'                                                               AS ORG_CD
+                         , SUM(A.NORM_SALE_AMT)                                                                     AS NORM_AMT
+                         , SUM(A.EVT_SALE_AMT)                                                                      AS EVENT_AMT
+                         , SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT)                                               AS TOT_AMT
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT6
+                      FROM DPS.PS_DAYNOREVT     A
+                             , DPS.PC_ORGMST    B
+                             , DPS.PC_STRPBN    C
+                     WHERE B.ORG_CD     = C.BUY_ORG_CD
+                       AND A.STR_CD     = C.STR_CD  
+                       AND A.PUMBUN_CD  = C.PUMBUN_CD
+                       AND A.STR_CD           = ?
+                       AND B.DEPT_CD          LIKE ? || '%'
+                       AND B.TEAM_CD          LIKE ? || '%'
+                       AND B.PC_CD            LIKE ? || '%'
+                       AND A.PUMBUN_CD        LIKE ? || '%'
+                       AND A.SALE_DT          >= ?
+                       AND A.SALE_DT          <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = B.STR_CD
+                                       AND MYORG.DEPT_CD     = B.DEPT_CD
+                                       AND MYORG.TEAM_CD     = B.TEAM_CD
+                                       AND MYORG.PC_CD       = B.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )
+                     GROUP BY 
+                           LPAD(C.BUY_ORG_CD,6)
+                         , A.SALE_DT
+                     ORDER BY SALE_DT
+                   )   A
+                  , DPS.PC_ORGMST    B
+             WHERE A.ORG_CD = B.ORG_CD      
+             GROUP BY
+                   A.ORG_CD
+                 , B.ORG_SHORT_NAME
+             ORDER BY
+                   A.ORG_CD
+    ]]>        
+    </query>
+  
+    <query name="SEL_SALE_WEEK_PC">        
+        <![CDATA[
+			SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                AS ORG_NAME
+                 , SUM(A.NORM_AMT)                                 AS NORM_AMT
+                 , SUM(A.EVENT_AMT)                                AS EVENT_AMT
+                 , SUM(A.TOT_AMT)                                  AS TOT_AMT
+                 , 0                                               AS CRATE
+                 , SUM(A.NORM_AMT0)                                AS NORM_AMT0
+                 , SUM(A.EVENT_AMT0)                               AS EVENT_AMT0
+                 , SUM(A.TOT_AMT0)                                 AS TOT_AMT0
+                 , 0                                               AS CRATE0
+                 , SUM(A.NORM_AMT1)                                AS NORM_AMT1
+                 , SUM(A.EVENT_AMT1)                               AS EVENT_AMT1
+                 , SUM(A.TOT_AMT1)                                 AS TOT_AMT1
+                 , 0                                               AS CRATE1
+                 , SUM(A.NORM_AMT2)                                AS NORM_AMT2
+                 , SUM(A.EVENT_AMT2)                               AS EVENT_AMT2
+                 , SUM(A.TOT_AMT2)                                 AS TOT_AMT2
+                 , 0                                               AS CRATE2
+                 , SUM(A.NORM_AMT3)                                AS NORM_AMT3
+                 , SUM(A.EVENT_AMT3)                               AS EVENT_AMT3
+                 , SUM(A.TOT_AMT3)                                 AS TOT_AMT3
+                 , 0                                               AS CRATE3
+                 , SUM(A.NORM_AMT4)                                AS NORM_AMT4
+                 , SUM(A.EVENT_AMT4)                               AS EVENT_AMT4
+                 , SUM(A.TOT_AMT4)                                 AS TOT_AMT4
+                 , 0                                               AS CRATE4
+                 , SUM(A.NORM_AMT5)                                AS NORM_AMT5
+                 , SUM(A.EVENT_AMT5)                               AS EVENT_AMT5
+                 , SUM(A.TOT_AMT5)                                 AS TOT_AMT5
+                 , 0                                               AS CRATE5
+                 , SUM(A.NORM_AMT6)                                AS NORM_AMT6
+                 , SUM(A.EVENT_AMT6)                               AS EVENT_AMT6
+                 , SUM(A.TOT_AMT6)                                 AS TOT_AMT6
+                 , 0                                               AS CRATE6
+              FROM (
+                    SELECT LPAD(C.SALE_ORG_CD,8) || '00'                                                                 AS ORG_CD
+                         , SUM(A.NORM_SALE_AMT)                                                                     AS NORM_AMT
+                         , SUM(A.EVT_SALE_AMT)                                                                      AS EVENT_AMT
+                         , SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT)                                               AS TOT_AMT
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT6
+                      FROM DPS.PS_DAYNOREVT     A
+                              , DPS.PC_ORGMST        B                 
+                              , DPS.PC_STRPBN    C
+                     WHERE B.ORG_CD     = C.SALE_ORG_CD
+                       AND A.STR_CD     = C.STR_CD  
+                       AND A.PUMBUN_CD  = C.PUMBUN_CD
+                       AND A.STR_CD           = ?
+                       AND B.DEPT_CD          LIKE ? || '%'
+                       AND B.TEAM_CD          LIKE ? || '%'
+                       AND B.PC_CD            LIKE ? || '%'
+                       AND A.PUMBUN_CD        LIKE ? || '%'
+                       AND A.SALE_DT          >= ?
+                       AND A.SALE_DT          <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = B.STR_CD
+                                       AND MYORG.DEPT_CD     = B.DEPT_CD
+                                       AND MYORG.TEAM_CD     = B.TEAM_CD
+                                       AND MYORG.PC_CD       = B.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )
+                     GROUP BY 
+                           LPAD(C.SALE_ORG_CD,8)
+                         , A.SALE_DT
+                     ORDER BY SALE_DT
+                   )             A
+                 , DPS.PC_ORGMST B
+             WHERE A.ORG_CD = B.ORG_CD
+             GROUP BY
+                   A.ORG_CD
+                 , B.ORG_SHORT_NAME
+             ORDER BY
+                   A.ORG_CD
+               
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_WEEK_PC2">        
+        <![CDATA[
+			SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                AS ORG_NAME
+                 , SUM(A.NORM_AMT)                                 AS NORM_AMT
+                 , SUM(A.EVENT_AMT)                                AS EVENT_AMT
+                 , SUM(A.TOT_AMT)                                  AS TOT_AMT
+                 , 0                                               AS CRATE
+                 , SUM(A.NORM_AMT0)                                AS NORM_AMT0
+                 , SUM(A.EVENT_AMT0)                               AS EVENT_AMT0
+                 , SUM(A.TOT_AMT0)                                 AS TOT_AMT0
+                 , 0                                               AS CRATE0
+                 , SUM(A.NORM_AMT1)                                AS NORM_AMT1
+                 , SUM(A.EVENT_AMT1)                               AS EVENT_AMT1
+                 , SUM(A.TOT_AMT1)                                 AS TOT_AMT1
+                 , 0                                               AS CRATE1
+                 , SUM(A.NORM_AMT2)                                AS NORM_AMT2
+                 , SUM(A.EVENT_AMT2)                               AS EVENT_AMT2
+                 , SUM(A.TOT_AMT2)                                 AS TOT_AMT2
+                 , 0                                               AS CRATE2
+                 , SUM(A.NORM_AMT3)                                AS NORM_AMT3
+                 , SUM(A.EVENT_AMT3)                               AS EVENT_AMT3
+                 , SUM(A.TOT_AMT3)                                 AS TOT_AMT3
+                 , 0                                               AS CRATE3
+                 , SUM(A.NORM_AMT4)                                AS NORM_AMT4
+                 , SUM(A.EVENT_AMT4)                               AS EVENT_AMT4
+                 , SUM(A.TOT_AMT4)                                 AS TOT_AMT4
+                 , 0                                               AS CRATE4
+                 , SUM(A.NORM_AMT5)                                AS NORM_AMT5
+                 , SUM(A.EVENT_AMT5)                               AS EVENT_AMT5
+                 , SUM(A.TOT_AMT5)                                 AS TOT_AMT5
+                 , 0                                               AS CRATE5
+                 , SUM(A.NORM_AMT6)                                AS NORM_AMT6
+                 , SUM(A.EVENT_AMT6)                               AS EVENT_AMT6
+                 , SUM(A.TOT_AMT6)                                 AS TOT_AMT6
+                 , 0                                               AS CRATE6
+              FROM (
+                    SELECT LPAD(C.BUY_ORG_CD,8) || '00'                                                                 AS ORG_CD
+                         , SUM(A.NORM_SALE_AMT)                                                                     AS NORM_AMT
+                         , SUM(A.EVT_SALE_AMT)                                                                      AS EVENT_AMT
+                         , SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT)                                               AS TOT_AMT
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT6
+                      FROM DPS.PS_DAYNOREVT     A
+                              , DPS.PC_ORGMST        B                 
+                              , DPS.PC_STRPBN    C
+                     WHERE B.ORG_CD     = C.BUY_ORG_CD
+                       AND A.STR_CD     = C.STR_CD  
+                       AND A.PUMBUN_CD  = C.PUMBUN_CD
+                       AND A.STR_CD           = ?
+                       AND B.DEPT_CD          LIKE ? || '%'
+                       AND B.TEAM_CD          LIKE ? || '%'
+                       AND B.PC_CD            LIKE ? || '%'
+                       AND A.PUMBUN_CD        LIKE ? || '%'
+                       AND A.SALE_DT          >= ?
+                       AND A.SALE_DT          <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = B.STR_CD
+                                       AND MYORG.DEPT_CD     = B.DEPT_CD
+                                       AND MYORG.TEAM_CD     = B.TEAM_CD
+                                       AND MYORG.PC_CD       = B.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )
+                     GROUP BY 
+                           LPAD(C.BUY_ORG_CD,8)
+                         , A.SALE_DT
+                     ORDER BY SALE_DT
+                   )             A
+                 , DPS.PC_ORGMST B
+             WHERE A.ORG_CD = B.ORG_CD
+             GROUP BY
+                   A.ORG_CD
+                 , B.ORG_SHORT_NAME
+             ORDER BY
+                   A.ORG_CD       
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_WEEK_PUMBUN">        
+        <![CDATA[
+        	SELECT A.ORG_CD
+                 , B.PUMBUN_NAME                                   AS ORG_NAME
+                 , SUM(A.NORM_AMT)                                 AS NORM_AMT
+                 , SUM(A.EVENT_AMT)                                AS EVENT_AMT
+                 , SUM(A.TOT_AMT)                                  AS TOT_AMT
+                 , 0                                               AS CRATE
+                 , SUM(A.NORM_AMT0)                                AS NORM_AMT0
+                 , SUM(A.EVENT_AMT0)                               AS EVENT_AMT0
+                 , SUM(A.TOT_AMT0)                                 AS TOT_AMT0
+                 , 0                                               AS CRATE0
+                 , SUM(A.NORM_AMT1)                                AS NORM_AMT1
+                 , SUM(A.EVENT_AMT1)                               AS EVENT_AMT1
+                 , SUM(A.TOT_AMT1)                                 AS TOT_AMT1
+                 , 0                                               AS CRATE1
+                 , SUM(A.NORM_AMT2)                                AS NORM_AMT2
+                 , SUM(A.EVENT_AMT2)                               AS EVENT_AMT2
+                 , SUM(A.TOT_AMT2)                                 AS TOT_AMT2
+                 , 0                                               AS CRATE2
+                 , SUM(A.NORM_AMT3)                                AS NORM_AMT3
+                 , SUM(A.EVENT_AMT3)                               AS EVENT_AMT3
+                 , SUM(A.TOT_AMT3)                                 AS TOT_AMT3
+                 , 0                                               AS CRATE3
+                 , SUM(A.NORM_AMT4)                                AS NORM_AMT4
+                 , SUM(A.EVENT_AMT4)                               AS EVENT_AMT4
+                 , SUM(A.TOT_AMT4)                                 AS TOT_AMT4
+                 , 0                                               AS CRATE4
+                 , SUM(A.NORM_AMT5)                                AS NORM_AMT5
+                 , SUM(A.EVENT_AMT5)                               AS EVENT_AMT5
+                 , SUM(A.TOT_AMT5)                                 AS TOT_AMT5
+                 , 0                                               AS CRATE5
+                 , SUM(A.NORM_AMT6)                                AS NORM_AMT6
+                 , SUM(A.EVENT_AMT6)                               AS EVENT_AMT6
+                 , SUM(A.TOT_AMT6)                                 AS TOT_AMT6
+                 , 0                                               AS CRATE6
+              FROM (
+                    SELECT C.PUMBUN_CD                                                                              AS ORG_CD
+                         , A.STR_CD
+                         , SUM(A.NORM_SALE_AMT)                                                                     AS NORM_AMT
+                         , SUM(A.EVT_SALE_AMT)                                                                      AS EVENT_AMT
+                         , SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT)                                               AS TOT_AMT
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT6
+                      FROM DPS.PS_DAYNOREVT     A
+                         , DPS.PC_ORGMST        B
+                         , DPS.PC_STRPBN    C
+                     WHERE B.ORG_CD     = C.SALE_ORG_CD
+                       AND A.STR_CD     = C.STR_CD  
+                       AND A.PUMBUN_CD  = C.PUMBUN_CD
+                       AND A.STR_CD           = ?
+                       AND B.DEPT_CD          LIKE ? || '%'
+                       AND B.TEAM_CD          LIKE ? || '%'
+                       AND B.PC_CD            LIKE ? || '%'
+                       AND A.PUMBUN_CD        LIKE ? || '%'
+                       AND A.SALE_DT          >= ?
+                       AND A.SALE_DT          <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = B.STR_CD
+                                       AND MYORG.DEPT_CD     = B.DEPT_CD
+                                       AND MYORG.TEAM_CD     = B.TEAM_CD
+                                       AND MYORG.PC_CD       = B.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )
+                     GROUP BY 
+                           C.PUMBUN_CD
+                         , A.SALE_DT
+                         , A.STR_CD
+                     ORDER BY SALE_DT
+                   )             A
+                 , DPS.PC_STRPBN B
+             WHERE A.ORG_CD = B.PUMBUN_CD
+               AND A.STR_CD = B.STR_CD
+             GROUP BY
+                   A.ORG_CD
+                 , B.PUMBUN_NAME
+             ORDER BY
+                   A.ORG_CD
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_WEEK_PUMBUN2">        
+        <![CDATA[
+        	SELECT A.ORG_CD
+                 , B.PUMBUN_NAME                                   AS ORG_NAME
+                 , SUM(A.NORM_AMT)                                 AS NORM_AMT
+                 , SUM(A.EVENT_AMT)                                AS EVENT_AMT
+                 , SUM(A.TOT_AMT)                                  AS TOT_AMT
+                 , 0                                               AS CRATE
+                 , SUM(A.NORM_AMT0)                                AS NORM_AMT0
+                 , SUM(A.EVENT_AMT0)                               AS EVENT_AMT0
+                 , SUM(A.TOT_AMT0)                                 AS TOT_AMT0
+                 , 0                                               AS CRATE0
+                 , SUM(A.NORM_AMT1)                                AS NORM_AMT1
+                 , SUM(A.EVENT_AMT1)                               AS EVENT_AMT1
+                 , SUM(A.TOT_AMT1)                                 AS TOT_AMT1
+                 , 0                                               AS CRATE1
+                 , SUM(A.NORM_AMT2)                                AS NORM_AMT2
+                 , SUM(A.EVENT_AMT2)                               AS EVENT_AMT2
+                 , SUM(A.TOT_AMT2)                                 AS TOT_AMT2
+                 , 0                                               AS CRATE2
+                 , SUM(A.NORM_AMT3)                                AS NORM_AMT3
+                 , SUM(A.EVENT_AMT3)                               AS EVENT_AMT3
+                 , SUM(A.TOT_AMT3)                                 AS TOT_AMT3
+                 , 0                                               AS CRATE3
+                 , SUM(A.NORM_AMT4)                                AS NORM_AMT4
+                 , SUM(A.EVENT_AMT4)                               AS EVENT_AMT4
+                 , SUM(A.TOT_AMT4)                                 AS TOT_AMT4
+                 , 0                                               AS CRATE4
+                 , SUM(A.NORM_AMT5)                                AS NORM_AMT5
+                 , SUM(A.EVENT_AMT5)                               AS EVENT_AMT5
+                 , SUM(A.TOT_AMT5)                                 AS TOT_AMT5
+                 , 0                                               AS CRATE5
+                 , SUM(A.NORM_AMT6)                                AS NORM_AMT6
+                 , SUM(A.EVENT_AMT6)                               AS EVENT_AMT6
+                 , SUM(A.TOT_AMT6)                                 AS TOT_AMT6
+                 , 0                                               AS CRATE6
+              FROM (
+                    SELECT C.PUMBUN_CD                                                                              AS ORG_CD
+                         , A.STR_CD
+                         , SUM(A.NORM_SALE_AMT)                                                                     AS NORM_AMT
+                         , SUM(A.EVT_SALE_AMT)                                                                      AS EVENT_AMT
+                         , SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT)                                               AS TOT_AMT
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+0,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT0
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+1,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT1
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+2,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT2
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+3,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT3
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+4,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT4
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+5,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT5
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) ELSE 0 END )                         AS NORM_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.EVT_SALE_AMT) ELSE 0 END )                          AS EVENT_AMT6
+                         , ( CASE WHEN A.SALE_DT = TO_CHAR(TO_DATE(?)+6,'YYYYMMDD') THEN SUM(A.NORM_SALE_AMT) + SUM(A.EVT_SALE_AMT) ELSE 0 END )   AS TOT_AMT6
+                      FROM DPS.PS_DAYNOREVT     A
+                         , DPS.PC_ORGMST        B
+                     , DPS.PC_STRPBN    C
+                     WHERE B.ORG_CD     = C.BUY_ORG_CD
+                       AND A.STR_CD     = C.STR_CD  
+                       AND A.PUMBUN_CD  = C.PUMBUN_CD
+                       AND A.STR_CD           = ?
+                       AND B.DEPT_CD          LIKE ? || '%'
+                       AND B.TEAM_CD          LIKE ? || '%'
+                       AND B.PC_CD            LIKE ? || '%'
+                       AND A.PUMBUN_CD        LIKE ? || '%'
+                       AND A.SALE_DT          >= ?
+                       AND A.SALE_DT          <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = B.STR_CD
+                                       AND MYORG.DEPT_CD     = B.DEPT_CD
+                                       AND MYORG.TEAM_CD     = B.TEAM_CD
+                                       AND MYORG.PC_CD       = B.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )
+                     GROUP BY 
+                           C.PUMBUN_CD
+                         , A.SALE_DT
+                         , A.STR_CD
+                     ORDER BY SALE_DT
+                   )             A
+                 , DPS.PC_STRPBN B
+             WHERE A.ORG_CD = B.PUMBUN_CD
+               AND A.STR_CD = B.STR_CD
+             GROUP BY
+                   A.ORG_CD
+                 , B.PUMBUN_NAME
+             ORDER BY
+                   A.ORG_CD
+        ]]>        
+    </query>
+    
+    
+    
+</service>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.05.30
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  회원 매출 객단가 현황(년)
+ -->
+<service name="/dbri309.db">
+    <!-- 월단위 포인트 현황  -->
+    <gauce name="H_MASTER"> 
+        <column colName="YYYYMM"    			colType="TB_STRING"  	 size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"       	colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_SALE_AMT"      	colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NCUST_SALE_AMT"  		colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_CUST_SALE_AMT"     colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_NCUST_SALE_AMT"    colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_CUST_SALE_AMT"  	colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_NCUST_SALE_AMT"    colType="TB_DECIMAL"     size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_CUST_SALE_RATE"    colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_NCUST_SALE_RATE"  	colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_SALE_RATE"     	colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NCUST_SALE_RATE"    	colType="TB_DECIMAL"     size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_DANGA"  			colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="CUST_DANGA"    		colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NCUST_DANGA"  			colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+        <column colName="CUST_NCUST_DANGA_RATE" colType="TB_STRING"      size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="CUST_CNT_XX" 			colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="CUST_CNT_YY" 			colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="CUST_CNT_YY_1" 		colType="TB_DECIMAL"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+    </gauce>
+    
+    <!-- 회원 매출 객단가 현황(년) -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT
+                        YYYY
+                        ,TOT_SALE_AMT -- 총매출
+                        ,CUST_SALE_AMT--회원매출
+                        ,NCUST_SALE_AMT-- 비회원매출
+                        ,PRE_CUST_SALE_AMT --회원전매출
+                        ,PRE_NCUST_SALE_AMT --비회원전매출
+                        ,ADD_CUST_SALE_AMT --회원매출증감
+                        ,ADD_NCUST_SALE_AMT --비회원매출증감
+                        ,ADD_CUST_SALE_RATE --회원매출증감율
+                        ,ADD_NCUST_SALE_RATE --비회원매출증감율
+                        ,CUST_SALE_RATE --회원매출구성비
+                        ,NCUST_SALE_RATE -- 비회원매출구성비
+                        ,TOT_DANGA-- 총매출 객단가
+                        ,CUST_DANGA--회원매출 객단가
+                        ,NCUST_DANGA-- 비회원매출 객단가
+                        ,ROUND(CUST_DANGA / NCUST_DANGA, 2)||':1' AS CUST_NUCUST_DANGA_RATE-- 회원대비회원매출 객단가비
+                        ,CUST_CNT_XX --총매출객수
+                        ,CUST_CNT_YY --회원매출객수
+                        ,CUST_CNT_YY_1 --비회원매출객수
+            FROM
+                (
+                   SELECT 
+                        XX.YYYY
+                        ,NORM_SALE_AMT  AS TOT_SALE_AMT -- 총매출
+                        ,NVL(SALE_AMT,0) AS CUST_SALE_AMT--회원매출
+                        ,NORM_SALE_AMT - NVL(SALE_AMT,0) AS NCUST_SALE_AMT-- 비회원매출
+                        ,LAG(NVL(SALE_AMT,0)) OVER (ORDER BY XX.YYYY) AS  PRE_CUST_SALE_AMT --회원전매출
+                        ,LAG(NORM_SALE_AMT - NVL(SALE_AMT,0),1) OVER (ORDER BY XX.YYYY) AS    PRE_NCUST_SALE_AMT --비회원전매출
+                        ,NVL(SALE_AMT,0) - LAG(NVL(SALE_AMT,0)) OVER (ORDER BY XX.YYYY) AS    ADD_CUST_SALE_AMT --회원매출증감
+                        ,NORM_SALE_AMT - NVL(SALE_AMT,0) -
+                         LAG(NORM_SALE_AMT - NVL(SALE_AMT,0),1) OVER (ORDER BY XX.YYYY) AS    ADD_NCUST_SALE_AMT --비회원매출증감
+                        ,ROUND((NVL(SALE_AMT,0) - LAG(NVL(SALE_AMT,0)) OVER (ORDER BY XX.YYYY))
+                            / NVL(SALE_AMT,0) * 100, 2)                                     AS ADD_CUST_SALE_RATE --회원매출증감율
+                        ,ROUND((NORM_SALE_AMT - NVL(SALE_AMT,0) -
+                         LAG(NORM_SALE_AMT - NVL(SALE_AMT,0),1) OVER (ORDER BY XX.YYYY)) 
+                          / (NORM_SALE_AMT - NVL(SALE_AMT,0)) * 100, 2)                     AS ADD_NCUST_SALE_RATE --비회원매출증감율
+                        ,DECODE(NORM_SALE_AMT,0,0,ROUND((NVL(SALE_AMT,0)/NORM_SALE_AMT)*100,2)) AS CUST_SALE_RATE --회원매출구성비
+                        ,DECODE(NORM_SALE_AMT,0,0, ROUND(((NORM_SALE_AMT - NVL(SALE_AMT,0))/NORM_SALE_AMT)*100,2))  AS NCUST_SALE_RATE -- 비회원매출구성비
+                        ,ROUND(NORM_SALE_AMT/ XX.CUST_CNT)  AS TOT_DANGA-- 총매출 객단가
+                        ,ROUND(NVL(SALE_AMT,0)/ NVL(YY.CUST_CNT,1)) AS CUST_DANGA--회원매출 객단가
+                        ,DECODE((XX.CUST_CNT - NVL(YY.CUST_CNT,0)),0,0, ROUND((NORM_SALE_AMT - NVL(SALE_AMT,0))/(XX.CUST_CNT - NVL(YY.CUST_CNT,0)))) AS NCUST_DANGA-- 비회원매출 객단가
+                    	,XX.CUST_CNT AS CUST_CNT_XX --총매출객수
+                        ,YY.CUST_CNT AS CUST_CNT_YY --회원매출객수
+                        ,XX.CUST_CNT - NVL(YY.CUST_CNT,0) AS CUST_CNT_YY_1 --비회원매출객수
+                    FROM
+                    (
+                        --SELECT STR_CD, SUBSTR(SALE_DT,1,4) YYYY, SUM(NORM_SALE_AMT) NORM_SALE_AMT, SUM(DECODE(CUST_CNT,0,1,CUST_CNT)) CUST_CNT
+                        SELECT SUBSTR(SALE_DT,1,4) YYYY, SUM(NORM_SALE_AMT) NORM_SALE_AMT, SUM(DECODE(CUST_CNT,0,1,CUST_CNT)) CUST_CNT
+                         FROM DPS.PS_DAYPBN A
+                        WHERE STR_CD = '01'
+                          AND SALE_DT >= TO_CHAR(ADD_MONTHS(TO_DATE(?,'YYYY'),-12),'YYYY')||'0101'
+                          AND SALE_DT <= ?||'1231'
+                         --GROUP BY STR_CD, SUBSTR(SALE_DT,1,4)
+                         GROUP BY SUBSTR(SALE_DT,1,4)
+                        ORDER BY 1,2,3
+                    ) XX,
+                    (
+                        --SELECT STR_CD, SUBSTR(SALE_DT,1,4) YYYY, SUM(SALE_AMT) SALE_AMT, COUNT(1) CUST_CNT
+                        SELECT SUBSTR(SALE_DT,1,4) YYYY, SUM(NORM_SALE_AMT) SALE_AMT, COUNT(1) CUST_CNT
+                            FROM  DPS.PS_DAYCUST B
+                        WHERE 1=1 --STR_CD = '01'
+                          AND SALE_DT >= TO_CHAR(ADD_MONTHS(TO_DATE(?,'YYYY'),-12),'YYYY')||'0101'
+                          AND SALE_DT <= ?||'1231'
+                     --GROUP BY STR_CD, SUBSTR(SALE_DT,1,4)
+                     GROUP BY SUBSTR(SALE_DT,1,4)
+                    ) YY
+                    WHERE 1=1 --XX.STR_CD = YY.STR_CD(+)
+                      AND XX.YYYY = YY.YYYY(+)
+                    ORDER BY YYYY
+                )  
+            WHERE YYYY >= ?
+              AND YYYY <= ?
+            ORDER BY YYYY DESC         
+        ]]>        
+    </query>  
+</service>

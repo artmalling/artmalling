@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  바이어(SM)을 조회한다.
+ -->
+<service name="/pcod004.pc">
+
+  <gauce name="H_SEL_MASTER">   
+        <column colName="BUYER_CD"        colType="TB_STRING" size="6"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"          colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="STR_NAME"        colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"         colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="TEAM_NAME"       colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"           colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PC_NAME"         colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="ORG_FLAG_NAME"   colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="MAIN_FLAG_NAME"  colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EMP_NO"          colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="USER_NAME"       colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="BUYER_FLAG_NAME" colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="USE_YN"          colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="APP_S_DT"        colType="TB_STRING" size="8"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="APP_E_DT"        colType="TB_STRING" size="8"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_BUYERMST">
+        <![CDATA[
+            SELECT BM.BUYER_CD          , BM.BUYER_NAME      , ST.STR_CD            , ST.ORG_SHORT_NAME    , TM.TEAM_CD
+                 , TM.ORG_SHORT_NAME    , PC.PC_CD           , PC.ORG_SHORT_NAME    , FL.COMM_NAME1        , SA.COMM_NAME1      
+                 , BO.EMP_NO            , US.USER_NAME         , BU.COMM_NAME1      , BM.USE_YN            , BO.APP_S_DT
+                 , BO.APP_E_DT
+              from DPS.PC_BUYERMST BM
+                 , DPS.PC_BUYERORG BO
+                 , DPS.PC_ORGMST PC
+                 , DPS.PC_ORGMST ST
+                 , DPS.PC_ORGMST TM
+                 , COM.TC_USRMST US
+                 , (SELECT COMM_CODE , COMM_NAME1
+                      FROM COM.TC_COMMCODE
+                     WHERE SYS_PART = 'D'
+                       AND COMM_PART = 'P047') FL
+                 , (SELECT COMM_CODE , COMM_NAME1
+                      FROM COM.TC_COMMCODE
+                     WHERE SYS_PART = 'D'
+                       AND COMM_PART = 'P046') SA
+                 , (SELECT COMM_CODE , COMM_NAME1
+                      FROM COM.TC_COMMCODE
+                     WHERE SYS_PART = 'D'
+                       AND COMM_PART = 'P020') BU
+               where BM.BUYER_CD = BO.BUYER_CD
+               AND PC.ORG_CD = BM.PC_ORG_CD
+               AND ST.STR_CD = BM.STR_CD   
+               AND ST.ORG_LEVEL = 1
+               AND TM.ORG_CD = SUBSTR(BM.PC_ORG_CD,1,6)||'0000'
+               AND TM.ORG_LEVEL = 3
+               AND US.USER_ID = BO.EMP_NO
+               AND BM.ORG_FLAG = FL.COMM_CODE
+               AND BM.MAIN_FLAG = SA.COMM_CODE
+               AND BM.BUYER_FLAG = BU.COMM_CODE
+       ]]>
+    </query> 
+    <query name="SEL_BUYERMST_WHERE_STR_CD">
+        <![CDATA[           
+               AND BM.STR_CD      = ?
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_ORG_FLAG">
+        <![CDATA[
+                AND BM.ORG_FLAG      = ?
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_USE_YN">
+        <![CDATA[
+               AND BM.USE_YN      = ?
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_DEPT_CD">
+        <![CDATA[
+               AND SUBSTR(BM.PC_ORG_CD , 3 , 2)      = ?
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_TEAM_CD">
+        <![CDATA[
+               AND BM.TEAM_CD      = ?
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_PC_CD">
+        <![CDATA[
+               AND SUBSTR(BM.PC_ORG_CD , 7 , 2)      = ?
+         ]]>
+    </query>
+    <query name="SEL_BUYERMST_ORDER">
+        <![CDATA[
+            ORDER BY BM.BUYER_CD
+                   , BO.APP_S_DT DESC
+        ]]>
+    </query>
+    
+</service>

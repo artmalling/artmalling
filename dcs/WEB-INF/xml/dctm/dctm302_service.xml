@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 한국후지쯔
+ * 작 성 일    : 2010.03.18
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       : 기부내역조회
+ -->
+<service name="/dctm302.dm">
+
+    <!-- 기부내역조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="DON_DATE"      colType="TB_STRING"   size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_ID"        colType="TB_STRING"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_TARGET"    colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_POINT"     colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_CTPOINT"   colType="TB_DECIMAL"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_ATPOINT"   colType="TB_DECIMAL"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 기부내역조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.DON_DATE
+                 , A.DON_ID
+                 , B.DON_TARGET 
+                 , A.DON_POINT
+                 , ( 
+                     SELECT SUM(DON_POINT) 
+                       FROM DCS.DC_DON_CUST
+                      WHERE CUST_ID = A.CUST_ID 
+                        AND DON_ID  = A.DON_ID
+                   ) DON_CTPOINT               
+                 , ( SELECT SUM(DON_POINT) 
+                      FROM DCS.DC_DON_CUST
+                     WHERE DON_ID = A.DON_ID 
+                   ) DON_ATPOINT             
+              FROM DCS.DC_DON_CUST A
+                 , DCS.DC_DON_PLAN B
+             WHERE A.DON_ID = B.DON_ID
+               AND A.DON_DATE BETWEEN ? AND ?
+               AND A.CUST_ID IN ( 
+                                  SELECT M.CUST_ID 
+                                    FROM DCS.DM_CUSTOMER M
+                                   WHERE M.CUST_ID = (
+                                                       SELECT UNIQUE A.CUST_ID 
+                                                        FROM DCS.DM_CUSTOMER A
+                                                           , DCS.DM_CARD B
+                                                       WHERE A.CUST_ID  =  B.CUST_ID
+                                                         AND A.CUST_ID  LIKE ? || '%'
+                                                         AND B.CARD_NO  LIKE DCS.SC_Crypto_FUN('ENC', ?) || '%'
+                                                         AND A.SS_NO)   LIKE DCS.SC_Crypto_FUN('ENC', ?) || '%'
+                                                         AND A.CUST_STAT_FLAG = '0'
+                                                     )  
+                                )
+             ORDER BY A.DON_DATE DESC, A.DON_ID DESC
+        ]]>        
+    </query>
+</service>

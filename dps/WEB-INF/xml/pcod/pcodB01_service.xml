@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.07.05
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 점별 타임아웃 정보를 관리 한다.
+ -->
+<service name="/pcodB01.pc">
+    <gauce name="H_SEL_MASTER">
+   		<column colName="SEL"                colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POST_SEQ"              colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POST_NO"               colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SI_DO"                 colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SI_GUN_GU"             colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EUP_DONG"              colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LI"                    colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISLAND"                colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DESTINATION"           colType="TB_STRING"   size="50"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TYPE_NM"               colType="TB_STRING"   size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_ADDR1"             colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_ADDR2"             colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="END_ADDR1"             colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="END_ADDR2"             colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FULL_ADDR"             colType="TB_STRING"   size="150"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADDR1"                 colType="TB_STRING"   size="100"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADDR2"                 colType="TB_STRING"   size="60"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DATE"              colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_FLAG"             colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+   <gauce name="H_SEL_MASTER2">
+   		<column colName="SEL"                colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POST_SEQ"              colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POST_NO"               colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SI_DO"                 colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SI_GUN_GU"             colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EUP_DONG"              colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ROAD_NM"               colType="TB_STRING"   size="60"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FULL_ADDR"             colType="TB_STRING"   size="150"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADDR1"                 colType="TB_STRING"   size="100"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADDR2"                 colType="TB_STRING"   size="60"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DATE"              colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_FLAG"             colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />        
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_ZIPCODE">
+        <![CDATA[
+             SELECT 'F' AS SEL
+                  , POST_SEQ
+                  , POST_NO
+                  , SI_DO
+                  , SI_GUN_GU
+                  , EUP_DONG
+                  , LI
+                  , ISLAND
+                  , DESTINATION
+                  , TYPE_NM
+                  , STR_ADDR1
+                  , STR_ADDR2
+                  , END_ADDR1
+                  , END_ADDR2
+                  , FULL_ADDR
+                  , ADDR1
+                  , ADDR2
+                  , REG_DATE
+               FROM COM.TC_POSTNO_OLD
+              WHERE POST_NO LIKE ?|| '%'                     
+                AND SI_DO LIKE  ? || '%'
+                 OR SI_GUN_GU LIKE  ? || '%'
+                 OR EUP_DONG LIKE  ? || '%' 
+           ORDER BY POST_NO ASC
+          
+        ]]>
+    </query>
+     
+    
+    <query name="SEL_ZIPCODE2">
+        <![CDATA[
+               SELECT 'F' AS SEL
+                         ,POST_SEQ
+                         , POST_NO
+                         , SI_DO
+                         , SI_GUN_GU
+                         , EUP_DONG
+                         , ROAD_NM
+                         , FULL_ADDR
+                         , ADDR1
+                         , ADDR2
+                         , REG_DATE
+               FROM COM.TC_POSTNO_NEW
+              WHERE POST_NO   LIKE  ? || '%'
+                AND ROAD_NM   LIKE  ? || '%'
+                AND SI_DO     LIKE  ? || '%'  
+                AND SI_GUN_GU LIKE  ? || '%'  
+              ORDER BY POST_NO ASC
+          
+        ]]>
+    </query>
+    <query name="POST_SEQ">
+        <![CDATA[
+              SELECT MAX(TO_NUMBER(NVL(POST_SEQ,0)))+1 AS POST_SEQ 
+              		 FROM COM.TC_POSTNO_OLD
+        ]]>
+    </query>
+    
+    <query name="POST_SEQ2">
+        <![CDATA[
+              SELECT MAX(TO_NUMBER(NVL(POST_SEQ,0)))+1 AS POST_SEQ 
+              		 FROM COM.TC_POSTNO_NEW
+        ]]>
+    </query>
+    <query name="ZIPCODE_INSERT">
+        <![CDATA[
+               INSERT INTO COM.TC_POSTNO_OLD
+                                           ( POST_SEQ
+                                           , POST_NO
+                                           , SI_DO
+                                           , SI_GUN_GU
+                                           , EUP_DONG
+                                           , LI
+                                           , ISLAND
+                                           , DESTINATION
+                                           , TYPE_NM
+                                           , STR_ADDR1
+                                           , STR_ADDR2
+                                           , END_ADDR1
+                                           , END_ADDR2
+                                           , FULL_ADDR
+                                           , ADDR1
+                                           , ADDR2
+                                           , REG_DATE
+                                           )
+                                    VALUES(  ?
+                                           , ?
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , SYSDATE
+                                           )
+                                           
+        ]]>
+    </query>
+    <query name="ZIPCODE_INSERT2">
+        <![CDATA[
+               INSERT INTO COM.TC_POSTNO_NEW
+                                           ( POST_SEQ
+                                           , POST_NO
+                                           , SI_DO
+                                           , SI_GUN_GU
+                                           , EUP_DONG
+                                           , ROAD_NM
+                                           , FULL_ADDR
+                                           , ADDR1
+                                           , ADDR2
+                                           , REG_DATE                                           
+                                           )
+                                    VALUES(  ?
+                                           , ?
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ? 
+                                           , ?
+                                           , ?
+                                           , SYSDATE
+                                           )
+                                           
+        ]]>
+    </query>
+    <query name="ZIPCODE_UPDATE">
+        <![CDATA[
+             UPDATE COM.TC_POSTNO_OLD
+                      SET SI_DO = ?
+                    , SI_GUN_GU  = ?
+                    , EUP_DONG     = ?
+                    , LI    = ?
+                    , ISLAND    = ?
+                    , DESTINATION = ?
+                    , TYPE_NM     = ?
+                    , STR_ADDR1   = ?
+                    , STR_ADDR2     = ?
+                    , END_ADDR1 = ?
+                    , END_ADDR2 = ?
+                    , FULL_ADDR = ?
+                    , ADDR1 = ?
+                    , ADDR2 = ?  
+             WHERE POST_SEQ     = ?                              
+               AND POST_NO     = ? 
+                                           
+        ]]>
+    </query>
+    <query name="ZIPCODE_UPDATE2">
+        <![CDATA[
+                UPDATE COM.TC_POSTNO_NEW
+                      SET SI_DO = ?
+                    , SI_GUN_GU  = ?
+                    , EUP_DONG     = ?
+                    , ROAD_NM    = ?
+                    , FULL_ADDR = ?
+                    , ADDR1 = ?
+                    , ADDR2 = ?  
+             WHERE POST_SEQ     = ?                              
+               AND POST_NO     = ?  
+                                           
+        ]]>
+    </query>
+    <query name="ZIPCODE_DELETE">
+        <![CDATA[
+		    DELETE FROM COM.TC_POSTNO_OLD
+		                          WHERE POST_SEQ = ?
+		                              AND POST_NO = ?
+                                                           
+        ]]>
+    </query>
+    <query name="ZIPCODE_DELETE2">
+        <![CDATA[
+		    DELETE FROM COM.TC_POSTNO_NEW
+		                          WHERE POST_SEQ = ?
+		                              AND POST_NO = ?
+                                                           
+        ]]>
+    </query>
+</service>

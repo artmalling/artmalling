@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal461.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"                  colType="TB_STRING"      size="50"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_CD"                colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_NM"                colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"                 colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"                 colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_ORG_NAME"           colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"                   colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_ORG_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MG_RATE"                 colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_COUNT"              colType="TB_DECIMAL"     size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_SALE_AMT"           colType="TB_DECIMAL"     size="20"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_RATE"               colType="TB_DECIMAL"     size="10"       dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+          
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_MG_PUMBUN">        
+        <![CDATA[
+             SELECT (SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 4) || '000000') AS STR_CD
+                  , NVL(BRAND_CD, ' ') AS BRAND_CD
+                  , NVL(BRAND_NM, ' ') AS BRAND_NM
+                  , DEPT_CD
+                  , TEAM_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 6) || '0000') AS TEAM_ORG_NAME
+                  , PC_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 8) || '00') AS PC_ORG_NAME
+                  , PUMBUN_CD
+                  , PUMBUN_NAME
+                  , MG_RATE
+                  , SUM(TOT_SALE_AMT) AS TOT_SALE_AMT
+                  , NVL((SELECT COUNT(DISTINCT CUST_NO) FROM DPS.PS_DAYCUST
+                        WHERE SALE_DT BETWEEN ? AND ?
+                        AND PUMBUN_CD = X.PUMBUN_CD),0) AS CUST_COUNT
+                  , NVL(SUM(CUST_SALE_AMT),0) AS CUST_SALE_AMT
+                  , CASE WHEN SUM(TOT_SALE_AMT) = 0 THEN 0 
+                        ELSE ROUND((NVL(SUM(CUST_SALE_AMT),0)/SUM(TOT_SALE_AMT)*100),2)  END AS CUST_RATE
+               FROM (SELECT 
+                            B.STR_CD
+                          , NVL(BRD.BRAND_CD, ' ') AS BRAND_CD
+                          , NVL(BRD.BRAND_NM, ' ') AS BRAND_NM
+                          , B.DEPT_CD
+                          , B.TEAM_CD
+                          , SUBSTR(F.SALE_ORG_CD, 1, 8) AS ORG_CD
+                          , B.PC_CD
+                          , A.PUMBUN_CD
+                          , F.PUMBUN_NAME
+                          , A.MG_RATE
+                          , CASE WHEN COUNT(DISTINCT CUST.CUST_NO) = 0 THEN SUM(A.NORM_SALE_AMT)
+                          ELSE (SUM(A.NORM_SALE_AMT)/COUNT(DISTINCT CUST.CUST_NO)) END AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                          , (SUM(CUST.SALE_AMT + (CUST.RETURN_AMT*2))/COUNT(DISTINCT A.PUMMOK_CD)) AS CUST_SALE_AMT
+                       FROM DPS.PS_DAYMGPBN    A
+                          , DPS.PC_ORGMST      B
+                          , DPS.PC_STRPBN      F
+                          , DPS.PC_PBNMST      PBN
+                          , DPS.PC_BRDMST      BRD
+                          , DPS.PS_DAYCUST    CUST
+                      WHERE F.SALE_ORG_CD     = B.ORG_CD
+                        AND A.STR_CD     = F.STR_CD
+                        AND A.PUMBUN_CD  = F.PUMBUN_CD
+                        AND PBN.PUMBUN_CD = F.PUMBUN_CD
+                        AND BRD.BRAND_CD  (+)= PBN.BRAND_CD
+                        AND B.STR_CD     LIKE  ? || '%'
+                        AND B.DEPT_CD    LIKE  ? || '%'
+                        AND B.TEAM_CD    LIKE  ? || '%'
+                        AND B.PC_CD      LIKE  ? || '%'
+                        AND A.PUMBUN_CD  LIKE  ? || '%'
+                        AND CUST.PUMBUN_CD(+) = A.PUMBUN_CD 
+                        AND A.SALE_DT    >= ?
+                        AND A.SALE_DT    <= ?
+                        AND CUST.SALE_DT(+) = A.SALE_DT 
+                        AND EXISTS ( SELECT MYORG.USER_ID
+                                       FROM COM.V_MYORG MYORG
+                                           WHERE MYORG.STR_CD      = B.STR_CD
+                                                AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                AND MYORG.PC_CD       = B.PC_CD
+                                                AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                                AND MYORG.USER_ID     = ?
+                                         )
+                      GROUP BY
+                            B.STR_CD
+                          , BRD.BRAND_CD
+                          , BRD.BRAND_NM
+                          , SUBSTR(F.SALE_ORG_CD, 1, 8)
+                          , B.DEPT_CD
+                          , B.TEAM_CD
+                          , B.PC_CD
+                          , A.PUMBUN_CD
+                          , A.SALE_DT
+                          , F.PUMBUN_NAME
+                          , A.MG_RATE
+                    ) X
+                    GROUP BY  ORG_CD
+                            , BRAND_CD
+                            , BRAND_NM
+                            , DEPT_CD
+                            , TEAM_CD
+                            , PC_CD
+                            , PUMBUN_CD
+                            , PUMBUN_NAME
+                            , MG_RATE
+            ORDER BY STR_CD,DECODE(SUBSTR(X.ORG_CD,1,4),'0104',NULL,SUBSTR(X.ORG_CD,1,4)) NULLS LAST,(SELECT SORT_ORDER FROM DPS.PC_ORGMST M WHERE M.ORG_CD = X.ORG_CD||'00')       
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_MG_PUMBUN1">        
+        <![CDATA[
+             SELECT (SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 4) || '000000') AS STR_CD
+                  , NVL(BRAND_CD, ' ') AS BRAND_CD
+                  , NVL(BRAND_NM, ' ') AS BRAND_NM
+                  , DEPT_CD
+                  , TEAM_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 6) || '0000') AS TEAM_ORG_NAME
+                  , PC_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 8) || '00') AS PC_ORG_NAME
+                  , PUMBUN_CD
+                  , PUMBUN_NAME
+                  , MG_RATE
+                  , SUM(TOT_SALE_AMT) AS TOT_SALE_AMT
+                  , NVL((SELECT COUNT(DISTINCT CUST_NO) FROM DPS.PS_DAYCUST
+                        WHERE SALE_DT BETWEEN ? AND ?
+                        AND PUMBUN_CD = X.PUMBUN_CD),0) AS CUST_COUNT
+                  , NVL(SUM(CUST_SALE_AMT),0) AS CUST_SALE_AMT
+                  , CASE WHEN SUM(TOT_SALE_AMT) = 0 THEN 0 
+                        ELSE ROUND((NVL(SUM(CUST_SALE_AMT),0)/SUM(TOT_SALE_AMT)*100),2)  END AS CUST_RATE
+               FROM (SELECT 
+                            B.STR_CD
+                          , NVL(BRD.BRAND_CD, ' ') AS BRAND_CD
+                          , NVL(BRD.BRAND_NM, ' ') AS BRAND_NM
+                          , B.DEPT_CD
+                          , B.TEAM_CD
+                          , SUBSTR(F.BUY_ORG_CD, 1, 8) AS ORG_CD
+                          , B.PC_CD
+                          , A.PUMBUN_CD
+                          , F.PUMBUN_NAME
+                          , A.MG_RATE
+                          , CASE WHEN COUNT(DISTINCT CUST.CUST_NO) = 0 THEN SUM(A.NORM_SALE_AMT)
+                          ELSE (SUM(A.NORM_SALE_AMT)/COUNT(DISTINCT CUST.CUST_NO)) END AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                          , (SUM(CUST.SALE_AMT + (CUST.RETURN_AMT*2))/COUNT(DISTINCT A.PUMMOK_CD)) AS CUST_SALE_AMT
+                       FROM DPS.PS_DAYMGPBN    A
+                          , DPS.PC_ORGMST      B
+                          , DPS.PC_STRPBN      F
+                          , DPS.PC_PBNMST      PBN
+                          , DPS.PC_BRDMST      BRD
+                          , DPS.PS_DAYCUST    CUST
+                      WHERE F.BUY_ORG_CD     = B.ORG_CD
+                        AND A.STR_CD     = F.STR_CD
+                        AND A.PUMBUN_CD  = F.PUMBUN_CD
+                        AND PBN.PUMBUN_CD = F.PUMBUN_CD
+                        AND BRD.BRAND_CD  (+)= PBN.BRAND_CD
+                        AND B.STR_CD     LIKE  ? || '%'
+                        AND B.DEPT_CD    LIKE  ? || '%'
+                        AND B.TEAM_CD    LIKE  ? || '%'
+                        AND B.PC_CD      LIKE  ? || '%'
+                        AND A.PUMBUN_CD  LIKE  ? || '%'
+                        AND CUST.PUMBUN_CD(+) = A.PUMBUN_CD 
+                        AND A.SALE_DT    >= ?
+                        AND A.SALE_DT    <= ?
+                        AND CUST.SALE_DT(+) = A.SALE_DT 
+                        AND EXISTS ( SELECT MYORG.USER_ID
+                                       FROM COM.V_MYORG MYORG
+                                           WHERE MYORG.STR_CD      = B.STR_CD
+                                                AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                AND MYORG.PC_CD       = B.PC_CD
+                                                AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                                AND MYORG.USER_ID     = ?
+                                         )
+                      GROUP BY
+                            B.STR_CD
+                          , BRD.BRAND_CD
+                          , BRD.BRAND_NM
+                          , SUBSTR(F.BUY_ORG_CD, 1, 8)
+                          , B.DEPT_CD
+                          , B.TEAM_CD
+                          , B.PC_CD
+                          , A.PUMBUN_CD
+                          , A.SALE_DT
+                          , F.PUMBUN_NAME
+                          , A.MG_RATE
+                    ) X
+                    GROUP BY  ORG_CD
+                            , BRAND_CD
+                            , BRAND_NM
+                            , DEPT_CD
+                            , TEAM_CD
+                            , PC_CD
+                            , PUMBUN_CD
+                            , PUMBUN_NAME
+                            , MG_RATE
+            ORDER BY STR_CD,DECODE(SUBSTR(X.ORG_CD,1,4),'0104',NULL,SUBSTR(X.ORG_CD,1,4)) NULLS LAST,(SELECT SORT_ORDER FROM DPS.PC_ORGMST M WHERE M.ORG_CD = X.ORG_CD||'00')      
+        ]]>        
+    </query>
+    
+    
+</service>

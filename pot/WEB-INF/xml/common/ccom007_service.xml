@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.15
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 조직코드 공통 XML
+ -->
+<service name="/ccom007.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_ORGMST">
+      <column colName="SEL"           colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="DEPT_CD"       colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="TEAM_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PC_CD"         colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="CORNER_CD"     colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ORG_CD"        colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ORG_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="KOSTL_CD"      colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 조직코드조회 SQL -->
+    <query name="SEL_ORGMST">
+        <![CDATA[                                        
+            SELECT 'F'        AS SEL
+                 , ORG.STR_CD
+                 , ORG.DEPT_CD
+                 , ORG.TEAM_CD
+                 , ORG.PC_CD
+                 , ORG.CORNER_CD
+                 , ORG.ORG_CD
+                 , ORG.ORG_NAME
+                 , CASE WHEN ORG.ORG_LEVEL = '5' THEN (SELECT KOSTLORG.KOSTL_CD FROM DPS.PC_ORGMST KOSTLORG WHERE KOSTLORG.ORG_CD = SUBSTR(ORG.ORG_CD,0,8)||'00')
+                        WHEN ORG.ORG_LEVEL = '4' THEN ORG.KOSTL_CD
+                   END       AS KOSTL_CD
+              FROM DPS.PC_ORGMST ORG
+             WHERE 1=1
+        ]]>
+    </query>
+
+    <query name="SEL_ORGMST_WHERE_AUTHORITY">
+        <![CDATA[
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD   = ORG.STR_CD
+                               AND MYORG.DEPT_CD  = CASE ORG.DEPT_CD WHEN '00' THEN MYORG.DEPT_CD ELSE ORG.DEPT_CD END
+                               AND MYORG.TEAM_CD  = CASE ORG.TEAM_CD WHEN '00' THEN MYORG.TEAM_CD ELSE ORG.TEAM_CD END
+                               AND MYORG.PC_CD    = CASE ORG.PC_CD   WHEN '00' THEN MYORG.PC_CD   ELSE ORG.PC_CD   END
+                               AND MYORG.USER_ID  = ?
+                               AND MYORG.ORG_FLAG = ?
+                               AND ROWNUM         = 1
+                          )
+        ]]>
+    </query>
+    <query name="SEL_ORGMST_WHERE_STR_CD">
+        <![CDATA[
+               AND ORG.STR_CD   = ?
+        ]]>
+    </query>
+
+    <query name="SEL_ORGMST_WHERE_ORG_CD">
+        <![CDATA[
+               AND ORG.ORG_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_ORGMST_WHERE_LIKE_ORG_CD">
+        <![CDATA[
+               AND ORG.ORG_CD   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_ORGMST_WHERE_ORG_NM">
+        <![CDATA[
+               AND ORG.ORG_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_ORGMST_WHERE_ORG_FLAG">
+        <![CDATA[
+               AND ORG.ORG_FLAG   = ?
+        ]]>
+    </query>
+    <query name="SEL_ORGMST_WHERE_ORG_LVL">
+        <![CDATA[
+               AND ORG.ORG_LEVEL  = ?
+        ]]>
+    </query>
+    <query name="SEL_ORGMST_WHERE_USE_YN">
+        <![CDATA[
+               AND ORG.USE_YN     = ?
+        ]]>
+    </query>
+    <query name="SEL_ORGMST_WHERE_KOSTL_CD">
+        <![CDATA[
+               AND CASE WHEN ORG.ORG_LEVEL = '5' THEN (SELECT KOSTLORG.KOSTL_CD FROM DPS.PC_ORGMST KOSTLORG WHERE KOSTLORG.ORG_CD = SUBSTR(ORG.ORG_CD,0,8)||'00')
+                        WHEN ORG.ORG_LEVEL = '4' THEN ORG.KOSTL_CD
+                   END  = ?
+        ]]>
+    </query>
+    <query name="SEL_ORGMST_START_WITH">
+        <![CDATA[
+             START WITH ORG.P_ORG_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_ORGMST_CONNECT_BY">
+        <![CDATA[
+           CONNECT BY PRIOR ORG.P_ORG_CD = ORG.ORG_CD
+        ]]>
+    </query>
+    <query name="SEL_ORGMST_ORDER">
+        <![CDATA[
+             ORDER BY ORG.ORG_CD
+        ]]>
+    </query>
+</service>

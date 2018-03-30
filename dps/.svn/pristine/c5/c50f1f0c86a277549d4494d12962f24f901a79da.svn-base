@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.16
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : F&B메뉴를 조회한다.
+ -->
+<service name="/pcod907.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FNB_SHOP_CD"        colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FNB_SHOP_NAME"      colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MENU_FLAG_CD"       colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MENU_FLAG_NAME"     colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"             colType="TB_STRING"   size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_NAME"          colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SORT_NO"            colType="TB_INT"      size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- F&B메뉴 마스터 조회 쿼리  -->
+    <query name="SEL_FNBMENUMST">
+        <![CDATA[
+            SELECT FMM.STR_CD        
+                 , FMM.FNB_SHOP_CD      
+                 , FSM.FNB_SHOP_NAME    
+                 , FMM.MENU_FLAG_CD
+                 , FMK.MENU_FLAG_NAME
+                 , FMM.SKU_CD
+                 , FMM.RECP_NAME
+                 , FMM.SORT_NO
+                 , FMM.USE_YN     
+              FROM DPS.PC_FNBSHOPMST  FSM
+                 , DPS.PC_FNBMENUKIND FMK
+                 , DPS.PC_FNBMENUMST  FMM
+             WHERE FMM.STR_CD         = FSM.STR_CD
+               AND FMM.FNB_SHOP_CD    = FSM.FNB_SHOP_CD
+               AND FMM.STR_CD         = FMK.STR_CD
+               AND FMM.FNB_SHOP_CD    = FMK.FNB_SHOP_CD
+               AND FMM.MENU_FLAG_CD   = FMK.MENU_FLAG_CD
+               AND FSM.FNB_SHOP_FLAG  = ?
+               AND FMM.STR_CD         = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBMENUMST_WHERE_FNB_SHOP_CD">
+        <![CDATA[
+               AND FMM.FNB_SHOP_CD    LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBMENUMST_WHERE_FNB_SHOP_NAME">
+        <![CDATA[
+               AND FSM.FNB_SHOP_NAME  LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBMENUMST_WHERE_MENU_FLAG_CD">
+        <![CDATA[
+               AND FMM.MENU_FLAG_CD   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBMENUMST_WHERE_MENU_FLAG_NAME">
+        <![CDATA[
+               AND FMK.MENU_FLAG_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBMENUMST_WHERE_USE_YN">
+        <![CDATA[
+               AND FMM.USE_YN         = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBMENUMST_ORDER">
+        <![CDATA[
+             ORDER BY FMM.STR_CD, FMM.FNB_SHOP_CD, FMM.MENU_FLAG_CD, FMM.SORT_NO, FMM.SKU_CD
+        ]]>
+    </query>
+</service>

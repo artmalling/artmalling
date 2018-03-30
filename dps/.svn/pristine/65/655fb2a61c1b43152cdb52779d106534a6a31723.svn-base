@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.16
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  재고실사 마감처리를 한다.
+ -->
+<service name="/pstk213.pt">
+
+  <gauce name="H_SEL_MASTER"> 
+        <column colName="CHECK1"       colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_CHECK"   colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_YM"       colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_DT"      colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_S_DT"    colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_E_DT"    colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CLOSE_DT"     colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_ID"     colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CLOSE_NAME"   colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TODAY_DT"     colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+  </gauce>
+  
+  <gauce name="H_SEL_CNT"> 
+        <column colName="CNT"          colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                  
+  </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_SCHEDULE">
+        <![CDATA[
+            SELECT CHECK1
+                 , DPS.FN_GET_STKCLOSE_YN(STR_CD, STK_YM) AS CONF_CHECK
+                 , STR_CD
+                 , STK_YM
+                 , STK_FLAG
+                 , SRVY_DT
+                 , SRVY_S_DT
+                 , SRVY_E_DT
+                 , CLOSE_DT
+                 , CLOSE_ID
+                 , CLOSE_NAME
+                 , TODAY_DT     
+              FROM (SELECT CASE WHEN SCH.CLOSE_DT IS NULL THEN 'F'
+                                ELSE 'T'
+                           END AS CHECK1
+                         , SCH.STR_CD
+                         , SCH.STK_YM
+                         , SCH.STK_FLAG
+                         , SCH.SRVY_DT
+                         , SCH.SRVY_S_DT
+                         , SCH.SRVY_E_DT
+                         , SCH.CLOSE_DT
+                         , SCH.CLOSE_ID
+                         , (SELECT USER_NAME
+                              FROM COM.TC_USRMST X
+                             WHERE CLOSE_ID = X.USER_ID)  AS CLOSE_NAME
+                         , TO_CHAR(SYSDATE,'YYYYMMDD')    AS TODAY_DT
+                      FROM DPS.PT_SCHEDULE SCH
+                     WHERE SCH.STR_CD = ?
+        ]]>    
+    </query> 
+    <query name="SEL_SCHEDULE_STK_YM">
+        <![CDATA[
+               AND STK_YM = ?
+        ]]>    
+    </query> 
+    <query name="SEL_SCHEDULE_ORDER">
+        <![CDATA[
+            ORDER BY STR_CD
+                   , STK_YM)
+        ]]>    
+    </query>
+    
+</service>

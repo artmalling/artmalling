@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal439.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="SALE_DT"                  colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIFORM_QTY"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIFORM_AMT"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAMETAG_QTY"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAMETAG_AMT"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAKBOX_QTY"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAKBOX_AMT"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PARKED_QTY"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PARKED_AMT"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOTAL_QTY"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOTAL_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_ETC">        
+        <![CDATA[
+            SELECT A.SALE_DT
+                 , SUM(A.UNIFORM_QTY)  AS UNIFORM_QTY
+                 , SUM(A.UNIFORM_AMT)  AS UNIFORM_AMT
+                 , SUM(A.NAMETAG_QTY)  AS NAMETAG_QTY
+                 , SUM(A.NAMETAG_AMT)  AS NAMETAG_AMT
+                 , SUM(A.PAKBOX_QTY)   AS PAKBOX_QTY
+                 , SUM(A.PAKBOX_AMT)   AS PAKBOX_AMT
+                 , SUM(A.PARKED_QTY)   AS PARKED_QTY
+                 , SUM(A.PARKED_AMT)   AS PARKED_AMT
+                 , SUM(A.TOTAL_QTY)    AS TOTAL_QTY
+                 , SUM(A.TOTAL_AMT)    AS TOTAL_AMT
+              FROM (
+                    SELECT A.SALE_DT
+                         , A.SALE_QTY                                                 AS TOTAL_QTY
+                         , A.SALE_AMT                                                 AS TOTAL_AMT
+                         , (CASE WHEN B.PUMBUN_TYPE = '7' THEN A.SALE_QTY ELSE 0 END) AS UNIFORM_QTY
+                         , (CASE WHEN B.PUMBUN_TYPE = '7' THEN A.SALE_AMT ELSE 0 END) AS UNIFORM_AMT
+                         , (CASE WHEN B.PUMBUN_TYPE = '8' THEN A.SALE_QTY ELSE 0 END) AS NAMETAG_QTY
+                         , (CASE WHEN B.PUMBUN_TYPE = '8' THEN A.SALE_AMT ELSE 0 END) AS NAMETAG_AMT
+                         , (CASE WHEN B.PUMBUN_TYPE = '9' THEN A.SALE_QTY ELSE 0 END) AS PAKBOX_QTY
+                         , (CASE WHEN B.PUMBUN_TYPE = '9' THEN A.SALE_AMT ELSE 0 END) AS PAKBOX_AMT
+                         , (CASE WHEN B.PUMBUN_TYPE = 'A' THEN A.SALE_QTY ELSE 0 END) AS PARKED_QTY
+                         , (CASE WHEN B.PUMBUN_TYPE = 'A' THEN A.SALE_AMT ELSE 0 END) AS PARKED_AMT
+                      FROM DPS.PS_DISSALEETC A
+                           , DPS.PC_STRPBN B
+                     WHERE A.STR_CD     = B.STR_CD
+                       AND A.PUMBUN_CD  = B.PUMBUN_CD
+                       AND B.PUMBUN_TYPE IN ('7', '8', '9', 'A')
+                       AND A.STR_CD      = ?
+                       AND A.SALE_DT     BETWEEN ? AND ?
+                   ) A
+             GROUP BY
+                   A.SALE_DT
+             ORDER BY
+                   A.SALE_DT
+  
+            
+        ]]>        
+    </query>
+    
+</service>

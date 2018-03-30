@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.11
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/ppay305.pp">
+    
+    <!-- 특정 임대을 지불대상액 마스터 리스트-->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PAY_YM"             colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PAY_CYC"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PAY_CNT"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_CD"             colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"          colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"          colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_ORG_CD"        colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_ORG_TEAM"      colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_ORG_TEAM_NM"   colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_ORG_PC"        colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_ORG_PC_NM"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_TYPE_NM"        colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TAX_FLAG_NM"        colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_TOT_AMT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TAMT"          colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_COMIS_TAMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_TRG_TAMT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_DT"             colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 특정 임대을 지불대상액 디테일 리스트 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_CD"          colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"          colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_FLAG"         colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MG_RATE"            colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TOT_AMT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_COMIS_AMT"     colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_TRG_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 지불일자조회 (콤보) -->
+    <gauce name="H_PAY_DT">     
+    <column colName="NAME"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CODE"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--  지불일자조회(콤보)  -->
+    <query name="SEL_PAY_DT">
+        <![CDATA[
+            SELECT '전체'        AS NAME 
+                 , '%'           AS CODE
+             FROM DUAL
+           UNION ALL
+		    SELECT DISTINCT REAL_PAY_DT       AS NAME
+                 , REAL_PAY_DT                AS CODE 
+              FROM DPS.PP_BILLMST
+             WHERE STR_CD  = ?
+               AND PAY_YM  = ?
+               AND PAY_CYC = ?
+               AND PAY_CNT = ?
+             ORDER BY CODE
+        ]]>
+    </query>
+    
+    <!-- 특정 임대을 지불대상액 마스터 조회  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+            SELECT STR_CD
+                 , PAY_YM
+                 , PAY_CYC
+                 , PAY_CNT
+                 , VEN_CD
+                 , VEN_NM
+                 , PUMBUN_CD
+                 , PUMBUN_NM
+                 , SALE_ORG_CD    
+                 , SUBSTR(SALE_ORG_CD,1,6)                AS SALE_ORG_TEAM     /* 팀 조직코드   */
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(SALE_ORG_CD,1,2)
+                                     , SUBSTR(SALE_ORG_CD,3,2)
+                                     , SUBSTR(SALE_ORG_CD,5,2)
+                                     , '00'
+                                     , '00'
+                   )                                      AS SALE_ORG_TEAM_NM  /* 팀 조직명   */ 
+                 , SUBSTR(SALE_ORG_CD,1,8)                AS SALE_ORG_PC       /* pc 조직코드   */         
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(SALE_ORG_CD,1,2)
+                                     , SUBSTR(SALE_ORG_CD,3,2)
+                                     , SUBSTR(SALE_ORG_CD,5,2)
+                                     , SUBSTR(SALE_ORG_CD,7,2)
+                                     , '00'
+                   )                                      AS SALE_ORG_PC_NM   /* 팀 조직명     */
+                 , BIZ_TYPE_NM
+                 , TAX_FLAG_NM
+                 , SALE_TOT_AMT
+                 , REDU_AMT
+                 , SALE_TAMT
+                 , SALE_COMIS_TAMT
+                 , PAY_TRG_TAMT
+                 , PAY_DT
+              FROM (
+                   SELECT 
+                          A.STR_CD
+                        , A.PAY_YM
+                        , A.PAY_CYC
+                        , A.PAY_CNT
+                        , A.VEN_CD
+                        , A.VEN_NM
+                        , A.PUMBUN_CD
+                        , A.PUMBUN_NM
+                        , A.SALE_ORG_CD
+                        , A.BIZ_TYPE_NM
+                        , A.TAX_FLAG_NM
+                        , SUM(A.SALE_TOT_AMT)      AS SALE_TOT_AMT
+                        , SUM(A.REDU_AMT)          AS REDU_AMT
+                        , SUM(A.SALE_AMT)          AS SALE_TAMT
+                        , SUM(A.SALE_COMIS_AMT)    AS SALE_COMIS_TAMT
+                        , SUM(A.PAY_TRG_AMT)       AS PAY_TRG_TAMT
+                        , A.PAY_DT
+                     FROM (
+                              SELECT 
+                                     VPD.STR_CD
+                                   , VPD.PAY_YM
+                                   , VPD.PAY_CYC
+                                   , VPD.PAY_CNT
+                                   , VPD.VEN_CD
+                                   , DPS.FN_GET_VENDOR_NAME(VPD.VEN_CD)  AS VEN_NM
+                                   , VPD.PUMBUN_CD
+                                   , COM.FN_GET_COMM_NAME('D', 'P002', VPD.BIZ_TYPE) AS BIZ_TYPE_NM            /*거래형태명*/
+                                   , COM.FN_GET_COMM_NAME('D', 'P004', VPD.TAX_FLAG) AS TAX_FLAG_NM            /*과세구분명*/
+                                   , DPS.FN_GET_PUMBUN_NAME(VPD.PUMBUN_CD) AS PUMBUN_NM
+                                   , SPN.SALE_ORG_CD
+                                   , NVL(VPD.SALE_TOT_AMT,0)  AS SALE_TOT_AMT
+                                   , NVL(VPD.REDU_AMT,0)      AS REDU_AMT
+                                   , NVL(VPD.SALE_AMT,0)      AS SALE_AMT
+                                   , NVL(VPD.SALE_COMIS_AMT,0) AS SALE_COMIS_AMT
+                                   , NVL(VPD.PAY_TRG_AMT,0)    AS PAY_TRG_AMT
+                                   , VPD.BIZ_TYPE
+                                   , VPD.PAY_DT
+                                FROM DPS.PP_VENPAYDTL VPD
+                                   , DPS.PC_STRPBN    SPN
+                               WHERE VPD.STR_CD    = SPN.STR_CD
+                                 AND VPD.PUMBUN_CD = SPN.PUMBUN_CD
+                                 AND SPN.SALE_ORG_CD LIKE ? || ? || ? || ? ||'%'
+                                 AND VPD.PAY_YM    = ?
+                                 AND VPD.PAY_CYC   = ?
+                                 AND VPD.PAY_CNT   = ?
+                                 AND NVL(VPD.PAY_DT, ' ')	LIKE ? || '%'
+                                 AND VPD.BIZ_TYPE IN('2','3')
+                                 AND VPD.VEN_CD    LIKE ? || '%'   
+                                 AND VPD.PUMBUN_CD LIKE ? || '%'
+                                 AND VPD.BIZ_TYPE  LIKE ? || '%'
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = SPN.STR_CD
+                                                 AND MYORG.PUMBUN_CD   = SPN.PUMBUN_CD
+                                                 AND MYORG.USER_ID     = ?
+                                                 AND ROWNUM            = 1
+                                                 AND MYORG.ORG_FLAG    = ?
+                                            )
+                           )    A
+                    GROUP BY  A.STR_CD
+                            , A.PAY_YM
+                            , A.PAY_CYC
+                            , A.PAY_CNT
+                            , A.VEN_CD
+                            , A.VEN_NM
+                            , A.PUMBUN_CD
+                            , A.PUMBUN_NM
+                            , A.SALE_ORG_CD
+                            , A.BIZ_TYPE_NM
+                            , A.TAX_FLAG_NM  
+                            , A.BIZ_TYPE
+                            , A.PAY_DT
+                    ORDER BY  A.PAY_DT
+                            , A.VEN_CD
+                            , A.PUMBUN_CD
+                            , A.BIZ_TYPE
+                   )
+        ]]>
+    </query> 
+    
+    <!-- 특정 임대을 지불대상액 마스터 조회  -->
+    <query name="SEL_MASTER1">
+        <![CDATA[
+            SELECT STR_CD
+                 , PAY_YM
+                 , PAY_CYC
+                 , PAY_CNT
+                 , VEN_CD
+                 , VEN_NM
+                 , PUMBUN_CD
+                 , PUMBUN_NM
+                 , BUY_ORG_CD    
+                 , SUBSTR(BUY_ORG_CD,1,6)                AS SALE_ORG_TEAM     /* 팀 조직코드   */
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(BUY_ORG_CD,1,2)
+                                     , SUBSTR(BUY_ORG_CD,3,2)
+                                     , SUBSTR(BUY_ORG_CD,5,2)
+                                     , '00'
+                                     , '00'
+                   )                                      AS SALE_ORG_TEAM_NM  /* 팀 조직명   */ 
+                 , SUBSTR(BUY_ORG_CD,1,8)                AS SALE_ORG_PC       /* pc 조직코드   */         
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(BUY_ORG_CD,1,2)
+                                     , SUBSTR(BUY_ORG_CD,3,2)
+                                     , SUBSTR(BUY_ORG_CD,5,2)
+                                     , SUBSTR(BUY_ORG_CD,7,2)
+                                     , '00'
+                   )                                      AS SALE_ORG_PC_NM   /* 팀 조직명     */
+                 , BIZ_TYPE_NM
+                 , TAX_FLAG_NM
+                 , SALE_TOT_AMT
+                 , REDU_AMT
+                 , SALE_TAMT
+                 , SALE_COMIS_TAMT
+                 , PAY_TRG_TAMT
+                 , PAY_DT
+              FROM (
+                   SELECT 
+                          A.STR_CD
+                        , A.PAY_YM
+                        , A.PAY_CYC
+                        , A.PAY_CNT
+                        , A.VEN_CD
+                        , A.VEN_NM
+                        , A.PUMBUN_CD
+                        , A.PUMBUN_NM
+                        , A.BUY_ORG_CD
+                        , A.BIZ_TYPE_NM
+                        , A.TAX_FLAG_NM
+                        , SUM(A.SALE_TOT_AMT)      AS SALE_TOT_AMT
+                        , SUM(A.REDU_AMT)          AS REDU_AMT
+                        , SUM(A.SALE_AMT)          AS SALE_TAMT
+                        , SUM(A.SALE_COMIS_AMT)    AS SALE_COMIS_TAMT
+                        , SUM(A.PAY_TRG_AMT)       AS PAY_TRG_TAMT
+                        , A.PAY_DT
+                     FROM (
+                              SELECT 
+                                     VPD.STR_CD
+                                   , VPD.PAY_YM
+                                   , VPD.PAY_CYC
+                                   , VPD.PAY_CNT
+                                   , VPD.VEN_CD
+                                   , DPS.FN_GET_VENDOR_NAME(VPD.VEN_CD)  AS VEN_NM
+                                   , VPD.PUMBUN_CD
+                                   , COM.FN_GET_COMM_NAME('D', 'P002', VPD.BIZ_TYPE) AS BIZ_TYPE_NM            /*거래형태명*/
+                                   , COM.FN_GET_COMM_NAME('D', 'P004', VPD.TAX_FLAG) AS TAX_FLAG_NM            /*과세구분명*/
+                                   , DPS.FN_GET_PUMBUN_NAME(VPD.PUMBUN_CD) AS PUMBUN_NM
+                                   , SPN.BUY_ORG_CD
+                                   , NVL(VPD.SALE_TOT_AMT,0)  AS SALE_TOT_AMT
+                                   , NVL(VPD.REDU_AMT,0)      AS REDU_AMT
+                                   , NVL(VPD.SALE_AMT,0)      AS SALE_AMT
+                                   , NVL(VPD.SALE_COMIS_AMT,0) AS SALE_COMIS_AMT
+                                   , NVL(VPD.PAY_TRG_AMT,0)    AS PAY_TRG_AMT
+                                   , VPD.BIZ_TYPE
+                                   , VPD.PAY_DT
+                                FROM DPS.PP_VENPAYDTL VPD
+                                   , DPS.PC_STRPBN    SPN
+                               WHERE VPD.STR_CD    = SPN.STR_CD
+                                 AND VPD.PUMBUN_CD = SPN.PUMBUN_CD
+                                 AND SPN.BUY_ORG_CD LIKE ? || ? || ? || ? ||'%'
+                                 AND VPD.PAY_YM    = ?
+                                 AND VPD.PAY_CYC   = ?
+                                 AND VPD.PAY_CNT   = ?
+                                 AND NVL(VPD.PAY_DT, ' ')	LIKE ? || '%'
+                                 AND VPD.BIZ_TYPE IN('2','3')
+                                 AND VPD.VEN_CD    LIKE ? || '%'   
+                                 AND VPD.PUMBUN_CD LIKE ? || '%'
+                                 AND VPD.BIZ_TYPE  LIKE ? || '%'
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = SPN.STR_CD
+                                                 AND MYORG.PUMBUN_CD   = SPN.PUMBUN_CD
+                                                 AND MYORG.USER_ID     = ?
+                                                 AND ROWNUM            = 1
+                                                 AND MYORG.ORG_FLAG    = ?
+                                            )
+                           )    A
+                    GROUP BY  A.STR_CD
+                            , A.PAY_YM
+                            , A.PAY_CYC
+                            , A.PAY_CNT
+                            , A.VEN_CD
+                            , A.VEN_NM
+                            , A.PUMBUN_CD
+                            , A.PUMBUN_NM
+                            , A.BUY_ORG_CD
+                            , A.BIZ_TYPE_NM
+                            , A.TAX_FLAG_NM  
+                            , A.BIZ_TYPE
+                            , A.PAY_DT
+                    ORDER BY  A.PAY_DT
+                            , A.VEN_CD
+                            , A.PUMBUN_CD
+                            , A.BIZ_TYPE
+                   )
+        ]]>
+    </query> 
+    
+    <!--  특정 임대을 지불대상액 디테일 조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+			  SELECT STR_CD
+			       , PUMBUN_CD
+			       , MAX(DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD)) AS PUMBUN_NM
+			       , EVENT_FLAG || EVENT_RATE          AS EVENT_FLAG
+			       , MG_RATE                           AS MG_RATE
+			       , SUM(NVL(SALE_TOT_AMT,0))          AS SALE_TOT_AMT
+			       , SUM(NVL(REDU_AMT,0))              AS REDU_AMT
+			       , SUM(NVL(SALE_AMT,0))              AS SALE_AMT
+			       , SUM(NVL(SALE_COMIS_AMT,0))        AS SALE_COMIS_AMT
+			       , SUM(NVL(PAY_TRG_AMT,0))           AS PAY_TRG_AMT
+			    FROM DPS.PP_VENPAYDTL
+			   WHERE STR_CD  = ?
+			     AND PAY_YM  = ?
+			     AND PAY_CYC = ?
+			     AND PAY_CNT = ?	
+			     AND VEN_CD  = ?
+			     AND PUMBUN_CD = ?		     
+                 AND BIZ_TYPE IN('2','3')
+               GROUP BY STR_CD
+                      , PUMBUN_CD
+                      , EVENT_FLAG || EVENT_RATE
+                      , MG_RATE
+        ]]>
+    </query> 
+ </service>

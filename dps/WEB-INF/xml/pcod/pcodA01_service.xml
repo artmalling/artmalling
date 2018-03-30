@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.07.05
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 점별 타임아웃 정보를 관리 한다.
+ -->
+<service name="/pcodA01.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="CLOSE_TASK_FLAG"    colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_UNIT_FLAG"    colType="TB_STRING"   size="2"    dec="0"  keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="CLOSE_UNIT_NAME"    colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_FLAG"         colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SAP_CLOSE_FLAG"     colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MCLOSE_PROC_YN"     colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="E_DAY"              colType="TB_INT"      size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="E_TIME"             colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"             colType="TB_STRING"   size="100"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_TIMEOUT">
+        <![CDATA[
+            SELECT STR_CD        
+                 , CLOSE_TASK_FLAG      
+                 , CLOSE_UNIT_FLAG   
+                 , CLOSE_UNIT_NAME 
+                 , CLOSE_FLAG
+                 , SAP_CLOSE_FLAG
+                 , MCLOSE_PROC_YN
+                 , E_DAY
+                 , E_TIME
+                 , REMARK
+              FROM DPS.PC_TIMEOUT
+             WHERE STR_CD          = ?
+        ]]>
+    </query>
+    <query name="SEL_TIMEOUT_WHERE_CLOSE_TASK_FLAG">
+        <![CDATA[
+               AND CLOSE_TASK_FLAG = ?
+        ]]>
+    </query>
+    <query name="SEL_TIMEOUT_WHERE_CLOSE_FLAG">
+        <![CDATA[
+               AND CLOSE_FLAG      = ?
+        ]]>
+    </query>
+    <query name="SEL_TIMEOUT_ORDER">
+        <![CDATA[
+             ORDER BY STR_CD, CLOSE_UNIT_FLAG  
+        ]]>
+    </query>
+    
+    <query name="SEL_STR_CLOSE_UNIT_FLAG_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_TIMEOUT
+             WHERE STR_CD          = ?
+               AND CLOSE_UNIT_FLAG = ?
+        ]]>
+    </query>
+    
+    
+    <query name="INS_TIMEOUT">
+        <![CDATA[
+            INSERT INTO DPS.PC_TIMEOUT(STR_CD        
+                                     , CLOSE_TASK_FLAG      
+                                     , CLOSE_UNIT_FLAG    
+                                     , CLOSE_UNIT_NAME
+                                     , CLOSE_FLAG
+                                     , SAP_CLOSE_FLAG
+                                     , MCLOSE_PROC_YN
+                                     , E_DAY
+                                     , E_TIME
+                                     , REMARK 
+                                     , REG_DATE
+                                     , REG_ID
+                                     , MOD_DATE
+                                     , MOD_ID
+                                      )
+                                VALUES(?        
+                                     , ?      
+                                     , ?    
+                                     , ?    
+                                     , ?    
+                                     , ?    
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ? 
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                      )
+        ]]>
+    </query>
+    
+    <query name="UPD_TIMEOUT">
+        <![CDATA[
+            UPDATE DPS.PC_TIMEOUT
+               SET CLOSE_UNIT_NAME = ?
+                 , CLOSE_FLAG      = ?
+                 , SAP_CLOSE_FLAG  = ?
+                 , MCLOSE_PROC_YN  = ?
+                 , E_DAY           = ?
+                 , E_TIME          = ?
+                 , REMARK          = ?
+                 , MOD_DATE        = SYSDATE
+                 , MOD_ID          = ?
+             WHERE STR_CD          = ?
+               AND CLOSE_TASK_FLAG = ?     
+               AND CLOSE_UNIT_FLAG = ?
+        ]]>
+    </query>
+</service>

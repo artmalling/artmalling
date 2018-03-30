@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : khj
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2016.10.19
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상품권입고등록
+ -->
+<service name="/mgif117.mg">
+    <!--  상품권종류 콤보 -->
+    <gauce name="H_COMBO">
+      <column colName="CODE"              	colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"              	colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    <!--  -->
+    <!--  입고등록 마스터-->
+    <gauce name="H_MASTER">
+      <column colName="STR_CD"              colType="TB_STRING" size="2"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STR_NM"              colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="IN_DT"               colType="TB_STRING" size="8"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="IN_SLIP_NO"          colType="TB_STRING" size="6"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STAT_FLAG"           colType="TB_STRING" size="10"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_CD"        colType="TB_STRING" size="4"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="IN_QTY_SUM"          colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+      <column colName="IN_AMT_SUM"          colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+    </gauce>
+    
+    <!--  입고등록 상세-->
+    <gauce name="H_DETAIL">
+      <column colName="IN_SEQ_NO"           colType="TB_STRING" size="3"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_CD"        colType="TB_STRING" size="4"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_NAME"      colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ISSUE_TYPE"          colType="TB_STRING" size="1"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_TYPE"       colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_NAME"       colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="IN_QTY"              colType="TB_DECIMAL" size="7"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_NO"             colType="TB_STRING" size="6"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT"        colType="TB_DECIMAL" size="9"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="TOT_AMT"             colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_HEAD"           colType="TB_STRING" size="18"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_S_NO"           colType="TB_STRING" size="18"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_E_NO"           colType="TB_STRING" size="18"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STAT_FLAG"           colType="TB_STRING" size="2"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    
+    
+    
+    <!--  상품마스터조회-->
+    <gauce name="H_DETAIL2">
+      <column colName="IN_SEQ_NO"           colType="TB_STRING" size="3"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_CD"        colType="TB_STRING" size="4"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_NAME"      colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ISSUE_TYPE"          colType="TB_STRING" size="1"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_TYPE"       colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_NAME"       colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT"        colType="TB_DECIMAL" size="9"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_NO"             colType="TB_STRING" size="18"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STAT_FLAG"           colType="TB_STRING" size="20"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+             
+    <!--  상품권종류 콤보 -->
+    <query name="SEL_COMBO">
+        <![CDATA[                                        
+		SELECT GIFT_TYPE_CD     AS CODE
+		     , GIFT_TYPE_NAME   AS NAME
+		  FROM MSS.MG_GIFTTPMST
+		 WHERE GIFT_TYPE_FLAG = '01'
+      ORDER BY GIFT_TYPE_CD
+        ]]>
+    </query>
+    
+    <!--  입고등록 마스터  -->
+    <query name="SEL_MASTER">
+        <![CDATA[                                        
+		SELECT A.STR_CD
+		     , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM
+		     , A.IN_DT
+		     , A.IN_SLIP_NO
+		     , '' AS STAT_FLAG
+		     , A.GIFT_TYPE_CD
+		     , SUM(A.IN_QTY) AS IN_QTY_SUM
+		     , SUM(A.IN_QTY * B.GIFTCERT_AMT) AS IN_AMT_SUM
+	    FROM MSS.MG_GIFTISSUEIN A
+		     , MSS.MG_GIFTAMTMST B
+	   WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+	     AND A.ISSUE_TYPE = B.ISSUE_TYPE
+	     AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+         AND NOT EXISTS (
+                      SELECT C.REQ_SLIP_NO
+                        FROM MSS.MG_GIFTISSUEREQ C
+                       WHERE A.STR_CD = C.STR_CD
+                         AND A.REQ_DT = C.REQ_DT
+                         AND A.REQ_SLIP_NO = C.REQ_SLIP_NO
+                         AND A.REQ_SEQ_NO = C.REQ_SEQ_NO
+                    ) 
+	     AND A.STR_CD = ?
+		 AND A.IN_DT BETWEEN ? AND ?  
+	 GROUP BY A.STR_CD, A.IN_DT, A.IN_SLIP_NO, A.GIFT_TYPE_CD
+	 ORDER BY A.STR_CD, A.IN_DT, A.IN_SLIP_NO
+        ]]>
+    </query>
+    
+    <!--  입고등록 상세  -->
+    <query name="SEL_DETAIL">
+        <![CDATA[                                        
+        SELECT A.IN_SEQ_NO
+             , A.GIFT_TYPE_CD
+             , C.GIFT_TYPE_NAME
+             , A.ISSUE_TYPE
+             , A.GIFT_AMT_TYPE
+             , B.GIFT_AMT_NAME
+             , A.IN_QTY
+		     , '' AS GIFT_NO
+             , B.GIFTCERT_AMT
+             , A.IN_QTY * B.GIFTCERT_AMT AS TOT_AMT
+		     , '' AS GIFT_HEAD
+             , SUBSTR(A.GIFT_S_NO, 1,17) AS GIFT_S_NO
+             , SUBSTR(A.GIFT_E_NO, 1,17) AS GIFT_E_NO
+             , '' AS STAT_FLAG
+        FROM MSS.MG_GIFTISSUEIN A
+           , MSS.MG_GIFTAMTMST B
+           , MSS.MG_GIFTTPMST C
+        WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+          AND A.ISSUE_TYPE = B.ISSUE_TYPE
+          AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+          AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+		  AND A.IN_DT= ?
+		  AND A.STR_CD = ?
+		  AND A.IN_SLIP_NO = ?
+        ]]>
+    </query>
+    
+    
+    <!--  상품권마스터 상세  -->
+    <query name="SEL_DETAIL2">
+        <![CDATA[                                        
+        SELECT A.IN_SEQ_NO
+             , A.GIFT_TYPE_CD
+             , C.GIFT_TYPE_NAME
+             , A.ISSUE_TYPE
+             , A.GIFT_AMT_TYPE
+             , B.GIFT_AMT_NAME
+             , B.GIFTCERT_AMT
+             , D.GIFTCARD_NO  AS GIFT_NO
+             , COM.FN_GET_COMM_NAME('D', 'M074', D.STAT_FLAG) AS STAT_FLAG
+        FROM MSS.MG_GIFTISSUEIN A
+           , MSS.MG_GIFTAMTMST B
+           , MSS.MG_GIFTTPMST C
+           , MSS.MG_GIFTMST D
+        WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+          AND A.ISSUE_TYPE = B.ISSUE_TYPE
+          AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+          AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+          AND A.GIFT_TYPE_CD = D.GIFT_TYPE_CD
+          AND A.ISSUE_TYPE = D.ISSUE_TYPE
+          AND A.GIFT_AMT_TYPE = D.GIFT_AMT_TYPE
+          AND D.GIFTCARD_NO BETWEEN A.GIFT_S_NO AND A.GIFT_E_NO
+		  AND A.IN_DT= ?
+		  AND A.STR_CD = ?
+		  AND A.IN_SLIP_NO = ?
+        ]]>
+    </query>
+
+</service>

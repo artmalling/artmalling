@@ -1,0 +1,727 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"  pageEncoding="UTF-8"
+ import="kr.fujitsu.ffw.base.BaseProperty,kr.fujitsu.ffw.util.String2,kr.fujitsu.ffw.control.ActionForm" %>
+<%@ page import="ecom.util.Util" %>
+<%@ page import="java.util.*" %>
+<%@ page import="sun.misc.FormattedFloatingDecimal.Form"%>
+<%@ page import="ecom.vo.SessionInfo2"%>
+<%@ taglib uri="/WEB-INF/tld/c.tld" prefix="c"%>
+<%@ taglib uri="/WEB-INF/tld/ajax-lib.tld" prefix="ajax"%>
+
+<%
+    String dir = request.getContextPath();
+
+    SessionInfo2 sessionInfo = (SessionInfo2) session.getAttribute("sessionInfo2");
+    String userid = sessionInfo.getUSER_ID();       //사용자아이디
+    String strcd = sessionInfo.getSTR_CD();         //점코드
+    String strNm = sessionInfo.getSTR_NM();         //점명
+    String vencd = sessionInfo.getVEN_CD();         //협력사코드
+    String venNm = sessionInfo.getVEN_NAME();       //협력사명
+    String gb = sessionInfo.getGB();                //1. 협력사     2.브랜드
+    String pumbuncd = sessionInfo.getPUMBUN_CD();
+    String pumbunNm = sessionInfo.getPUMBUN_NAME();
+     
+%>
+
+<html>
+<ajax:library />
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>아트몰링</title>
+<link href="<%=dir%>/css/ds.css" rel="stylesheet" type="text/css" />
+<script language="javascript"  src="<%=dir%>/js/common.js"  type="text/javascript"></script>
+<script language="javascript"  src="<%=dir%>/js/popup.js"  type="text/javascript"></script>
+<script language="javascript" src="<%=dir%>/js/message.js"   type="text/javascript"></script>
+<script language="javascript" src="<%=dir%>/js/gauce.js"     type="text/javascript"></script>
+<script language="javascript" src="<%=dir%>/js/global.js"    type="text/javascript"></script>
+
+
+<script language="javascript">
+var strTakeDt      = dialogArguments[0];
+var strStrCd       = dialogArguments[1];
+var strTakeSeq     = dialogArguments[2];
+var strProcStat    = dialogArguments[3];
+var g_pre_row = -1;
+var g_last_row = -1;
+/**
+ * doInit()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2011-04-18
+ * 개    요 : 해당 페이지 LOAD 시  
+ * return값 : void
+ */
+function doinit(){
+	 getSelectCombo("D", "M059", "chg_prom_hh", "2");             //변경약속  시간
+	 getSelectCombo("D", "M060", "chg_prom_mm", "2");             //변경약속 분
+	 
+	 getStrCd("chg_deli_str", "2");                               // 변경 인도점
+	 
+	 getSelectCombo("D", "M022", "chg_deli_type", "2");          // 변경 인도방식
+	 
+	 getSelectCombo("D", "M023", "chg_reason_01", "2");
+	 getSelectCombo("D", "M023", "chg_reason_02", "2");
+	 getSelectCombo("D", "M023", "chg_reason_03", "2");
+	 getSelectCombo("D", "M023", "chg_reason_04", "2");
+	 getSelectCombo("D", "M023", "chg_reason_05", "2");
+	 
+	 
+	 // 취소건인경우 변경내용 등록 불가 
+	 if(strProcStat == "4" || strProcStat == "5"){
+		 var contents = document.getElementsByName("contents");
+		 for(var i=0;i<contents.length;i++){
+	            contents[i].disabled="disabled";
+	        }
+		 enableControl(img_01, false);
+		 enableControl(img_02, false);
+		 enableControl(img_03, false);
+		 enableControl(img_04, false);
+		 enableControl(img_05, false);
+		 enableControl(img_06, false);
+		 enableControl(img_07, false);
+	 }
+	 
+	 
+	 getPromise();
+}
+
+/**
+ * getStrCd()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2011-04-18
+ * 개    요 :  조회부 공통 부문
+ * return값 : void
+ */ 
+function getStrCd(target, gb){
+    
+    var param = "&goTo=getStrCd";
+    <ajax:open callback="on_SelectComboXML" 
+        param="param" 
+        method="POST" 
+        urlvalue="/edi/ccom001.cc"/>
+    
+    
+    <ajax:callback function="on_SelectComboXML"> 
+    
+    var sel_box = document.getElementById(target);
+    if( rowsNode.length > 0){
+        if( gb == "1" ){
+             var opt = document.createElement("option");  
+             opt.setAttribute("value", "%");
+             
+             var text = document.createTextNode("전체");
+             opt.appendChild(text); 
+             sel_box.appendChild(opt);
+        }
+        if( gb == "2" ){
+            var opt = document.createElement("option");  
+            opt.setAttribute("value", "");
+            
+            var text = document.createTextNode("");
+            opt.appendChild(text); 
+            sel_box.appendChild(opt);
+       }
+        for( i =0; i < rowsNode.length; i++){
+            var opt = document.createElement("option");  
+            opt.setAttribute("value", rowsNode[i].childNodes[0].childNodes[0].nodeValue);
+            
+            var text = document.createTextNode(rowsNode[i].childNodes[1].childNodes[0].nodeValue);
+            opt.appendChild(text); 
+            sel_box.appendChild(opt);
+        }
+        
+    } else {
+        var opt = document.createElement("option");  
+        opt.setAttribute("value", "%");
+        
+        var text = document.createTextNode("전체");
+        opt.appendChild(text); 
+        sel_box.appendChild(opt);
+    }    
+    
+    
+    
+    </ajax:callback>
+}
+
+/**
+ * getSelectCombo()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2011-04-18
+ * 개    요 :  조회부 공통 부문
+ * return값 : void
+ */ 
+function getSelectCombo(syspat,compart, target, gb){
+    
+    var param = "&goTo=getEtcCode&syspat="+syspat+"&compart="+compart;
+    <ajax:open callback="on_SelectComboXML" 
+        param="param" 
+        method="POST" 
+        urlvalue="/edi/ccom001.cc"/>
+    
+    
+    <ajax:callback function="on_SelectComboXML"> 
+    
+    var sel_box = document.getElementById(target);
+    if( rowsNode.length > 0){
+        if( gb == "1" ){
+             var opt = document.createElement("option");  
+             opt.setAttribute("value", "%");
+             
+             var text = document.createTextNode("전체");
+             opt.appendChild(text); 
+             sel_box.appendChild(opt);
+        }
+        if( gb == "2" ){
+            var opt = document.createElement("option");  
+            opt.setAttribute("value", "");
+            
+            var text = document.createTextNode("");
+            opt.appendChild(text); 
+            sel_box.appendChild(opt);
+       }
+        for( i =0; i < rowsNode.length; i++){
+            var opt = document.createElement("option");  
+            opt.setAttribute("value", rowsNode[i].childNodes[0].childNodes[0].nodeValue);
+            
+            var text = document.createTextNode(rowsNode[i].childNodes[1].childNodes[0].nodeValue);
+            opt.appendChild(text); 
+            sel_box.appendChild(opt);
+        }
+        
+    } else {
+        var opt = document.createElement("option");  
+        opt.setAttribute("value", "%");
+        
+        var text = document.createTextNode("전체");
+        opt.appendChild(text); 
+        sel_box.appendChild(opt);
+    }    
+    
+    
+    
+    </ajax:callback>
+}
+
+/**
+ * getPromise()
+ * 작 성 자 : 김성미
+ * 작 성 일 : 2011-06-24
+ * 개    요 :  조회  
+ * return값 : void
+ */
+function getPromise(){
+	
+    var param = "&goTo=getPromise" + "&strTakeDt=" + strTakeDt
+                                  + "&strStrCd=" + strStrCd
+                                  + "&strTakeSeq=" + strTakeSeq;
+               
+    
+    <ajax:open callback="on_getPromiseXML" 
+        param="param" 
+        method="POST" 
+        urlvalue="/edi/epro101.ep"/>
+        
+
+    <ajax:callback function="on_getPromiseXML">
+       
+       if( rowsNode.length > 0 ){
+      	  document.getElementById("prom_dt").value = rowsNode[0].childNodes[3].childNodes[0].nodeValue == "null" ? "" : getDateFormat(rowsNode[0].childNodes[3].childNodes[0].nodeValue);
+      	  document.getElementById("prom_time").value = rowsNode[0].childNodes[4].childNodes[0].nodeValue == "null" ? "" : isHHMM(rowsNode[0].childNodes[4].childNodes[0].nodeValue);
+      	  document.getElementById("in_dt").value = rowsNode[0].childNodes[5].childNodes[0].nodeValue == "null" ? "" : getDateFormat(rowsNode[0].childNodes[5].childNodes[0].nodeValue);
+      	  document.getElementById("in_str").value = rowsNode[0].childNodes[6].childNodes[0].nodeValue == "null" ? "" : rowsNode[0].childNodes[6].childNodes[0].nodeValue;
+          document.getElementById("in_str_nm").value = rowsNode[0].childNodes[7].childNodes[0].nodeValue == "null" ? "" : rowsNode[0].childNodes[7].childNodes[0].nodeValue;
+      	  document.getElementById("deli_type").value = rowsNode[0].childNodes[8].childNodes[0].nodeValue == "null" ? "" : rowsNode[0].childNodes[8].childNodes[0].nodeValue;
+          document.getElementById("deli_type_nm").value = rowsNode[0].childNodes[9].childNodes[0].nodeValue == "null" ? "" : rowsNode[0].childNodes[9].childNodes[0].nodeValue;
+          getHistory();
+       }	   
+       
+    </ajax:callback>
+    
+    
+}
+
+function getHistory(){
+	
+	var param = "&goTo=getHistory" + "&strStrcd=" + strStrCd
+								  + "&strTakeDt=" + strTakeDt
+								  + "&strTakeSeq=" + strTakeSeq;
+
+	<ajax:open callback="on_getHistoryXML" 
+		param="param" 
+		method="POST" 
+		urlvalue="/edi/epro101.ep"/>
+	
+	
+	<ajax:callback function="on_getHistoryXML">
+	var master_content = "<table width='910' border='0' cellspacing='0' cellpadding='0' class='g_table' id='tb_Litable'>";
+    if( rowsNode.length > 0 ){
+        
+        for( i = 0; i < rowsNode.length; i++  ){
+            
+            /*
+              0.접수일 1.점코드 2.점명 3.신청순번4.약속유형 5.약속유형명
+              
+            */
+            
+            var strModItem = rowsNode[i].childNodes[0].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[0].childNodes[0].nodeValue;
+            var strModContents = rowsNode[i].childNodes[1].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[1].childNodes[0].nodeValue;
+            var strModReason = rowsNode[i].childNodes[2].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[2].childNodes[0].nodeValue;
+            var strModReasonDtl = rowsNode[i].childNodes[3].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[3].childNodes[0].nodeValue;
+            var strModTakeDt = rowsNode[i].childNodes[4].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[4].childNodes[0].nodeValue;
+            
+            master_content += "<tr onclick='chBak("+i+");' style='cursor:hand;'>";
+            master_content += "<td class='r1' id='1tdId"+i+"' width='20' >"+(i+1)+"</td>";
+            master_content += "<td class='r3' id='2tdId"+i+"' width='100'>"+strModItem+"</td>";
+            master_content += "<td class='r1' id='3tdId"+i+"' width='100'>"+strModContents+"</td>";
+            master_content += "<td class='r3' id='4tdId"+i+"' width='150'>"+strModReason+"</td>";
+            master_content += "<td class='r3' id='5tdId"+i+"' width='410'>"+strModReasonDtl+"</td>";
+            master_content += "<td class='r1' id='6tdId"+i+"' width='100'>"+strModTakeDt+"</td>";
+            master_content += "</tr>";   
+        }
+    
+    } else {
+        document.getElementById("MASTER_CONTETN").innerHTML = "";
+     //   setObjec("ContentF");
+    }
+    master_content += "</table>";
+    document.getElementById("MASTER_CONTETN").innerHTML = master_content;
+    setPorcCount("SELECT", rowsNode.length);  
+	</ajax:callback>
+}
+
+function VailCheckSave(){
+	   // 저장할 내용없음 
+	 var contents = document.getElementsByName("contents");
+	 var chkSave = 0;
+     for(var i=0;i<contents.length;i++){
+         if(contents[i].value != ""){
+         	chkSave += 1;
+         }
+     }
+	if(chkSave == 1 && document.getElementById("chk_cancel").checked == false){
+		showMessage(INFORMATION, OK, "USER-1028");
+        return false;
+	}
+	
+	// 변경약속일
+	if( document.getElementById("chg_prom_dt").value != ""
+			|| document.getElementById("chg_prom_hh").value != ""
+			    || document.getElementById("chg_prom_mm").value != ""
+			        || document.getElementById("chg_reason_01").value != ""
+			        		|| document.getElementById("chg_take_dt_01").value != ""){
+       
+		if( document.getElementById("chg_prom_dt").value == "" ){
+	        showMessage(INFORMATION, OK, "USER-1003", "변경약속일");
+	        document.getElementById("chg_prom_dt").focus();
+	        return false;
+	    }
+		if( document.getElementById("chg_prom_hh").value == "" ){
+            showMessage(INFORMATION, OK, "USER-1003", "변경약속시간");
+            document.getElementById("chg_prom_hh").focus();
+            return false;
+        }
+		if( document.getElementById("chg_prom_mm").value == "" ){
+            showMessage(INFORMATION, OK, "USER-1003", "변경약속분");
+            document.getElementById("chg_prom_mm").focus();
+            return false;
+        }
+		if( document.getElementById("chg_reason_01").value == "" ){
+            showMessage(INFORMATION, OK, "USER-1003", "변경약속사유");
+            document.getElementById("chg_reason_01").focus();
+            return false;
+        }
+		if( document.getElementById("chg_take_dt_01").value == "" ){
+            showMessage(INFORMATION, OK, "USER-1003", "변경접수일자 ");
+            document.getElementById("chg_take_dt_01").focus();
+            return false;
+        }
+        if( document.getElementById("chg_take_dt_01").value > getTodayFormat("YYYY/MM/DD") ){ 
+            showMessage(INFORMATION, OK, "USER-1000", "변경접수일자는 오늘보다 클 수 없습니다.");
+            document.getElementById("chg_take_dt_01").focus();
+            return false;
+        }  
+    }
+	
+	// 변경 입고예정일
+	if( document.getElementById("chg_in_dt").value != ""
+            || document.getElementById("chg_reason_02").value != ""
+                   || document.getElementById("chg_take_dt_02").value != ""){
+   
+	    if( document.getElementById("chg_in_dt").value == "" ){
+	        showMessage(INFORMATION, OK, "USER-1003", "변경입고예정일");
+	        document.getElementById("chg_in_dt").focus();
+	        return false;
+	    }
+	    if( document.getElementById("chg_reason_02").value == "" ){
+	        showMessage(INFORMATION, OK, "USER-1003", "변경약속사유");
+	        document.getElementById("chg_reason_02").focus();
+	        return false;
+	    }
+	    if( document.getElementById("chg_take_dt_02").value == "" ){
+	        showMessage(INFORMATION, OK, "USER-1003", "변경접수일자 ");
+	        document.getElementById("chg_take_dt_02").focus();
+	        return false;
+	    }
+    }
+	
+	// 변경 인도점
+	if( document.getElementById("chg_deli_str").value != ""
+        || document.getElementById("chg_reason_03").value != ""
+              || document.getElementById("chg_take_dt_03").value != ""){
+
+		if( document.getElementById("chg_deli_str").value == "" ){
+		    showMessage(INFORMATION, OK, "USER-1003", "변경인도점");
+		    document.getElementById("chg_deli_str").focus();
+		    return false;
+		}
+		if( document.getElementById("chg_reason_03").value == "" ){
+		    showMessage(INFORMATION, OK, "USER-1003", "변경약속사유");
+		    document.getElementById("chg_reason_03").focus();
+		    return false;
+		}
+		if( document.getElementById("chg_take_dt_03").value == "" ){
+		    showMessage(INFORMATION, OK, "USER-1003", "변경접수일자 ");
+		    document.getElementById("chg_take_dt_03").focus();
+		    return false;
+		}
+	}
+	
+	// 변경 인도방식
+    if( document.getElementById("chg_deli_type").value != ""
+        || document.getElementById("chg_reason_04").value != ""
+              || document.getElementById("chg_take_dt_04").value != ""){
+
+        if( document.getElementById("chg_deli_type").value == "" ){
+            showMessage(INFORMATION, OK, "USER-1003", "변경인도방식");
+            document.getElementById("chg_deli_type").focus();
+            return false;
+        }
+        if( document.getElementById("chg_reason_04").value == "" ){
+            showMessage(INFORMATION, OK, "USER-1003", "변경약속사유");
+            document.getElementById("chg_reason_04").focus();
+            return false;
+        }
+        if( document.getElementById("chg_take_dt_04").value == "" ){
+            showMessage(INFORMATION, OK, "USER-1003", "변경접수일자 ");
+            document.getElementById("chg_take_dt_04").focus();
+            return false;
+        }
+    }	
+	
+	// 취소 
+    if( document.getElementById("chk_cancel").checked == true
+        || document.getElementById("chg_reason_05").value != ""
+              || document.getElementById("chg_take_dt_05").value != ""){
+
+        if( document.getElementById("chk_cancel").checked == false ){
+            showMessage(INFORMATION, OK, "USER-1003", "취소 구분");
+            document.getElementById("chk_cancel").focus();
+            return false;
+        }
+        if( document.getElementById("chg_reason_05").value == "" ){
+            showMessage(INFORMATION, OK, "USER-1003", "변경약속사유");
+            document.getElementById("chg_reason_05").focus();
+            return false;
+        }
+        if( document.getElementById("chg_take_dt_05").value == "" ){
+            showMessage(INFORMATION, OK, "USER-1003", "변경접수일자 ");
+            document.getElementById("chg_take_dt_05").focus();
+            return false;
+        }
+    }	
+	return true;
+}
+
+
+function btn_save(){                                                              
+	          
+	if( !VailCheckSave() ) return;                                              
+	                                                                              
+	if( showMessage(QUESTION, YESNO, "USER-1010") != 1){                         
+        return;
+    }                                                                  
+                                                                      
+	if(document.getElementById("chk_cancel").checked){                
+		var strChkCancel = "T";                                       
+	}else{                                                            
+		var strChkCancel = "";
+	}
+	 var param = "&goTo=saveHistory" + "&strTakeDt="                 +  strTakeDt
+                                     + "&strStrCd="                  +  strStrCd
+                                     + "&strTakeSeq="                +  strTakeSeq
+                                     + "&strChgPromDt="              +  document.getElementById("chg_prom_dt").value
+                                     + "&strChgPromHH="              +  document.getElementById("chg_prom_hh").value        
+                                     + "&strChgPromMM="              +  document.getElementById("chg_prom_mm").value
+                                     + "&strChgReason01="            +  document.getElementById("chg_reason_01").value
+                                     + "&strChgReasonDtl01="         +  document.getElementById("chg_reason_dtl_01").value        
+                                     + "&strTakeDt01="               +  document.getElementById("chg_take_dt_01").value   
+                                     + "&strLastPromDt="             +  document.getElementById("prom_dt").value  
+                                     + "&strLastPRomTime="           +  document.getElementById("prom_time").value        
+                                     + "&strChgInDt="                +  document.getElementById("chg_in_dt").value
+                                     + "&strChgReason02="            +  document.getElementById("chg_reason_02").value
+                                     + "&strChgReasonDtl02="         +  document.getElementById("chg_reason_dtl_02").value
+                                     + "&strTakeDt02="               +  document.getElementById("chg_take_dt_02").value
+                                     + "&strInDeliDt="               +  document.getElementById("in_dt").value
+                                     + "&strChgDeliStr="             +  document.getElementById("chg_deli_str").value
+                                     + "&strChgReason03="            +  document.getElementById("chg_reason_03").value
+                                     + "&strChgReasonDtl03="         +  document.getElementById("chg_reason_dtl_03").value
+                                     + "&strTakeDt03="               +  document.getElementById("chg_take_dt_03").value
+                                     + "&strDeliStr="                +  document.getElementById("in_str").value
+                                     + "&strChgDelType="             +  document.getElementById("chg_deli_type").value
+                                     + "&strChgReason04="            +  document.getElementById("chg_reason_04").value
+                                     + "&strChgReasonDtl04="         +  document.getElementById("chg_reason_dtl_04").value
+                                     + "&strTakeDt04="               +  document.getElementById("chg_take_dt_04").value
+                                     + "&strDeliType="               +  document.getElementById("deli_type").value
+                                     + "&strChkCancel="              +  strChkCancel
+                                     + "&strChgReason05="            +  document.getElementById("chg_reason_05").value
+                                     + "&strChgReasonDtl05="         +  document.getElementById("chg_reason_dtl_05").value
+                                     + "&strTakeDt05="               +  document.getElementById("chg_take_dt_05").value;                                                 
+		<ajax:open callback="on_saveHistoryXML" 
+							param="param" 
+							method="POST" 
+							urlvalue="/edi/epro101.ep"/>
+		
+		
+		<ajax:callback function="on_saveHistoryXML">
+	        
+	        var cnt = rowsNode[0].childNodes[0].childNodes[0].nodeValue == "null" ? "" : rowsNode[0].childNodes[0].childNodes[0].nodeValue;
+	        
+	        if( Number(cnt) > 0 ){
+	        	showMessage(INFORMATION, OK, "GAUCE-1000", cnt+"건이 저장되었습니다.");
+	        	window.returnValue = "save";
+	        	window.close();
+           }else {
+        	   showMessage(INFORMATION, OK, "GAUCE-1000", cnt);
+           }
+	        
+		</ajax:callback>
+}
+
+
+
+function btn_del(){
+}
+
+function btn_new(){
+}
+
+function chBak(val) {
+    g_last_row = val;
+    if (g_pre_row != g_last_row){
+        for(i=1;i<7;i++) {
+            document.getElementById(i+"tdId"+val).style.backgroundColor="#fff56E";
+    
+            if (g_pre_row != -1) {
+                document.getElementById(i+"tdId"+g_pre_row).style.backgroundColor="#ffffff";
+            }
+        }
+    }
+    g_pre_row = g_last_row;
+}
+
+function scrollAll(){
+    document.all.MASTER_TITLE.scrollLeft = document.all.MASTER_CONTETN.scrollLeft;
+}
+
+
+/**
+ * btn_Close()
+ * 작 성 자 : ckj
+ * 작 성 일 : 2006.07.12
+ * 개    요 : Close
+ * return값 : void
+ */  
+ function btn_Close()
+ {
+     window.close();
+ }
+</script>
+
+
+</head>
+
+
+<!--*************************************************************************-->
+<!--* B. 스크립트 시작                                                        *-->
+<!--*************************************************************************-->
+
+
+<!--*************************************************************************-->
+<!--* E. 본문시작                                                                                                                                                               *-->
+<!--*************************************************************************-->
+<body  class="PL10 PR07 PT15" onload="doinit();">
+<input type=hidden name="in_str" value=>
+<input type=hidden name="deli_type" value=>
+<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td class="PT01 PB03">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+      <tr>
+        <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td width="" class="title">
+              <img src="<%=dir%>/imgs/comm/title_head.gif" width="15" height="13" align="absmiddle" class="popR05 PL03"/>
+              <SPAN id="title1" class="PL03">약속변경</SPAN>
+            </td>
+            <td><table border="0" align="right" cellpadding="0" cellspacing="0">
+              <tr>
+                <td><img src="/edi/imgs/btn/save.gif" width="50" height="22" id="save" onclick="btn_save();"/></td>
+            <td><img src="/edi/imgs/btn/close.gif" width="50" height="22"   onClick="btn_Close();"/></td>
+                
+                </tr>
+            </table></td>
+          </tr>
+        </table></td>
+      </tr>
+      <tr height=5>
+      <td>
+      </td>
+      </tr>
+      <tr>
+        <td class="popT01 PB03">
+           <table width="100%" border="0" cellspacing="0" cellpadding="0" >
+            <tr>
+                <td width=25%  valign="top">
+                     <table width="100%" border="0" cellspacing="0" cellpadding="0" class="o_table">
+                      <tr>
+                        <td><table width="100%" border="0" cellpadding="0" cellspacing="0" class="s_table">
+                          <tr>
+                            <th width="60">항목</th>
+                            <th width="80">이전약속</th>
+                          </tr>
+                          <tr>
+                            <th>약속일</th>
+                            <td><input type="text" name="prom_dt" id="prom_dt" size="10" maxlength="10" style='text-align:center;IME-MODE: disabled' disabled="disabled" >
+                                <input type="text" name="prom_time" id="prom_time" size="5" maxlength="10" style='text-align:center;IME-MODE: disabled' disabled="disabled" >
+                            </td>
+                          </tr>
+                          <tr>
+                            <th>입고예정일</th>
+                            <td><input type="text" name="in_dt" id="in_dt" size="10" maxlength="10" style='text-align:center;IME-MODE: disabled' disabled="disabled" ></td>
+                          </tr>
+                          <tr>
+                            <th>인도점</th>
+                            <td><input type="text" name="in_str_nm" id="in_str_nm" size="10" maxlength="10" style='text-align:center;IME-MODE: disabled' disabled="disabled" ></td>
+                          </tr>
+                          <tr>
+                            <th>인도방식</th>
+                            <td><input type="text" name="deli_type_nm" id="deli_type_nm"size="10" maxlength="10" style='text-align:center;IME-MODE: disabled' disabled="disabled" ></td>
+                          </tr>
+                        </table></td>
+                      </tr>
+                    </table>
+                </td>
+                <td>
+                     <table width="100%" border="0" cellspacing="0" cellpadding="0" class="o_table">
+                      <tr>
+                        <td><table width="100%" border="0" cellpadding="0" cellspacing="0" class="s_table">
+                          <tr>
+                            <th></th>
+                            <th class="point">변경약속</th>
+                            <th class="point">변경사유</th>
+                            <th>변경사유 상세</th>
+                            <th class="point">변경접수일자</th>
+                          </tr>
+                          <tr><!--  약속일 -->
+                          <th>변경약속일</th>
+                            <td><input type="text" name="contents" id="chg_prom_dt" size="10" onblur="dateCheck(this);" onfocus="dateValid(this);" onkeypress="javascript:onlyNumber();" style='text-align:center;IME-MODE: disabled'>
+                            <img src="<%=dir%>/imgs/btn/date.gif" alt="변경약속일" align="absmiddle" onclick="openCal('G',chg_prom_dt);return false;" id="img_01" />
+                            <select id="chg_prom_hh" name="contents" style="width:50;">
+	                        </select>
+	                        <select id="chg_prom_mm" name="contents" style="width:50;">
+	                        </select>
+                            </td>
+                            <td> <select id="chg_reason_01" name="contents" style="width:120;">
+                            </select></td>
+                            <td><textarea style="height:40;width:150;"  name="contents" id="chg_reason_dtl_01" onkeyup="checkByteLength(this, 100);" ></textarea></td>
+                            <td><input type="text" name="contents" id="chg_take_dt_01"size="10" onblur="dateCheck(this);" onfocus="dateValid(this);" onkeypress="javascript:onlyNumber();" style='text-align:center;IME-MODE: disabled' >
+                            <img src="<%=dir%>/imgs/btn/date.gif" alt="변경접수일자" align="absmiddle" onclick="openCal('G',chg_take_dt_01);return false;" id="img_02" /></td>
+                          </tr>
+                         <tr><!--  입고예정일 -->
+                         <th>변경 입고예정일</th>
+                             <td><input type="text" name="contents" id="chg_in_dt" size="10" onblur="dateCheck(this);" onfocus="dateValid(this);" onkeypress="javascript:onlyNumber();" style='text-align:center;IME-MODE: disabled'>
+                             <img src="<%=dir%>/imgs/btn/date.gif" alt="변경 입고예정일" align="absmiddle" onclick="openCal('G',chg_in_dt);return false;" id="img_03" /></td>
+                            <td> <select id="chg_reason_02" name="contents" style="width:120;">
+                            </select></td>
+                            <td><textarea style="height:40;width:150;"  name="contents" id="chg_reason_dtl_02" onkeyup="checkByteLength(this, 100);" ></textarea></td>
+                            <td><input type="text" name="contents" id="chg_take_dt_02"size="10" maxlength="10" style='text-align:center;IME-MODE: disabled'>
+                            <img src="<%=dir%>/imgs/btn/date.gif" alt="변경접수일자" align="absmiddle" onclick="openCal('G',chg_take_dt_02);return false;" id="img_04" />
+                            </td>
+                          </tr>
+                           <tr><!--  인도점 -->
+                           <th>변경 인도점</th>
+                            <td> <select id="chg_deli_str" name="contents" style="width:100;">
+                            </select></td>
+                            <td><select id="chg_reason_03" name="contents" style="width:120;">
+                            </select></td>
+                            <td><textarea style="height:40;width:150;"  name="contents" id="chg_reason_dtl_03" onkeyup="checkByteLength(this, 100);" ></textarea></td>
+                            <td><input type="text" name="contents" id="chg_take_dt_03"size="10" onblur="dateCheck(this);" onfocus="dateValid(this);" onkeypress="javascript:onlyNumber();" style='text-align:center;IME-MODE: disabled' >
+                            <img src="<%=dir%>/imgs/btn/date.gif" alt="변경접수일자" align="absmiddle" onclick="openCal('G',chg_take_dt_03);return false;" id="img_05" />
+                            </td>
+                          </tr>
+                           <tr><!--  인도방식 -->
+                           <th>변경 인도방식</th>
+                             <td> <select id="chg_deli_type" name="contents" style="width:100;">
+                            </select></td>
+                            <td><select id="chg_reason_04" name="contents" style="width:120;">
+                            </select></td>
+                            <td><textarea style="height:40;width:150;"  name="contents" id="chg_reason_dtl_04" onkeyup="checkByteLength(this, 100);" ></textarea></td>
+                            <td><input type="text" name="contents" id="chg_take_dt_04"size="10"  style='text-align:center;IME-MODE: disabled' onblur="dateCheck(this);" onfocus="dateValid(this);" onkeypress="javascript:onlyNumber();">
+                            <img src="<%=dir%>/imgs/btn/date.gif" alt="변경접수일자" align="absmiddle" onclick="openCal('G',chg_take_dt_04);return false;" id="img_06" />
+                            </td>
+                          </tr>
+                          <tr> <!--  취소 -->
+                          <th>취소</th>
+                          <td> <input type="checkbox" name="contents" id="chk_cancel">  취소</td>
+                             <td> <select id="chg_reason_05" name="contents" style="width:120;">
+                            </select></td>
+                            <td><textarea style="height:40;width:150;"  name="contents" id="chg_reason_dtl_05" onkeyup="checkByteLength(this, 100);" ></textarea></td>
+                            <td><input type="text" name="contents" id="chg_take_dt_05" size="10" style='text-align:center;IME-MODE: disabled' onblur="dateCheck(this);" onfocus="dateValid(this);" onkeypress="javascript:onlyNumber();" >
+                            <img src="<%=dir%>/imgs/btn/date.gif" alt="변경접수일자" align="absmiddle" onclick="openCal('G',chg_take_dt_05);return false;" id="img_07" />
+                            </td>
+                          </tr>
+                        </table></td>
+                      </tr>
+                    </table>
+                </td>
+            </tr>
+           </table>
+        </td>
+      </tr>
+      <tr>
+        <td class="popT01 PT05">
+           <table width="100%" border="0" cellspacing="0" cellpadding="0"  class="BD4A">
+                    <tr >
+                        <td>
+                            <div id="MASTER_TITLE" style=" width:930px; overflow:hidden;"> 
+                                <table width=930 border="0" cellspacing="0" cellpadding="0" class="g_table" >
+                                    <tr>
+                                        <th width="20">NO</th>
+                                        <th width="100">항목</th>
+                                        <th width="100">변경내역</th>
+                                        <th width="150">사유</th>
+                                        <th width="410">변경사유상세</th>
+                                        <th width="100">변경접수일자</th>
+                                        <th width="15">&nbsp;</th>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div id="MASTER_CONTETN" style="width:930px;height:250px;overflow:scroll" onscroll="scrollAll();">
+                                <table width="910" border="0" cellspacing="0" cellpadding="0" class="g_table" id="tb_master">
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+        </td>
+      </tr>
+    </table>
+    </td>
+  </tr> 
+</table>
+</body>
+</html>
+

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김경은
+ * 회 사 명    : 
+ * 작 성 일    : 2010.05.18
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  임대을B 매출수수료산출 현황
+ -->
+<service name="/ppay310.pp">
+    
+    <!-- 임대을B 매출수수료 산출현황 마스터 리스트-->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"               colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"               colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"               colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"               colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"            colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"             colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BF_SALE_COMIS_AMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_SALE_AMT"         colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_COMIS_AMT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUP_AMT"              colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAT_AMT"              colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_SALE_COMMIS_AMT"  colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_SALE_AMT"         colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 임대을B 매출수수료 산출현황 디테일 리스트 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="STR_CD"               colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"               colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"               colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"               colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"            colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT"                colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MG_RATE"              colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"             colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BF_SALE_COMIS_AMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_SALE_AMT"         colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_COMIS_AMT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_SALE_COMMIS_AMT"  colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_SALE_AMT"         colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 임대을B 매출수수료 산출현황 마스터 조회  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+		    SELECT STR_CD                                                     /* 점 */
+		          , DPS.FN_GET_STORE_NAME(STR_CD)   AS STR_NM                 /* 점명 */
+		          , VEN_CD                                                    /* 협력사 */
+		          , DPS.FN_GET_VENDOR_NAME(VEN_CD)  AS VEN_NMVEN_NM           /* 협력사명 */
+			      , PUMBUN_CD        									      /* 브랜드 */
+			      , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NM			  /* 브랜드명 */
+		          , SALE_AMT                        AS SALE_AMT               /* 매출 */
+		          , BF_SALE_COMIS_AMT               AS BF_SALE_COMIS_AMT      /* 매출수수료(매출) */
+		          , MOD_SALE_AMT                    AS MOD_SALE_AMT           /* 매출(산출) */
+		          , SALE_COMIS_AMT                  AS SALE_COMIS_AMT         /* 매출수수료(산출) */
+		          , SUP_AMT                         AS SUP_AMT                /* 공급가 */
+		          , VAT_AMT                         AS VAT_AMT                /* 부가세 */
+		          , GAP_SALE_COMMIS_AMT             AS GAP_SALE_COMMIS_AMT    /* 매출수수료차이 */
+		          , DECODE(GAP_SALE_COMMIS_AMT, 0, 0
+		                             , MOD_SALE_AMT - SALE_AMT)  AS GAP_SALE_AMT  /* 매출차이*/
+		       FROM DPS.PP_RENTBMST
+		      WHERE STR_CD    = ?
+		        AND PAY_YM    = ?
+		        AND PAY_CYC   = ?
+		        AND PAY_CNT   = ?
+		        AND VEN_CD    LIKE ? || '%' 
+		      ORDER BY STR_CD
+		             , VEN_CD
+        ]]>
+    </query> 
+    
+    <!--  임대을B 매출수수료 산출현황 디테일 조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+                   
+		   SELECT STR_CD                                                      /* 점 */
+		        , DPS.FN_GET_STORE_NAME(STR_CD)     AS STR_NM                 /* 점명 */
+		        , VEN_CD                                                      /* 협력사 */
+		        , DPS.FN_GET_VENDOR_NAME(VEN_CD)    AS VEN_NMVEN_NM           /* 협력사명 */
+		        , PUMBUN_CD                                                   /* 품번코드 */
+		        , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NM              /* 품번명 */
+		        , EVENT_FLAG || EVENT_RATE          AS EVENT                  /* 행사구분 */
+		        , MG_RATE                           AS MG_RATE                /* 마진율 */
+                , SALE_AMT                          AS SALE_AMT               /* 매출 */
+                , BF_SALE_COMIS_AMT                 AS BF_SALE_COMIS_AMT      /* 매출수수료(POS) */
+                , MOD_SALE_AMT                      AS MOD_SALE_AMT           /* 매출수정(산출) */  
+                , SALE_COMIS_AMT                    AS SALE_COMIS_AMT         /* 매출수수료(산출) */
+                , GAP_SALE_COMMIS_AMT               AS GAP_SALE_COMMIS_AMT    /* 매출수수료차이 */
+                , DECODE(GAP_SALE_COMMIS_AMT, 0, 0
+                             , MOD_SALE_AMT - SALE_AMT )  AS GAP_SALE_AMT  /* 매출차이*/
+             FROM DPS.PP_RENTBDTL
+            WHERE STR_CD   = ?
+             AND PAY_YM    = ?
+             AND PAY_CYC   = ?
+             AND PAY_CNT   = ?
+             AND VEN_CD    = ?
+             AND PUMBUN_CD = ?
+            ORDER BY PUMBUN_CD
+             , SALE_AMT DESC
+             , EVENT_FLAG || EVENT_RATE
+        ]]>
+    </query> 
+ </service>

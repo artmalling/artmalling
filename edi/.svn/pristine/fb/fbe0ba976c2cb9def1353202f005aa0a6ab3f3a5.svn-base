@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal103.es">
+    
+   
+    <!-- 마진별 매출실적 조회 -->
+    <query name="SEL_DAYMGPBN">
+        <![CDATA[
+       SELECT NVL(DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 0, 
+                                                                                                                                 A.STR_CD, ' '), ' ')  AS STR_CD 
+	         , NVL(DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 31, '합 계', 
+	               DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 0, DPS.FN_GET_STORE_NAME(A.STR_CD), ' ')), ' ')  AS STRNM 
+	         , NVL(DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 15, '일자별소계 ', 
+	               DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 0, 
+	                      SUBSTR(A.SALE_DT, 0, 4)||'/'||SUBSTR(A.SALE_DT, 5, 2)||'/'||SUBSTR(A.SALE_DT, 7, 2), ' ')), ' ')                        AS SALE_DT 
+	         , NVL(DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 7, '브랜드별 소계', 
+	               DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 0, A.PUMBUN_CD, ' ')), ' ')                      AS PUMBUN_CD 
+	         , NVL(DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 0, 
+	                                                                                                  DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD), ' '), ' ')  AS PUMBUN_NAME 
+	                   
+	         , NVL(DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 3, '행사구분별 소계', 
+	               DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 0, A.EVENT_FLAG, ' ')), ' ')                     AS EVENT_FLAG 
+	         , NVL(DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 1, '행사율별 소계', 
+	               DECODE(GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE), 0, A.EVENT_RATE, ' ')), ' ')                     AS EVENT_RATE 
+             , TO_CHAR(A.MG_RATE, 'FM990.00') AS MG_RATE
+             , SUM(NVL(A.SALE_QTY, 0)) AS SALE_QTY
+             , SUM(NVL(A.TOT_SALE_AMT, 0)) - SUM(NVL(A.REDU_AMT, 0)) AS SALE_AMT 
+             , SUM(NVL(A.DC_AMT, 0)) AS DC_AMT
+             , SUM(NVL(A.NET_SALE_AMT, 0)) AS NET_SALE_AMT
+             , SUM(NVL(A.REDU_AMT, 0)) AS REDU_AMT
+             , SUM(NVL(A.TOT_SALE_AMT, 0)) AS TOT_SALE_AMT
+             , GROUPING_ID(A.SALE_DT, A.PUMBUN_CD, A.EVENT_FLAG, A.EVENT_RATE, A.MG_RATE)     AS NO
+          FROM DPS.PS_DAYMGPBN    A
+             , DPS.PC_STRPBN      F 
+         WHERE A.STR_CD = F.STR_CD
+           AND A.PUMBUN_CD = F.PUMBUN_CD
+           AND F.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND A.STR_CD     = ?
+           AND A.PUMBUN_CD  LIKE ? || '%'
+           AND F.VEN_CD = ? 
+           AND A.SALE_DT    >= ?
+           AND A.SALE_DT    <= ?      
+           AND A.EVENT_FLAG LIKE ?||'%'  
+      GROUP BY A.STR_CD, ROLLUP (A.SALE_DT,  A.PUMBUN_CD, A.EVENT_FLAG,  A.EVENT_RATE, A.MG_RATE)
+      ORDER BY A.SALE_DT , A.PUMBUN_CD 
+        ]]>
+    </query>       
+      <!-- 
+         SELECT A.SALE_DT
+             , A.STR_CD
+             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM
+             , A.PUMBUN_CD
+             , F.PUMBUN_NAME
+             , A.EVENT_FLAG
+             , A.EVENT_RATE
+             , TO_CHAR(A.MG_RATE, 'FM990.00') AS MG_RATE
+             , SUM(NVL(A.SALE_QTY, 0)) AS SALE_QTY
+             , SUM(NVL(A.TOT_SALE_AMT, 0)) AS TOT_SALE_AMT
+             , SUM(NVL(A.REDU_AMT, 0)) AS REDU_AMT
+             , SUM(NVL(A.DC_AMT, 0)) AS DC_AMT
+             , SUM(NVL(A.NET_SALE_AMT, 0)) AS NET_SALE_AMT
+          FROM DPS.PS_DAYMGPBN    A
+             , DPS.PC_STRPBN      F 
+         WHERE A.STR_CD = F.STR_CD
+           AND A.PUMBUN_CD = F.PUMBUN_CD
+           AND F.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND A.STR_CD     = ?
+           AND A.PUMBUN_CD  LIKE ? || '%'
+           AND F.VEN_CD = ?  
+           AND A.SALE_DT    >= ?
+           AND A.SALE_DT    <= ?          
+           AND A.EVENT_FLAG LIKE ?||'%'  
+      GROUP BY A.SALE_DT, A.STR_CD,   A.PUMBUN_CD,  F.PUMBUN_NAME,  A.EVENT_FLAG,  A.EVENT_RATE, A.MG_RATE
+      ORDER BY A.SALE_DT DESC,  A.STR_CD,  A.PUMBUN_CD    
+       -->
+    <!-- 행사구분 조회  -->
+    <query name="SEL_MARGIN_FLAG">
+        <![CDATA[
+         SELECT C.EVENT_FLAG
+              , C.EVENT_FLAG AS EVENT_FLAG_NM
+           FROM DPS.PC_STRPBN    B
+              , DPS.PC_MARGINMST C 
+          WHERE B.STR_CD     = C.STR_CD
+            AND B.PUMBUN_CD = C.PUMBUN_CD
+            AND B.STR_CD    = ?              /*점코드*/
+            AND B.PUMBUN_CD = ?              /*브랜드코드*/
+            AND (? BETWEEN C.APP_S_DT AND C.APP_E_DT      /*마진적용율*/
+                 OR ? BETWEEN C.APP_S_DT AND C.APP_E_DT)
+            AND C.EVENT_CD = '00000000000'
+       ORDER BY C.EVENT_FLAG
+        ]]>
+    </query>
+    
+
+</service>

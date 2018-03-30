@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  일별 POS 마감정보조회
+ -->
+<service name="/dmtc606.dc">
+
+    <gauce name="H_MASTER"> 
+        <column colName="TYPE_CODE"      colType="TB_STRING"   size="10" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TYPE"      	 colType="TB_STRING"   size="40" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="COMM_CODE"      	 colType="TB_STRING"   size="40" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="COMM_NAME1"      	 colType="TB_STRING"   size="40" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON01"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON01_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON02"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON02_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON03"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON03_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON04"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON04_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON05"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON05_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON06"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON06_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON07"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON07_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON08"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON08_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON09"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON09_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON10"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON10_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON11"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON11_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON12"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MON12_CNT"         colType="TB_DECIMAL"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>
+
+    <!-- 마감일자관리 조회 -->    
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            WITH T_ADD AS
+			    (SELECT /*+ index(DO_POINT_ADD IX_DO_POINT_ADD_06) index(DO_POINT_ADD IX_DO_POINT_ADD_03) */  * FROM DCS.DO_POINT_ADD WHERE ADD_DT BETWEEN ?||'0101' AND ?||'1231'),
+			     T_USE AS
+			    (SELECT /*+ index(DO_POINT_USE IX_DO_POINT_USE_03) index(DO_POINT_USE IX_DO_POINT_USE_05) */  * FROM DCS.DO_POINT_USE WHERE USE_DT BETWEEN ?||'0101' AND ?||'1231')    
+			   
+			
+			
+			SELECT  '0' TYPE_CODE,TYPE,COMM_CODE,COMM_NAME1,
+                        SUM(MON01) MON01, SUM(MON01_CNT) MON01_CNT, SUM(MON02) MON02, SUM(MON02_CNT) MON02_CNT, SUM(MON03) MON03, SUM(MON03_CNT) MON03_CNT, 
+                        SUM(MON04) MON04, SUM(MON04_CNT) MON04_CNT, SUM(MON05) MON05, SUM(MON05_CNT) MON05_CNT, SUM(MON06) MON06, SUM(MON06_CNT) MON06_CNT, 
+                        SUM(MON07) MON07, SUM(MON07_CNT) MON07_CNT, SUM(MON08) MON08, SUM(MON08_CNT) MON08_CNT, SUM(MON09) MON09, SUM(MON09_CNT) MON09_CNT, 
+                        SUM(MON10) MON10, SUM(MON10_CNT) MON10_CNT, SUM(MON11) MON11, SUM(MON11_CNT) MON11_CNT, SUM(MON12) MON12, SUM(MON12_CNT) MON12_CNT 
+            FROM    
+                    (SELECT  
+                                '적립' TYPE,COMM_CODE,COMM_NAME1 ,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '01' THEN SUM(ADD_POINT) ELSE 0 END MON01,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '01' THEN COUNT(*) ELSE 0 END MON01_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '02' THEN SUM(ADD_POINT) ELSE 0 END MON02,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '02' THEN COUNT(*) ELSE 0 END MON02_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '03' THEN SUM(ADD_POINT) ELSE 0 END MON03,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '03' THEN COUNT(*) ELSE 0 END MON03_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '04' THEN SUM(ADD_POINT) ELSE 0 END MON04,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '04' THEN COUNT(*) ELSE 0 END MON04_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '05' THEN SUM(ADD_POINT) ELSE 0 END MON05,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '05' THEN COUNT(*) ELSE 0 END MON05_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '06' THEN SUM(ADD_POINT) ELSE 0 END MON06,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '06' THEN COUNT(*) ELSE 0 END MON06_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '07' THEN SUM(ADD_POINT) ELSE 0 END MON07,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '07' THEN COUNT(*) ELSE 0 END MON07_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '08' THEN SUM(ADD_POINT) ELSE 0 END MON08,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '08' THEN COUNT(*) ELSE 0 END MON08_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '09' THEN SUM(ADD_POINT) ELSE 0 END MON09,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '09' THEN COUNT(*) ELSE 0 END MON09_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '10' THEN SUM(ADD_POINT) ELSE 0 END MON10,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '10' THEN COUNT(*) ELSE 0 END MON10_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '11' THEN SUM(ADD_POINT) ELSE 0 END MON11,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '11' THEN COUNT(*) ELSE 0 END MON11_CNT,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '12' THEN SUM(ADD_POINT) ELSE 0 END MON12,
+                                CASE WHEN SUBSTR(ADD_DT,5,2) = '12' THEN COUNT(*) ELSE 0 END MON12_CNT
+                    FROM COM.TC_COMMCODE A, T_ADD B
+                    WHERE SYS_PART = 'D' AND COMM_PART = 'D006'
+                      AND ADD_TYPE (+) = COMM_CODE
+                      AND ADD_DT (+) BETWEEN ?||'0101' AND ?||'1231'
+                    GROUP BY COMM_CODE,COMM_NAME1 , SUBSTR(ADD_DT,5,2)
+                    ) A
+            GROUP BY TYPE,COMM_CODE,COMM_NAME1
+            
+            UNION ALL
+            
+            SELECT  '1' TYPE_CODE,TYPE,COMM_CODE,COMM_NAME1,
+                        SUM(MON01) MON01, SUM(MON01_CNT) MON01_CNT, SUM(MON02) MON02, SUM(MON02_CNT) MON02_CNT, SUM(MON03) MON03, SUM(MON03_CNT) MON03_CNT, 
+                        SUM(MON04) MON04, SUM(MON04_CNT) MON04_CNT, SUM(MON05) MON05, SUM(MON05_CNT) MON05_CNT, SUM(MON06) MON06, SUM(MON06_CNT) MON06_CNT, 
+                        SUM(MON07) MON07, SUM(MON07_CNT) MON07_CNT, SUM(MON08) MON08, SUM(MON08_CNT) MON08_CNT, SUM(MON09) MON09, SUM(MON09_CNT) MON09_CNT, 
+                        SUM(MON10) MON10, SUM(MON10_CNT) MON10_CNT, SUM(MON11) MON11, SUM(MON11_CNT) MON11_CNT, SUM(MON12) MON12, SUM(MON12_CNT) MON12_CNT 
+            FROM    
+                    (SELECT 
+                                '사용' TYPE,COMM_CODE,COMM_NAME1 ,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '01' THEN SUM(USE_POINT) ELSE 0 END MON01,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '01' THEN COUNT(*) ELSE 0 END MON01_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '02' THEN SUM(USE_POINT) ELSE 0 END MON02,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '02' THEN COUNT(*) ELSE 0 END MON02_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '03' THEN SUM(USE_POINT) ELSE 0 END MON03,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '03' THEN COUNT(*) ELSE 0 END MON03_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '04' THEN SUM(USE_POINT) ELSE 0 END MON04,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '04' THEN COUNT(*) ELSE 0 END MON04_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '05' THEN SUM(USE_POINT) ELSE 0 END MON05,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '05' THEN COUNT(*) ELSE 0 END MON05_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '06' THEN SUM(USE_POINT) ELSE 0 END MON06,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '06' THEN COUNT(*) ELSE 0 END MON06_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '07' THEN SUM(USE_POINT) ELSE 0 END MON07,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '07' THEN COUNT(*) ELSE 0 END MON07_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '08' THEN SUM(USE_POINT) ELSE 0 END MON08,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '08' THEN COUNT(*) ELSE 0 END MON08_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '09' THEN SUM(USE_POINT) ELSE 0 END MON09,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '09' THEN COUNT(*) ELSE 0 END MON09_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '10' THEN SUM(USE_POINT) ELSE 0 END MON10,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '10' THEN COUNT(*) ELSE 0 END MON10_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '11' THEN SUM(USE_POINT) ELSE 0 END MON11,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '11' THEN COUNT(*) ELSE 0 END MON11_CNT,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '12' THEN SUM(USE_POINT) ELSE 0 END MON12,
+                                CASE WHEN SUBSTR(USE_DT,5,2) = '12' THEN COUNT(*) ELSE 0 END MON12_CNT
+                    FROM COM.TC_COMMCODE A, T_USE B
+                    WHERE SYS_PART = 'D' AND COMM_PART = 'D007'
+                      AND USE_TYPE (+) = COMM_CODE
+                      AND USE_DT (+) BETWEEN ?||'0101' AND ?||'1231'
+                    GROUP BY COMM_CODE,COMM_NAME1 , SUBSTR(USE_DT,5,2)
+                    ) A
+            GROUP BY TYPE,COMM_CODE,COMM_NAME1
+            
+            
+                    
+                     UNION ALL
+                        
+                        SELECT 
+                            '9' TYPE_CODE,'회원' TYPE, '99' COMM_CODE,'신규가입자수' COMM_NAME1,
+                            SUM(MON01) MON01,SUM(MON01_CNT) MON01_CNT,
+                            SUM(MON02) MON02,SUM(MON02_CNT) MON02_CNT,
+                            SUM(MON03) MON03,SUM(MON03_CNT) MON03_CNT,
+                            SUM(MON04) MON04,SUM(MON04_CNT) MON04_CNT,
+                            SUM(MON05) MON05,SUM(MON05_CNT) MON05_CNT,
+                            SUM(MON06) MON06,SUM(MON06_CNT) MON06_CNT,
+                            SUM(MON07) MON07,SUM(MON07_CNT) MON07_CNT,
+                            SUM(MON08) MON08,SUM(MON08_CNT) MON08_CNT,
+                            SUM(MON09) MON09,SUM(MON09_CNT) MON09_CNT,
+                            SUM(MON10) MON10,SUM(MON10_CNT) MON10_CNT,
+                            SUM(MON11) MON11,SUM(MON11_CNT) MON11_CNT,
+                            SUM(MON12) MON12,SUM(MON12_CNT) MON12_CNT
+                        FROM
+                            (SELECT /*+ index(DM_CUSTOMER IX_DM_CUSTOMER_03) */ 
+                                   0 MON01, CASE WHEN SUBSTR(ENTR_DT,5,2) = '01' THEN COUNT(*) ELSE 0 END MON01_CNT,
+                                   0 MON02, CASE WHEN SUBSTR(ENTR_DT,5,2) = '02' THEN COUNT(*) ELSE 0 END MON02_CNT,
+                                   0 MON03, CASE WHEN SUBSTR(ENTR_DT,5,2) = '03' THEN COUNT(*) ELSE 0 END MON03_CNT,
+                                   0 MON04, CASE WHEN SUBSTR(ENTR_DT,5,2) = '04' THEN COUNT(*) ELSE 0 END MON04_CNT,
+                                   0 MON05, CASE WHEN SUBSTR(ENTR_DT,5,2) = '05' THEN COUNT(*) ELSE 0 END MON05_CNT,
+                                   0 MON06, CASE WHEN SUBSTR(ENTR_DT,5,2) = '06' THEN COUNT(*) ELSE 0 END MON06_CNT,
+                                   0 MON07, CASE WHEN SUBSTR(ENTR_DT,5,2) = '07' THEN COUNT(*) ELSE 0 END MON07_CNT,
+                                   0 MON08, CASE WHEN SUBSTR(ENTR_DT,5,2) = '08' THEN COUNT(*) ELSE 0 END MON08_CNT,
+                                   0 MON09, CASE WHEN SUBSTR(ENTR_DT,5,2) = '09' THEN COUNT(*) ELSE 0 END MON09_CNT,
+                                   0 MON10, CASE WHEN SUBSTR(ENTR_DT,5,2) = '10' THEN COUNT(*) ELSE 0 END MON10_CNT,
+                                   0 MON11, CASE WHEN SUBSTR(ENTR_DT,5,2) = '11' THEN COUNT(*) ELSE 0 END MON11_CNT,
+                                   0 MON12, CASE WHEN SUBSTR(ENTR_DT,5,2) = '12' THEN COUNT(*) ELSE 0 END MON12_CNT
+                            FROM DCS.DM_CUSTOMER
+                            WHERE ENTR_DT BETWEEN ?||'0101' AND ?||'1231'
+                            GROUP BY SUBSTR(ENTR_DT,5,2))
+                    
+                ORDER BY TYPE_CODE,COMM_CODE
+        ]]>        
+    </query>                 
+
+</service>

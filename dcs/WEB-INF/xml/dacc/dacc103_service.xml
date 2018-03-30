@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작  성  자  : 김영진
+ * 회  사  명  : 한국후지쯔
+ * 작  성  일  : 2010.05.24
+ * 변  경  일  : 
+ * 변경내용 : 
+ * 개          요 :  제휴카드사포인트 검증
+ -->
+<service name="/dacc103.da">
+
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"        colType="TB_STRING"   size="2"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BRCH_NM"       colType="TB_STRING"   size="40" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PAY_DTL"       colType="TB_STRING"   size="2"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="PAY_DTL_NM"    colType="TB_STRING"   size="40" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="SALE_DT"       colType="TB_STRING"   size="8"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PCARD_COUNT"   colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PCARD_POINT"   colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POS_COUNT"     colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POS_POINT"     colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="JCOMP_COUNT"   colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="JCOMP_POINT"   colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CHA1_COUNT"    colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CHA1_POINT"    colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CHA2_COUNT"    colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CHA2_POINT"    colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>
+     
+     <gauce name="H_GAPLIST"> 
+        <column colName="STR_CD"        colType="TB_STRING"   size="2"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BRCH_NM"       colType="TB_STRING"   size="40" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PAY_DTL"       colType="TB_STRING"   size="2"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="PAY_DTL_NM"    colType="TB_STRING"   size="40" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="RECP_NO"       colType="TB_STRING"   size="19" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CAPPR_NO"      colType="TB_STRING"   size="10" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PCARD_POINT"   colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POS_POINT"     colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="JCOMP_POINT"   colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CHA1_POINT"    colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CHA2_POINT"    colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>
+
+    <!-- 제휴카드사포인트 검증 -->    
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT X.STR_CD
+                 , (
+                    SELECT BRCH_NAME 
+                      FROM DCS.DB_BRANCH
+                     WHERE STR_CD = X.STR_CD
+                       AND ROWNUM = 1
+                   ) BRCH_NM
+                 , X.PAY_DTL
+                 , (SELECT CCOMP_NM
+                      FROM DPS.PD_CARDCOMP
+                     WHERE CCOMP_CD = X.PAY_DTL
+                 ) PAY_DTL_NM
+                 , X.SALE_DT
+                 , SUM(PCARD_COUNT) PCARD_COUNT
+                 , SUM(PCARD_POINT) PCARD_POINT
+                 , SUM(POS_COUNT)   POS_COUNT
+                 , SUM(POS_POINT)   POS_POINT
+                 , SUM(JCOMP_COUNT) JCOMP_COUNT
+                 , SUM(JCOMP_POINT) JCOMP_POINT
+                 , SUM(JCOMP_COUNT) - SUM(PCARD_COUNT) CHA1_COUNT
+                 , SUM(JCOMP_POINT) - SUM(PCARD_POINT) CHA1_POINT
+                 , SUM(JCOMP_COUNT) - SUM(POS_COUNT) CHA2_COUNT
+                 , SUM(JCOMP_POINT) - SUM(POS_POINT) CHA2_POINT
+              FROM ( 
+                     SELECT W.STR_CD
+                          , W.PAY_DTL
+                          , W.SALE_DT
+                          , COUNT(*) PCARD_COUNT
+                          , SUM(ADD_POINT) PCARD_POINT
+                          , 0 POS_COUNT
+                          , 0 POS_POINT
+                          , 0 JCOMP_COUNT
+                          , 0 JCOMP_POINT
+                       FROM ( SELECT A.STR_CD
+                                   , A.SALE_DT
+                                   , A.PAY_DTL
+                                   , A.PAY_AMT
+                                   , A.ADD_POINT    
+                                FROM DCS.DA_PADD_PCARD A
+                                  , (
+                                     SELECT M.COMM_NAME1 PAY_TYPE
+                                          , N.BCOMP_CD PAY_DTL
+                                       FROM (
+                                             SELECT COMM_NAME1
+                                               FROM COM.TC_COMMCODE
+                                              WHERE COMM_PART = 'D062'
+                                                AND COMM_CODE = '3'
+                                            ) M
+                                          , (
+                                             SELECT DISTINCT BCOMP_CD
+                                               FROM DPS.PD_BRANCH
+                                              WHERE JBRCH_TYPE = '12' 
+                                            ) N 
+                                    ) B
+                              WHERE A.PAY_TYPE = B.PAY_TYPE
+                                AND A.PAY_DTL  = B.PAY_DTL
+                                AND A.SALE_DT  BETWEEN ? AND ?
+                                AND A.STR_CD   LIKE ? || '%'
+                                AND A.PAY_DTL  LIKE ? || '%'
+                            ) W
+                      GROUP BY W.STR_CD, W.PAY_DTL, W.SALE_DT
+                     UNION ALL 
+                     SELECT W.STR_CD
+                          , W.PAY_DTL
+                          , W.SALE_DT
+                          , 0 PCARD_COUNT
+                          , 0 PCARD_POINT
+                          , COUNT(*) POS_COUNT
+                          , SUM(ADD_POINT) POS_POINT
+                          , 0 JCOMP_COUNT
+                          , 0 JCOMP_POINT
+                       FROM ( SELECT STR_CD 
+                                   , A.SALE_DT
+                                   , A.PAY_DTL
+                                   , A.PAY_AMT
+                                   , A.ADD_POINT    
+                                FROM DCS.DA_PADD_POS A
+                                  , (SELECT M.COMM_NAME1 PAY_TYPE
+                                          , N.BCOMP_CD PAY_DTL
+                                       FROM (SELECT COMM_NAME1
+                                               FROM COM.TC_COMMCODE
+                                              WHERE COMM_PART = 'D062'
+                                                AND COMM_CODE = '3'
+                                            ) M
+                                          , (SELECT DISTINCT BCOMP_CD
+                                               FROM DPS.PD_BRANCH
+                                              WHERE JBRCH_TYPE = '12' 
+                                            ) N 
+                                    ) B
+                              WHERE A.PAY_TYPE = B.PAY_TYPE
+                                AND A.PAY_DTL  = B.PAY_DTL
+                                AND A.SALE_DT  BETWEEN ? AND ?
+                                AND A.STR_CD   LIKE ? || '%'
+                                AND A.PAY_DTL  LIKE ? || '%'
+                            ) W
+                      GROUP BY W.STR_CD, W.PAY_DTL, W.SALE_DT 
+                     UNION ALL 
+                     SELECT W.STR_CD
+                          , W.PAY_DTL
+                          , W.SALE_DT
+                          , 0 PCARD_COUNT
+                          , 0 PCARD_POINT
+                          , 0 POS_COUNT
+                          , 0 POS_POINT
+                          , COUNT(*) JCOMP_COUNT
+                          , SUM(ADD_POINT) JCOMP_POINT
+                       FROM ( SELECT A.STORE_CD STR_CD
+                                   , A.USE_DT SALE_DT
+                                   , A.BCOMP_CD PAY_DTL 
+                                   , A.USE_AMT PAY_AMT
+                                   , A.ADD_POINT    
+                                FROM DCS.DA_PADD_JCOMP A
+                                  , (SELECT M.COMM_NAME1 PAY_TYPE
+                                          , N.BCOMP_CD PAY_DTL
+                                       FROM (SELECT COMM_NAME1
+                                               FROM COM.TC_COMMCODE
+                                              WHERE COMM_PART = 'D062'
+                                                AND COMM_CODE = '3'
+                                            ) M
+                                          , (SELECT DISTINCT BCOMP_CD
+                                               FROM DPS.PD_BRANCH
+                                              WHERE JBRCH_TYPE = '12' 
+                                            ) N 
+                                    ) B
+                              WHERE A.USE_DT  BETWEEN ? AND ?
+                                AND A.STORE_CD   LIKE  ? || '%'
+                                AND A.BCOMP_CD   LIKE  ? || '%'
+                            ) W
+                      GROUP BY W.STR_CD, W.PAY_DTL, W.SALE_DT    
+                  ) X        
+            GROUP BY X.STR_CD, X.PAY_DTL, X.SALE_DT         
+        ]]>        
+    </query>                 
+
+    <!-- 차이내역 -->    
+    <query name="SEL_GAP">   
+        <![CDATA[    
+            SELECT A.STR_CD
+                 , (SELECT BRCH_NAME 
+                      FROM DCS.DB_BRANCH
+                     WHERE STR_CD = A.STR_CD
+                       AND ROWNUM = 1
+                   ) BRCH_NM
+                 , A.PAY_DTL
+                 , (SELECT CCOMP_NM
+                      FROM DPS.PD_CARDCOMP
+                     WHERE CCOMP_CD = A.PAY_DTL
+                 ) PAY_DTL_NM
+                 , A.STR_CD || A.SALE_DT || A.POS_NO || A.TRAN_NO RECP_NO
+                 , A.CAPPR_NO
+                 , NVL(B.ADD_POINT,0) PCARD_POINT
+                 , A.ADD_POINT        POS_POINT
+                 , NVL(C.ADD_POINT,0) JCOMP_POINT
+                 , NVL(C.ADD_POINT,0) - NVL(B.ADD_POINT,0) CHA1_POINT
+                 , NVL(C.ADD_POINT,0) - A.ADD_POINT        CHA2_POINT
+              FROM DCS.DA_PADD_POS A
+                 , DCS.DA_PADD_PCARD B
+                 , DCS.DA_PADD_JCOMP C
+             WHERE A.PAPPR_NO = B.PAPPR_NO (+)
+               AND A.CAPPR_NO = C.CAPPR_NO (+)
+               AND A.SALE_DT  = ?
+               AND A.STR_CD   = ?
+               AND A.PAY_DTL  = ?
+        ]]>        
+    </query>                 
+</service>

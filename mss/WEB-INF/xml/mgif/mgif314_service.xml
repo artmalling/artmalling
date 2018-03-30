@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.08.20
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상품권 개인카드 매출 조회
+ -->
+<service name="/mgif314.mg">
+    <!-- 상품권 개인카드 매출 조회  -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"           colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"            colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"           colType="TB_STRING" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_ETC_AMT"      colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+        <column colName="CARD_DATA"         colType="TB_STRING" size="19" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CCOMP_NM"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    </gauce>
+   
+	 <!-- 상품권 개인카드 매출 조회  -->
+	 <query name="SEL_MASTER">
+	     <![CDATA[
+		 SELECT TA.STR_CD                --점코드
+		      , DPS.FN_GET_STORE_NAME(TA.STR_CD) AS STR_NM
+		      , TB.SALE_DT               --판매일자
+		      , TB.POS_NO                --포스번호
+		      , TB.TRAN_NO               --트란번호
+		      , CASE WHEN TC.TRAN_FLAG = '0'        THEN TB.SALE_ETC_AMT
+		             WHEN TC.TRAN_FLAG IN ('1','2') THEN TB.SALE_ETC_AMT * -1 
+		             ELSE 0
+		        END        SALE_ETC_AMT  --실청구금액, --거래구분-->TRAN_FLAG ('0':정상, '1':반품, '2':오타)
+		      , SUBSTR(TB.CARD_DATA, 1, 4) || '-' || SUBSTR(TB.CARD_DATA, 5, 4) || '-****-'|| SUBSTR(TB.CARD_DATA, 13, 4) AS CARD_DATA --카드데이터 
+		      , TD.CCOMP_NM
+		  FROM  DPS.PD_CARDCOMP TD
+		      , DPS.PS_TRHEADER TC       --TRAN헤더
+		      , DPS.PS_DISCARD  TB       --카드집계
+		      , DPS.PC_POSMST   TA       --POS마트서
+		  WHERE TB.CARD_PUBLISH = TD.BCOMP_CD
+		    AND TB.TRAN_NO      = TC.TRAN_NO
+		    AND TB.POS_NO       = TC.POS_NO
+		    AND TB.SALE_DT      = TC.SALE_DT
+		    AND TB.STR_CD       = TC.STR_CD
+		    AND TA.POS_NO       = TB.POS_NO
+		    AND TA.STR_CD       = TB.STR_CD
+		    AND TB.SALE_DT     >= ?
+		    AND TB.SALE_DT     <= ?
+		    AND TA.POS_FLAG     = '08'  --상품권판매포스
+		    AND TD.BCOMP_YN     = 'Y'
+		    AND TB.CARD_DATA    LIKE ?||'%'
+	     ]]>
+	 </query>
+	 
+	 <!-- 상품권 개인카드 매출 조회  : 점조건 추가-->
+     <query name="SEL_MASTER_W_STR">
+         <![CDATA[
+            AND TA.STR_CD      = ?    
+         ]]>
+     </query>
+	 
+	  <!-- 상품권 개인카드 매출 조회  : 정렬-->
+     <query name="SEL_MASTER_ORDER">
+         <![CDATA[
+            ORDER BY SALE_DT, POS_NO, TRAN_NO
+         ]]>
+     </query>
+	 
+</service>

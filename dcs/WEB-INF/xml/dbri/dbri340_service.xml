@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : jyk
+ * 회 사 명 : 
+ * 작 성 일 : 2018.01.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  회원 거래내역 조회
+ -->
+<service name="/dbri340.db">
+    <gauce name="H_MASTER"> 
+        <column colName="ENTR_DT"     		colType="TB_STRING"  size="10"		dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_ID" 	    	colType="TB_STRING"  size="32"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"    		colType="TB_STRING"  size="100" 	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MASKED_NAME"   	colType="TB_STRING"  size="100" 	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_ID" 	    	colType="TB_STRING"  size="100" 	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_NAME" 	    	colType="TB_STRING"  size="100" 	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_STAT_FLAG"	colType="TB_STRING"  size="100" 	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_STAT" 	   	colType="TB_STRING"  size="100" 	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+
+    <!-- 가입기간내 회원 리스트 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+	          SELECT ENTR_DT
+				   , CUST_ID
+				   , CUST_NAME
+				   , DPS.FN_GET_MASKING_STR(CUST_NAME) MASKED_NAME
+				   , REG_ID
+				   , NVL(DPS.FN_GET_PUMBUN_NAME(REG_ID), COM.FN_GET_USER_NAME(REG_ID)) REG_NAME
+				   , CUST_STAT_FLAG
+				   , DECODE(CUST_STAT_FLAG,'0',NULL, '탈퇴') CUST_STAT
+			    FROM DCS.DM_CUSTOMER
+			   WHERE ENTR_DT BETWEEN ? AND ?	-- 가입기간
+			     AND REG_ID LIKE ?||'%'			-- 가입브랜드
+			     AND CUST_STAT_FLAG LIKE ?||'%'	-- 탈퇴구분
+		    ORDER BY ENTR_DT DESC
+	 	]]>        
+    </query>
+    
+    
+    <gauce name="H_PUMBLIST"> 
+        <column colName="PUMBUN_CD"    	colType="TB_STRING"  size="10"		dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PUMBUN_NAME" 	colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CNT"    		colType="TB_DECIMAL" size="13" 		dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="AMT"    		colType="TB_DECIMAL" size="13" 		dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="LAST_DT" 	    colType="TB_STRING"  size="10" 		dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>
+
+	<!-- 회원 구매 품번 리스트 -->
+    <query name="SEL_PUMBLIST">   
+        <![CDATA[    
+	          SELECT PUMBUN_CD
+				   , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) PUMBUN_NAME
+				   , COUNT(*) CNT
+				   , SUM(SALE_AMT)-SUM(RETURN_AMT) AMT
+				   , MAX(SALE_DT) LAST_DT
+				FROM DPS.PS_DAYCUST
+			   WHERE CUST_NO= ?		-- 회원 아이디
+			     AND SALE_DT >= ?	-- 가입일자 이후 조회
+			   GROUP BY PUMBUN_CD
+			   ORDER BY CNT DESC
+	 	]]>        
+    </query>
+    
+    
+    
+    <gauce name="H_SALELIST"> 
+        <column colName="STR_CD"    	colType="TB_STRING"  size="10"		dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SALE_DT" 		colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POS_NO" 		colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TRAN_NO" 		colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SALE_TIME" 	colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TRAN_FLAG" 	colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TRAN_FLAG_NM" 	colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="O_SALE_DT" 	colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="O_POS_NO" 		colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="O_TRAN_NO" 	colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PUMBUN_CD" 	colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PUMBUN_NM" 	colType="TB_STRING"  size="100"  	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SALE_AMT"  	colType="TB_DECIMAL" size="13" 		dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ROWCOLOR"  	colType="TB_DECIMAL" size="13" 		dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>
+
+	<!-- 회원 구매 리스트 -->
+    <query name="SEL_SALELIST">   
+        <![CDATA[    
+	          SELECT  A.STR_CD
+				    , A.SALE_DT
+				    , A.POS_NO
+				    , A.TRAN_NO
+				    , A.SALE_TIME
+				    , A.TRAN_FLAG
+				    , DECODE(A.TRAN_FLAG,'0','정상','반품') TRAN_FLAG_NM
+				    , A.O_SALE_DT
+				    , A.O_POS_NO
+				    , A.O_TRAN_NO
+				    , B.PUMBUN_CD											-- 브랜드 코드
+				    , DPS.FN_GET_PUMBUN_NAME(B.PUMBUN_CD) PUMBUN_NM			-- 브랜드 명
+				    , B.SALE_AMT * DECODE(A.TRAN_FLAG, '0',1,-1) SALE_AMT	-- 매출금액
+				    , MOD(A.ROW_NUM,2) ROWCOLOR								-- 영수증구분용 컬러구분
+				 FROM
+				(
+				SELECT A.STR_CD
+				    , A.SALE_DT
+				    , A.POS_NO
+				    , A.TRAN_NO
+				    , A.SALE_TIME
+				    , A.TRAN_FLAG
+				    , A.O_SALE_DT
+				    , A.O_POS_NO
+				    , A.O_TRAN_NO
+				    , ROW_NUMBER() OVER(ORDER BY A.STR_CD, A.SALE_DT DESC, A.POS_NO, A.TRAN_NO) ROW_NUM
+				 FROM DPS.PS_DISHEADER A
+				   , (
+						SELECT SUBSTR(BRCH_ID,LENGTH(BRCH_ID)-1,2) STR_CD
+						    ,'20'||SUBSTR(RECP_NO,2,6) SALE_DT
+						    , SUBSTR(RECP_NO,8,4) POS_NO
+						    , SUBSTR(RECP_NO,12,5) TRAN_NO
+						 FROM DCS.DO_POINT_ADD A
+						WHERE SALE_DT >= ? 														-- 가입일 이후 조회
+						  AND CARD_NO IN (SELECT CARD_NO FROM DCS.DM_CARD WHERE CUST_ID = ? ) 	-- 회원번호로 카드번호 찾기.
+						  AND ADD_TYPE IN ('11','13')											-- 정상적립, 사후적립 리스트
+				  	) C
+			   WHERE A.STR_CD	= C.STR_CD
+				 AND A.SALE_DT	= C.SALE_DT
+				 AND A.POS_NO 	= C.POS_NO
+				 AND A.TRAN_NO	= C.TRAN_NO
+				) A
+				, DPS.PS_DISITEM B
+			   WHERE A.STR_CD 	= B.STR_CD
+				 AND A.SALE_DT 	= B.SALE_DT
+				 AND A.POS_NO	= B.POS_NO
+				 AND A.TRAN_NO 	= B.TRAN_NO
+				 AND B.SALE_AMT <> 0
+				 AND B.REJCT_FLAG <> '1'
+				 ORDER BY A.STR_CD, A.SALE_DT DESC, A.POS_NO, A.TRAN_NO
+	 	]]>        
+    </query>
+</service>

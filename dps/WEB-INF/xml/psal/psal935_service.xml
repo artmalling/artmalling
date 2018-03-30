@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  재청구 데이터 조회
+ -->
+<service name="/psal935.ps">
+    <gauce name="H_MASTER"> 
+        <column colName="REC_FLAG"     colType="TB_STRING"    size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DATA_FLAG"    colType="TB_STRING"    size="43"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"      colType="TB_STRING"    size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECV_DT"      colType="TB_STRING"    size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"      colType="TB_STRING"    size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_MONTH"    colType="TB_STRING"    size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_NO"      colType="TB_STRING"    size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CRTN_CD"      colType="TB_STRING"    size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VRTN_NM"      colType="TB_STRING"    size="43"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRADE_AMT"    colType="TB_DECIMAL"   size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CCOMP_NM"     colType="TB_STRING"    size="43"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JBRCH_ID"     colType="TB_STRING"    size="15"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JBRCH_NM"     colType="TB_STRING"    size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DOLLAR_FLAG"  colType="TB_STRING"    size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FILLER"       colType="TB_STRING"    size="66"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYREQ_YN"    colType="TB_STRING"    size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REASON_CD"    colType="TB_STRING"    size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REASON_NM"    colType="TB_STRING"    size="43"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT B.REC_FLAG
+                 , COM.FN_GET_COMM_NAME('D', 'D034', B.DATA_FLAG) DATA_FLAG
+                 , B.SALE_DT
+                 , B.RECV_DT
+                 , B.CARD_NO
+                 , B.DIV_MONTH
+                 , B.APPR_NO
+                 , B.CRTN_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D041', B.VRTN_CD) VRTN_NM
+                 , B.TRADE_AMT
+                 , DPS.FN_GET_CCOMP_NM(A.CCOMP_CD) CCOMP_NM   
+                 , A.JBRCH_ID
+                 , C.JBRCH_NM
+                 , A.DOLLAR_FLAG
+                 , A.FILLER 
+                 , A.BUYREQ_YN
+                 , A.REASON_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D066', A.REASON_CD ) REASON_NM
+              FROM DPS.PD_REBUYREQ A
+                 , DPS.PD_RTND B 
+                 , DPS.PD_BRANCH C
+             WHERE A.PAY_DT   =    B.PAY_DT
+               AND A.PAY_SEQ  =    B.PAY_SEQ 
+               AND A.SEQ_NO   =    B.SEQ_NO
+               AND A.JBRCH_ID =    C.JBRCH_ID
+               AND C.STR_CD   LIKE ? || '%'
+               AND B.PAY_DT   BETWEEN ? AND ?
+               AND B.VRTN_CD  LIKE ? || '%'
+               AND B.CCOMP_CD LIKE ? || '%'
+               AND A.BCOMP_CD LIKE ? || '%'
+               AND B.JBRCH_ID LIKE ? || '%'
+               AND B.CARD_NO  LIKE ? || '%'
+               AND B.APPR_NO  LIKE ? || '%'
+               AND A.BUYREQ_YN LIKE ? || '%'
+             ORDER BY B.RECV_DT, B.SALE_DT, A.CCOMP_CD, JBRCH_ID
+        ]]>        
+    </query>
+</service>

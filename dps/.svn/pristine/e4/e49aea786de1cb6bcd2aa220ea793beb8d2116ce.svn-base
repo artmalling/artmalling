@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal442.ps">
+           
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="CREDIT_FLAG"             colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"                  colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"                  colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"                 colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="END_PROC_DT"             colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STATUS"                  colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TOT_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SP_SUNSUKUM"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SP_JANKUM"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SP_IPAMK"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SP_JANAEK"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DM_NAME"                 colType="TB_STRING"      size="20"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DM_SABUN"                colType="TB_STRING"      size="12"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIGO"                    colType="TB_STRING"      size="37"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNO"> 
+        <column colName="POSNO"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNOMM"> 
+        <column colName="POSNO_MIN"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSNO_MAX"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_TOTAL">        
+        <![CDATA[
+            SELECT A.CREDIT_FLAG
+                 , A.STR_CD
+                 , A.SALE_DT
+                 , A.POS_NO
+                 , A.TRAN_NO
+                 , A.END_PROC_DT
+                 , A.STATUS
+                 , A.SALE_TOT_AMT
+                 , A.SP_SUNSUKUM  
+                 , A.SP_JANKUM
+                 , A.SP_IPAMK  
+                 , A.SP_JANAEK 
+                 , A.DM_NAME   
+                 , A.DM_SABUN  
+                 , A.BIGO      
+              FROM (   
+                    SELECT CREDIT_FLAG
+                         , STR_CD                            AS STR_CD
+                         , SALE_DT                           AS SALE_DT
+                         , POS_NO                            AS POS_NO
+                         , TRAN_NO                           AS TRAN_NO
+                         , ''                                AS END_PROC_DT
+                         , CASE WHEN MAX(STATUS) = 'B' 
+                           THEN '미결' 
+                           ELSE '결말' END                   AS STATUS
+                         , SUM(SALE_TOT_AMT)                 AS SALE_TOT_AMT
+                         , SUM(SP_SUNSUKUM)                  AS SP_SUNSUKUM
+                         , SUM(SP_JANKUM)                    AS SP_JANKUM
+                         , SUM(SP_IPAMK)                     AS SP_IPAMK
+                         , SUM(SP_JANKUM) -  SUM(SP_IPAMK)   AS SP_JANAEK
+                         , MAX(DM_NAME)                      AS DM_NAME
+                         , MAX(DM_SABUN)                     AS DM_SABUN
+                         , MAX(BIGO)                         AS BIGO
+                      FROM (        
+                            SELECT (CASE WHEN A.TRAN_FLAG = '52' THEN '특판' WHEN A.TRAN_FLAG = '53' THEN 'COD' ELSE ''  END) AS CREDIT_FLAG
+                                 , A.STR_CD              AS STR_CD
+                                 , A.SALE_DT             AS SALE_DT
+                                 , A.POS_NO              AS POS_NO
+                                 , A.TRAN_NO             AS TRAN_NO
+                                 , (CASE WHEN B.TRAN_FLAG = '0' 
+                                    THEN (CASE WHEN B.TRAN_MODE = '92' THEN B.SALE_TOT_AMT*-1 ELSE B.SALE_TOT_AMT END) 
+                                    ELSE B.SALE_TOT_AMT*-1 END)        AS SALE_TOT_AMT
+                                 , (CASE WHEN B.TRAN_FLAG = '0' 
+                                    THEN (CASE WHEN B.TRAN_MODE = '92' THEN A.BALANCE_AMT*-1 ELSE A.BALANCE_AMT END) 
+                                    ELSE A.BALANCE_AMT*-1 END)         AS SP_SUNSUKUM
+                                 , (CASE WHEN B.TRAN_FLAG = '0' 
+                                    THEN (CASE WHEN B.TRAN_MODE = '92' THEN A.SALE_AMT*-1 ELSE A.SALE_AMT END) 
+                                    ELSE A.SALE_AMT*-1 END)            AS SP_JANKUM
+                                 , 0                     AS SP_IPAMK
+                                 , A.DM_NAME             AS DM_NAME
+                                 , A.DM_SABUN            AS DM_SABUN
+                                 , 'B'                   AS STATUS
+                                 , A.BIGO                AS BIGO
+                              FROM DPS.PS_DISCREDIT A
+                                 , DPS.PS_DISHEADER B
+                                 , DPS.PC_POSMST    C
+                             WHERE A.STR_CD    = B.STR_CD
+                               AND A.SALE_DT   = B.SALE_DT
+                               AND A.POS_NO    = B.POS_NO
+                               AND A.TRAN_NO   = B.TRAN_NO
+                               AND A.STR_CD    = C.STR_CD
+                               AND A.POS_NO    = C.POS_NO
+                               AND A.STR_CD    = ?
+                               AND C.FLOR_CD   LIKE ? || '%'
+                               AND C.POS_FLAG  LIKE ? || '%'
+                               AND A.POS_NO    >= ?
+                               AND A.POS_NO    <= ?
+                               AND A.SALE_DT   BETWEEN ? AND ?
+                               AND A.TRAN_FLAG IN ('52', '53')  -- 특판/COD발생
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = A.STR_CD
+                                               AND MYORG.USER_ID     = ?
+                                          )    
+                               
+                             UNION ALL
+                             
+                            SELECT (CASE WHEN A.TRAN_FLAG = '54' THEN '특판' WHEN A.TRAN_FLAG = '55' THEN 'COD' ELSE ''  END) AS CREDIT_FLAG
+                                 , A.STR_CD              AS STR_CD
+                                 , C.O_SALE_DT           AS SALE_DT
+                                 , C.O_POS_NO            AS POS_NO
+                                 , C.O_TRAN_NO           AS TRAN_NO
+                                 , 0                     AS SALE_TOT_AMT
+                                 , 0                     AS SP_BALAEK
+                                 , 0                     AS SP_JANAEK
+                                 , (CASE WHEN C.TRAN_FLAG = '0' 
+                                    THEN (CASE WHEN C.TRAN_MODE = '92' THEN B.PAY_AMT*-1 ELSE B.PAY_AMT END) 
+                                    ELSE B.PAY_AMT*-1 END)             AS SP_IPAMK
+                                 , A.DM_NAME             AS DM_NAME
+                                 , A.DM_SABUN            AS DM_SABUN
+                                 , 'E'                   AS STATUS
+                                 , A.BIGO                AS BIGO
+                              FROM DPS.PS_DISCREDIT A
+                                 , DPS.PS_TRPAID    B
+                                 , DPS.PS_TRHEADER  C
+                                 , DPS.PC_POSMST    D
+                             WHERE A.STR_CD    = B.STR_CD
+                               AND A.SALE_DT   = B.SALE_DT
+                               AND A.POS_NO    = B.POS_NO
+                               AND A.TRAN_NO   = B.TRAN_NO
+                               AND A.STR_CD    = C.STR_CD
+                               AND A.SALE_DT   = C.SALE_DT
+                               AND A.POS_NO    = C.POS_NO
+                               AND A.TRAN_NO   = C.TRAN_NO
+                               AND A.STR_CD    = D.STR_CD
+                               AND A.POS_NO    = D.POS_NO
+                               AND A.STR_CD    = ?
+                               AND D.FLOR_CD   LIKE ? || '%'
+                               AND D.POS_FLAG  LIKE ? || '%'
+                               AND A.POS_NO    >= ?
+                               AND A.POS_NO    <= ?
+                               AND A.SALE_DT   BETWEEN ? AND ?
+                               AND A.TRAN_FLAG IN ('55', '54')  -- 특판/COD결말
+                               AND B.PAY_TYPE  NOT IN ('55', '54')
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = A.STR_CD
+                                               AND MYORG.USER_ID     = ?
+                                          )    
+                           )
+                     GROUP BY 
+                           CREDIT_FLAG
+                         , STR_CD
+                         , SALE_DT
+                         , POS_NO
+                         , TRAN_NO 
+        
+                     UNION ALL
+                          
+                    SELECT '주문'                            AS CREDIT_FLAG
+                         , STR_CD                            AS STR_CD
+                         , SALE_DT                           AS SALE_DT
+                         , POS_NO                            AS POS_NO
+                         , TRAN_NO                           AS TRAN_NO
+                         , MAX(END_PROC_DT)                  AS END_PROC_DT
+                         , CASE WHEN MAX(STATUS) = 'B' 
+                           THEN '미결' 
+                           ELSE '결말' END                   AS STATUS
+                         , SUM(SALE_TOT_AMT)                 AS SALE_TOT_AMT
+                         , SUM(SP_SUNSUKUM)                  AS SP_SUNSUKUM
+                         , SUM(SP_JANKUM)                    AS SP_JANKUM
+                         , SUM(SP_IPAMK)                     AS SP_IPAMK
+                         , SUM(SP_JANKUM) -  SUM(SP_IPAMK)   AS SP_JANAEK
+                         , ''                                AS DM_NAME
+                         , ''                                AS DM_SABUN
+                         , MAX(BIGO)                         AS BIGO
+                      FROM (  
+                            SELECT A.STR_CD              AS STR_CD
+                                 , A.SALE_DT             AS SALE_DT
+                                 , A.POS_NO              AS POS_NO
+                                 , A.TRAN_NO             AS TRAN_NO
+                                 , (CASE WHEN B.TRAN_FLAG = '0' 
+                                    THEN (CASE WHEN B.TRAN_MODE = '92' THEN B.SALE_TOT_AMT*-1 ELSE B.SALE_TOT_AMT END) 
+                                    ELSE B.SALE_TOT_AMT*-1 END)        AS SALE_TOT_AMT
+                                 , (CASE WHEN B.TRAN_FLAG = '0' 
+                                    THEN (CASE WHEN B.TRAN_MODE = '92' THEN A.PENDING_AMT*-1 ELSE A.PENDING_AMT END) 
+                                    ELSE A.PENDING_AMT*-1 END)         AS SP_SUNSUKUM
+                                 , (CASE WHEN B.TRAN_FLAG = '0' 
+                                    THEN (CASE WHEN B.TRAN_MODE = '92' THEN A.SALE_AMT*-1 ELSE A.SALE_AMT END) 
+                                    ELSE A.SALE_AMT*-1 END)             AS SP_JANKUM
+                                 , 0                     AS SP_IPAMK
+                                 , A.END_PROC_DT         AS END_PROC_DT
+                                 , 'B'                   AS STATUS
+                                 , A.BIGO                AS BIGO
+                              FROM DPS.PS_DISPENDING A
+                                 , DPS.PS_DISHEADER  B
+                                 , DPS.PC_POSMST     C
+                             WHERE A.STR_CD    = B.STR_CD
+                               AND A.SALE_DT   = B.SALE_DT
+                               AND A.POS_NO    = B.POS_NO
+                               AND A.TRAN_NO   = B.TRAN_NO
+                               AND A.STR_CD    = C.STR_CD
+                               AND A.POS_NO    = C.POS_NO
+                               AND A.STR_CD    = ?
+                               AND C.FLOR_CD   LIKE ? || '%'
+                               AND C.POS_FLAG  LIKE ? || '%'
+                               AND A.POS_NO    >= ?
+                               AND A.POS_NO    <= ?
+                               AND A.SALE_DT   BETWEEN ? AND ?
+                               AND A.PEND_FLAG = '61'  -- 주문발생
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = A.STR_CD
+                                               AND MYORG.USER_ID     = ?
+                                          )    
+                               
+                             UNION ALL
+                             
+                            SELECT A.STR_CD              AS STR_CD
+                                 , C.O_SALE_DT           AS SALE_DT
+                                 , C.O_POS_NO            AS POS_NO
+                                 , C.O_TRAN_NO           AS TRAN_NO
+                                 , 0                     AS SALE_TOT_AMT
+                                 , 0                     AS SP_BALAEK
+                                 , 0                     AS SP_JANAEK
+                                 , (CASE WHEN C.TRAN_FLAG = '0' 
+                                    THEN (CASE WHEN C.TRAN_MODE = '92' THEN B.PAY_AMT*-1 ELSE B.PAY_AMT END) 
+                                    ELSE B.PAY_AMT*-1 END)             AS SP_IPAMK
+                                 , A.END_PROC_DT         AS END_PROC_DT
+                                 , 'E'                   AS STATUS
+                                 , A.BIGO                AS BIGO
+                              FROM DPS.PS_DISPENDING A
+                                 , DPS.PS_TRPAID     B
+                                 , DPS.PS_TRHEADER   C
+                                 , DPS.PC_POSMST     D
+                             WHERE A.STR_CD    = B.STR_CD
+                               AND A.SALE_DT   = B.SALE_DT
+                               AND A.POS_NO    = B.POS_NO
+                               AND A.TRAN_NO   = B.TRAN_NO
+                               AND A.STR_CD    = C.STR_CD
+                               AND A.SALE_DT   = C.SALE_DT
+                               AND A.POS_NO    = C.POS_NO
+                               AND A.TRAN_NO   = C.TRAN_NO
+                               AND A.STR_CD    = D.STR_CD
+                               AND A.POS_NO    = D.POS_NO
+                               AND A.STR_CD    = ?
+                               AND D.FLOR_CD   LIKE ? || '%'
+                               AND D.POS_FLAG  LIKE ? || '%'
+                               AND A.POS_NO    >= ?
+                               AND A.POS_NO    <= ?
+                               AND A.SALE_DT   BETWEEN ? AND ?
+                               AND A.PEND_FLAG = '62'  -- 주문결말
+                               AND B.PAY_TYPE  NOT IN ('62')
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = A.STR_CD
+                                               AND MYORG.USER_ID     = ?
+                                          )            
+                           )
+                     GROUP BY 
+                           STR_CD
+                         , SALE_DT
+                         , POS_NO
+                         , TRAN_NO 
+                   ) A
+             ORDER BY
+                   A.CREDIT_FLAG
+                 , A.STR_CD
+                 , A.SALE_DT
+                 , A.POS_NO
+                 , A.TRAN_NO
+                 , A.END_PROC_DT
+                 , A.STATUS
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_COD">        
+        <![CDATA[
+            SELECT CREDIT_FLAG
+                 , STR_CD                            AS STR_CD
+                 , SALE_DT                           AS SALE_DT
+                 , POS_NO                            AS POS_NO
+                 , TRAN_NO                           AS TRAN_NO
+                 , ''                                AS END_PROC_DT
+                 , CASE WHEN MAX(STATUS) = 'B' 
+                   THEN '미결' 
+                   ELSE '결말' END                   AS STATUS
+                 , SUM(SALE_TOT_AMT)                 AS SALE_TOT_AMT
+                 , SUM(SP_SUNSUKUM)                  AS SP_SUNSUKUM
+                 , SUM(SP_JANKUM)                    AS SP_JANKUM
+                 , SUM(SP_IPAMK)                     AS SP_IPAMK
+                 , SUM(SP_JANKUM) -  SUM(SP_IPAMK)   AS SP_JANAEK
+                 , MAX(DM_NAME)                      AS DM_NAME
+                 , MAX(DM_SABUN)                     AS DM_SABUN
+                 , MAX(BIGO)                         AS BIGO
+              FROM (        
+                    SELECT (CASE WHEN A.TRAN_FLAG = '52' THEN '특판' WHEN A.TRAN_FLAG = '53' THEN 'COD' ELSE ''  END) AS CREDIT_FLAG
+                         , A.STR_CD              AS STR_CD
+                         , A.SALE_DT             AS SALE_DT
+                         , A.POS_NO              AS POS_NO
+                         , A.TRAN_NO             AS TRAN_NO
+                         , B.SALE_TOT_AMT        AS SALE_TOT_AMT
+                         , A.BALANCE_AMT         AS SP_SUNSUKUM
+                         , A.SALE_AMT            AS SP_JANKUM
+                         , 0                     AS SP_IPAMK
+                         , A.DM_NAME             AS DM_NAME
+                         , A.DM_SABUN            AS DM_SABUN
+                         , 'B'                   AS STATUS
+                         , A.BIGO                AS BIGO
+                      FROM DPS.PS_DISCREDIT A
+                         , DPS.PS_DISHEADER B
+                         , DPS.PC_POSMST    C
+                     WHERE A.STR_CD    = B.STR_CD
+                       AND A.SALE_DT   = B.SALE_DT
+                       AND A.POS_NO    = B.POS_NO
+                       AND A.TRAN_NO   = B.TRAN_NO
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.POS_NO    = C.POS_NO
+                       AND A.STR_CD    = ?
+                       AND C.FLOR_CD   LIKE ? || '%'
+                       AND C.POS_FLAG  LIKE ? || '%'
+                       AND A.POS_NO    >= ?
+                       AND A.POS_NO    <= ?
+                       AND A.SALE_DT   BETWEEN ? AND ?
+                       AND A.TRAN_FLAG = ?  -- 특판/COD발생
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = A.STR_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )    
+                       
+                     UNION ALL
+                     
+                    SELECT (CASE WHEN A.TRAN_FLAG = '54' THEN '특판' WHEN A.TRAN_FLAG = '55' THEN 'COD' ELSE ''  END) AS CREDIT_FLAG
+                         , A.STR_CD              AS STR_CD
+                         , C.O_SALE_DT           AS SALE_DT
+                         , C.O_POS_NO            AS POS_NO
+                         , C.O_TRAN_NO           AS TRAN_NO
+                         , 0                     AS SALE_TOT_AMT
+                         , 0                     AS SP_BALAEK
+                         , 0                     AS SP_JANAEK
+                         , B.PAY_AMT             AS SP_IPAMK
+                         , A.DM_NAME             AS DM_NAME
+                         , A.DM_SABUN            AS DM_SABUN
+                         , 'E'                   AS STATUS
+                         , A.BIGO                AS BIGO
+                      FROM DPS.PS_DISCREDIT A
+                         , DPS.PS_TRPAID    B
+                         , DPS.PS_TRHEADER  C
+                         , DPS.PC_POSMST    D
+                     WHERE A.STR_CD    = B.STR_CD
+                       AND A.SALE_DT   = B.SALE_DT
+                       AND A.POS_NO    = B.POS_NO
+                       AND A.TRAN_NO   = B.TRAN_NO
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.SALE_DT   = C.SALE_DT
+                       AND A.POS_NO    = C.POS_NO
+                       AND A.TRAN_NO   = C.TRAN_NO
+                       AND A.STR_CD    = D.STR_CD
+                       AND A.POS_NO    = D.POS_NO
+                       AND A.STR_CD    = ?
+                       AND D.FLOR_CD   LIKE ? || '%'
+                       AND D.POS_FLAG  LIKE ? || '%'
+                       AND A.POS_NO    >= ?
+                       AND A.POS_NO    <= ?
+                       AND A.SALE_DT   BETWEEN ? AND ?
+                       AND A.TRAN_FLAG = ?  -- 특판/COD결말
+                       AND B.PAY_TYPE  <> ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = A.STR_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )    
+                   )
+             GROUP BY 
+                   CREDIT_FLAG
+                 , STR_CD
+                 , SALE_DT
+                 , POS_NO
+                 , TRAN_NO 
+             ORDER BY 
+                   1, 2, 3, 4 
+
+                         
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_JUMUN">        
+        <![CDATA[
+            SELECT '주문'                            AS CREDIT_FLAG
+                 , STR_CD                            AS STR_CD
+                 , SALE_DT                           AS SALE_DT
+                 , POS_NO                            AS POS_NO
+                 , TRAN_NO                           AS TRAN_NO
+                 , MAX(END_PROC_DT)                  AS END_PROC_DT
+                 , CASE WHEN MAX(STATUS) = 'B' 
+                   THEN '미결' 
+                   ELSE '결말' END                   AS STATUS
+                 , SUM(SALE_TOT_AMT)                 AS SALE_TOT_AMT
+                 , SUM(SP_SUNSUKUM)                  AS SP_SUNSUKUM
+                 , SUM(SP_JANKUM)                    AS SP_JANKUM
+                 , SUM(SP_IPAMK)                     AS SP_IPAMK
+                 , SUM(SP_JANKUM) -  SUM(SP_IPAMK)   AS SP_JANAEK
+                 , ''                                AS DM_NAME
+                 , ''                                AS DM_SABUN
+                 , MAX(BIGO)                         AS BIGO
+              FROM (  
+                    SELECT A.STR_CD              AS STR_CD
+                         , A.SALE_DT             AS SALE_DT
+                         , A.POS_NO              AS POS_NO
+                         , A.TRAN_NO             AS TRAN_NO
+                         , B.SALE_TOT_AMT        AS SALE_TOT_AMT
+                         , A.PENDING_AMT         AS SP_SUNSUKUM
+                         , A.SALE_AMT            AS SP_JANKUM
+                         , 0                     AS SP_IPAMK
+                         , A.END_PROC_DT         AS END_PROC_DT
+                         , 'B'                   AS STATUS
+                         , A.BIGO                AS BIGO
+                      FROM DPS.PS_DISPENDING A
+                         , DPS.PS_DISHEADER  B
+                         , DPS.PC_POSMST     C
+                     WHERE A.STR_CD    = B.STR_CD
+                       AND A.SALE_DT   = B.SALE_DT
+                       AND A.POS_NO    = B.POS_NO
+                       AND A.TRAN_NO   = B.TRAN_NO
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.POS_NO    = C.POS_NO
+                       AND A.STR_CD    = ?
+                       AND C.FLOR_CD   LIKE ? || '%'
+                       AND C.POS_FLAG  LIKE ? || '%'
+                       AND A.POS_NO    >= ?
+                       AND A.POS_NO    <= ?
+                       AND A.SALE_DT   BETWEEN ? AND ?
+                       AND A.PEND_FLAG = ?  -- 주문발생
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = A.STR_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )    
+                       
+                     UNION ALL
+                     
+                    SELECT A.STR_CD              AS STR_CD
+                         , C.O_SALE_DT           AS SALE_DT
+                         , C.O_POS_NO            AS POS_NO
+                         , C.O_TRAN_NO           AS TRAN_NO
+                         , 0                     AS SALE_TOT_AMT
+                         , 0                     AS SP_BALAEK
+                         , 0                     AS SP_JANAEK
+                         , B.PAY_AMT             AS SP_IPAMK
+                         , A.END_PROC_DT         AS END_PROC_DT
+                         , 'E'                   AS STATUS
+                         , A.BIGO                AS BIGO
+                      FROM DPS.PS_DISPENDING A
+                         , DPS.PS_TRPAID     B
+                         , DPS.PS_TRHEADER   C
+                         , DPS.PC_POSMST     D
+                     WHERE A.STR_CD    = B.STR_CD
+                       AND A.SALE_DT   = B.SALE_DT
+                       AND A.POS_NO    = B.POS_NO
+                       AND A.TRAN_NO   = B.TRAN_NO
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.SALE_DT   = C.SALE_DT
+                       AND A.POS_NO    = C.POS_NO
+                       AND A.TRAN_NO   = C.TRAN_NO
+                       AND A.STR_CD    = D.STR_CD
+                       AND A.POS_NO    = D.POS_NO
+                       AND A.STR_CD    = ?
+                       AND D.FLOR_CD   LIKE ? || '%'
+                       AND D.POS_FLAG  LIKE ? || '%'
+                       AND A.POS_NO    >= ?
+                       AND A.POS_NO    <= ?
+                       AND A.SALE_DT   BETWEEN ? AND ?
+                       AND A.PEND_FLAG = ?  -- 주문결말
+                       AND B.PAY_TYPE  NOT IN (?)
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                              FROM COM.V_MYORG MYORG
+		                             WHERE MYORG.STR_CD      = A.STR_CD
+		                               AND MYORG.USER_ID     = ?
+		                          )            
+                   )
+             GROUP BY 
+                   STR_CD
+                 , SALE_DT
+                 , POS_NO
+                 , TRAN_NO 
+             ORDER BY 
+                   1, 2, 3, 4
+                         
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSNO">        
+        <![CDATA[
+            SELECT A.POS_NO
+              FROM DPS.PC_POSMST A
+             WHERE A.POS_NO = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSNOMM">        
+        <![CDATA[
+            SELECT MAX(A.POSNO_MIN) AS POSNO_MIN
+                 , MAX(A.POSNO_MAX) AS POSNO_MAX
+              FROM (
+		            SELECT MIN(A.POS_NO) AS POSNO_MIN
+		                 , ''            AS POSNO_MAX
+		              FROM DPS.PC_POSMST A
+		              
+		            UNION ALL
+		              
+		            SELECT ''            AS POSNO_MIN
+		                 , MAX(A.POS_NO) AS POSNO_MAX
+		              FROM DPS.PC_POSMST A
+		           ) A
+        ]]>        
+    </query>
+    
+    
+</service>

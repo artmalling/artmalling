@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.05.30
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  회원현황(월)
+ -->
+<service name="/dbri301.db">
+    <!-- 회원현황(월)  -->
+    <gauce name="H_MASTER"> 
+        <column colName="ENTR_YYYYMM"    	colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTR_CNT"       	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_ENTR_CNT"      colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_ENTR_CNT"      colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_ENTR_RATE"     colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_SUM_ENTR_CNT"  colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTR_RATE"    		colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTR_TOT_CNT"  	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 회원현황(월) -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT
+			    ENTR_YYYYMM         -- 년월
+			    , ENTR_CNT          -- 신규회원수
+			    , PRE_ENTR_CNT      -- 전월신규회원수
+			    , ADD_ENTR_CNT      -- 신규회원증감수
+			    , ADD_ENTR_RATE     -- 신규회원증감율
+			    , ADD_SUM_ENTR_CNT  -- 누적회원수
+			    , ENTR_RATE         -- 구성비
+			    , ENTR_TOT_CNT      -- 총회원수
+			FROM (    
+			    SELECT 
+			           X.ENTR_YYYYMM
+			         , X.ENTR_CNT
+			         , LAG(X.ENTR_CNT,1) OVER (ORDER BY ENTR_YYYYMM) PRE_ENTR_CNT
+			         , X.ENTR_CNT - LAG(X.ENTR_CNT,1) OVER (ORDER BY ENTR_YYYYMM) ADD_ENTR_CNT
+			         , SUM(X.ENTR_CNT) OVER (ORDER BY X.ENTR_YYYYMM) ADD_SUM_ENTR_CNT
+			         --, ROUND((X.ENTR_CNT - LAG(X.ENTR_CNT,1) OVER (ORDER BY X.ENTR_YYYYMM))/LAG(ENTR_CNT,1) OVER (ORDER BY X.ENTR_YYYYMM) * 100,2)   ADD_ENTR_RATE
+			         --, ROUND(X.ENTR_CNT / Y.ENTR_TOT_CNT,2) ENTR_RATE
+			         , (CASE WHEN LAG(ENTR_CNT,1) OVER (ORDER BY X.ENTR_YYYYMM) = 0 THEN 0 
+		                  ELSE ROUND((X.ENTR_CNT - LAG(X.ENTR_CNT,1) OVER (ORDER BY X.ENTR_YYYYMM))/LAG(ENTR_CNT,1) OVER (ORDER BY X.ENTR_YYYYMM) * 100,2) 
+		                  END )  ADD_ENTR_RATE
+		             , DECODE(Y.ENTR_TOT_CNT, 0, 0, ROUND(X.ENTR_CNT / Y.ENTR_TOT_CNT ,2)) ENTR_RATE
+			         , Y.ENTR_TOT_CNT
+			    FROM (
+					        SELECT SUBSTR(ENTR_DT,1,6) ENTR_YYYYMM, COUNT(1) ENTR_CNT
+					        FROM DCS.DM_CUSTOMER
+					        WHERE ENTR_DT >= TO_CHAR(ADD_MONTHS(TO_DATE(?,'YYYYMM'),-1),'YYYYMM')||'01'
+					          AND ENTR_DT <= ?||'31'
+					        GROUP BY SUBSTR(ENTR_DT,1,6)
+					        UNION
+					        SELECT TO_CHAR(ADD_MONTHS(TO_DATE(?,'YYYYMM'),-2),'YYYYMM'), COUNT(1)
+					        FROM DCS.DM_CUSTOMER
+					        WHERE ENTR_DT <= TO_CHAR(ADD_MONTHS(TO_DATE(?,'YYYYMM'),-2),'YYYYMM')||'31'
+					        ) X,
+					        (
+					        SELECT COUNT(1) ENTR_TOT_CNT
+					        FROM DCS.DM_CUSTOMER
+					        WHERE ENTR_DT <= ?||'31'        
+			        ) Y
+			    ) Z    
+			WHERE Z.ENTR_YYYYMM >= ?
+			  AND Z.ENTR_YYYYMM <= ?
+			ORDER BY 1 DESC
+        ]]>        
+    </query>  
+</service>

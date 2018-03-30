@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.04
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  품번이동을 조회한다.
+ -->
+<service name="/pcod206.pc">
+
+    <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"              colType="TB_STRING" size="2"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />        
+        <column colName="MOD_DT"              colType="TB_STRING" size="8"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"           colType="TB_STRING" size="6"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"         colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="ORG_FLAG"            colType="TB_STRING" size="1"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_BF_ORG_CD"       colType="TB_STRING" size="10" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_BF_ORG_NM"       colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_BF_ORG_SRT_NM"   colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_BF_BUYER_CD"     colType="TB_STRING" size="6"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_BF_BUYER_NM"     colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_AFT_ORG_CD"      colType="TB_STRING" size="10" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_AFT_ORG_NM"      colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_AFT_ORG_SRT_NM"  colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_AFT_BUYER_CD"    colType="TB_STRING" size="6"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_AFT_BUYER_NM"    colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="PROC_YN"             colType="TB_STRING" size="1"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+    </gauce>    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 품번 이동마스터 조회 -->
+     
+    <query name="SEL_PBNTRNSMST">
+        <![CDATA[
+            SELECT PTM.STR_CD
+                 , PTM.MOD_DT
+                 , STR.PUMBUN_CD
+                 , STR.PUMBUN_NAME
+                 , PTM.ORG_FLAG
+                 , PTM.MOD_BF_ORG_CD
+                 , BFORG.ORG_NAME        AS MOD_BF_ORG_NM
+                 , BFORG.ORG_SHORT_NAME  AS MOD_BF_ORG_SRT_NM
+                 , BFBYM.BUYER_CD        AS MOD_BF_BUYER_CD 
+                 , BFBYM.BUYER_NAME      AS MOD_BF_BUYER_NM
+                 , PTM.MOD_AFT_ORG_CD
+                 , AFORG.ORG_NAME        AS MOD_AFT_ORG_NM
+                 , AFORG.ORG_SHORT_NAME  AS MOD_AFT_ORG_SRT_NM
+                 , AFBYM.BUYER_CD     AS MOD_AFT_BUYER_CD 
+                 , AFBYM.BUYER_NAME   AS MOD_AFT_BUYER_NM 
+                 , PTM.PROC_YN
+              FROM DPS.PC_PBNTRNSMST PTM
+                 , DPS.PC_PBNTRNSDTL PDTL
+                 , DPS.PC_ORGMST     BFORG
+                 , DPS.PC_BUYERMST   BFBYM
+                 , DPS.PC_ORGMST     AFORG
+                 , DPS.PC_BUYERMST   AFBYM
+                 , DPS.PC_STRPBN     STR
+             WHERE PTM.MOD_BF_ORG_CD          = BFORG.ORG_CD
+               AND PTM.MOD_AFT_ORG_CD         = AFORG.ORG_CD
+               AND DECODE(BFORG.ORG_FLAG,'1',BFORG.P_ORG_CD,'2',BFORG.ORG_CD) = BFBYM.PC_ORG_CD(+)
+               AND DECODE(AFORG.ORG_FLAG,'1',AFORG.P_ORG_CD,'2',AFORG.ORG_CD) = AFBYM.PC_ORG_CD(+)
+               AND BFBYM.MAIN_FLAG(+)         = '1'
+               AND AFBYM.MAIN_FLAG(+)         = '1'
+               AND PTM.STR_CD                 =  ?
+               AND PTM.MOD_DT                 >= ? 
+               AND PTM.MOD_DT                 <= ?  
+               AND PTM.STR_CD = PDTL.STR_CD
+               AND PTM.MOD_DT = PDTL.MOD_DT
+               AND PTM.MOD_BF_ORG_CD = PDTL.MOD_BF_ORG_CD
+               AND PTM.MOD_AFT_ORG_CD = PDTL.MOD_AFT_ORG_CD
+               AND STR.STR_CD = PDTL.STR_CD
+               AND STR.PUMBUN_CD = PDTL.PUMBUN_CD              
+        ]]> 
+    </query> 
+
+    <!--품번 -->
+    <query name="SEL_PBNTRNSMST_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND STR.PUMBUN_CD   LIKE ?||'%'   
+        ]]>          
+    </query>
+    <!--품번명 -->
+    <query name="SEL_PBNTRNSMST_WHERE_PUMBUN_NAME">           
+        <![CDATA[
+               AND STR.PUMBUN_NAME LIKE '%'||?||'%'
+        ]]>  
+    </query>
+    <!--조직구분 -->
+    <query name="SEL_PBNTRNSMST_WHERE_ORG_FLAG">           
+        <![CDATA[
+               AND BFORG.ORG_FLAG             = ?   
+               AND AFORG.ORG_FLAG             = ?
+        ]]>    
+    </query>
+    <!--변경전조직 -->
+    <query name="SEL_PBNTRNSMST_WHERE_MOD_BF_ORG_CD">           
+        <![CDATA[
+               AND PTM.MOD_BF_ORG_CD LIKE  ?||'%'
+        ]]>  
+    </query>
+    <!--변경후조직 -->
+    <query name="SEL_PBNTRNSMST_WHERE_MOD_AFT_ORG_CD">           
+        <![CDATA[
+               AND PTM.MOD_AFT_ORG_CD LIKE  ?||'%'
+        ]]>  
+    </query>
+    <!--처리여부 -->
+    <query name="SEL_PBNTRNSMST_WHERE_PROC_YN">           
+        <![CDATA[
+               AND PDTL.PROC_YN       = ?
+        ]]>  
+    </query>  
+    <query name="SEL_PBNTRNSMST_ORDER">           
+        <![CDATA[
+            ORDER BY MOD_DT
+                   , PUMBUN_NAME
+                   , ORG_FLAG
+                   , MOD_BF_ORG_CD
+                   , MOD_AFT_ORG_CD
+        ]]>        
+    </query>    
+</service>

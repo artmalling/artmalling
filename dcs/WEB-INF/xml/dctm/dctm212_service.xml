@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작  성  자  : 김영진
+ * 회  사  명  : 한국후지쯔
+ * 작  성  일  : 2010.03.23
+ * 변  경  일  : 
+ * 변경내용 : 
+ * 개          요 : 최종발번번호조회
+ -->
+<service name="/dctm212.dm">
+
+    <!-- 초기 PREFIX -->
+    <gauce name="H_PREFIX"> 
+        <column colName="S_PREFIX"     colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="E_PREFIX"     colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 최종발번번호조회-->
+    <gauce name="H_MASTER"> 
+        <column colName="PREFIX"        colType="TB_STRING"   size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MIN_VALUE"     colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MAX_VALUE"     colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LAST_NUMBER"   colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <!-- 초기 PREFIX 조회 -->
+    <query name="SEL_PREFIX">        
+        <![CDATA[
+            SELECT MIN(COMM_NAME1) S_PREFIX
+                 , MAX(COMM_NAME1) E_PREFIX
+              FROM COM.TC_COMMCODE
+             WHERE SYS_PART  = 'D'  
+               AND COMM_PART = 'D012'
+               AND USE_YN = 'Y'
+        ]]>        
+    </query>
+    
+    <!-- 최종발번번호조회-->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT PREFIX
+                 , MIN_VALUE
+                 , MAX_VALUE
+                 , LAST_NUMBER
+              FROM ( 
+                     SELECT COM.FN_GET_COMM_NAME('D', 'D012', '1') PREFIX 
+                          , MIN_VALUE
+                          , MAX_VALUE
+                          , LAST_NUMBER
+                       FROM DCS.DM_PREFIX_SEQ_TEMP
+                      --WHERE SEQUENCE_NAME = 'SQ_CARD' 
+                      WHERE SEQUENCE_NAME = 'SQ_CARD_1000'
+                     UNION ALL 
+                     SELECT COM.FN_GET_COMM_NAME('D', 'D012', '2') PREFIX 
+                          , MIN_VALUE
+                          , MAX_VALUE
+                          , LAST_NUMBER
+                       FROM DCS.DM_PREFIX_SEQ_TEMP
+                      --WHERE SEQUENCE_NAME = 'SQ_CARD1' 
+                      WHERE SEQUENCE_NAME = 'SQ_CARD_2000' 
+                   )
+             ORDER BY PREFIX   
+        ]]>        
+    </query>
+</service>

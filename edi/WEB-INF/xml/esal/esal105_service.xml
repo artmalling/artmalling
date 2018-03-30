@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal105.es">
+    
+    <!-- 재고현황조회 (수량) -->
+    <query name="SEL_BUY_QTY">
+        <![CDATA[   
+            SELECT A.VEN_CD
+                 , (SELECT VEN_NAME
+                      FROM DPS.PC_VENMST X
+                     WHERE A.VEN_CD = X.VEN_CD)       AS VEN_NAME 
+                 , A.PUMBUN_CD
+                 , (SELECT PUMBUN_NAME
+                      FROM DPS.PC_PBNMST X
+                     WHERE A.PUMBUN_CD = X.PUMBUN_CD) AS PUMBUN_NAME 
+                 , A.PUMMOK_CD
+                 , (SELECT PUMMOK_NAME
+                      FROM DPS.PC_PMKMST X
+                     WHERE A.PUMMOK_CD = X.PUMMOK_CD) AS PUMMOK_NAME 
+                 , A.EVENT_FLAG
+                 , A.EVENT_RATE 
+                 , SUM(NVL(A.BASE_QTY,0))             AS BASE_QTY           -- 기초재고수량 
+                 , SUM(NVL(A.BUY_QTY,0))              AS BUY_QTY            -- 매입수량
+                 , SUM(NVL(A.RFD_QTY,0))              AS RFD_QTY            -- 반품수량
+                 , SUM(NVL(A.SALE_QTY,0))             AS SALE_QTY           -- 매출수량
+                 , SUM(NVL(A.BASE_QTY,0)) + SUM(NVL(A.BUY_QTY,0)) - SUM(NVL(A.RFD_QTY,0)) - SUM(NVL(A.SALE_QTY,0)) + SUM(NVL(A.STK_ADJ_QTY,0))                   AS TOTCOUNT      -- 현재고
+              FROM DPS.PC_PBNMST PBN
+                 , (SELECT A.STR_CD
+                         , A.VEN_CD
+                         , A.PUMBUN_CD
+                         , A.PUMMOK_CD
+                         , A.EVENT_FLAG
+                         , A.EVENT_RATE
+                         , A.MG_RATE
+                         , SUM(NVL(CAO_QTY,0))        AS BASE_QTY
+                         , 0                          AS BUY_QTY
+                         , 0                          AS RFD_QTY
+                         , 0                          AS SALE_QTY  
+                         , 0                          AS STK_ADJ_QTY 
+                      FROM DPS.PT_PBNMONTH A,
+                           ( 
+                              SELECT   A.STR_CD,
+                                       A.PUMBUN_CD,
+                                       B.DEPT_CD,
+                                       B.TEAM_CD,
+                                       B.PC_CD
+                              FROM     DPS.PC_STRPBN A, DPS.PC_ORGMST B
+                              WHERE    A.SALE_ORG_CD = B.ORG_CD
+                              AND      A.STR_CD = ?
+                           ) B
+                     WHERE A.STR_CD = B.STR_CD
+                       AND A.PUMBUN_CD = B.PUMBUN_CD
+                       AND A.STR_CD = ?
+                       AND A.STK_YM = SUBSTR(?, 0, 6)
+                       GROUP BY A.STR_CD 
+                              , A.VEN_CD
+                              , A.PUMBUN_CD
+                              , A.PUMMOK_CD
+                              , A.EVENT_FLAG
+                              , A.EVENT_RATE
+                              , A.MG_RATE
+                    UNION ALL
+                    SELECT STR_CD
+                         , VEN_CD
+                         , PUMBUN_CD
+                         , PUMMOK_CD
+                         , EVENT_FLAG
+                         , EVENT_RATE
+                         , MG_RATE
+                         , 0                         AS BASE_QTY 
+                         , SUM(BUY_QTY)              AS BUY_QTY
+                         , SUM(RFD_QTY)              AS RFD_QTY
+                         , SUM(SALE_QTY)             AS SALE_QTY  
+                         , SUM(STK_ADJ_QTY)          AS STK_ADJ_QTY 
+                      FROM DPS.PT_PBNDAY
+                     WHERE STR_CD = ?
+                       AND STK_DT BETWEEN SUBSTR(?, 0, 6)||'01' AND ?
+                     GROUP BY STR_CD
+                            , DEPT_CD
+                            , TEAM_CD
+                            , PC_CD
+                            , PUMBUN_CD
+                            , PUMMOK_CD
+                            , VEN_CD
+                            , EVENT_FLAG
+                            , EVENT_RATE
+                            , MG_RATE
+                      ) A
+             WHERE A.PUMBUN_CD = PBN.PUMBUN_CD
+                 AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+/*               AND PBN.SKU_FLAG = '2'*/   /* 서부장님 요청으로 20110828 박래형수정*/
+               AND PBN.PUMBUN_TYPE <> '2'  
+               AND A.PUMBUN_CD LIKE ?||'%' 
+               AND A.VEN_CD = ?
+            GROUP BY A.VEN_CD
+                   , A.PUMBUN_CD
+                   , A.PUMMOK_CD
+                   , A.EVENT_FLAG
+                   , A.EVENT_RATE
+                   , A.MG_RATE  
+            ORDER BY VEN_CD
+                   , PUMBUN_CD
+                   , PUMMOK_CD  
+                   , EVENT_FLAG
+                   , EVENT_RATE
+                   , MG_RATE      
+        ]]>        
+    </query>
+    
+   
+    <!-- 재고현황조회 (원가) -->
+    <query name="SEL_COST">
+        <![CDATA[   
+            SELECT A.VEN_CD
+                 , (SELECT VEN_NAME
+                      FROM DPS.PC_VENMST X
+                     WHERE A.VEN_CD = X.VEN_CD)       AS VEN_NAME 
+                 , A.PUMBUN_CD
+                 , (SELECT PUMBUN_NAME
+                      FROM DPS.PC_PBNMST X
+                     WHERE A.PUMBUN_CD = X.PUMBUN_CD) AS PUMBUN_NAME 
+                 , A.PUMMOK_CD
+                 , (SELECT PUMMOK_NAME
+                      FROM DPS.PC_PMKMST X
+                     WHERE A.PUMMOK_CD = X.PUMMOK_CD) AS PUMMOK_NAME 
+                 , A.EVENT_FLAG
+                 , A.EVENT_RATE 
+                 , SUM(NVL(A.BASE_QTY,0))                                     AS BASE_QTY           -- 기초재고수량 
+                 , SUM(NVL(A.BUY_QTY,0))                                      AS BUY_QTY            -- 매입수량
+                 , SUM(NVL(A.RFD_QTY,0))                                      AS RFD_QTY            -- 반품수량
+                 , SUM(NVL(A.SALE_QTY,0))- SUM(NVL(A.REDU_QTY,0))             AS SALE_QTY           -- 매출수량
+                 , SUM(NVL(A.BASE_QTY,0)) + SUM(NVL(A.BUY_QTY,0)) - SUM(NVL(A.RFD_QTY,0)) - SUM(NVL(A.RFD_QTY,0)) - (SUM(NVL(A.SALE_QTY,0))- SUM(NVL(A.REDU_QTY,0))) + SUM(NVL(A.STK_ADJ_QTY,0))                   AS TOTCOUNT      -- 현재고
+              FROM DPS.PC_PBNMST PBN
+                 , (SELECT A.STR_CD
+                         , A.VEN_CD
+                         , A.PUMBUN_CD
+                         , A.PUMMOK_CD
+                         , A.EVENT_FLAG
+                         , A.EVENT_RATE
+                         , A.MG_RATE
+                         , SUM(NVL(CAO_COST_AMT,0))        AS BASE_QTY 
+                         , 0                          AS BUY_QTY
+                         , 0                          AS RFD_QTY
+                         , 0                          AS SALE_QTY  
+                         , 0                          AS REDU_QTY
+                         , 0                          AS STK_ADJ_QTY 
+                      FROM DPS.PT_PBNMONTH A,
+                           ( 
+                              SELECT   A.STR_CD,
+                                       A.PUMBUN_CD,
+                                       B.DEPT_CD,
+                                       B.TEAM_CD,
+                                       B.PC_CD
+                              FROM     DPS.PC_STRPBN A, DPS.PC_ORGMST B
+                              WHERE    A.SALE_ORG_CD = B.ORG_CD
+                              AND      A.STR_CD = ?
+                           ) B
+                     WHERE A.STR_CD = B.STR_CD
+                       AND A.PUMBUN_CD = B.PUMBUN_CD
+                       AND A.STR_CD = ?
+                       AND A.STK_YM = SUBSTR(?, 0, 6)
+                       GROUP BY A.STR_CD 
+                              , A.VEN_CD
+                              , A.PUMBUN_CD
+                              , A.PUMMOK_CD
+                              , A.EVENT_FLAG
+                              , A.EVENT_RATE
+                              , A.MG_RATE
+                    UNION ALL
+                    SELECT STR_CD
+                         , VEN_CD
+                         , PUMBUN_CD
+                         , PUMMOK_CD
+                         , EVENT_FLAG
+                         , EVENT_RATE
+                         , MG_RATE
+                         , 0                              AS BASE_QTY 
+                         , SUM(BUY_COST_AMT)              AS BUY_QTY
+                         , SUM(RFD_COST_AMT)              AS RFD_QTY
+                         , SUM(SALE_COST_AMT)             AS SALE_QTY  
+                         , SUM(REDU_AMT)                  AS REDU_QTY
+                         , SUM(STK_ADJ_COST_AMT)          AS STK_ADJ_QTY 
+                      FROM DPS.PT_PBNDAY
+                     WHERE STR_CD = ?
+                       AND STK_DT BETWEEN SUBSTR(?, 0, 6)||'01' AND ?
+                     GROUP BY STR_CD
+                            , DEPT_CD
+                            , TEAM_CD
+                            , PC_CD
+                            , PUMBUN_CD
+                            , PUMMOK_CD
+                            , VEN_CD
+                            , EVENT_FLAG
+                            , EVENT_RATE
+                            , MG_RATE
+                      ) A
+             WHERE A.PUMBUN_CD = PBN.PUMBUN_CD
+                 AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+/*               AND PBN.SKU_FLAG = '2'*/   /* 서부장님 요청으로 20110828 박래형수정*/
+               AND PBN.PUMBUN_TYPE <> '2'  
+               AND A.PUMBUN_CD LIKE ? ||'%' 
+               AND A.VEN_CD = ?
+            GROUP BY A.VEN_CD
+                   , A.PUMBUN_CD
+                   , A.PUMMOK_CD
+                   , A.EVENT_FLAG
+                   , A.EVENT_RATE
+                   , A.MG_RATE  
+            ORDER BY VEN_CD
+                   , PUMBUN_CD
+                   , PUMMOK_CD  
+                   , EVENT_FLAG
+                   , EVENT_RATE
+                   , MG_RATE     
+        ]]>        
+    </query>
+    
+    <!-- 재고현황조회 (매가) -->
+    <query name="SEL_SALE">
+        <![CDATA[   
+            SELECT A.VEN_CD
+                 , (SELECT VEN_NAME
+                      FROM DPS.PC_VENMST X
+                     WHERE A.VEN_CD = X.VEN_CD)       AS VEN_NAME 
+                 , A.PUMBUN_CD
+                 , (SELECT PUMBUN_NAME
+                      FROM DPS.PC_PBNMST X
+                     WHERE A.PUMBUN_CD = X.PUMBUN_CD) AS PUMBUN_NAME 
+                 , A.PUMMOK_CD
+                 , (SELECT PUMMOK_NAME
+                      FROM DPS.PC_PMKMST X
+                     WHERE A.PUMMOK_CD = X.PUMMOK_CD) AS PUMMOK_NAME 
+                 , A.EVENT_FLAG
+                 , A.EVENT_RATE 
+                 , SUM(NVL(A.BASE_QTY,0))                                        AS BASE_QTY           -- 기초재고수량 
+                 , SUM(NVL(A.BUY_QTY,0))                                         AS BUY_QTY            -- 매입수량
+                 , SUM(NVL(A.RFD_QTY,0))                                         AS RFD_QTY            -- 반품수량
+                 , SUM(NVL(A.SALE_QTY,0))- SUM(NVL(A.REDU_QTY,0))                AS SALE_QTY           -- 매출수량
+                 , SUM(NVL(A.BASE_QTY,0)) + SUM(NVL(A.BUY_QTY,0)) - SUM(NVL(A.RFD_QTY,0)) - (SUM(NVL(A.SALE_QTY,0)) - SUM(NVL(A.REDU_QTY,0))) + SUM(NVL(A.STK_ADJ_QTY,0))                   AS TOTCOUNT      -- 현재고
+              FROM DPS.PC_PBNMST PBN
+                 , (SELECT A.STR_CD
+                         , A.VEN_CD
+                         , A.PUMBUN_CD
+                         , A.PUMMOK_CD
+                         , A.EVENT_FLAG
+                         , A.EVENT_RATE
+                         , A.MG_RATE
+                         , SUM(NVL(CAO_SALE_AMT,0))        AS BASE_QTY 
+                         , 0                          AS BUY_QTY
+                         , 0                          AS RFD_QTY
+                         , 0                          AS SALE_QTY 
+                         , 0                          AS REDU_QTY  
+                         , 0                          AS STK_ADJ_QTY 
+                      FROM DPS.PT_PBNMONTH A,
+                           ( 
+                              SELECT   A.STR_CD,
+                                       A.PUMBUN_CD,
+                                       B.DEPT_CD,
+                                       B.TEAM_CD,
+                                       B.PC_CD
+                              FROM     DPS.PC_STRPBN A, DPS.PC_ORGMST B
+                              WHERE    A.SALE_ORG_CD = B.ORG_CD
+                              AND      A.STR_CD = ?
+                           ) B
+                     WHERE A.STR_CD = B.STR_CD
+                       AND A.PUMBUN_CD = B.PUMBUN_CD
+                       AND A.STR_CD = ?
+                       AND A.STK_YM = SUBSTR(?, 0, 6)
+                       GROUP BY A.STR_CD 
+                              , A.VEN_CD
+                              , A.PUMBUN_CD
+                              , A.PUMMOK_CD
+                              , A.EVENT_FLAG
+                              , A.EVENT_RATE
+                              , A.MG_RATE
+                    UNION ALL
+                    SELECT STR_CD
+                         , VEN_CD
+                         , PUMBUN_CD
+                         , PUMMOK_CD
+                         , EVENT_FLAG
+                         , EVENT_RATE
+                         , MG_RATE
+                         , 0                              AS BASE_QTY 
+                         , SUM(BUY_SALE_AMT)              AS BUY_QTY
+                         , SUM(RFD_SALE_AMT)              AS RFD_QTY
+                         , SUM(SALE_SALE_AMT)             AS SALE_QTY  
+                         , SUM(REDU_AMT)                  AS REDU_QTY
+                         , SUM(STK_ADJ_SALE_AMT)          AS STK_ADJ_QTY 
+                      FROM DPS.PT_PBNDAY
+                     WHERE STR_CD = ?
+                       AND STK_DT BETWEEN SUBSTR(?, 0, 6)||'01' AND ?
+                     GROUP BY STR_CD
+                            , DEPT_CD
+                            , TEAM_CD
+                            , PC_CD
+                            , PUMBUN_CD
+                            , PUMMOK_CD
+                            , VEN_CD
+                            , EVENT_FLAG
+                            , EVENT_RATE
+                            , MG_RATE
+                      ) A
+             WHERE A.PUMBUN_CD = PBN.PUMBUN_CD
+                 AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+/*               AND PBN.SKU_FLAG = '2'*/   /* 서부장님 요청으로 20110828 박래형수정*/
+               AND PBN.PUMBUN_TYPE <> '2'  
+               AND A.PUMBUN_CD LIKE ?||'%' 
+               AND A.VEN_CD = ?
+            GROUP BY A.VEN_CD
+                   , A.PUMBUN_CD
+                   , A.PUMMOK_CD
+                   , A.EVENT_FLAG
+                   , A.EVENT_RATE
+                   , A.MG_RATE  
+            ORDER BY VEN_CD
+                   , PUMBUN_CD
+                   , PUMMOK_CD  
+                   , EVENT_FLAG
+                   , EVENT_RATE
+                   , MG_RATE     
+        ]]>        
+    </query>
+    
+    
+    
+    
+   
+          
+      
+    
+    
+
+</service>

@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal570.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"                colType="TB_STRING"      size="2"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"                colType="TB_STRING"      size="8"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="POS_NO"                colType="TB_STRING"      size="4"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="POS_NM"                colType="TB_STRING"      size="20"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"               colType="TB_STRING"      size="5"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_FLAG"             colType="TB_STRING"      size="20"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TOT_AMT"          colType="TB_DECIMAL"      size="9"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CASH_TOT_AMT"          colType="TB_DECIMAL"      size="9"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_AMT"              colType="TB_DECIMAL"      size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT"              colType="TB_DECIMAL"      size="9"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUPON_AMT"             colType="TB_DECIMAL"      size="9"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OKCASHBAG_AMT"         colType="TB_DECIMAL"      size="9"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNO"> 
+        <column colName="POSNO"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNOMM"> 
+        <column colName="POSNO_MIN"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSNO_MAX"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_DETAIL"> 
+    	<column colName="E_JNL"                   colType="TB_STRING"      size="4000"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_MASTER2">        
+        <![CDATA[
+             --- 사용안함
+             SELECT    A.STR_CD
+                     , A.POS_NO
+                     , A.TRAN_NO
+                     , CASE A.TRAN_TYPE
+                            WHEN '0' THEN '일반' 
+                            WHEN '1' THEN '외상'
+                            WHEN '2' THEN '미결'
+                            WHEN '3' THEN '임대매출'
+                            WHEN '8' THEN '입출금'
+                            WHEN '9' THEN '기타'
+                       END AS TRAN_TYPE
+                     , CASE A.TRAN_MODE
+                            WHEN '01' THEN '매출거래' 
+                            WHEN '11' THEN '사용'
+                            WHEN '21' THEN '주문발생'
+                            WHEN '22' THEN '주문결말'
+                            WHEN '23' THEN 'COD발생'
+                            WHEN '24' THEN 'COD결말'
+                            WHEN '25' THEN '특판발생'
+                            WHEN '26' THEN '특판결말'
+                            WHEN '31' THEN '임대외상'
+                            WHEN '81' THEN '준비금'
+                            WHEN '82' THEN '중간입금'
+                            WHEN '83' THEN 'PDA 입금'
+                            WHEN '84' THEN '상품권환전'
+                            WHEN '85' THEN '마감입금'
+                            WHEN '91' THEN '정산'
+                            WHEN '92' THEN '일괄취소'
+                            WHEN '93' THEN '포인트적립'
+                            WHEN '94' THEN '상품교환'
+                            WHEN '95' THEN '재고조사'
+                            WHEN '96' THEN 'OK캐쉬백적립'
+                       END AS TRAN_MODE
+                     , DECODE(A.TRAN_FLAG, '0', '정상', DECODE(A.TRAN_FLAG, '1', '반품', '오타')) AS TRAN_FLAG
+                     , DECODE(A.TRAN_MODE,'92','0',DECODE(A.TRAN_FLAG, '0', MAX(NVL(A.SALE_TOT_AMT,0)),  MAX(NVL(A.SALE_TOT_AMT,0))*-1))               AS SALE_TOT_AMT
+                     , DECODE(A.TRAN_FLAG, '0', MAX(NVL(A.REDU_TOT_AMT,0)),  MAX(NVL(A.REDU_TOT_AMT,0))*-1)               AS REDO_TOT_AMT
+                     , DECODE(A.TRAN_FLAG, '0', MAX(NVL(A.SALE_TOT_AMT,0)),  MAX(NVL(A.SALE_TOT_AMT,0))*-1)
+                       - DECODE(A.TRAN_FLAG, '0', MAX(NVL(A.REDU_TOT_AMT,0)),  MAX(NVL(A.REDU_TOT_AMT,0))*-1)             AS SALE_AMT
+                       , DECODE(A.TRAN_FLAG, '0', MAX(NVL(A.DC_TOT_AMT  ,0)),  MAX(NVL(A.DC_TOT_AMT  ,0))*-1)                   AS DC_TOT_AMT
+                       , DECODE(A.TRAN_FLAG, '0', MAX(NVL(A.SALE_TOT_AMT,0)),  MAX(NVL(A.SALE_TOT_AMT,0))*-1)
+                       - DECODE(A.TRAN_FLAG, '0', MAX(NVL(A.REDU_TOT_AMT,0)),  MAX(NVL(A.REDU_TOT_AMT,0))*-1)            
+                       - DECODE(A.TRAN_FLAG, '0', MAX(NVL(A.DC_TOT_AMT  ,0)),  MAX(NVL(A.DC_TOT_AMT  ,0))*-1)             AS REAL_SALE_AMT
+                     , MAX(CASE WHEN C.PAY_TYPE IN('00') THEN
+                           -- DECODE(A.TRAN_FLAG, '0', NVL(C.PAY_AMT, 0), NVL(C.PAY_AMT, 0)* -1)
+                           'Y'
+                       ELSE
+                            -- 0
+                            'N'
+                       END)  AS CASH_TOT_AMT 
+                     , MAX(CASE WHEN C.PAY_TYPE IN ('10', '12', '13') THEN
+                            --DECODE(A.TRAN_FLAG, '0', NVL(C.PAY_AMT, 0), NVL(C.PAY_AMT, 0)* -1)
+                            'Y'
+                       ELSE
+                            --0
+                            'N'
+                       END)  AS CARD_AMT
+                     , MAX(CASE WHEN C.PAY_TYPE IN ('20', '21', '22') THEN
+                            --DECODE(A.TRAN_FLAG, '0', NVL(C.PAY_AMT, 0), NVL(C.PAY_AMT, 0)* -1)
+                            'Y'
+                       ELSE
+                            --0
+                            'N'
+                       END)   AS GIFT_AMT
+                     , MAX(CASE WHEN C.PAY_TYPE IN ('30', '31', '32', '33') THEN
+                            --DECODE(A.TRAN_FLAG, '0', NVL(C.PAY_AMT, 0), NVL(C.PAY_AMT, 0)* -1)
+                            'Y'
+                       ELSE
+                            --0
+                            'N'
+                       END)   AS CUPON_AMT
+                     , MAX(CASE WHEN C.PAY_TYPE IN ('41') THEN
+                            --DECODE(A.TRAN_FLAG, '0', NVL(C.PAY_AMT, 0), NVL(C.PAY_AMT, 0)* -1)
+                            'Y'
+                       ELSE
+                            --0
+                            'N'
+                       END)   AS OKCASHBAG_AMT                       
+                     , A.SALE_DT  
+                  FROM DPS.PS_TRHEADER A
+                     , DPS.PC_POSMST   B
+                     , (SELECT STR_CD
+                                  , SALE_DT
+                                  , POS_NO
+                                  , TRAN_NO
+                                  , PAY_TYPE
+                                  , PAY_AMT
+                           FROM DPS.PS_TRPAID   
+                          WHERE STR_CD = ?
+                            AND SALE_DT = ?
+                          )  C
+                 WHERE B.STR_CD = A.STR_CD
+                   AND B.POS_NO   = A.POS_NO
+                   AND B.POS_FLAG LIKE ? || '%'
+                   AND C.STR_CD   (+)= A.STR_CD 
+                   AND C.POS_NO   (+)= A.POS_NO
+                   AND C.SALE_DT  (+)= A. SALE_DT
+                   AND C.TRAN_NO (+)= A.TRAN_NO
+                   AND A.STR_CD = ?
+                   AND A.SALE_DT = ?
+                   AND A.POS_NO >= ?
+                   AND A.POS_NO <= ?
+                   AND A.SALE_USER_ID LIKE ? || '%'
+                   AND A.TRAN_NO >= ?
+                   AND A.TRAN_NO <= ?
+                   AND A.SALE_TOT_AMT >= ?
+                   AND A.SALE_TOT_AMT <= ?
+                   AND (  ('0' = ? AND C.PAY_TYPE LIKE '0' ||'%' )
+                      OR  ('1' = ? AND C.PAY_TYPE LIKE '1' ||'%' )
+                      OR  ('2' = ? AND C.PAY_TYPE = '20')
+                      OR  ('3' = ? AND C.PAY_TYPE LIKE '3' || '%')
+                      OR  ('4' = ? AND C.PAY_TYPE IN ('21','22'))
+                      OR  ('5' = ? AND C.PAY_TYPE IN ('41'))
+                      OR  ('%' = ? AND 1=1) 
+                      )                        -- %:전체 0:현금 1:카드 2:자사상품권 3:쿠폰 4:타사상품권 5:OK캐쉬백
+                GROUP BY A.STR_CD
+                       , A.SALE_DT
+                       , A.POS_NO
+                       , A.TRAN_NO          
+                       , A.TRAN_TYPE
+                       , A.TRAN_MODE
+                       , A.TRAN_FLAG
+                       ORDER BY STR_CD 
+                              , POS_NO
+                              , TRAN_NO
+                       
+            
+        ]]>        
+    </query>
+    
+    
+    <query name="SEL_SALE_MASTER">        
+        <![CDATA[
+			                                          
+			SELECT  STR_CD                                                 -- 점코드
+			      , SALE_DT                                                -- 매출일자
+			      , POS_NO												   -- pos번호
+				  , (SELECT POS_NAME FROM DPS.PC_POSMST WHERE STR_CD = A.STR_CD AND POS_NO = A.POS_NO ) POS_NM -- POS명			      
+			      , TRAN_NO												   -- 거래번호
+			      , MIN(SIGN) TRAN_FLAG									   -- 거래구분(정상/취소)
+			      , SUM(AMT) SALE_TOT_AMT								   -- 총매출액
+			      , SUM(DECODE(PAY_TYPE,'00',AMT,0)) CASH_TOT_AMT          -- 현금
+			      , SUM(DECODE(PAY_TYPE,'10',AMT,'13',AMT,0)) CARD_AMT     -- 카드 (은련 포함)
+			      , SUM(DECODE(PAY_TYPE,'20',AMT,0)) GIFT_AMT              -- 자사
+			      , SUM(DECODE(PAY_TYPE,'21',AMT,0)) CUPON_AMT             -- 타사
+			      , SUM(DECODE(PAY_TYPE,'61',AMT,0)) OKCASHBAG_AMT         -- 외상매출
+			 FROM
+			 (
+			 SELECT I.STR_CD
+			     , I.SALE_DT 
+			     , I.POS_NO  
+			     , I.TRAN_NO 
+			     , DECODE(H.TRAN_FLAG,0,'정상','취소') SIGN
+			     , I.PAY_TYPE
+			     , I.PAY_AMT * DECODE(H.TRAN_FLAG,0,1,-1) AMT
+			 FROM POS.TR_PAID I, POS.TR_HEADER H
+			WHERE I.STR_CD = H.STR_CD
+			  AND I.SALE_DT = H.SALE_DT
+			  AND I.POS_NO = H.POS_NO
+			  AND I.TRAN_NO = H.TRAN_NO
+			  AND I.STR_CD = ?
+			  AND I.SALE_DT = ?
+			  AND I.POS_NO BETWEEN ? AND ?
+			  AND I.POS_NO IN (
+			    SELECT POS_NO FROM DPS.PC_POSMST
+			        WHERE USE_YN='Y'
+			  )
+			  AND I.TRAN_NO BETWEEN ? AND ?
+			  AND H.REJCT_FLAG <>'1'
+			  ) A
+			  GROUP BY STR_CD,SALE_DT, POS_NO, TRAN_NO
+			  HAVING  SUM(AMT) BETWEEN ? AND ?
+			 ORDER BY STR_CD,SALE_DT, POS_NO, TRAN_NO
+			                       
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_DETAIL">        
+        <![CDATA[
+        	SELECT E_JNL
+		      FROM DPS.PS_TREJNL
+		    WHERE STR_CD = ?
+	          AND SALE_DT = ?
+		      AND POS_NO = ?
+		      AND TRAN_NO = ? 
+    ]]>        
+    </query>
+    <query name="SEL_POSNO">        
+        <![CDATA[
+            SELECT A.POS_NO
+              FROM DPS.PC_POSMST A
+             WHERE A.POS_NO = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSNOMM">        
+        <![CDATA[
+            SELECT MAX(A.POSNO_MIN) AS POSNO_MIN
+                 , MAX(A.POSNO_MAX) AS POSNO_MAX
+              FROM (
+                    SELECT MIN(A.POS_NO) AS POSNO_MIN
+                         , ''            AS POSNO_MAX
+                      FROM DPS.PC_POSMST A
+                      
+                    UNION ALL
+                      
+                    SELECT ''            AS POSNO_MIN
+                         , MAX(A.POS_NO) AS POSNO_MAX
+                      FROM DPS.PC_POSMST A
+                   ) A
+        ]]>        
+    </query>
+    
+    
+</service>

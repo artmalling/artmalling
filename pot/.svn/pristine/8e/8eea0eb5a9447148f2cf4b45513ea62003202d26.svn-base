@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자  : 박래형
+ * 회 사 명  : 형지 아트몰링
+ * 작 성 일  : 2016.10.25
+ * 변 경 일  :
+ * 변경내용  :
+ * 개    요  : 아트몰링 추가개발 팝업 조회
+ -->
+<service name="/ccom999.cc">
+
+    <!-- 점별 POS HEADER -->
+    <gauce name="H_STR_POS_MST1">
+      <column colName="CHK"       colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STR_CD"    colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="POS_NO"    colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SHOP_NAME" colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="POS_NAME"  colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="POS_FLAG"  colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="FLOR_CD"   colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="HALL_CD"   colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce> 
+    
+    <!-- 점별 POS START1 -->
+    <query name="SEL_STR_POS_MST_START1">
+        <![CDATA[
+			SELECT 'F'        AS CHK
+			     , A.STR_CD          /* VARCHAR2(2)     점코드        */
+			     , A.POS_NO          /* VARCHAR2(4)     POS번호       */
+			     , A.SHOP_NAME       /* VARCHAR2(20)    매장명        */
+			     , A.POS_NAME        /* VARCHAR2(20)    POS명         */
+			     , A.POS_FLAG        /* VARCHAR2(2)     POS구분(P082) */
+			     , A.FLOR_CD         /* VARCHAR2(2)     층코드(P061)  */
+			     , A.HALL_CD	     /* VARCHAR2(2)	    관코드(P197)  */
+			  FROM DPS.PC_POSMST A 
+			 WHERE A.STR_CD LIKE ? || '%'
+			   AND A.POS_NO LIKE ? || '%'
+        ]]>        
+    </query>
+    
+    <!-- 점별 POS WHERE1 -->
+    <query name="SEL_STR_POS_MST_WHERE1">
+        <![CDATA[
+			   AND NOT EXISTS (
+			                    SELECT B.POS_NO
+			                      FROM DPS.PC_EVTPLACPOS B
+			                     WHERE B.STR_CD = A.STR_CD
+			                       AND B.POS_NO = A.POS_NO
+			                  )
+        ]]>        
+    </query>
+    
+    <!-- 점별 POS ORDER BY1 -->
+    <query name="SEL_STR_POS_MST_ORDER1">
+        <![CDATA[
+			 ORDER BY A.POS_NO
+        ]]>        
+    </query>
+
+    <!-- 점별 브랜드 HEADER -->
+    <gauce name="H_STR_PUMBUN_MST1">
+      <column colName="CHK"              colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STR_CD"           colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMBUN_CD"        colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMBUN_NAME"      colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="RECP_NAME"        colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SKU_FLAG"         colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="REP_PUMBUN_CD"    colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SKU_TYPE"         colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BIZ_TYPE"         colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="TAX_FLAG"         colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="CHAR_BUYER_CD"    colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="CHAR_BUYER_NAME"  colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="CHAR_SM_CD"       colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="CHAR_SM_NAME"     colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_CD"           colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_NAME"         colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STYLE_TYPE"       colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BUYER_EMP_NAME"   colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BUY_ORG_CD"       colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SALE_ORG_CD"      colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BRAND_CD"         colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BRAND_NM"         colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMBUN_TYPE"      colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce> 
+    
+    <!-- 점별 브랜드 START1 -->
+    <query name="SEL_STR_PUMBUN_MST_START1">
+        <![CDATA[
+			SELECT 'F'        AS CHK
+			     , SPN.STR_CD
+			     , PBN.PUMBUN_CD
+			     , PBN.PUMBUN_NAME
+			     , PBN.RECP_NAME
+			     , PBN.SKU_FLAG
+			     , PBN.REP_PUMBUN_CD
+			     , PBN.SKU_TYPE
+			     , PBN.BIZ_TYPE
+			     , PBN.TAX_FLAG
+			     , SPN.CHAR_BUYER_CD
+			     , BUY.BUYER_NAME     AS CHAR_BUYER_NAME
+			     , SPN.CHAR_SM_CD
+			     , SM.BUYER_NAME      AS CHAR_SM_NAME
+			     , PBN.VEN_CD
+			     , VEN.VEN_NAME
+			     , PBN.STYLE_TYPE
+			     , DPS.FN_GET_BUYER_NAME(CHAR_BUYER_CD) AS BUYER_EMP_NAME
+			     , SPN.BUY_ORG_CD
+			     , SPN.SALE_ORG_CD
+			     , PBN.BRAND_CD
+			     , BRD.BRAND_NM
+			     , PBN.PUMBUN_TYPE
+			  FROM DPS.PC_PBNMST   PBN
+			     , DPS.PC_STRPBN   SPN
+			     , DPS.PC_BUYERMST BUY
+			     , DPS.PC_BUYERMST SM
+			     , DPS.PC_VENMST   VEN
+			     , DPS.PC_BRDMST   BRD
+			 WHERE PBN.VEN_CD        = VEN.VEN_CD
+			   AND BRD.BRAND_CD   (+)= PBN.BRAND_CD
+			   AND SPN.PUMBUN_CD     = PBN.PUMBUN_CD
+			   AND SPN.CHAR_BUYER_CD = BUY.BUYER_CD(+)
+			   AND SPN.CHAR_SM_CD    = SM.BUYER_CD(+)  
+			   AND PBN.USE_YN        = 'Y'
+			   AND SPN.STR_CD        = ?
+			   AND (
+			          PBN.PUMBUN_CD  LIKE '%' || ? || '%'
+			       OR SPN.PUMBUN_CD  LIKE '%' || ? || '%'
+			       )
+			   AND PBN.PUMBUN_NAME   LIKE '%' || ? || '%'
+        ]]>        
+    </query>
+    
+    <!-- PUMBUN_TYPE -->
+    <query name="WHERE_PUMBUN_TYPE">
+        <![CDATA[
+			   AND PBN.PUMBUN_TYPE = ?
+        ]]>        
+    </query>
+    
+    <!-- SKU_FLAG -->
+    <query name="WHERE_SKU_FLAG">
+        <![CDATA[
+			   AND PBN.SKU_FLAG = ?
+        ]]>        
+    </query>
+    
+    <!-- BIZ_TYPE -->
+    <query name="WHERE_BIZ_TYPE">
+        <![CDATA[
+			   AND PBN.BIZ_TYPE = ?
+        ]]>        
+    </query>
+    
+    <!-- IN_BIZ_TYPE -->
+    <query name="WHERE_IN_BIZ_TYPE">
+        <![CDATA[
+			   AND PBN.BIZ_TYPE IN (_ARR_PARAMS_)
+        ]]>        
+    </query>
+    
+    <!-- SKU_TYPE -->
+    <query name="WHERE_SKU_TYPE">
+        <![CDATA[
+			   AND PBN.SKU_TYPE = ?
+        ]]>        
+    </query>
+    
+    <!-- 점별 브랜드 ORDER BY1 -->
+    <query name="SEL_STR_PUMBUN_MST_ORDER1">
+        <![CDATA[
+			 ORDER BY SPN.STR_CD
+			        , PBN.PUMBUN_CD
+        ]]>        
+    </query>
+
+</service>

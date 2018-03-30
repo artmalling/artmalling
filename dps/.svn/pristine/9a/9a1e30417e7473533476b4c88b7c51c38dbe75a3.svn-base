@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal957.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"          colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"         colType="TB_STRING"      size="9"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT_01_49"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_01_49"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT_02_49"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_02_49"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHAIK_49"        colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT_01_99"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_01_99"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT_02_99"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_02_99"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHAIK_99"        colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT_01_189"      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_01_189"      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT_02_189"      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_02_189"      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHAIK_189"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT_01_699"      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_01_699"      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT_02_699"      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_02_699"      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHAIK_699"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNOMM"> 
+        <column colName="POSNO_MIN"       colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSNO_MAX"       colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSFLORMM"> 
+        <column colName="POSFLOR_MIN"     colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSFLOR_MAX"     colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 구분 : POS번호별 -->
+    <query name="SEL_SALE_POS_POS">        
+        <![CDATA[
+                /* 구분 : POS번호별  MASTER 조회 */
+				SELECT T.STR_CD
+				     , T.SALE_DT
+				     , T.POS_NO
+				     /**** 총판매내역계 ****/
+				     , SUM(T.NORM_TRAN_CNT_01_49)  AS CNT_01_49
+				     , SUM(T.NORM_TRAN_AMT_01_49)  AS AMT_01_49
+				     , SUM(T.NORM_TRAN_CNT_02_49)  AS CNT_02_49
+				     , SUM(T.NORM_TRAN_AMT_02_49)  AS AMT_02_49
+				     , SUM(T.NORM_TRAN_AMT_01_49) - SUM(T.NORM_TRAN_AMT_02_49) AS CHAIK_49
+				     /**** 결재대상액계 ****/
+				     , SUM(T.NORM_TRAN_CNT_01_99)  AS CNT_01_99
+				     , SUM(T.NORM_TRAN_AMT_01_99)  AS AMT_01_99
+				     , SUM(T.NORM_TRAN_CNT_02_99)  AS CNT_02_99
+				     , SUM(T.NORM_TRAN_AMT_02_99)  AS AMT_02_99
+				     , SUM(T.NORM_TRAN_AMT_01_99) - SUM(T.NORM_TRAN_AMT_02_99) AS CHAIK_99
+				     /**** 결재내역계 ****/
+				     , SUM(T.NORM_TRAN_CNT_01_189) AS CNT_01_189
+				     , SUM(T.NORM_TRAN_AMT_01_189) AS AMT_01_189
+				     , SUM(T.NORM_TRAN_CNT_02_189) AS CNT_02_189
+				     , SUM(T.NORM_TRAN_AMT_02_189) AS AMT_02_189
+				     , SUM(T.NORM_TRAN_AMT_01_189) - SUM(T.NORM_TRAN_AMT_02_189) AS CHAIK_189
+				     /**** 기타매출계 ****/
+				     , SUM(T.NORM_TRAN_CNT_01_699) AS CNT_01_699
+				     , SUM(T.NORM_TRAN_AMT_01_699) AS AMT_01_699
+				     , SUM(T.NORM_TRAN_CNT_02_699) AS CNT_02_699
+				     , SUM(T.NORM_TRAN_AMT_02_699) AS AMT_02_699
+				     , SUM(T.NORM_TRAN_AMT_01_699) - SUM(T.NORM_TRAN_AMT_02_699) AS CHAIK_699     
+				  FROM (
+				        SELECT A.STR_CD    /* 점코드   */
+				             , A.SALE_DT   /* 매출일자 */
+				             , A.POS_NO    /* 포스번호 */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '49' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_01_49 /* (시스템집계)49: 총판매내역계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '49' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_01_49 /* (시스템집계)49: 총판매내역계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '99' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_01_99 /* (시스템집계)99: 결재대상액계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '99' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_01_99 /* (시스템집계)99: 결재대상액계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '189' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_01_189  /* (시스템집계)189: 결제내역계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '189' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_01_189 /* (시스템집계)189: 결제내역계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '699' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_01_699  /* (시스템집계)699: 기타매출계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '699' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_01_699 /* (시스템집계)699: 기타매출계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '49' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_02_49 /* (POS집계)49: 총판매내역계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '49' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_02_49 /* (POS집계)49: 총판매내역계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '99' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_02_99 /* (POS집계)99: 결재대상액계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '99' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_02_99 /* (POS집계)99: 결재대상액계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '189' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_02_189 /* (POS집계)189: 결제내역계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '189' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_02_189 /* (POS집계)189: 결제내역계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '699' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_02_699  /* (POS집계)699: 기타매출계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '699' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_02_699 /* (POS집계)699: 기타매출계 금액   */
+				          FROM DPS.PS_TRTOTAL A
+				             , DPS.PC_POSMST  B
+				         WHERE A.STR_CD    = B.STR_CD
+				           AND A.POS_NO    = B.POS_NO
+				           AND A.STR_CD    LIKE ? || '%'
+				           AND B.FLOR_CD   LIKE ? || '%'
+				           AND B.POS_FLAG  LIKE ? || '%'
+				           AND B.HALL_CD   LIKE ? || '%'
+				           AND A.POS_NO    >= ?
+				           AND A.POS_NO    <= ?
+				           AND A.SALE_DT   = ?
+				           AND BALANCE_FLAG  IN ( '49', '99', '189')
+				           AND EXISTS ( SELECT MYORG.USER_ID
+				                          FROM COM.V_MYORG MYORG
+				                         WHERE MYORG.STR_CD      = A.STR_CD
+				                           AND MYORG.USER_ID     = ?
+				                           )
+				       ) T  
+				 GROUP BY T.STR_CD
+				        , T.SALE_DT
+				        , T.POS_NO
+				 ORDER BY T.POS_NO
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_POS_FLOR">        
+        <![CDATA[
+                /* 구분 : 층별  MASTER 조회 */
+				SELECT T.STR_CD
+				     , T.SALE_DT
+				     , T.COMM_NAME1 AS POS_NO
+				     /**** 총판매내역계 ****/
+				     , SUM(T.NORM_TRAN_CNT_01_49)  AS CNT_01_49
+				     , SUM(T.NORM_TRAN_AMT_01_49)  AS AMT_01_49
+				     , SUM(T.NORM_TRAN_CNT_02_49)  AS CNT_02_49
+				     , SUM(T.NORM_TRAN_AMT_02_49)  AS AMT_02_49
+				     , SUM(T.NORM_TRAN_AMT_01_49) - SUM(T.NORM_TRAN_AMT_02_49) AS CHAIK_49
+				     /**** 결재대상액계 ****/
+				     , SUM(T.NORM_TRAN_CNT_01_99)  AS CNT_01_99
+				     , SUM(T.NORM_TRAN_AMT_01_99)  AS AMT_01_99
+				     , SUM(T.NORM_TRAN_CNT_02_99)  AS CNT_02_99
+				     , SUM(T.NORM_TRAN_AMT_02_99)  AS AMT_02_99
+				     , SUM(T.NORM_TRAN_AMT_01_99) - SUM(T.NORM_TRAN_AMT_02_99) AS CHAIK_99
+				     /**** 결재내역계 ****/
+				     , SUM(T.NORM_TRAN_CNT_01_189) AS CNT_01_189
+				     , SUM(T.NORM_TRAN_AMT_01_189) AS AMT_01_189
+				     , SUM(T.NORM_TRAN_CNT_02_189) AS CNT_02_189
+				     , SUM(T.NORM_TRAN_AMT_02_189) AS AMT_02_189
+				     , SUM(T.NORM_TRAN_AMT_01_189) - SUM(T.NORM_TRAN_AMT_02_189) AS CHAIK_189
+				     /**** 기타매출계 ****/
+				     , SUM(T.NORM_TRAN_CNT_01_699) AS CNT_01_699
+				     , SUM(T.NORM_TRAN_AMT_01_699) AS AMT_01_699
+				     , SUM(T.NORM_TRAN_CNT_02_699) AS CNT_02_699
+				     , SUM(T.NORM_TRAN_AMT_02_699) AS AMT_02_699
+				     , SUM(T.NORM_TRAN_AMT_01_699) - SUM(T.NORM_TRAN_AMT_02_699) AS CHAIK_699   
+				  FROM (
+				        SELECT A.STR_CD    /* 점코드   */
+				             , A.SALE_DT   /* 매출일자 */
+				             , A.POS_NO    /* 포스번호 */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '49' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_01_49 /* (시스템집계)49: 총판매내역계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '49' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_01_49 /* (시스템집계)49: 총판매내역계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '99' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_01_99 /* (시스템집계)99: 결재대상액계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '99' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_01_99 /* (시스템집계)99: 결재대상액계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '189' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_01_189  /* (시스템집계)189: 결제내역계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '189' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_01_189 /* (시스템집계)189: 결제내역계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '699' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_01_699  /* (시스템집계)699: 기타매출계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '01' AND BALANCE_FLAG = '699' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_01_699 /* (시스템집계)699: 기타매출계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '49' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_02_49 /* (POS집계)49: 총판매내역계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '49' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_02_49 /* (POS집계)49: 총판매내역계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '99' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_02_99 /* (POS집계)99: 결재대상액계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '99' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_02_99 /* (POS집계)99: 결재대상액계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '189' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_02_189 /* (POS집계)189: 결제내역계 건수   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '189' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_02_189 /* (POS집계)189: 결제내역계 건수   */
+				             , C.COMM_NAME1
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '699' THEN A.NORM_TRAN_CNT
+				               ELSE 0 
+				               END AS NORM_TRAN_CNT_02_699  /* (POS집계)699: 기타매출계 금액   */
+				             , CASE WHEN TOTAL_FLAG = '02' AND BALANCE_FLAG = '699' THEN A.NORM_TRAN_AMT
+				               ELSE 0 
+				               END AS NORM_TRAN_AMT_02_699 /* (POS집계)699: 기타매출계 금액   */
+				          FROM DPS.PS_TRTOTAL A
+				             , DPS.PC_POSMST  B
+				             , ( SELECT COMM_CODE
+                                      , RESERVED1
+                                      , COMM_NAME1
+                                   FROM COM.TC_COMMCODE
+                                  WHERE SYS_PART = 'D'
+                                    AND COMM_PART = 'P061'
+                                    AND USE_YN = 'Y'
+                               ) C
+				         WHERE A.STR_CD    = B.STR_CD
+				           AND A.POS_NO    = B.POS_NO
+				           AND B.FLOR_CD   = C.COMM_CODE
+				           AND A.STR_CD    LIKE ? || '%'
+				           AND B.FLOR_CD   LIKE ? || '%'
+				           AND B.POS_FLAG  LIKE ? || '%'
+				           AND B.HALL_CD   LIKE ? || '%'
+                           AND C.RESERVED1 BETWEEN 
+                                                (
+                                                   SELECT TO_NUMBER(RESERVED1)
+                                                     FROM COM.TC_COMMCODE
+                                                    WHERE COMM_PART = 'P061'
+                                                      AND USE_YN = 'Y'
+                                                      AND COMM_CODE = ?
+                                                )
+                           					    AND 
+                                                (
+                                                   SELECT TO_NUMBER(RESERVED1)
+                                                     FROM COM.TC_COMMCODE
+                                                    WHERE COMM_PART = 'P061'
+                                                      AND USE_YN = 'Y'
+                                                      AND COMM_CODE = ?
+                                                )
+				           AND A.SALE_DT     = ?
+				           AND BALANCE_FLAG  IN ( '49', '99', '189')
+				           AND EXISTS ( SELECT MYORG.USER_ID
+				                          FROM COM.V_MYORG MYORG
+				                         WHERE MYORG.STR_CD      = A.STR_CD
+				                           AND MYORG.USER_ID     = ?
+				                           )
+				       ) T  
+				 GROUP BY T.STR_CD
+				        , T.SALE_DT
+				        , T.COMM_NAME1
+				 ORDER BY T.COMM_NAME1
+        ]]>        
+    </query>
+    
+    <!-- POSNO MIN, MAX 값을 조회 -->
+    <query name="SEL_POSNOMM">        
+        <![CDATA[
+             /* POS 최소번호 최대번호 조회 */
+             SELECT MIN(POS_NO) AS POSNO_MIN
+                  , MAX(POS_NO) AS POSNO_MAX
+               FROM DPS.PC_POSMST 
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSFLORMM">        
+        <![CDATA[ 
+            /* POS 층 코드 최소 최대 값 조회 */
+            SELECT MAX(A.POSFLOR_MIN) AS POSFLOR_MIN
+                 , MAX(A.POSFLOR_MAX) AS POSFLOR_MAX
+              FROM (
+                    SELECT A.COMM_CODE    AS POSFLOR_MIN
+                         , ''             AS POSFLOR_MAX
+                      FROM COM.TC_COMMCODE A
+                     WHERE A.COMM_PART = 'P061'
+                       AND INQR_ORDER IN  (SELECT MAX(INQR_ORDER)
+                                             FROM COM.TC_COMMCODE
+                                            WHERE COMM_PART = 'P061'
+                                              AND USE_YN = 'Y'
+                                           )
+                      
+                    UNION ALL
+                      
+                    SELECT ''             AS POSFLOR_MIN
+                         , A.COMM_CODE    AS POSFLOR_MAX
+                      FROM COM.TC_COMMCODE A
+                     WHERE A.COMM_PART = 'P061'
+                       AND INQR_ORDER IN  (SELECT MIN(INQR_ORDER)
+                                             FROM COM.TC_COMMCODE
+                                            WHERE COMM_PART = 'P061'
+                                              AND USE_YN = 'Y'
+                                           )
+                   ) A
+        ]]>        
+    </query>
+</service>

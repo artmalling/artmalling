@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/ppay109.pp">
+    
+    <!-- 세금계산서 생성 마스터  리스트 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TAX_ISSUE_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TAX_ISSUE_SEQ_NO"   colType="TB_INT"     size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_CD"             colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"          colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"          colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETAX_NO"            colType="TB_STRING"  size="29"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETAX_STAT"          colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ETAX_STAT_NM"       colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_TYPE"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_TYPE_NM"        colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAX_FLAG"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAX_FLAG_NM"        colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NO"            colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUP_AMT"            colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAT_AMT"            colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"            colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EDI_SEQ_NO"         colType="TB_STRING"  size="29"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+        <column colName="STATUS"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAX_INV_FLAG"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAX_INV_FLAG_NM"    colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--  세금계산서 생성 마스터  리스트  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT        
+			       A.STR_CD                                           /*점코드*/
+			     , A.TAX_ISSUE_DT                                     /*세금계산서발행일자*/
+			     , A.TAX_ISSUE_SEQ_NO                                 /*세금계산서발행순번*/
+			     , A.VEN_CD                                           /*협력사코드*/
+			     , A.VEN_NM                                           /*협력사명*/
+			     , A.PUMBUN_CD                                        /*품번코드*/
+                 , A.PUMBUN_NM                                        /*품번명*/
+			     , A.ETAX_NO                                          /*전자세금계산서ID*/
+			     , A.ETAX_STAT                                        /*전자세금계산서상태 */
+			     , A.ETAX_STAT_NM                                     /*전자세금계산서상태명 */
+			     , A.BIZ_TYPE                                         /*거래형태*/
+			     , A.BIZ_TYPE_NM                                      /*거래형태명*/
+			     , A.TAX_FLAG                                         /*과세구분*/
+			     , A.TAX_FLAG_NM                                      /*과세구분명*/
+			     , A.COMP_NO                                          /*사업자번호*/
+			     , A.SUP_AMT                                          /*공급액*/
+			     , A.VAT_AMT                                          /*부가세액*/
+			     , A.TOT_AMT                                          /*합계금액*/
+			     , A.EDI_SEQ_NO                                       /*세금계산서ID */
+			     , A.STATUS                                           /*상태 */       
+                 , A.TAX_INV_FLAG                                     /*구분 */       
+                 , A.TAX_INV_FLAG_NM                                  /*구분명 */      
+			 FROM (    
+					SELECT
+					       TAX.STR_CD                                                                /*점코드*/
+					     , TAX.TAX_ISSUE_DT                                                          /*세금계산서발행일자*/
+					     , TAX.TAX_ISSUE_SEQ_NO                                                      /*세금계산서발행순번*/
+					     , TAX.VEN_CD                                                                /*협력사코드*/
+					     , DPS.FN_GET_VENDOR_NAME(TAX.VEN_CD)    AS VEN_NM                           /*협력사명*/
+					     , TAX.PUMBUN_CD                                                             /*품번코드*/
+                         , DPS.FN_GET_PUMBUN_SNAME(TAX.PUMBUN_CD)    AS PUMBUN_NM                    /*품번명명*/
+					     , TAX.ETAX_NO                                                               /*전자세금계산서ID*/
+					     , DECODE(TAX.ETAX_STAT, 'K', TAX.ETAX_STAT
+                         , DPS.FN_GET_TAX_STATE(TAX.EDI_SEQ_NO)) AS ETAX_STAT    /*전자세금계산서상태*/    
+                         , DECODE(TAX.ETAX_STAT, 'K', COM.FN_GET_COMM_NAME('D', 'P401', 'K')
+                                  , COM.FN_GET_COMM_NAME('D', 'P401'
+                                  , DPS.FN_GET_TAX_STATE(TAX.EDI_SEQ_NO))) AS ETAX_STAT_NM  /*전자세금계산서상태명*/
+					     , TAX.BIZ_TYPE                                                              /*거래형태*/
+					     , COM.FN_GET_COMM_NAME('D', 'P002', TAX.BIZ_TYPE) AS BIZ_TYPE_NM            /*거래형태명*/
+					     , TAX.TAX_FLAG                                                              /*과세구분*/
+					     , COM.FN_GET_COMM_NAME('D', 'P004', TAX.TAX_FLAG) AS TAX_FLAG_NM            /*과세구분명*/
+					     , VEN.COMP_NO                                                               /*사업자번호*/
+					     , TAX.SUP_AMT                                                               /*공급액*/
+					     , TAX.VAT_AMT                                                               /*부가세액*/
+					     , TAX.TOT_AMT                                                               /*합계금액*/
+					     , TAX.EDI_SEQ_NO                                                            /* 세금계산서ID */
+					     , DECODE(TAX.ETAX_STAT, 'K', TAX.ETAX_STAT, DPS.FN_GET_TAX_STATE (TAX.EDI_SEQ_NO)) AS STATUS                           /* 상태 */
+                         , TAX.TAX_INV_FLAG
+                         , COM.FN_GET_COMM_NAME('D', 'P403', TAX.TAX_INV_FLAG) AS TAX_INV_FLAG_NM            /*세금계산서 종류*/
+					  FROM DPS.PP_TAXMST     TAX
+					     , DPS.PC_VENMST     VEN
+					     , DPS.PC_STRVENMST  SVM
+					 WHERE TAX.STR_CD  = SVM.STR_CD
+					   AND TAX.VEN_CD  = SVM.VEN_CD
+					   AND TAX.VEN_CD  = VEN.VEN_CD
+					   AND TAX.STR_CD  = ?
+					   AND TAX.PAY_YM  = ?
+					   AND TAX.PAY_CYC = ?
+					   AND TAX.PAY_CNT = ?
+					   AND TAX.BIZ_TYPE LIKE ? || '%'
+					   AND TAX.TAX_FLAG LIKE ? || '%'
+					   AND NVL(TAX.EDI_SEQ_NO,' ')   LIKE ? || '%'
+                       AND TAX.VEN_CD          LIKE ? || '%'
+                       AND TAX.TAX_INV_FLAG    LIKE ? || '%'
+				   )   A                       
+        ]]>
+    </query> 
+    
+     <query name="WHERE_ETAXSTAT">
+        <![CDATA[
+             WHERE A.STATUS  LIKE ? || '%'  
+        ]]>
+    </query> 
+    
+     <query name="WHERE_ETAXSTAT2">
+        <![CDATA[
+             WHERE A.STATUS  <> 'K'  
+        ]]>
+    </query> 
+    
+     <query name="SEL_TAX_DT">
+        <![CDATA[
+            AND A.TAX_ISSUE_DT BETWEEN ? AND ?
+        ]]>
+    </query> 
+    
+     <query name="ORDER_BY">
+        <![CDATA[
+            ORDER BY A.STR_CD, A.VEN_CD, A.PUMBUN_CD, A.TAX_ISSUE_DT DESC, A.TAX_ISSUE_SEQ_NO DESC
+        ]]>
+    </query> 
+ </service>

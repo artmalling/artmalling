@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김정민
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.05.18
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  POS별 지급취소내역 조회
+ -->
+<service name="/mcae428.mc">
+    <!-- MASTER -->
+    <!-- <gauce name="H_MASTER">         
+        <column colName="STR_CD "       colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="FLOR_CD"       colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JGCANCLE"      colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MCALCLE"       colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWSQTY"      colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWMQTY"      colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_AMT"       colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>  -->
+    
+    <gauce name="H_MASTER">
+    	<column colName="STR_CD "       colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="FLOR_CD"       colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JGCANCLE"      colType="TB_DECIMAL" size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ALLCANDRAW"    colType="TB_DECIMAL" size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACANDRAW"      colType="TB_DECIMAL" size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PCANDRAW"      colType="TB_DECIMAL" size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWAQTY"      colType="TB_DECIMAL" size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWMQTY"      colType="TB_DECIMAL" size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWMAMT"      colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="DRAWCAMT"      colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PAY_AMT"       colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+ 
+    <!-- DETAIL -->
+    <gauce name="H_DETAIL">
+        <column colName="POS_NO"       colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_COST_PRC" colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRAWLFLAG"    colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY"          colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"          colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TOT_AMT"      colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+
+    <!-- MASTER -->
+    <!--  <query name="SEL_MASTER">
+        <![CDATA[
+        SELECT STR_CD 
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+             , FLOR_CD
+             , POS_NO
+             , SUM(TOT_DRAWL) AS JGCANCLE
+             , SUM(TOT_DRAWL) - (SUM(DRAWSQTY) + SUM(DRAWMQTY)) AS MCALCLE
+             , SUM(DRAWSQTY) AS DRAWSQTY
+             , SUM(DRAWMQTY) AS DRAWMQTY
+             , SUM(PAY_AMT) AS PAY_AMT
+          FROM ( SELECT C.STR_CD 
+                      , DPS.FN_GET_STORE_NAME(C.STR_CD) AS STR_NM
+                      , D.FLOR_CD
+                      , C.POS_NO
+                      , COUNT(*) AS TOT_DRAWL
+                      , CASE WHEN C.DRAWLFLAG =  '1' THEN (CASE WHEN C.SKU_GB='1' THEN SUM(C.PAY_QTY) ELSE 0 END) ELSE 0 END DRAWSQTY
+                      , CASE WHEN C.DRAWLFLAG =  '1' THEN (CASE WHEN C.SKU_GB='2' THEN SUM(C.PAY_QTY) ELSE 0 END) ELSE 0 END DRAWMQTY
+                      , CASE WHEN C.DRAWLFLAG <> '1' THEN SUM(C.PAY_AMT) ELSE 0 END AS PAY_AMT
+                   FROM MSS.MC_POSRECOVERY C, DPS.PC_POSMST D 
+                  WHERE C.POS_NO  = D.POS_NO 
+                    AND C.STR_CD  = D.STR_CD 
+                    AND C.STR_CD  LIKE ? || '%'
+                    AND D.FLOR_CD LIKE ? || '%'
+                    AND C.POS_NO  LIKE ? || '%'
+                    AND C.SALE_DT BETWEEN ? AND ?
+               GROUP BY C.STR_CD
+                      , D.FLOR_CD
+                      , C.POS_NO
+                      , C.DRAWLFLAG
+                      , C.SKU_GB )
+      GROUP BY STR_CD
+             , FLOR_CD
+             , POS_NO              
+      ORDER BY STR_CD
+             , FLOR_CD
+        ]]>
+    </query> -->
+    
+    <!-- MASTER -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+      SELECT STR_CD 
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+             , FLOR_CD
+             , POS_NO
+             , SUM(TOT_DRAWL) AS JGCANCLE      -- 반납거래건
+             , SUM(ALLCANDRAW) AS ALLCANDRAW  -- 전체 현금(현금 + 상품권) 회수 거래건 
+             , SUM(ACANDRAW) AS ACANDRAW     -- 미회수거래건
+             , SUM(PCANDRAW) AS PCANDRAW     -- 부분 회수 거래건 
+             , SUM(DRAWAQTY) AS DRAWAQTY    -- 회수 건수 (전체)
+             , SUM(DRAWMQTY) AS DRAWMQTY    -- 회수 상품권 수량 
+             , SUM(DRAWMAMT) AS DRAWMAMT   -- 회수 상품권 금액
+             , SUM(DRAWCAMT) AS DRAWCAMT -- 회수 현금 금액
+             , SUM(PAY_AMT) AS PAY_AMT            -- 회수 총 금액(현금대체)
+          FROM ( SELECT C.STR_CD 
+                      , DPS.FN_GET_STORE_NAME(C.STR_CD) AS STR_NM
+                      , D.FLOR_CD
+                      , C.POS_NO
+                      , COUNT(CASE WHEN C.SEQ_NO = 1 THEN C.STR_CD END) AS TOT_DRAWL    -- 반납거래건
+                      , COUNT(CASE WHEN C.SEQ_NO = 1 AND C.DRAWLFLAG = '9' THEN C.STR_CD END) AS ACANDRAW   --  미회수 거래건
+                      , COUNT(CASE WHEN C.SEQ_NO = 1 AND C.DRAWLFLAG = '3' THEN C.STR_CD END) AS PCANDRAW   -- 부분 회수 거래건
+                      , COUNT(CASE WHEN C.SEQ_NO = 1 AND C.DRAWLFLAG = '2' THEN C.STR_CD END) AS ALLCANDRAW  -- 전체현금(현금 + 상품권) 회수 거래건
+                      , CASE WHEN C.DRAWLFLAG IN  ('2','3') THEN COUNT(C.STR_CD) ELSE 0  END DRAWAQTY       -- 회수 건수
+                      , CASE WHEN C.DRAWLFLAG IN  ('2','3') THEN SUM(C.PAY_QTY) ELSE SUM(0) END DRAWMQTY   -- 회수 상품권 수량
+                      , CASE WHEN C.DRAWLFLAG IN  ('2','3') AND C.PAY_QTY = 1 THEN SUM(PAY_AMT) ELSE SUM(0) END  DRAWMAMT   --회수 상품권 금액
+                      , CASE WHEN C.DRAWLFLAG IN  ('2','3') AND C.PAY_QTY = 0 THEN SUM(PAY_AMT) ELSE SUM(0) END  DRAWCAMT    -- 회수 현금 금액 
+                      , CASE WHEN C.DRAWLFLAG <> '1' THEN SUM(C.PAY_AMT) ELSE 0 END AS PAY_AMT                                               -- 현금대체 총 금액
+                   FROM MSS.MC_POSRECOVERY C, DPS.PC_POSMST D, DPS.PS_TRHEADER E
+                  WHERE C.POS_NO  = D.POS_NO 
+                  	AND E.STR_CD = C.STR_CD
+                    AND C.STR_CD  = D.STR_CD 
+                    AND C.STR_CD  LIKE ? || '%'
+                    AND D.FLOR_CD LIKE ? || '%'
+                    AND C.POS_NO   LIKE ? || '%'
+                    AND E.SALE_DT = C.SALE_DT
+                  	AND E.POS_NO = C.POS_NO
+                  	AND E.TRAN_NO = C.TRAN_NO
+                  	AND E.TRAN_TYPE = '0'
+                  	AND C.SALE_DT BETWEEN ? AND ?
+               	GROUP BY C.STR_CD
+                      , D.FLOR_CD
+                      , C.POS_NO
+                      , C.DRAWLFLAG
+                      , C.PAY_GIFTCARD_NO
+                      , C.PAY_QTY
+                      , C.SKU_GB )
+      GROUP BY STR_CD
+             , FLOR_CD
+             , POS_NO              
+      ORDER BY STR_CD
+             , POS_NO
+        ]]>
+    </query>
+    
+    
+    <!-- DETAIL -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+       SELECT POS_NO
+			, SALE_DT
+			, SKU_NAME
+			, BUY_COST_PRC
+			, SRAWLFLAG
+			, SUM(QTY) AS QTY
+			, SUM(AMT) AS AMT
+			, SUM(TOT_AMT) AS TOT_AMT
+		FROM (SELECT A.POS_NO 
+		           , A.SALE_DT
+		           , CASE WHEN B.SKU_NAME IS NULL THEN '미회수' ELSE B.SKU_NAME END AS SKU_NAME
+		           , B.SALE_PRC AS BUY_COST_PRC
+		           , CASE WHEN A.DRAWLFLAG = '1' THEN (CASE WHEN A.DRAWLFLAG ='1' THEN '현물회수' ELSE '대납' END) ELSE '' END AS SRAWLFLAG
+		           , CASE WHEN A.DRAWLFLAG = '1' THEN A.PAY_QTY ELSE 0 END AS QTY
+		           , CASE WHEN A.DRAWLFLAG <> '1' THEN A.PAY_AMT ELSE 0 END AS AMT 
+		           , (CASE WHEN A.DRAWLFLAG = '1' THEN A.PAY_QTY ELSE 0 END) * B.SALE_PRC AS TOT_AMT
+		        FROM MSS.MC_POSRECOVERY A, DPS.PC_STRSKUMST B 
+		       WHERE A.STR_CD      = B.STR_CD (+)  
+		         AND A.SKU_CD      = B.SKU_CD (+)
+		         AND A.STR_CD      = ?
+		         AND A.POS_NO      = ? 
+		         AND A.SALE_DT  BETWEEN ? AND ? )
+	 GROUP BY POS_NO
+			, SALE_DT
+			, SKU_NAME
+			, BUY_COST_PRC
+			, SRAWLFLAG
+     ORDER BY POS_NO
+			, SALE_DT
+        ]]>
+    </query>
+   
+</service>

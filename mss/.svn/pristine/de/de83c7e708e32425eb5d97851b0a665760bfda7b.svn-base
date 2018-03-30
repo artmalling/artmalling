@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 오형규
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  협력사 EDI 게시판
+ -->
+<service name="/medi104.md">
+
+    <!-- 협력사 EDI Q&A 게시판  -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STRNM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DT" colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_SEQ_NO" colType="TB_STRING" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIMES" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TITLE" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GB" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REPL_DT" colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REPL_SEQ_NO" colType="TB_INT" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_CODE" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="READ_CNT" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TITLE01" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NM01" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONTNES" colType="TB_STRING" size="2000" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AUTH_FLAG" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AUTH" colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                                 
+    </gauce>
+    
+     <!-- 협력사 EDI Q&A 바이어코드 (헤드) -->
+    <gauce name="H_BUYER"> 
+        <column colName="BUYER_CD" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                        
+    </gauce>
+    
+    <!-- 협력사 EDI 브랜드명 (헤드) -->
+    <gauce name="H_PUMBENNM"> 
+        <column colName="PUMBUN_YN" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD" colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DT" colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_SEQ_NO" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                        
+    </gauce>
+    
+     <!-- 협력사 EDI  권한 허용 BOARDAUTH(헤드) -->
+    <gauce name="H_BORADAUTH"> 
+        <column colName="PUMBUN_CD" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                              
+    </gauce>
+    
+    <!-- 협력사 EDI COMBO BUYER -->
+    <gauce name="H_COMBOBUYER"> 
+        <column colName="BUYER_CD" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                              
+    </gauce>
+    
+    <!-- 협력사 EDI 콤보바이어 (바이어코드)  -->
+     <query name="SEL_COMBOBUYER">
+        <![CDATA[
+        SELECT A.BUYER_CD AS BUYER_CD
+             , B.BUYER_NAME AS BUYER_NM
+          FROM DPS.PC_BUYERORG A
+             , DPS.PC_BUYERMST B
+             , (
+                SELECT DISTINCT   A.STR_CD     AS STR_CD
+                FROM   COM.V_MYORG A, DPS.PC_STRMST B
+                WHERE  A.STR_CD = B.STR_CD
+                AND    A.USE_YN = 'Y'
+                AND    A.FCL_FLAG = '1'
+                AND    USER_ID = ?              
+                AND    STR_FLAG LIKE '1' || '%'
+                AND    ORG_FLAG = ?             
+               ) C         
+         WHERE A.BUYER_CD = B.BUYER_CD
+           AND B.STR_CD = C.STR_CD
+           AND A.EMP_NO = ?                    
+           AND TO_DATE(A.APP_S_DT) <= sysdate
+           AND A.APP_E_DT = '99991231'
+           AND A.USE_YN = 'Y'  
+           AND A.STR_CD like ?  ||  '%'  
+        ]]>
+    </query>
+    
+    
+    
+    <!-- 협력사 EDI 게시판 조회 (바이어코드)  -->
+     <query name="SEL_BUYERCD">
+        <![CDATA[
+        SELECT A.BUYER_CD AS BUYER_CD
+             , B.BUYER_NAME AS BUYER_NM
+          FROM DPS.PC_BUYERORG A
+             , DPS.PC_BUYERMST B            
+         WHERE A.PC_ORG_CD = B.PC_ORG_CD  
+           AND A.EMP_NO = ?
+           AND ROWNUM = 1
+      ORDER BY BUYER_CD DESC, APP_S_DT DESC  
+        ]]>
+    </query>
+    
+    <!-- 협력사 EDI 게시판 권한   -->
+     <query name="SEL_AUTH">
+        <![CDATA[
+        SELECT CASE WHEN C.PUMBUN_CD IS NULL THEN 'F' ELSE 'T' END AS PUMBUN_YN
+             , B.PUMBUN_CD AS PUMBUN_CD
+             , B.PUMBUN_NAME AS PUMBUN_NAME
+             , C.STR_CD AS STR_CD
+			 , C.REG_DT AS REG_DT
+			 , C.REG_SEQ_NO AS REG_SEQ_NO  						          
+	      FROM DPS.PC_BUYERMST A
+	         , DPS.PC_STRPBN B
+	         , ( 
+	            SELECT STR_CD,REG_DT, REG_SEQ_NO
+	                 , PUMBUN_CD
+		          FROM MSS.ET_EDIBOARDAUTH
+		         WHERE STR_CD = ?
+		           AND REG_SEQ_NO = ?
+		           AND REG_DT = ?
+			   ) C
+		 WHERE A.BUYER_CD = B.CHAR_BUYER_CD
+		   AND A.STR_CD = B.STR_CD
+	       AND B.STR_CD = C.STR_CD(+)
+		   AND B.PUMBUN_CD = C.PUMBUN_CD(+)
+		   AND A.BUYER_CD = ?
+        ]]>
+    </query>
+    
+    
+    <!-- 협력사 EDI 게시판 조회   -->
+     <query name="SEL_MASTER">
+        <![CDATA[
+        SELECT STR_CD
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STRNM
+             , DECODE(GB, 1, REG_DT, 2, REPL_DT) as REG_DT
+             , LPAD(REG_SEQ_NO, 3, 0) AS REG_SEQ_NO
+           --, LPAD(DECODE(GB, 1, REG_SEQ_NO, 2, REPL_SEQ_NO), 3, 0) as REG_SEQ_NO
+             , TIMES 
+             , TITLE
+             , GB
+             , REPL_DT
+             , REPL_SEQ_NO
+             , A.BUYER_CODE AS BUYER_CODE
+             , A.BUYER_NM AS BUYER_NAME 
+             , READ_CNT
+             , TITLE01
+             , BUYER_NM01
+             , CONTNES
+             , AUTH_FLAG
+             , CASE WHEN B.BUYER_CD IS NULL THEN  'F' ELSE 'T' END AS AUTH 
+          FROM (
+                SELECT STR_CD
+                     , REG_DT
+                     , REG_SEQ_NO
+                     , TIMES
+                     , TITLE
+                     , GB
+                     , REPL_DT
+                     , REPL_SEQ_NO
+                     , BUYER_CODE
+                     , BUYER_NM
+                     , READ_CNT
+                     , TITLE01
+                     , BUYER_NM01
+                     , CONTNES
+                     , AUTH_FLAG  
+                  FROM (
+                         SELECT A.STR_CD
+                              , A.REG_DT
+                              , A.REG_SEQ_NO
+                              , A.TIME AS TIMES
+                              , A.TITLE
+                              , 1 AS GB
+                              , '' AS REPL_DT
+                              , 0 as REPL_SEQ_NO
+                              , B.BUYER_CD AS BUYER_CODE
+                              , B.BUYER_NAME AS BUYER_NM
+                              , A.READ_CNT AS READ_CNT
+                              , A.TITLE AS TITLE01
+                              , B.BUYER_NAME AS BUYER_NM01
+                              , A.CONTENT AS CONTNES
+                              , A.AUTH_FLAG AS AUTH_FLAG 
+                           FROM MSS.ET_EDIBOARD A, DPS.PC_BUYERMST B
+                          WHERE A.BUYER_CODE = B.BUYER_CD
+                            AND A.STR_CD = ?
+                            AND A.REG_DT >= ? AND A.REG_DT <= ? 
+                            AND A.TITLE LIKE '%' || ? || '%'
+                       ORDER BY A.REG_DT DESC, A.REG_SEQ_NO desc
+                       ) A
+                 WHERE ROWNUM <= ?
+                 UNION 
+                SELECT B.STR_CD
+                     , B.REG_DT
+                     , B.REG_SEQ_NO
+                     , B.TIME AS TIMES
+                     , LPAD('└[Re]:', 10) || B.TITLE AS TITLE
+                     , 2 AS GB
+                     , B.REPL_DT
+                     , B.REPL_SEQ_NO
+                     , USER_ID AS BUYER_CODE
+                     , MSS.FN_EDIREPLY_USERNM(B.STR_CD, B.USER_ID, B.REG_TP)  AS BUYER_NM
+                     , B.READ_CNT AS READ_CNT
+                     , B.TITLE AS TITLE01
+                     , MSS.FN_EDIREPLY_USERNM(B.STR_CD, B.USER_ID, B.REG_TP) AS BUYER_NM01
+                     , B.CONTENT AS CONTNES
+                     , '' AS AUTH_FLAG 
+                 FROM (
+                        SELECT STR_CD
+                             , REG_DT
+                             , REG_SEQ_NO
+                          FROM (
+                                SELECT STR_CD
+                                     , REG_DT
+                                     , REG_SEQ_NO
+                                  FROM MSS.ET_EDIBOARD  
+                                 WHERE STR_CD = ?
+                                   AND REG_DT >= ? AND REG_DT <= ?
+                                   AND TITLE LIKE '%' || ? || '%'
+                              ORDER BY REG_DT DESC, REG_SEQ_NO desc
+                               ) A
+                         WHERE ROWNUM <= ?    
+                      ) A, MSS.ET_REPLY B
+                WHERE A.STR_CD = B.STR_CD 
+                  AND A.REG_DT = B.REG_DT 
+                  And A.REG_SEQ_NO = B.REG_SEQ_NO
+                ) A,
+                (
+                 SELECT A.BUYER_CD AS BUYER_CD
+                      , B.BUYER_NAME AS BUYER_NM
+                   FROM DPS.PC_BUYERORG A, DPS.PC_BUYERMST B            
+                  WHERE A.BUYER_CD = B.BUYER_CD
+                    AND A.EMP_NO = ?
+                    AND TO_DATE(A.APP_S_DT) <= sysdate
+                    AND A.APP_E_DT = '99991231'
+                    AND A.USE_YN = 'Y'  
+                ) B
+		WHERE A.BUYER_CODE = B.BUYER_CD(+)
+		ORDER BY STR_CD, A.REG_DT desc, REG_SEQ_NO desc, GB, A.REPL_DT DESC, A.REPL_SEQ_NO DESC
+        ]]>
+    </query>   
+    <!-- 조회 건수 -->
+    <query name="SEL_ROWNUM">
+        <![CDATA[
+            AND ROWNUM <= ?
+        ]]>
+    </query>
+    <!-- 게시판  ORDER BY  -->
+    <query name="SEL_ORDERBY">
+        <![CDATA[
+            ORDER BY STR_CD, REG_DT desc, REG_SEQ_NO desc, GB
+        ]]>
+    </query>
+    <!-- 브랜드명  -->
+    <query name="SEL_PUMBENNAME">
+        <![CDATA[
+        SELECT 'F' AS PUMBUN_YN
+             , B.PUMBUN_CD AS PUMBUN_CD 
+             , B.PUMBUN_NAME AS PUMBUN_NAME 
+          FROM DPS.PC_BUYERMST A, DPS.PC_STRPBN B
+         WHERE A.BUYER_CD = B.CHAR_BUYER_CD
+           AND A.STR_CD = B.STR_CD
+           AND A.BUYER_CD = ?
+           AND B.STR_CD = ?
+        ]]>
+    </query>
+    <!-- 게시판 답변글 등록 -->
+    <query name="INT_REPLE">
+        <![CDATA[
+        INSERT INTO MSS.ET_REPLY
+                                (
+                                   REPL_DT
+                                 , REPL_SEQ_NO
+                                 , REG_DT
+                                 , REG_SEQ_NO
+                                 , TITLE
+                                 , CONTENT
+                                 , TIME
+                                 , USER_ID
+                                 , READ_CNT
+                                 , REG_ID
+                                 , REG_DATE
+                                 , MOD_ID
+                                 , MOD_DATE
+                                 , STR_CD
+                                 , REG_TP
+                                ) 
+                           VALUES 
+                                (
+                                   TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                 , ?
+                                 , ?
+                                 , ?
+                                 , ?
+                                 , ?
+                                 , TO_CHAR(SYSDATE, 'HH24MISS')
+                                 , ?
+                                 , 0
+                                 , ?
+                                 , TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                 , ?
+                                 , TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                 , ?
+                                 , '1'
+                                )
+        ]]>
+    </query>
+    
+      <!-- 게시판 답변글 수정 -->
+    <query name="UPD_REPLY">
+        <![CDATA[
+        UPDATE MSS.ET_REPLY 
+           SET TITLE       = ?
+             , CONTENT     = ?
+             , MOD_ID      = ?
+             , MOD_DATE = SYSDATE
+         WHERE STR_CD      = ?
+           AND REPL_DT     = ?
+           AND REPL_SEQ_NO = ?      
+        ]]>
+    </query>
+    
+    <!-- 게시판 등록 -->
+    <query name="INT_BOARD">
+        <![CDATA[
+        INSERT INTO MSS.ET_EDIBOARD
+                                   (
+                                    STR_CD
+                                  , REG_DT 
+                                  , REG_SEQ_NO
+                                  , TITLE
+                                  , CONTENT
+                                  , BUYER_CODE
+                                  , AUTH_FLAG
+                                  , TIME
+                                  , READ_CNT
+                                  , REG_ID
+                                  , REG_DATE
+                                  , MOD_ID
+                                  , MOD_DATE
+                                   ) 
+                              VALUES
+                                   (
+                                    ? 
+                                  , TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                  , ?
+                                  , ?
+                                  , ?
+                                  , ?
+                                  , ?
+                                  , TO_CHAR(SYSDATE, 'HH24MISS')
+                                  , 0
+                                  , ?
+                                  , SYSDATE
+                                  , ?
+                                  , SYSDATE
+                                   )      
+        ]]>
+    </query>
+  
+    
+    <!-- 게시판 수정 -->
+    <query name="UPD_BOARD">
+        <![CDATA[
+        UPDATE MSS.ET_EDIBOARD 
+           SET TITLE = ?
+             , CONTENT = ?
+             , AUTH_FLAG = ?
+             , MOD_ID = ?
+             , MOD_DATE = SYSDATE
+		 WHERE STR_CD = ?
+		   AND REG_DT  = ?
+		   AND REG_SEQ_NO  = ?           
+        ]]>
+    </query>
+    <!-- 게시판 권한 등록 -->
+    <query name="INT_AUTH">
+        <![CDATA[
+         INSERT INTO MSS.ET_EDIBOARDAUTH 
+                                        (
+                                         STR_CD
+                                       , REG_DT
+                                       , REG_SEQ_NO
+                                       , PUMBUN_CD
+                                        ) 
+                                   VALUES
+                                        (
+                                         ?
+                                       , TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                       , ?
+                                       , ?
+                                        )
+        ]]>
+    </query>
+    
+     <!-- 게시판 권한 등록 -->
+    <query name="INT_AUTHUP">
+        <![CDATA[
+            INSERT INTO MSS.ET_EDIBOARDAUTH 
+                                           (
+                                            STR_CD
+                                          , REG_DT
+                                          , REG_SEQ_NO
+                                          , PUMBUN_CD
+                                            ) 
+                                      VALUES
+                                            (
+                                             ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                            )
+        ]]>
+    </query>
+    
+    <!-- 게시판 답변글  시퀀스 -->
+    <query name="SEL_SEQNO">
+        <![CDATA[
+        SELECT NVL(MAX(REPL_SEQ_NO), 0)+1  AS SEQNO FROM MSS.ET_REPLY WHERE REPL_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+        ]]>
+    </query>
+    <!-- 권한 시퀀스 -->
+     <query name="SEL_AUTH_SEQ_NO">
+        <![CDATA[
+        SELECT MSS.SQ_ET_EDIBOARD.NEXTVAL AS SEQ_NO FROM DUAL
+        ]]>
+    </query>
+    
+     <!-- 권한 삭제 -->
+     <query name="DET_AUTH">
+        <![CDATA[
+        DELETE FROM MSS.ET_EDIBOARDAUTH WHERE REG_DT = ? AND REG_SEQ_NO = ? AND PUMBUN_CD = ? AND STR_CD = ?
+        ]]>
+    </query>
+    
+    
+     
+</service>

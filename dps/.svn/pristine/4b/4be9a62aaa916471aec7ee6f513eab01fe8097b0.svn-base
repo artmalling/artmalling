@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 조형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  청구 대상 데이터 가져오기.
+ -->
+<service name="/psal921.ps">
+    <!-- VAN사청구대상 목록 -->
+    <gauce name="H_MASTER">
+        <column colName="COMM_CODE"       colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+		<column colName="COMM_NAME1"      colType="TB_STRING"  size="30"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CNT"             colType="TB_DECIMAL" size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PROC_CNT"        colType="TB_DECIMAL" size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="RTN_MSG"         colType="TB_STRING"  size="60"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <gauce name="H_DETAIL">
+        <column colName="COMM_CODE"       colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+		<column colName="COMM_NAME1"      colType="TB_STRING"  size="30"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_DT"         colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CNT"             colType="TB_DECIMAL" size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="POSTPONE"        colType="TB_DECIMAL" size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- VAN사청구대상 목록 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT 
+            		A.COMM_CODE
+			     , A.COMM_NAME1
+			     , B.CNT
+			     , '' as PROC_CNT
+			     , '' as RTN_MSG
+			  FROM COM.TC_COMMCODE A
+			     , (( SELECT '1' FCL_FLAG 
+			              ,(SELECT COUNT(*)
+			                   FROM DPS.PS_TRHEADER   A
+			                      , DPS.PS_TRPAID     B
+			                      , DPS.PC_POSMST     D
+			                  WHERE A.STR_CD       =    B.STR_CD
+			                    AND A.SALE_DT      =    B.SALE_DT
+			                    AND A.POS_NO       =    B.POS_NO
+			                    AND A.TRAN_NO      =    B.TRAN_NO
+			                    AND A.STR_CD       =    D.STR_CD
+			                    AND A.POS_NO       =    D.POS_NO
+			                    AND A.STR_CD       =    ?
+			                    AND B.PAY_TYPE IN (SELECT COMM_CODE FROM COM.TC_COMMCODE
+			                                        WHERE COMM_PART = 'D065'
+			                                          AND SYS_PART  = 'D'
+			                                       ) -- VAN 청구대상 결재코드
+			                    AND A.SALE_DT     <    ?
+			                    AND A.SALE_DT >= TO_CHAR(SYSDATE-40,'YYYYMMDD')
+			                    AND D.POS_FLAG    <>    '11'  -- 문화센터 POS 온라인 제외 
+			                    AND B.SEND_DATE   IS    NULL
+			               ) CNT  
+			           FROM DUAL
+			       ) 
+			       UNION ALL
+			       ( SELECT '2' FCL_FLAG 
+			              ,(SELECT COUNT(*)
+			                   FROM DPS.PS_TRHEADER   A
+			                      , DPS.PS_TRPAID     B
+			                      , DPS.PC_POSMST     D
+			                  WHERE A.STR_CD       =    B.STR_CD
+			                    AND A.SALE_DT      =    B.SALE_DT
+			                    AND A.POS_NO       =    B.POS_NO
+			                    AND A.TRAN_NO      =    B.TRAN_NO
+			                    AND A.STR_CD       =    D.STR_CD
+			                    AND A.POS_NO       =    D.POS_NO
+			                    AND A.STR_CD       =    ?
+			                    AND B.PAY_TYPE IN (SELECT COMM_CODE FROM COM.TC_COMMCODE
+			                                        WHERE COMM_PART = 'D065'
+			                                          AND SYS_PART  = 'D'
+			                                       ) -- VAN 청구대상 결재코드
+			                    AND A.SALE_DT     <    ?
+			                    AND A.SALE_DT >= TO_CHAR(SYSDATE-40,'YYYYMMDD')
+			                    AND D.POS_FLAG     =    '11'  -- 문화센터 POS 온라인 제외 
+			                    AND B.SEND_DATE   IS    NULL
+			                    
+			               ) CNT  
+			           FROM DUAL
+			       ) 
+			       UNION ALL
+			       /*
+			       ( SELECT '3' FCL_FLAG 
+			              ,( SELECT COUNT(*)
+			                   FROM DPS.PD_REBUYREQ A
+			                  WHERE A.BUYREQ_YN = 'Y'
+			                    AND A.REQ_DT IS NULL
+			               ) CNT
+			           FROM DUAL
+			       ) 
+			       */
+			       ( SELECT '3' FCL_FLAG 
+			              ,( SELECT COUNT(*)
+			                   FROM DPS.PD_REBUYREQ A
+			                      , DPS.PD_BRANCH   B
+			                  WHERE A.BUYREQ_YN = 'Y'
+			                    AND A.REQ_DT IS NULL
+			                    AND A.JBRCH_ID  =  B.JBRCH_ID
+			                    AND B.STR_CD    = ? 
+			               ) CNT
+			           FROM DUAL
+			       ) 
+			 ) B         
+			 WHERE A.COMM_PART LIKE 'D033'
+			   AND A.USE_YN = 'Y'
+			   AND A.COMM_CODE = B.FCL_FLAG(+)
+			   --AND A.COMM_CODE = D.FCL_FLAG(+)
+			 ORDER BY A.COMM_CODE
+        ]]>        
+    </query>
+    
+    <!-- VAN사청구대상 목록 조회 -->
+    <query name="SEL_MASTER2">        
+        <![CDATA[
+            SELECT 
+            		A.COMM_CODE
+                 , A.COMM_NAME1
+                 , B.CNT
+                 , '' as PROC_CNT
+                 , '' as RTN_MSG
+              FROM COM.TC_COMMCODE A
+                 , ( SELECT '1' FCL_FLAG 
+                          ,(SELECT COUNT(*)
+                               FROM DPS.PS_TRHEADER   A
+                                  , DPS.PS_TRPAID     B
+                                  , DPS.PD_BUYREQPREP C
+                                  , DPS.PC_POSMST     D
+                              WHERE A.STR_CD       =    B.STR_CD
+                                AND A.SALE_DT      =    B.SALE_DT
+                                AND A.POS_NO       =    B.POS_NO
+                                AND A.TRAN_NO      =    B.TRAN_NO
+                                AND B.STR_CD       =    C.STR_CD(+)
+                                AND B.SALE_DT      =    C.SALE_DT(+)
+                                AND B.POS_NO       =    C.POS_NO(+)
+                                AND B.TRAN_NO      =    C.TRAN_NO(+)
+                                AND B.SEQ_NO       =    C.POS_SEQ_NO(+)
+                                AND B.PAY_TYPE     =    C.PAY_TYPE(+)
+                                AND A.STR_CD       =    D.STR_CD
+                                AND A.POS_NO       =    D.POS_NO
+                                AND A.STR_CD       =    ?
+                                AND B.PAY_TYPE IN (SELECT COMM_CODE FROM COM.TC_COMMCODE
+                                                    WHERE COMM_PART = 'D065'
+                                                      AND SYS_PART  = 'D'
+                                                   ) -- VAN 청구대상 결재코드
+                                AND A.SALE_DT     <=    ?
+                                AND A.SALE_DT >= TO_CHAR(SYSDATE-40,'YYYYMMDD')
+                                AND C.SALE_DT     IS    NULL
+                                AND D.POS_FLAG    <>    '11'  -- 문화센터 POS 온라인 제외 
+                           ) CNT  
+                       FROM DUAL
+                   ) B    
+                 , ( SELECT '2' FCL_FLAG 
+                          ,(SELECT COUNT(*)
+                               FROM DPS.PS_TRHEADER   A
+                                  , DPS.PS_TRPAID     B
+                                  , DPS.PD_BUYREQPREP C
+                                  , DPS.PC_POSMST     D
+                              WHERE A.STR_CD       =    B.STR_CD
+                                AND A.SALE_DT      =    B.SALE_DT
+                                AND A.POS_NO       =    B.POS_NO
+                                AND A.TRAN_NO      =    B.TRAN_NO
+                                AND B.STR_CD       =    C.STR_CD(+)
+                                AND B.SALE_DT      =    C.SALE_DT(+)
+                                AND B.POS_NO       =    C.POS_NO(+)
+                                AND B.TRAN_NO      =    C.TRAN_NO(+)
+                                AND B.SEQ_NO       =    C.POS_SEQ_NO(+)
+                                AND B.PAY_TYPE     =    C.PAY_TYPE(+)
+                                AND A.STR_CD       =    D.STR_CD
+                                AND A.POS_NO       =    D.POS_NO
+                                AND A.STR_CD       =    ?
+                                AND B.PAY_TYPE IN (SELECT COMM_CODE FROM COM.TC_COMMCODE
+                                                    WHERE COMM_PART = 'D065'
+                                                      AND SYS_PART  = 'D'
+                                                   ) -- VAN 청구대상 결재코드
+                                AND A.SALE_DT     <=    ?
+                                AND A.SALE_DT >= TO_CHAR(SYSDATE-40,'YYYYMMDD')
+                                AND C.SALE_DT     IS    NULL
+                                AND D.POS_FLAG     =    '11'  -- 문화센터 POS 온라인 제외 
+                           ) CNT  
+                       FROM DUAL
+                   ) C    
+                 , ( SELECT '3' FCL_FLAG 
+                          ,( SELECT COUNT(*)
+                               FROM DPS.PD_REBUYREQ A
+                              WHERE A.BUYREQ_YN = 'Y'
+                                AND A.REQ_DT IS NULL
+                           ) CNT
+                       FROM DUAL
+                   ) D            
+             WHERE A.COMM_PART LIKE 'D033'
+               AND A.COMM_CODE = B.FCL_FLAG(+)
+               AND A.COMM_CODE = C.FCL_FLAG(+)
+               AND A.COMM_CODE = D.FCL_FLAG(+)
+             ORDER BY A.COMM_CODE
+        ]]>        
+    </query>
+    
+    
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+        
+        	SELECT 
+                    A.COMM_CODE
+                 , A.COMM_NAME1
+                 , SALE_DT
+                 , B.CNT
+                 ,(SELECT COUNT(*) FROM DPS.PD_POSTPONE Z WHERE Z.STR_CD = B.STR_CD AND Z.REG_DT = B.SALE_DT) POSTPONE
+              FROM COM.TC_COMMCODE A,
+		     (SELECT '1' FCL_FLAG,A.STR_CD, A.SALE_DT,COUNT(*) CNT
+		       FROM DPS.PS_TRHEADER   A
+		          , DPS.PS_TRPAID     B
+		      WHERE A.STR_CD       =    B.STR_CD
+		        AND A.SALE_DT      =    B.SALE_DT
+		        AND A.POS_NO       =    B.POS_NO
+		        AND A.TRAN_NO      =    B.TRAN_NO
+		        AND A.STR_CD       =    ?
+		        AND B.PAY_TYPE IN (SELECT COMM_CODE FROM COM.TC_COMMCODE
+		                            WHERE COMM_PART = 'D065'
+		                              AND SYS_PART  = 'D'
+		                           ) -- VAN 청구대상 결재코드
+		        AND A.SALE_DT     <    ?
+		        AND A.SALE_DT     >    TO_CHAR(SYSDATE-40,'YYYYMMDD')
+		        AND B.SEND_DATE   IS NULL
+		    GROUP BY A.STR_CD,A.SALE_DT
+		    ) B         
+		             WHERE A.COMM_PART LIKE 'D033'
+		               AND A.USE_YN = 'Y'
+		               AND A.COMM_CODE = B.FCL_FLAG(+)
+		               AND A.COMM_CODE = '1'
+		   ORDER BY A.COMM_CODE
+		            
+        
+         ]]>        
+    </query>
+    
+</service>

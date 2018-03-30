@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.22
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/ccom012.cc">    
+     
+    <!-- 품목코드조회 SQL -->
+    <query name="SEL_PBCODE">
+        <![CDATA[                                        
+        SELECT SPN.PUMBUN_CD    AS PUMBUN_CD
+             , SPN.PUMBUN_NAME  AS PUMBUN_NAME
+          FROM DPS.PC_PBNMST   PBN
+             , DPS.PC_STRPBN   SPN
+         WHERE SPN.PUMBUN_CD  = PBN.PUMBUN_CD
+         --AND SPN.EDI_YN = 'Y' 
+           AND SPN.STR_CD = ?
+           AND SPN.VEN_CD = ?
+           AND SPN.BIZ_TYPE = '2'
+           AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+        ]]>
+    </query>
+    <query name="SEL_WHERE_PBCODE">
+        <![CDATA[
+           AND SPN.PUMBUN_CD   LIKE ? || '%'
+           AND SPN.PUMBUN_NAME LIKE ? || '%'
+        ]]>
+    </query>
+    <query name="SEL_PBCODE_ORDER">
+        <![CDATA[
+      ORDER BY SPN.PUMBUN_CD
+        ]]>
+    </query> 
+    
+     <!-- 품목 조회 (1건)-->
+    <query name="SEL_PUMBUN_SEL">
+        <![CDATA[
+         SELECT SPN.PUMBUN_CD    AS PUMBUN_CD
+	          , SPN.PUMBUN_NAME  AS PUMBUN_NAME
+	       FROM DPS.PC_PBNMST   PBN
+	          , DPS.PC_STRPBN   SPN
+	      WHERE SPN.PUMBUN_CD  = PBN.PUMBUN_CD
+	      --AND SPN.EDI_YN = 'Y' 
+	        AND SPN.STR_CD = ?
+	        AND SPN.VEN_CD = ?
+	        AND SPN.BIZ_TYPE = '2'
+            AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+            AND (SPN.PUMBUN_CD   = ? OR SPN.PUMBUN_NAME   = ?)
+          ORDER BY SPN.PUMBUN_CD
+        ]]>
+    </query> 
+    
+     <query name="SEL_SKUFLAG_WHERE">
+        <![CDATA[   
+           AND SPN.SKU_FLAG         = ?      /* 단품구분 : 1(단품), 2(비단품) */ 
+           AND SPN.SALE_BUY_FLAG    = '1'    /* 판매분매입구분 : 1(사전), 2(판매분매입) */
+        ]]>        
+    </query>
+    
+    <query name="SEL_PUMBUNTYPE_WHERE1">
+        <![CDATA[   
+           AND PBN.SKU_TYPE    = '1'             /* 단품종류 (1:규격단품)  */ 
+           AND PBN.PUMBUN_TYPE IN ('0','4')      /* 브랜드형태 : 정상(0), F&B(4) */
+        ]]>        
+    </query>
+    
+    <query name="SEL_PUMBUNTYPE_WHERE2">
+        <![CDATA[   
+           AND PBN.PUMBUN_TYPE = '0'            /* 브랜드형태 : 정상(0) */
+        ]]>        
+    </query>
+     
+    <query name="SEL_PUMBUNCOMBO_ORDER">
+        <![CDATA[   
+           ORDER BY SPN.PUMBUN_CD, SPN.PUMBUN_NAME 
+        ]]>        
+    </query>
+</service>

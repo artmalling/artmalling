@@ -1,0 +1,479 @@
+<!-- 
+/*******************************************************************************
+ * 시스템명 : 고객관리 >  VOC 관리  > 컴플레인 현황 
+ * 작  성  일  : 2010.07.21
+ * 작  성  자  : FKSS
+ * 수  정  자  : 
+ * 파  일  명  : dvoc0020.jsp
+ * 버         전  : 1.0 (버전은 1.0부터 시작하며 0.1씩 증가)
+ * 개         요  : 
+ * 이         력  :
+ *        
+ ******************************************************************************/
+-->
+
+<%@ page language="java" contentType="text/html;charset=utf-8"%>
+<%@ page import="common.vo.SessionInfo" %>
+<%@ page import="common.util.Util"  %>
+<%@ page import="kr.fujitsu.ffw.base.BaseProperty"  %>
+
+<%@ taglib uri="/WEB-INF/tld/c-rt.tld" prefix="c"%>
+<%@ taglib uri="/WEB-INF/tld/gauce40.tld" prefix="gauce"%>
+<%@ taglib uri="/WEB-INF/tld/app.tld" prefix="loginChk"%>
+<%@ taglib uri="/WEB-INF/tld/button.tld" prefix="button"%>
+<!--*************************************************************************-->
+<!--* A. 로그인 유무, 기본설정                                              *-->
+<!--*************************************************************************-->
+<loginChk:islogin />
+<%
+    String dir = BaseProperty.get("context.common.dir");
+%>
+<html>
+<head>
+<meta http-equiv="pragma" content="no-cache">
+<link href="/<%=dir%>/css/mds.css" rel="stylesheet" type="text/css">
+<script language="javascript" src="/<%=dir%>/js/common.js" type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/gauce.js" type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/global.js" type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/message.js" type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/popup.js" type="text/javascript"></script>
+<script language="javascript"  src="/<%=dir%>/js/popup_dps.js" type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/popup_dcs.js" type="text/javascript"></script>
+
+<!--*************************************************************************-->
+<!--* B. 스크립트 시작                                                      *-->
+<!--*************************************************************************-->
+
+<script LANGUAGE="JavaScript">
+
+var strFlag           = "INS";
+var strChangFlag      = false;
+var bfListRowPosition = 0;                             // 이전 List Row Position
+var strBefore         = "";  
+var strAfter          = "";
+var intChangRow       = 0;
+var bfMasterRowPos = 0;       // 마스터조회여부
+var LAST_MOD_ROW      = 0;
+var strChk            ='U';
+/*************************************************************************
+ * 1. 초기설정
+ *************************************************************************/
+/** 
+ * doInit()
+ * 작 성 자     : 조형욱
+ * 작 성 일     : 2010-05-19
+ * 개       요     : 해당 페이지 LOAD 시  
+ * return값 : void
+ */
+ var top = 165;		//해당화면의 동적그리드top위치
+function doInit(){
+	 
+	//Master 그리드 세로크기자동조정  2013-07-17
+	 var obj   = document.getElementById("GR_MASTER"); 
+	 obj.style.height  = (parseInt(window.document.body.clientHeight)-top) + "px";
+
+	// Input, Output Data Set Header 초기화
+    DS_IO_MASTER.setDataHeader('<gauce:dataset name="H_MASTER"/>');
+    
+    //그리드 초기화
+    gridCreate1(); //마스터
+    		
+    initComboStyle(LC_SEL_STR, DS_O_S_STR, "CODE^0^30,NAME^0^80", 1, PK);					//점 코드
+    initComboStyle(LC_SEL_CLM_KIND, DS_O_S_CLM_KIND, "CODE^0^30,NAME^0^80", 1, NORMAL);		//클레임 종류
+    initComboStyle(LC_SEL_PROG_GBN, DS_O_S_PROC_GBN, "CODE^0^30,NAME^0^80", 1, NORMAL);		//처리 구분
+    initComboStyle(LC_SEL_REC_TYPE, DS_O_S_REC_TYPE, "CODE^0^30,NAME^0^80", 1, NORMAL);		//접수 형태
+
+    
+    initEmEdit(EM_S_REC_DT,   "SYYYYMMDD", NORMAL); //접수 기간
+    initEmEdit(EM_E_REC_DT,   "TODAY", NORMAL);   	//접수 기간
+    initEmEdit(EM_S_REC_SEQ,   "GEN^40", NORMAL);	//접수 번호 구간
+    initEmEdit(EM_E_REC_SEQ,   "GEN^40", NORMAL);	//접수 번호 구간
+    initEmEdit(EM_CUST_ID,   "GEN^40", NORMAL);		//회원 번호
+    initEmEdit(EM_CUST_NAME,   "GEN^40", NORMAL);	//회원 이름
+
+
+    
+    getStore("DS_O_S_STR", "N", "", "N"); //점코드
+    DS_O_S_STR.Filter();     //점구분 : 지점만 셋팅
+
+    getEtcCode("DS_O_S_CLM_KIND", "M", "M010", "Y"); //클레임 종류 공통코드
+    getEtcCode("DS_O_S_PROC_GBN", "M", "M015", "Y"); //처리 구분 공통코드
+    getEtcCode("DS_O_S_REC_TYPE", "M", "M012", "Y"); //접수 형태 공통코드
+
+    
+    LC_SEL_STR.Index = 0;
+    LC_SEL_CLM_KIND.Index = 0;
+    LC_SEL_PROG_GBN.Index = 0;
+    LC_SEL_REC_TYPE.Index = 0;
+
+    
+}
+function gridCreate1(){
+	 var hdrProperies = '<FC>id={currow}            name="NO"             width=30    align=center     edit=none </FC>'
+	       			  + '<FC>id=REC_DT              name="접수일자"          width=100    align=center     edit=none mask="XXXX/XX/XX" suppress=1 </FC>'
+	       			  + '<FC>id=REC_SEQ             name="접수번호"          width=70   align=center      edit=none </FC>'
+	       			  + '<FC>id=CLM_KIND            name="클레임종류"        width=150   align=left       edit=none EditStyle=Lookup  Data="DS_O_S_CLM_KIND:CODE:NAME"  </FC>'
+	      			  + '<FC>id=REC_TITLE           name="제목"              width=110   align=left       edit=none </FC>'
+	      			  + '<FC>id=BRAND_NM            name="브랜드"            width=150   align=left       edit=none </FC>'
+	       			  + '<FC>id=CUST_NAME           name="고객명"            width=110   align=left       edit=none </FC>'
+	       			  + '<FC>id=MOBILE_PH1          name="연락처"            width=130   align=center     edit=none </FC>'
+	       			  + '<FC>id=CUST_ID             name="회원번호"          width=110   align=center     edit=none </FC>'
+	       			  + '<FC>id=REC_TYPE            name="접수형태"          width=100   align=center       edit=none EditStyle=Lookup  Data="DS_O_S_REC_TYPE:CODE:NAME"  </FC>' 
+	       			  + '<FC>id=PROC_GBN            name="처리구분"          width=100   align=center       edit=none EditStyle=Lookup  Data="DS_O_S_PROC_GBN:CODE:NAME"  </FC>' ; 
+         
+   initGridStyle(GR_MASTER, "common", hdrProperies, true);
+ 	
+}
+
+/*************************************************************************
+ * 2. 공통버튼
+     (1) 조회       - btn_Search(), subQuery()
+     (2) 신규       - btn_New()
+     (3) 저장       - btn_Save()
+     (4) 엑셀       - btn_Excel()
+ *************************************************************************/
+ /**
+  * btn_Search()
+  * 작 성 자     : 조형욱
+  * 작 성 일     : 2010-02-10
+  * 개       요     : 조회시 호출
+  * return값 : void
+  */
+function btn_Search() {
+	  
+	
+	if( EM_S_REC_SEQ.TEXT == ''){
+		EM_S_REC_SEQ.TEXT = 0; 
+	}
+	if( EM_E_REC_SEQ.TEXT == ''){
+		EM_E_REC_SEQ.TEXT = 99999; 
+	}
+    var goTo       = "searchMaster"; 
+    var strStrCd   = LC_SEL_STR.BindColval;
+    var strSrecDt  = EM_S_REC_DT.TEXT;
+    var strErecDt  = EM_E_REC_DT.TEXT;
+    var strClmKind = LC_SEL_CLM_KIND.BindColval;
+    var strProgGbn = LC_SEL_PROG_GBN.BindColval;
+    var strSrecSeq = EM_S_REC_SEQ.TEXT;
+    var strErecSeq = EM_E_REC_SEQ.TEXT;
+    var strMbrGb   = RD_SEL_MBR_GBN.CodeValue;
+    var strRecType = LC_SEL_REC_TYPE.BindColval;
+    var strCustId  = EM_CUST_ID.TEXT;
+    var strCustNm  = EM_CUST_NAME.TEXT;
+
+    var parameters  = "&strStrCd="		+encodeURIComponent(strStrCd)
+    			    + "&strSrecDt="		+encodeURIComponent(strSrecDt)
+    			    + "&strErecDt="		+encodeURIComponent(strErecDt)
+    			    + "&strClmKind="    +encodeURIComponent(strClmKind)
+    			    + "&strProgGbn="    +encodeURIComponent(strProgGbn)
+    			    + "&strSrecSeq="    +encodeURIComponent(strSrecSeq)
+    			    + "&strErecSeq="    +encodeURIComponent(strErecSeq)
+    			    + "&strMbrGb="      +encodeURIComponent(strMbrGb)
+    			    + "&strRecType="    +encodeURIComponent(strRecType)
+    			    + "&strCustId="     +encodeURIComponent(strCustId)
+    			    + "&strCustNm="     +encodeURIComponent(strCustNm)
+    			  ;
+                  
+    TR_MAIN.Action  = "/dcs/dvoc002.dv?goTo="+goTo+parameters;  
+    TR_MAIN.KeyValue= "SERVLET(O:DS_IO_MASTER=DS_IO_MASTER)"; //조회는 O
+    TR_MAIN.Post();    
+    
+    setPorcCount("SELECT", GR_MASTER);
+    
+}
+
+
+
+
+/*************************************************************************
+ * 3. 함수
+ *************************************************************************/
+ 
+
+
+</script>
+</head>
+<!--*************************************************************************-->
+<!--* B. 스크립트 끝                                                            *-->
+<!--*************************************************************************-->
+
+
+<!--*************************************************************************-->
+<!--* C. 가우스 이벤트 처리                                                         *-->
+<!--*    1. TR Success 메세지 처리                                        *-->
+<script language=JavaScript for=TR_MAIN event=onSuccess>
+    for(i=0;i<TR_MAIN.SrvErrCount('UserMsg');i++) {
+        var strMsg = TR_MAIN.SrvErrMsg('UserMsg',i).split('|');
+        //EM_CUST_ID.Text = strMsg[0]; 
+        showMessage(INFORMATION, OK, "USER-1000", strMsg[0]);
+    }
+</script>
+<script language=JavaScript for=TR_DETAIL event=onSuccess>
+    for(i=0;i<TR_DETAIL.SrvErrCount('UserMsg');i++) {
+        var strMsg = TR_DETAIL.SrvErrMsg('UserMsg',i).split('|');
+        //EM_CUST_ID.Text = strMsg[0]; 
+        showMessage(INFORMATION, OK, "USER-1000", strMsg[0]);
+    }
+    
+    EM_CUST_ID.Enable   = false;
+    newData(false);
+</script>
+
+<script language=JavaScript for=TR_SAVE_DETAIL event=onSuccess>
+    for(i=0;i<TR_SAVE_DETAIL.SrvErrCount('UserMsg');i++) {
+        var strMsg = TR_SAVE_DETAIL.SrvErrMsg('UserMsg',i).split('|');
+        //EM_CUST_ID.Text = strMsg[0]; 
+        showMessage(INFORMATION, OK, "USER-1000", strMsg[0]);
+    }
+  
+    showMaster();
+</script>
+
+<script language=JavaScript for=GR_MASTER event=OnDblClick(row,colid)>
+
+	var strStrCd  = DS_IO_MASTER.NameValue(DS_IO_MASTER.RowPosition, "STR_CD");
+	var strCustId  = DS_IO_MASTER.NameValue(DS_IO_MASTER.RowPosition, "CUST_ID");
+	var strRecDt = DS_IO_MASTER.NameValue(DS_IO_MASTER.RowPosition, "REC_DT");
+	var strRecSeq = DS_IO_MASTER.NameValue(DS_IO_MASTER.RowPosition, "REC_SEQ");
+	
+	
+	var strClmKind = DS_IO_MASTER.NameValue(DS_IO_MASTER.RowPosition, "CLM_KIND");
+	var strProcDept  = DS_IO_MASTER.NameValue(DS_IO_MASTER.RowPosition, "PROC_DEPT");
+	var strProcGbn  = DS_IO_MASTER.NameValue(DS_IO_MASTER.RowPosition, "PROC_GBN");
+
+	var arrArg  = new Array(strStrCd, strCustId, strRecDt, strRecSeq, strClmKind, strProcDept, strProcGbn);
+	
+	var returnVal = window.showModalDialog("/dcs/jsp/dvoc/dvoc0021.jsp?",
+		                               arrArg,
+                                       "dialogWidth:1100px;dialogHeight:650px;scroll:no;");
+</script>
+<!--------------------- 2. TR Fail 메세지 처리  ------------------------------->
+<script language=JavaScript for=TR_MAIN event=onFail>
+    trFailed(TR_MAIN.ErrorMsg);
+</script>
+<script language=JavaScript for=TR_DETAIL event=onFail>
+    trFailed(TR_DETAIL.ErrorMsg);
+</script>
+<script language=JavaScript for=TR_SAVE_DETAIL event=onFail>
+    trFailed(TR_SAVE_DETAIL.ErrorMsg);
+</script>
+
+<!--------------------- 3. DataSet Success 메세지 처리  ----------------------->
+<!--------------------- 4. DataSet Fail 메세지 처리  -------------------------->
+<!--------------------- 5. DataSet 이벤트 처리  ------------------------------->
+
+
+<script language=JavaScript for=DS_O_S_STR event=OnFilter(row)>
+if (DS_O_S_STR.NameValue(row, "CODE") == "00") {// 본사점
+	return false;
+}
+return true;
+</script>
+
+<script language=JavaScript for=DS_I_S_STR event=OnFilter(row)>
+if (DS_I_S_STR.NameValue(row, "CODE") == "00") {// 본사점
+	return false;
+}
+return true;
+</script>
+
+<script language=JavaScript for=DS_IO_MASTER event=onColumnChanged(row,colid)>
+    var orgValue      = DS_IO_MASTER.OrgNameValue(row,colid);
+    var newValue      = DS_IO_MASTER.NameValue(row,colid);
+</script>
+
+
+<!--DS_O_MASTER  OnRowPosChanged(row)(row,colid)-->
+<script language=JavaScript for=DS_IO_MASTER event=OnRowPosChanged(row,colid)>
+	if( row < 1 || bfMasterRowPos == row)
+    	return;
+	bfMasterRowPos = row;
+	
+</script>
+
+
+
+<!--------------------- 6. 컴포넌트 이벤트 처리  -------------------------------->
+
+<!--*************************************************************************-->
+
+
+<!--*************************************************************************-->
+<!--* C. 가우스 이벤트 처리    끝                                                *-->
+<!--*************************************************************************-->
+
+
+<!--*************************************************************************-->
+<!--* D. 가우스 DataSet & Transaction 정의                                    *-->
+<!--*    1. DataSet                                                        *-->
+<!--*************************************************************************-->
+
+<!--*    2. Transaction
+<!--*************************************************************************-->
+<!-- ===============- Input용,Output용 -->
+<comment id="_NSID_"><object id="DS_O_S_STR" classid=<%=Util.CLSID_DATASET%>><param name=UseFilter value=true></object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="DS_O_S_CLM_KIND" classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="DS_O_S_PROC_GBN" classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="DS_O_S_REC_TYPE" classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="DS_IO_MASTER" classid=<%=Util.CLSID_DATASET%>> </object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="DS_IO_DETAIL" classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+
+
+<!-- ===============- 공통함수용 -->
+<comment id="_NSID_"><object id="DS_I_COMMON" classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="DS_O_RESULT" classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="DS_I_CONDITION" classid=<%=Util.CLSID_DATASET%>></object></comment><script>_ws_(_NSID_);</script>
+
+<!--*************************************************************************-->
+<!--* D. 가우스 DataSet & Transaction 정의 끝                                                                                        *-->
+<!--*************************************************************************-->
+<comment id="_NSID_"><object id="TR_MAIN" classid=<%=Util.CLSID_TRANSACTION%>><param name="KeyName" value="Toinb_dataid4"></object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="TR_DETAIL" classid=<%=Util.CLSID_TRANSACTION%>><param name="KeyName" value="Toinb_dataid4"></object></comment><script>_ws_(_NSID_);</script>
+<comment id="_NSID_"><object id="TR_SAVE_DETAIL" classid=<%=Util.CLSID_TRANSACTION%>><param name="KeyName" value="Toinb_dataid4"></object></comment><script>_ws_(_NSID_);</script>
+
+
+<script language='javascript'>
+window.onresize = function(){
+	
+    var obj   = document.getElementById("GR_MASTER");
+    
+    var grd_height = 0;
+    
+    
+    if((parseInt(window.document.body.clientHeight)) <= top+150) {
+    	grd_height = top;    	
+    } else {
+    	grd_height = (parseInt(window.document.body.clientHeight)-top);
+    }
+    obj.style.height  = grd_height + "px";
+    
+    
+}
+</script>
+<!--*************************************************************************-->
+<!--* E. 본문시작                                                            *-->
+<!--*************************************************************************-->
+
+<body onLoad="doInit();" class="PL10 PT15">
+
+<!--공통 타이틀/버튼 -->
+<%@ include file="/jsp/common/titleButton.jsp"%>
+<!--공통 타이틀/버튼 // -->
+
+<div id="testdiv" class="testdiv">
+<table width="100%" border="0" cellspacing="0" cellpadding="0"> 
+    <tr>
+        <td class="PT01 PB03">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0"
+            class="o_table">
+            <tr>
+                <td><!-- search start -->
+				<table width="100%" border="0" cellpadding="0" cellspacing="0"
+					class="s_table">
+					<tr>
+						<th width="80" class="point">점</th>
+						<td width="130"><comment id="_NSID_"> <object
+							id=LC_SEL_STR classid=<%=Util.CLSID_LUXECOMBO%> width=95
+							align="absmiddle" tabindex=1> </object> </comment><script>_ws_(_NSID_);</script></td>
+						<th width="80" class="point">접수기간</th>
+						<td width="220"><comment id="_NSID_"> <object
+							id=EM_S_REC_DT classid=<%=Util.CLSID_EMEDIT%>
+							onblur="javascript:checkDateTypeYMD(this);" width=75 tabindex=1
+							align="absmiddle"> </object></comment><script>_ws_(_NSID_);</script> <img
+							src="/<%=dir%>/imgs/btn/date.gif"
+							onclick="javascript:openCal('G',EM_S_REC_DT)" align="absmiddle" />
+						~ <comment id="_NSID_"> <object id=EM_E_REC_DT
+							classid=<%=Util.CLSID_EMEDIT%>
+							onblur="javascript:checkDateTypeYMD(this);" width=75 tabindex=1
+							align="absmiddle"> </object> </comment><script>_ws_(_NSID_);</script><img
+							src="/<%=dir%>/imgs/btn/date.gif"
+							onclick="javascript:openCal('G',EM_E_REC_DT)" align="absmiddle" />
+						</td>			
+				    	<th width="80">클레임종류</th>
+						<td ><comment id="_NSID_"> <object
+								id=LC_SEL_CLM_KIND classid=<%=Util.CLSID_LUXECOMBO%> width=120
+								tabindex=1></object> </comment> <script> _ws_(_NSID_);</script></td>	
+					</tr>
+					<tr>
+						<th width="80">처리구분</th>
+						<td><comment id="_NSID_"> <object
+								id=LC_SEL_PROG_GBN classid=<%=Util.CLSID_LUXECOMBO%> width=120
+								tabindex=1></object> </comment> <script> _ws_(_NSID_);</script></td>	
+						<th width="80" >접수번호구간</th>
+						<td>
+	                        <comment id="_NSID_">
+	                             <object id=EM_S_REC_SEQ classid=<%=Util.CLSID_EMEDIT%>   width="70" tabindex=1 align="absmiddle" tabindex=1>
+	                             </object>
+	                             &nbsp ~ &nbsp
+	                             <object id=EM_E_REC_SEQ classid=<%=Util.CLSID_EMEDIT%>   width="70" tabindex=1 align="absmiddle" tabindex=1>
+	                             </object>
+	                         </comment><script> _ws_(_NSID_);</script></td>	
+							 
+														
+						 <th width="80">고객구분</th>
+                  <td>
+                    <comment id="_NSID_">
+                    <object id=RD_SEL_MBR_GBN classid=<%=Util.CLSID_RADIO%> tabindex=1 style="height:20; width:150">
+                    <param name=Cols    value="3">
+                    <param name=Format  value="%^전체,1^일반,2^회원">
+                    <param name=CodeValue  value="%">
+                    </object>  
+                    </comment><script> _ws_(_NSID_);</script> 
+                  </td> 					
+					</tr>
+					<tr>
+						<th width="80">접수형태</th>
+						<td><comment id="_NSID_"> <object
+								id=LC_SEL_REC_TYPE classid=<%=Util.CLSID_LUXECOMBO%> width=120
+								tabindex=1></object> </comment> <script> _ws_(_NSID_);</script></td>	
+						<th width="80">회원번호</th>
+						<td>
+	                        <comment id="_NSID_">
+	                             <object id=EM_CUST_ID classid=<%=Util.CLSID_EMEDIT%>   width="150" tabindex=1 align="absmiddle" tabindex=1>
+	                             </object>
+	                         </comment><script> _ws_(_NSID_);</script></td>	
+							
+														
+						<th width="80">고객명</th>
+						<td><comment id="_NSID_">
+	                             <object id=EM_CUST_NAME classid=<%=Util.CLSID_EMEDIT%>   width="70" tabindex=1 align="absmiddle" tabindex=1>
+	                             </object>
+	                         </comment><script> _ws_(_NSID_);</script> </td>					
+					</tr>
+                </table>
+                </td>
+            </tr>
+        </table>
+        </td>
+    </tr>
+    
+    <tr>
+        <td class="dot"></td>
+    </tr>
+    
+    
+    <tr valign="top">
+        <td class="PB03">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0"
+            class="BD4A">
+            <tr>
+                <td><comment id="_NSID_"> <object id=GR_MASTER width="100%" height=720 classid=<%=Util.CLSID_GRID%> tabindex=1>
+                    <param name="DataID" value="DS_IO_MASTER">
+                </object> </comment> <script>_ws_(_NSID_);</script></td>
+            </tr>
+        </table>
+        </td>
+    </tr>   
+      
+</table>
+<!-----------------------------------------------------------------------------
+  Gauce Bind Component Declaration
+------------------------------------------------------------------------------>
+<comment id="_NSID_">
+
+</comment>
+<script>_ws_(_NSID_);</script>
+
+</div>
+<body>
+</html> 

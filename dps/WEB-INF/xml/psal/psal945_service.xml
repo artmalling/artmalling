@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  재청구진행현황를 조회한다.
+ -->
+<service name="/psal945.ps">
+    <!-- 매출일자별 청구현황목록 -->
+    <gauce name="H_MASTER">
+        <column colName="SALE_DT"     colType="TB_STRING"    size="8"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+		<column colName="CHRG_DT"     colType="TB_STRING"    size="8"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="BCOMP_NM"    colType="TB_STRING"    size="43"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="JBRCH_ID"    colType="TB_STRING"    size="51"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="BUYREQ_CNT"  colType="TB_DECIMAL"   size="7"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="BUYREQ_AMT"  colType="TB_DECIMAL"   size="9"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 매출일자별 청구현황조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT B.SALE_DT
+                 , A.CHRG_DT
+                 , DPS.FN_GET_CCOMP_NM(A.BCOMP_CD) BCOMP_NM   
+                 , ( 
+                    SELECT JBRCH_NM 
+                      FROM DPS.PD_BRANCH 
+                      WHERE STR_CD   = ?  
+                        AND BCOMP_CD = A.BCOMP_CD 
+                        AND JBRCH_ID = A.JBRCH_ID 
+                        AND DEL_YN='N' 
+                   ) JBRCH_NM
+                 , COUNT(*)        BUYREQ_CNT
+                 , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) BUYREQ_AMT
+              FROM DPS.PD_BUYREQD A
+                 , DPS.PD_BUYREQPREP B
+             WHERE A.CHRG_DT    = B.CHRG_DT
+               AND A.CHRG_SEQ   = B.CHRG_SEQ
+               AND A.SEQ_NO     = B.CHRG_NO
+               AND A.JBRCH_ID   IN ( 
+                                    SELECT JBRCH_ID 
+                                      FROM DPS.PD_BRANCH
+                                     WHERE STR_CD = ?
+                                   )
+               AND DECODE(?,'1',B.CHRG_DT,B.SALE_DT)    BETWEEN ? AND ?
+               AND A.BCOMP_CD   LIKE    ? || '%'
+             GROUP BY A.CHRG_DT, B.SALE_DT, A.BCOMP_CD, A.JBRCH_ID
+             ORDER BY A.CHRG_DT, B.SALE_DT, A.BCOMP_CD, A.JBRCH_ID
+        ]]>        
+    </query>
+    
+</service>

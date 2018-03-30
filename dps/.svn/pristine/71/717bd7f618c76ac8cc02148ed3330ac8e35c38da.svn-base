@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.06.29
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal431.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="SALE_DT"          colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLOOR_CD"         colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLOOR_NAME"       colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOTAL_SALE_AMT"   colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_RATE"        colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"         colType="TB_INT"         size="7"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_SALE_AMT"    colType="TB_INT"         size="7"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <query name="SEL_MASTER_S">        
+        <![CDATA[
+            SELECT SALE_DT
+                 , FLOOR
+                 , ''  AS FLOOR_NAME
+                 , TOT_SALE_AMT
+                 , ROUND((TOT_SALE_AMT/DECODE(SUM(TOT_SALE_AMT) OVER (ORDER BY STR_CD),0,1,SUM(TOT_SALE_AMT) OVER (ORDER BY STR_CD)))*100,2) AS COMP_RATE 
+                 , CUST_CNT
+                 , ROUND(TOT_SALE_AMT/DECODE(CUST_CNT,0,1,CUST_CNT))                    AS CUST_SALE_AMT
+              FROM (SELECT DPB.STR_CD
+                         , DPB.SALE_DT
+                         , NVL(SPB.FLOR_CD,'99') AS FLOOR
+                         , SUM(DPB.TOT_SALE_AMT) AS TOT_SALE_AMT
+                         , SUM(DPB.CUST_CNT)     AS CUST_CNT
+                      FROM DPS.PS_DAYPBN    DPB
+                         , DPS.PC_STRPBN    SPB                         
+                     WHERE DPB.STR_CD    = SPB.STR_CD
+                       AND DPB.PUMBUN_CD = SPB.PUMBUN_CD
+                       AND DPB.STR_CD    = ?
+                       AND DPB.SALE_DT   BETWEEN ? AND ?
+                     GROUP BY DPB.STR_CD, DPB.SALE_DT, NVL(SPB.FLOR_CD,'99')
+                   )
+             WHERE 1=1
+        ]]>        
+    </query>    
+    <query name="SEL_MASTER_WHERE_FLOOR_CD">        
+        <![CDATA[
+             WHERE FLOOR = ?
+        ]]>
+    </query>    
+    <query name="SEL_MASTER_E">        
+        <![CDATA[
+             ORDER BY SALE_DT, FLOOR
+        ]]>        
+    </query> 
+    
+    
+</service>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.26
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  메인계량기정산고지서출력
+ -->
+<service name="/mren606.mr">
+    <gauce name="H_MGAUGUSED_MONTH">
+	    <column colName="STR_CD"           colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MNTN_ITEM_CD"     colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MNTN_ITEM_NM"     colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_CD"           colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="USE_QTY"          colType="TB_DECIMAL"  size="7"  dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="USE_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="BAS_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MGAUGUSED_MONTH">
+        <![CDATA[
+			SELECT CNTR.BELONG_STR_CD   AS STR_CD/*CES:소속점*/
+			     , MITM.MNTN_ITEM_CD       
+			     , MITM.MNTN_ITEM_NM       
+			     , MITM.CAL_CD       
+			     , CITM.USE_QTY /*사용량*/
+			     , CITM.USE_AMT /*사용금액*/
+			     , CITM.BAS_AMT /*기본요금*/
+			  FROM MSS.MR_CNTRMST   CNTR
+			     , MSS.MR_CALITEM   CITM
+			     , MSS.MR_MNTNITEM  MITM
+			 WHERE CNTR.CNTR_ID = CITM.CNTR_ID
+			   AND CITM.MNTN_ITEM_CD = MITM.MNTN_ITEM_CD
+			   AND CNTR.STR_CD IN (SELECT STR_CD 
+			                         FROM DPS.PC_STRMST
+			                        WHERE FCL_FLAG = '5' /*CES*/)
+			   AND MITM.CAL_CD = ? /*계량기구분과 매핑*/
+               AND CITM.CAL_YM = ?
+               AND CITM.STR_CD = ?
+        ]]>
+    </query>
+    
+</service>

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.05.19
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  회수등록
+ -->
+<service name="/mgif310.mg">
+    <!-- 회수 마스터 정보조회 -->
+    <gauce name="H_MASTER">
+        <column colName="DRAWL_DT"          colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_STR"         colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_SLIP_NO"     colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"            colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"           colType="TB_STRING" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 회수 정보 상세조회 -->
+    <gauce name="H_DETAIL">
+        <column colName="FLAG"              colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_DT"          colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_STR"         colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_SLIP_NO"     colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_SEQ_NO"      colType="TB_STRING" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"            colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISSUE_TYPE"        colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_NO"       colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY"               colType="TB_DECIMAL" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_FLAG"         colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_FLAG_NM"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"           colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_STR"          colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 회수 내역 마스터 조회-->
+    <query name="SEL_MASTER">
+       <![CDATA[
+	   SELECT DISTINCT 
+	          DRAWL_DT
+	        , DRAWL_STR
+	        , DRAWL_SLIP_NO
+	        , VEN_CD
+	        , DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VEN_NM
+	        , DRAWL_DT || '-' || DRAWL_SLIP_NO AS SLIP_NO
+	     FROM MSS.MG_GIFTDRAWL
+	    WHERE DRAWL_FLAG = '4'
+	      AND DRAWL_STR = ?
+	      AND DRAWL_DT BETWEEN ? AND ?
+	      AND VEN_CD LIKE ? || '%'
+	 ORDER BY DRAWL_DT , DRAWL_STR, DRAWL_SLIP_NO
+        ]]>
+    </query>
+    
+      <!-- 회수 내역 상세 조회 -->
+    <query name="SEL_DETAIL">
+       <![CDATA[
+       SELECT 'F' AS FLAG
+            , A.DRAWL_DT
+            , A.DRAWL_STR
+            , DRAWL_SLIP_NO
+            , DRAWL_SEQ_NO
+            , A.VEN_CD
+            , A.GIFT_TYPE_CD
+            , GIFT_TYPE_NAME
+            , A.GIFT_AMT_TYPE
+            , GIFT_AMT_NAME
+            , A.ISSUE_TYPE
+            , A.GIFTCARD_NO
+            , D.GIFTCERT_AMT
+            , 1 AS QTY
+            , STAT_FLAG
+            , COM.FN_GET_COMM_NAME('D', 'M074', STAT_FLAG) AS STAT_FLAG_NM
+            , D.SALE_DT
+            , D.SALE_STR
+         FROM MSS.MG_GIFTDRAWL A
+            , MSS.MG_GIFTTPMST B
+            , MSS.MG_GIFTAMTMST C
+            , MSS.MG_GIFTMST D
+        WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+          AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+          AND A.GIFT_AMT_TYPE = C.GIFT_AMT_TYPE
+          AND A.ISSUE_TYPE = C.ISSUE_TYPE
+          AND A.GIFTCARD_NO = D.GIFTCARD_NO
+          AND A.DRAWL_STR = ?
+          AND A.DRAWL_DT = ?
+          AND A.DRAWL_SLIP_NO = ?
+        ]]>
+    </query>
+    
+    <!-- 상품권 정보조회 -->
+    <query name="SEL_GIFTCARD">
+       <![CDATA[
+       SELECT 'F' AS FLAG
+            , ? AS DRAWL_DT
+            , ? AS DRAWL_STR
+            , '' AS DRAWL_SLIP_NO
+            , '' AS DRAWL_SEQ_NO
+            , ? AS VEN_CD
+            , A.GIFT_TYPE_CD
+            , GIFT_TYPE_NAME
+            , A.GIFT_AMT_TYPE
+            , GIFT_AMT_NAME
+            , A.ISSUE_TYPE
+            , A.GIFTCARD_NO
+            , A.GIFTCERT_AMT
+            , 1 AS QTY
+            , STAT_FLAG
+            , COM.FN_GET_COMM_NAME('D', 'M074', STAT_FLAG) AS STAT_FLAG_NM
+            , A.SALE_DT
+            , A.SALE_STR
+         FROM MSS.MG_GIFTMST A
+            , MSS.MG_GIFTTPMST B
+            , MSS.MG_GIFTAMTMST C
+        WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+          AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+          AND A.GIFT_AMT_TYPE = C.GIFT_AMT_TYPE
+          AND A.ISSUE_TYPE = C.ISSUE_TYPE
+          AND STAT_FLAG IN ('05','06')
+          AND ACDT_FLAG = 'N'
+          AND A.GIFTCARD_NO = ?
+        ]]>
+    </query>
+    
+    <!-- 상품권 회수 전표번호 발번 -->
+    <query name="SEL_DRAWL_SLIP_NO">
+        <![CDATA[
+        SELECT LPAD(MSS.SQ_MG_GIFTDRAWL.NEXTVAL,6,0) AS DRAWL_SLIP_NO FROM DUAL
+        ]]>
+    </query>
+
+    <!--회수내역 등록-->
+    <query name="INS_GIFTDRAWL">
+        <![CDATA[
+        INSERT INTO MSS.MG_GIFTDRAWL ( DRAWL_DT  
+                                     , DRAWL_STR
+                                     , DRAWL_SLIP_NO
+                                     , DRAWL_SEQ_NO
+                                     , VEN_CD
+                                     , GIFT_AMT_TYPE
+                                     , GIFT_TYPE_CD
+                                     , ISSUE_TYPE
+                                     , DRAWL_FLAG
+                                     , DRAWL_TYPE
+                                     , DRAWL_AMT
+                                     , GIFTCARD_NO
+                                     , SALE_STR
+                                     , SALE_DT
+                                     , REG_FLAG
+                                     , REG_ID
+                                     , REG_DATE
+                                     , MOD_ID
+                                     , MOD_DATE)
+                               VALUES( ?  
+                                     , ?
+                                     , ?
+                                     , (SELECT NVL(MAX(DRAWL_SEQ_NO),0) + 1 
+                                                FROM MSS.MG_GIFTDRAWL 
+                                               WHERE DRAWL_DT = ?
+                                                 AND DRAWL_STR = ?
+                                                 AND DRAWL_SLIP_NO = ? )  
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , '4'
+                                     , '10'
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , '1'
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE)
+        ]]>
+    </query>
+    
+    <!-- 상품권 마스터 상품권 회수정보 수정 -->
+    <query name="UPD_GIFTMST">
+        <![CDATA[
+        UPDATE MSS.MG_GIFTMST
+           SET DRAWL_STR = ?
+             , DRAWL_DT = ?
+             , DRAWL_FLAG = '4'
+             , DRAWL_REG_EMP_ID =  ?
+             , STAT_FLAG = '07'
+             , MOD_ID = ?
+             , MOD_DATE = SYSDATE
+         WHERE GIFTCARD_NO = ?
+        ]]>
+    </query>
+    
+    <!-- 가맹점 회수내역 삭제 -->
+    <query name="DEL_GIFTDRAWL">
+        <![CDATA[
+		DELETE 
+		  FROM MSS.MG_GIFTDRAWL 
+		 WHERE DRAWL_DT = ?
+		   AND DRAWL_STR  = ?
+		   AND DRAWL_SLIP_NO  = ?
+		   AND DRAWL_SEQ_NO  = ?
+        ]]>
+    </query>
+    
+    <!-- 가맹점 회수내역 삭제시 마스터 내용수정-->
+    <query name="UPD_GIFTMST_D">
+        <![CDATA[
+        UPDATE MSS.MG_GIFTMST
+           SET STAT_FLAG = DECODE((SELECT SALE_DT FROM MSS.MG_GIFTMST WHERE GIFTCARD_NO = ? )
+                                 , '', '05','06')
+             , DRAWL_STR = DECODE((SELECT COUNT(*) FROM MSS.MG_GIFTDRAWL WHERE GIFTCARD_NO = ? )
+                                 , '0', ''
+                                 ,(SELECT DRAWL_STR 
+                                     FROM (SELECT DRAWL_STR 
+                                             FROM MSS.MG_GIFTDRAWL
+                                            WHERE GIFTCARD_NO = ? 
+                                         ORDER BY DRAWL_DT DESC, DRAWL_SLIP_NO DESC)
+                                    WHERE ROWNUM = 1))
+             , DRAWL_DT = DECODE((SELECT COUNT(*) FROM MSS.MG_GIFTDRAWL WHERE GIFTCARD_NO = ? )
+                                 , '0', ''
+                                 ,(SELECT DRAWL_DT 
+                                     FROM (SELECT DRAWL_DT 
+                                             FROM MSS.MG_GIFTDRAWL
+                                            WHERE GIFTCARD_NO = ? 
+                                         ORDER BY DRAWL_DT DESC, DRAWL_SLIP_NO DESC)
+                                    WHERE ROWNUM = 1))
+             , DRAWL_FLAG = DECODE((SELECT COUNT(*) FROM MSS.MG_GIFTDRAWL WHERE GIFTCARD_NO = ? )
+                                 , '0', ''
+                                 ,(SELECT DRAWL_FLAG 
+                                     FROM (SELECT DRAWL_FLAG 
+                                             FROM MSS.MG_GIFTDRAWL
+                                            WHERE GIFTCARD_NO = ? 
+                                         ORDER BY DRAWL_DT DESC, DRAWL_SLIP_NO DESC)
+                                    WHERE ROWNUM = 1))
+             , DRAWL_REG_EMP_ID = DECODE((SELECT COUNT(*) FROM MSS.MG_GIFTDRAWL WHERE GIFTCARD_NO = ? )
+                                 , '0', ''
+                                 ,(SELECT REG_ID 
+                                     FROM (SELECT REG_ID 
+                                             FROM MSS.MG_GIFTDRAWL
+                                            WHERE GIFTCARD_NO = ? 
+                                         ORDER BY DRAWL_DT DESC, DRAWL_SLIP_NO DESC)
+                                    WHERE ROWNUM = 1))
+             , MOD_ID = ? 
+             , MOD_DATE = SYSDATE
+         WHERE GIFTCARD_NO = ? 
+        ]]>
+    </query>
+</service>

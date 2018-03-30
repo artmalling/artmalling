@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.17
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  규격단품정보를 조회한다.
+ -->
+<service name="/pcod506.pc">
+
+  <gauce name="H_SEL_MASTER">   
+        <column colName="SKU_CD"          colType="TB_STRING" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="SKU_NAME"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RECP_NAME"       colType="TB_STRING" size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="INPUT_PLU_CD"    colType="TB_STRING" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"       colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PUMMOK_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_AREA_CD"  colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MODEL_NO"        colType="TB_STRING" size="24"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BOTTLE_CD"       colType="TB_STRING" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                
+        <column colName="SALE_UNIT_CD"    colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BAS_SPEC_CD"     colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BAS_SPEC_UNIT"   colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMP_SPEC_CD"     colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="CMP_SPEC_UNIT"   colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SET_YN"          colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_FLAG"       colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="GIFT_TYPE_CD"    colType="TB_STRING" size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="GIFT_TYPE_NAME"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="GIFT_AMT_TYPE"   colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="GIFT_AMT_NAME"   colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="MAKER_CD"        colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"          colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="REMARK"          colType="TB_STRING" size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_SKUMST">
+        <![CDATA[
+            SELECT SKU.SKU_CD         , SKU.SKU_NAME          , SKU.RECP_NAME        , SKU.INPUT_PLU_CD     , SKU.PUMMOK_CD
+                 , PMK.PUMMOK_NAME    , SKU.ORIGIN_AREA_CD    , SKU.MODEL_NO         , SKU.BOTTLE_CD        , SKU.SALE_UNIT_CD    
+                 , SKU.BAS_SPEC_CD    , SKU.BAS_SPEC_UNIT     , SKU.CMP_SPEC_CD      , SKU.CMP_SPEC_UNIT    , SKU.SET_YN
+                 , SKU.GIFT_FLAG      , SKU.GIFT_TYPE_CD      , NM.GIFT_TYPE_NAME    , SKU.GIFT_AMT_TYPE    , NM.GIFT_AMT_NAME
+                 , SKU.MAKER_CD       , SKU.USE_YN            , SKU.REMARK
+              FROM DPS.PC_SKUMST SKU
+                 , DPS.PC_PMKMST PMK
+                 , (SELECT A.GIFT_TYPE_CD
+                        , (SELECT B.GIFT_TYPE_NAME
+                             FROM MSS.MG_GIFTTPMST B
+                            WHERE B.GIFT_TYPE_FLAG = '01'
+                              AND B.GIFT_TYPE_CD = A.GIFT_TYPE_CD
+                           ) AS GIFT_TYPE_NAME
+                        , A.GIFT_AMT_TYPE
+                        , (SELECT B.GIFT_AMT_NAME 
+                             FROM MSS.MG_GIFTAMTMST B
+                            WHERE B.GIFT_TYPE_CD = A.GIFT_TYPE_CD
+                              AND ISSUE_TYPE = '1'
+                              AND B.GIFT_AMT_TYPE = A.GIFT_AMT_TYPE
+                           ) GIFT_AMT_NAME
+                      FROM DPS.PC_SKUMST A
+                     WHERE A.GIFT_TYPE_CD IS NOT NULL) NM
+             WHERE SKU.PUMMOK_CD     = PMK.PUMMOK_CD
+               AND SKU.GIFT_TYPE_CD  = NM.GIFT_TYPE_CD(+)
+               AND SKU.GIFT_AMT_TYPE = NM.GIFT_AMT_TYPE(+) 
+        ]]>     
+    </query> 
+    <query name="SEL_SKUMST_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND SKU.PUMBUN_CD     = ?
+        ]]>
+    </query> 
+    <query name="SEL_SKUMST_WHERE_PUMMOK_CD">
+        <![CDATA[
+               AND SKU.PUMMOK_CD     = ?
+        ]]> 
+    </query>
+    <query name="SEL_SKUMST_WHERE_LIKE_SKU_CD">
+        <![CDATA[
+               AND SKU.SKU_CD        LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_LIKE_SKU_NAME">
+        <![CDATA[
+               AND SKU.SKU_NAME      LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_ORDER">
+        <![CDATA[
+            ORDER BY SKU.SKU_CD
+        ]]>
+    </query>
+    
+</service>

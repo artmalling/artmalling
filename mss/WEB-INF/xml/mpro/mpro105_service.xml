@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 오형규
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.02.22
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  전화통화관리
+ -->
+<service name="/mpro105.mp">
+    <gauce name="H_SEL_MRMASTER"> 
+       <column colName="STR_CD" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="STRCD" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="TAKE_DT" colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+       <column colName="TAKE_SEQ" colType="TB_STRING" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="TAKE_USER_ID" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="PROM_TYPE" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="DELI_TYPE" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="ADDR" colType="TB_STRING" size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="LAST_PROM_DT" colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="DELI_STR" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="CUST_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="PHONE" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="PHONE1" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="PHONE2" colType="TB_STRING" size="30" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="PHONE3" colType="TB_STRING" size="30" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="PUMBUN_CD" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="PUMBUN_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="IN_DELI_DT" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SKU_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="PROM_DTL" colType="TB_STRING" size="4000" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+    </gauce>
+    
+        
+    <gauce name="H_SEL_MPCALLMGRDETAIL"> 
+        <column colName="CALL_DT" colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="SEND_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EM_SEND_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO" colType="TB_STRING" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_SEQ_NO" colType="TB_STRING" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                      
+        <column colName="EM_CALL_DT" colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECV_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_HH" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_MM" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_FLAG" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_DESC" colType="TB_STRING" size="4000" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+        <column colName="TAKE_DT" colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TAKE_SEQ" colType="TB_STRING" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+     
+    <!-- 약속대장 조회 / 접수일자 기준  -->
+    <query name="SEL_TAKE_DT">
+        <![CDATA[
+        SELECT DPS.FN_GET_STORE_NAME(A.STR_CD) STR_CD
+             , A.STR_CD STRCD
+             , A.TAKE_DT TAKE_DT			                            
+			 , A.TAKE_SEQ TAKE_SEQ
+			 , A.TAKE_USER_ID TAKE_USER_ID								        
+			 , COM.FN_GET_COMM_NAME('D','M021',A.PROM_TYPE) AS PROM_TYPE
+			 , COM.FN_GET_COMM_NAME('D','M022',A.DELI_TYPE) AS DELI_TYPE								        
+			 , A.ADDR ADDR
+			 , A.LAST_PROM_DT LAST_PROM_DT
+			 , DPS.FN_GET_STORE_NAME(A.DELI_STR) DELI_STR
+			 , A.CUST_NM CUST_NM
+			 , '' AS PHONE
+			 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1) AS PHONE1 
+			 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2) AS PHONE2 
+			 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3) AS PHONE3 
+			 , B.PUMBUN_CD PUMBUN_CD
+			 , B.PUMBUN_NAME PUMBUN_NAME
+			 , A.IN_DELI_DT IN_DELI_DT
+			 , A.SKU_NM SKU_NM
+			 , A.PROM_DTL PROM_DTL
+		  FROM MSS.MP_PROMISECERT A, DPS.PC_STRPBN B
+		 WHERE A.PUMBUN_CD = B.PUMBUN_CD
+		   AND A.STR_CD = B.STR_CD			
+		   AND A.PROM_TYPE  LIKE ? || '%'
+		   AND A.CUST_NM LIKE '%' || ? || '%'			
+		   AND A.STR_CD = ?			
+		   AND A.TAKE_DT  >= ? 
+		   AND A.TAKE_DT <= ? 
+      ORDER BY A.TAKE_DT, A.TAKE_SEQ                 
+        ]]>
+    </query>   
+    
+    <!-- 약속대장 조회 / 입고예정일 기준   -->
+    <query name="SEL_IN_DELI_DT">
+        <![CDATA[
+        SELECT DPS.FN_GET_STORE_NAME(A.STR_CD) STR_CD
+             , A.STR_CD STRCD
+             , A.TAKE_DT TAKE_DT                                      
+             , A.TAKE_SEQ TAKE_SEQ
+             , A.TAKE_USER_ID TAKE_USER_ID                                        
+             , COM.FN_GET_COMM_NAME('D','M021',A.PROM_TYPE) AS PROM_TYPE
+             , COM.FN_GET_COMM_NAME('D','M022',A.DELI_TYPE) AS DELI_TYPE                                      
+             , A.ADDR ADDR
+             , A.LAST_PROM_DT LAST_PROM_DT
+             , DPS.FN_GET_STORE_NAME(A.DELI_STR) DELI_STR
+             , A.CUST_NM CUST_NM
+             , '' AS PHONE
+             , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1)  AS PHONE1
+             , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2)  AS PHONE2
+             , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3)  AS PHONE3
+             , B.PUMBUN_CD PUMBUN_CD
+             , B.PUMBUN_NAME PUMBUN_NAME
+             , A.IN_DELI_DT IN_DELI_DT
+             , A.SKU_NM SKU_NM
+             , A.PROM_DTL PROM_DTL
+          FROM MSS.MP_PROMISECERT A, DPS.PC_STRPBN B
+	     WHERE A.PUMBUN_CD = B.PUMBUN_CD
+	       AND A.STR_CD = B.STR_CD           
+	       AND A.PROM_TYPE  LIKE ? || '%'
+	       AND A.CUST_NM LIKE '%' || ? || '%'           
+	       AND A.STR_CD = ?            
+	       AND A.IN_DELI_DT   >= ?
+	       AND A.IN_DELI_DT  <= ?      
+	  ORDER BY A.TAKE_DT, A.TAKE_SEQ           
+        ]]>
+    </query>   
+    
+    <!-- 약속대장 조회 /  약속일자 기준    -->
+    <query name="SEL_FRST_PROM_DT">
+        <![CDATA[
+        SELECT DPS.FN_GET_STORE_NAME(A.STR_CD) STR_CD
+             , A.STR_CD STRCD
+             , A.TAKE_DT TAKE_DT                                      
+             , A.TAKE_SEQ TAKE_SEQ
+             , A.TAKE_USER_ID TAKE_USER_ID                                        
+             , COM.FN_GET_COMM_NAME('D','M021',A.PROM_TYPE) AS PROM_TYPE
+             , COM.FN_GET_COMM_NAME('D','M022',A.DELI_TYPE) AS DELI_TYPE                                      
+             , A.ADDR ADDR
+             , A.LAST_PROM_DT LAST_PROM_DT
+             , DPS.FN_GET_STORE_NAME(A.DELI_STR) DELI_STR
+             , A.CUST_NM CUST_NM
+             , '' AS PHONE
+             , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1) AS  PHONE1
+             , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2) AS  PHONE2
+             , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3) AS  PHONE3
+             , B.PUMBUN_CD PUMBUN_CD
+             , B.PUMBUN_NAME PUMBUN_NAME
+             , A.IN_DELI_DT IN_DELI_DT
+             , A.SKU_NM SKU_NM
+             , A.PROM_DTL PROM_DTL
+	      FROM MSS.MP_PROMISECERT A, DPS.PC_STRPBN B
+	     WHERE A.PUMBUN_CD = B.PUMBUN_CD           
+	       AND A.STR_CD = B.STR_CD
+	       AND A.PROM_TYPE  LIKE ? || '%'
+	       AND A.CUST_NM LIKE '%' || ? || '%'            
+	       AND A.STR_CD = ?            
+	       AND A.FRST_PROM_DT   >= ?
+	       AND A.FRST_PROM_DT  <= ?    
+	  ORDER BY A.TAKE_DT, A.TAKE_SEQ             
+        ]]>
+    </query>
+    
+    
+     <!-- 전화통화내역 상세조회 -->
+    <query name="SEL_CALLMRG">
+        <![CDATA[
+        SELECT A.CALL_DT CALL_DT
+             , A.SEND_NM SEND_NM
+             , A.SEND_NM EM_SEND_NM                              
+             , A.SEQ_NO SEQ_NO
+             , A.SEQ_NO CALL_SEQ_NO
+             , A.CALL_DT EM_CALL_DT
+             , A.RECV_NM RECV_NM
+             , SUBSTR(CALL_TIME, 0, 2) CALL_HH
+             , SUBSTR(CALL_TIME, 3, 4) CALL_MM
+             , A.CALL_FLAG CALL_FLAG
+             , A.CALL_DESC CALL_DESC
+             , A.TAKE_DT TAKE_DT
+             , A.STR_CD STR_CD
+             , A.TAKE_SEQ TAKE_SEQ
+		  FROM MSS.MP_CALLMGR A, MSS.MP_PROMISECERT B
+		 WHERE A.TAKE_SEQ = B.TAKE_SEQ
+		   AND A.STR_CD = B.STR_CD
+		   AND A.TAKE_DT = B.TAKE_DT
+		   AND A.TAKE_SEQ = ?
+		   AND A.STR_CD = ?  
+		   AND A.TAKE_DT = ?
+	  ORDER BY A.SEQ_NO DESC           
+        ]]>
+    </query>
+    <!-- 전화통화내역 등록 -->
+    <query name="INT_CALLMRG">
+        <![CDATA[
+        INSERT INTO MSS.MP_CALLMGR ( 
+			                        SEQ_NO                           
+			                      , CALL_DT
+			                      , TAKE_DT
+			                      , STR_CD
+			                      , TAKE_SEQ
+			                      , CALL_TIME                             
+			                      , SEND_NM
+			                      , RECV_NM
+			                      , CALL_FLAG
+			                      , CALL_DESC
+			                      , REG_ID
+			                      , REG_DATE
+			                        )
+			                   VALUES
+			                        (
+			                         ?
+			                       , ?
+			                       , ?
+			                       , ?
+			                       , ?
+			                       , ?
+			                       , ?
+			                       , ?
+			                       , ?
+			                       , ?
+			                       , ?
+			                       , SYSDATE
+			                        )    
+        ]]>
+    </query>
+    <!-- 전화통화상세 수정 등록 -->
+    <query name="UPD_CALLMRG">
+        <![CDATA[
+        UPDATE MSS.MP_CALLMGR 
+           SET SEND_NM        = ?
+             , RECV_NM        = ?
+             , CALL_FLAG      = ?
+             , CALL_DESC      = ?
+             , MOD_ID         = ?
+             , MOD_DATE       = SYSDATE
+         WHERE SEQ_NO = ?
+           AND CALL_DT = ?
+        ]]>
+    </query>
+    
+    <!-- 전화통화상세 삭제 -->
+    <query name="DEL_CALLMRG">
+        <![CDATA[
+        DELETE FROM MSS.MP_CALLMGR
+        WHERE                       SEQ_NO      = ?
+        AND                         CALL_DT     = ?  
+        ]]>
+    </query>
+    
+    
+    <query name="SEL_SEQNO">
+        <![CDATA[
+        SELECT NVL(MAX(SEQ_NO),0)+1 SEQ_NO
+        FROM MSS.MP_CALLMGR            
+        ]]>
+    </query>      
+    
+</service>

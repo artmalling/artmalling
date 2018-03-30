@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.08.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  가맹점 제휴상품권 회수관리
+ -->
+<service name="/mgif312.mg">
+    <!-- 회수 마스터 정보조회 -->
+    <gauce name="H_MASTER">
+        <column colName="DRAWL_DT"          colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_STR"         colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_SLIP_NO"     colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"            colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"           colType="TB_STRING" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 회수 정보 상세조회 -->
+    <gauce name="H_DETAIL">
+        <column colName="FLAG"              colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_QTY"         colType="TB_DECIMAL" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_AMT"         colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_DT"          colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_STR"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_SLIP_NO"     colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"            colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 회수 내역 마스터 조회-->
+    <query name="SEL_MASTER">
+       <![CDATA[
+            SELECT DISTINCT
+                   DRAWL_DT
+			     , STR_CD AS DRAWL_STR
+			     , DRAWL_SLIP_NO
+			     , VEN_CD
+			     , DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VEN_NM
+			     , STR_CD ||'-'|| DRAWL_DT ||'-'|| DRAWL_SLIP_NO AS SLIP_NO
+			  FROM MSS.MG_BRCHDRAWL
+			 WHERE STR_CD = ?
+			   AND DRAWL_DT BETWEEN ? AND ?
+			   AND VEN_CD LIKE ? || '%'
+			 ORDER BY DRAWL_DT, STR_CD, DRAWL_SLIP_NO
+        ]]>
+    </query>
+    
+    <!-- 회수 내역 상세 조회 -->
+    <query name="SEL_DETAIL">
+       <![CDATA[
+            SELECT 'F' AS FLAG
+                 , BRCH.GIFT_TYPE_CD
+                 , BRCH.GIFT_TYPE_CD||GIMT.ISSUE_TYPE||BRCH.GIFT_AMT_TYPE AS GIFT_AMT_TYPE
+                 , GIMT.GIFTCERT_AMT
+                 , BRCH.DRAWL_QTY
+                 , BRCH.DRAWL_AMT
+                 , BRCH.DRAWL_DT
+                 , BRCH.STR_CD
+                 , BRCH.DRAWL_SLIP_NO
+                 , BRCH.VEN_CD
+              FROM MSS.MG_BRCHDRAWL     BRCH
+                 , MSS.MG_GIFTAMTMST    GIMT
+             WHERE BRCH.ISSUE_TYPE = GIMT.ISSUE_TYPE
+               AND BRCH.GIFT_TYPE_CD = GIMT.GIFT_TYPE_CD
+               AND BRCH.GIFT_AMT_TYPE = GIMT.GIFT_AMT_TYPE
+               AND BRCH.DRAWL_SLIP_NO = ?
+               AND BRCH.STR_CD = ?
+               AND BRCH.DRAWL_DT = ?
+        ]]>
+    </query>
+    
+    <!-- 제휴상품권 회수 전표번호 발번 -->
+    <query name="SEL_DRAWL_SLIP_NO">
+        <![CDATA[
+	        SELECT LPAD(MSS.SQ_MG_BRCHDRAWL.NEXTVAL,6,0) AS DRAWL_SLIP_NO FROM DUAL
+        ]]>
+    </query>
+
+    <!--회수내역 등록-->
+    <query name="INS_MG_BRCHDRAWL">
+        <![CDATA[
+			INSERT 
+			  INTO MSS.MG_BRCHDRAWL
+			     ( DRAWL_DT
+			     , STR_CD
+			     , DRAWL_SLIP_NO
+			     , SEQ_NO
+			     , VEN_CD
+			     , GIFT_TYPE_CD
+			     , ISSUE_TYPE
+			     , GIFT_AMT_TYPE
+			     , DRAWL_QTY
+			     , DRAWL_AMT
+			     , REG_ID
+			     , REG_DATE
+			     , MOD_ID
+			     , MOD_DATE )
+			VALUES
+			     ( ?
+			     , ?
+			     , ?
+                 , (SELECT NVL(MAX(SEQ_NO)+1, 1) 
+                     FROM MSS.MG_BRCHDRAWL
+                    WHERE DRAWL_DT = ?
+                      AND STR_CD = ?
+                      AND DRAWL_SLIP_NO = ?)  /*SEQ_NO*/
+			     , ?
+			     , ?
+			     , SUBSTR(?,5,1) /*ISSUE_TYPE*/
+			     , SUBSTR(?,6,2) /*GIFT_AMT_TYPE*/
+			     , ?
+			     , ?
+			     , ?
+			     , SYSDATE
+			     , ?
+			     , SYSDATE)
+        ]]>
+    </query>
+    
+    <!-- 상품권 마스터 상품권 회수정보 수정 -->
+    <query name="UPD_MG_BRCHDRAWL">
+        <![CDATA[
+	        UPDATE MSS.MG_BRCHDRAWL
+	           SET DRAWL_QTY = ?
+	             , DRAWL_AMT = ?
+	             , MOD_ID = ?
+	             , MOD_DATE = SYSDATE
+	         WHERE SEQ_NO  = ?
+	           AND DRAWL_SLIP_NO = ?
+	           AND STR_CD = ?
+	           AND DRAWL_DT = ?
+        ]]>
+    </query>
+    
+    <!-- 가맹점 회수내역 삭제(마스터) -->
+    <query name="DEL_MG_BRCHDRAWL">
+        <![CDATA[
+			DELETE 
+			  FROM MSS.MG_BRCHDRAWL 
+			 WHERE DRAWL_SLIP_NO = ?
+	           AND STR_CD = ?
+	           AND DRAWL_DT = ?
+        ]]>
+    </query>
+    
+    <!-- 가맹점 회수내역 삭제(디테일) -->
+    <query name="DEL_MG_BRCHDRAWL_DTL">
+        <![CDATA[
+			DELETE 
+			  FROM MSS.MG_BRCHDRAWL 
+	         WHERE SEQ_NO  = ?
+	           AND DRAWL_SLIP_NO = ?
+	           AND STR_CD = ?
+	           AND DRAWL_DT = ?
+        ]]>
+    </query>
+    
+    <!-- 상품권종류/권종  -->
+    <gauce name="H_SEL_MG_GIFTCODE">
+        <column colName="CODE"              colType="TB_STRING"     size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"              colType="TB_STRING"     size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL"    size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING"     size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REAL_CODE"         colType="TB_STRING"     size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권종류 -->
+    <query name="SEL_MG_GIFTTPMST">
+       <![CDATA[
+            SELECT GIFT_TYPE_CD     AS CODE
+                 , GIFT_TYPE_NAME   AS NAME
+                 , ''               AS GIFTCERT_AMT
+                 , ''               AS GIFT_TYPE_CD
+                 , ''               AS REAL_CODE
+              FROM MSS.MG_GIFTTPMST
+             WHERE GIFT_TYPE_FLAG LIKE ?||'%'
+        ]]>
+    </query>
+    
+    <!-- 상품권금종 -->
+    <query name="SEL_MG_GIFTAMTMST">
+       <![CDATA[
+            SELECT GIFT_TYPE_CD||ISSUE_TYPE||GIFT_AMT_TYPE  AS CODE
+                 , GIFT_AMT_NAME    AS NAME
+                 , GIFTCERT_AMT
+                 , GIFT_TYPE_CD     
+                 , GIFT_AMT_TYPE    AS REAL_CODE 
+              FROM MSS.MG_GIFTAMTMST
+        ]]>
+    </query>
+</service>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2010.04.11
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  매출정정현황
+ -->
+<service name="/psal507.ps">
+    <!-- 매출정정현황 MASTER 헤더  -->
+    <gauce name="H_SEL_SAL_COR_MST">
+        <column colName="STR_CD"       colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="DEPT_CD"      colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TEAM_CD"      colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TEAM_NM"      colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PC_CD"        colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PC_NM"        colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PUMBUN_CD"    colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PUMBUN_NM"    colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_DT"      colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="POS_NO"       colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_USER_ID" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_USER_NM" colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 매출정정현황 DETAIL 헤더  -->
+    <gauce name="H_SEL_SAL_COR_DTL">
+        <column colName="SALE_DT"      colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="POS_NO"       colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TRAN_NO"      colType="TB_STRING"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SEQ_NO"       colType="TB_STRING"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FLAG"         colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PUMMOK_CD"    colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PUMMOK_NM"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="ITEM_CD"      colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="ITEM_NM"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="EVT_CD"       colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="EVT_RATE"     colType="TB_DECIMAL" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="MG_RATE"      colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_QTY"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_AMT"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="REDU_PRC"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="DC_PRC"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 매출정정현황 MASTER 조회쿼리  TOP-->
+    <query name="SEL_SAL_COR_MST">
+        <![CDATA[
+        SELECT HDR.STR_CD
+             , ORG.DEPT_CD
+             , ORG.TEAM_CD
+             , DPS.FN_GET_ORG_SHORT_NAME(HDR.STR_CD,ORG.DEPT_CD,ORG.TEAM_CD,'00','00')      AS TEAM_NM
+             , ORG.PC_CD
+             , DPS.FN_GET_ORG_SHORT_NAME(HDR.STR_CD,ORG.DEPT_CD,ORG.TEAM_CD,ORG.PC_CD,'00') AS PC_NM
+             , ITM.PUMBUN_CD
+             , DPS.FN_GET_PUMBUN_NAME(ITM.PUMBUN_CD)                                  AS PUMBUN_NM
+             , HDR.SALE_DT
+             , HDR.POS_NO
+             , HDR.SALE_USER_ID
+             , COM.FN_GET_USER_NAME(HDR.SALE_USER_ID)                                 AS SALE_USER_NM
+          FROM DPS.PS_TRHEADER HDR
+             , DPS.PS_TRITEM   ITM
+             , DPS.PC_ORGMST   ORG
+             , DPS.PC_STRPBN   HIS
+         WHERE HDR.STR_CD    = ITM.STR_CD
+           AND HDR.SALE_DT   = ITM.SALE_DT
+           AND HDR.POS_NO    = ITM.POS_NO
+           AND HDR.TRAN_NO   = ITM.TRAN_NO
+           -- AND ORG.ORG_CD    = ITM.ORG_CD
+           AND ITM.STR_CD    = HIS.STR_CD
+           AND ITM.PUMBUN_CD = HIS.PUMBUN_CD
+           AND ORG.ORG_CD    = HIS.SALE_ORG_CD
+
+           AND HDR.STR_CD  = ?
+           AND ORG.DEPT_CD = ?
+           AND HDR.SALE_DT BETWEEN ? AND ?
+           AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD  = ORG.STR_CD
+                           AND MYORG.DEPT_CD = ORG.DEPT_CD
+                           AND MYORG.TEAM_CD = ORG.TEAM_CD
+                           AND MYORG.PC_CD   = ORG.PC_CD 
+                           AND MYORG.USER_ID = ? ) 
+           AND EXISTS ( SELECT STR_CD
+                          FROM DPS.PC_POSMST
+                         WHERE STR_CD = HDR.STR_CD
+                           AND POS_NO = HDR.POS_NO 
+                           AND POS_FLAG = '09' ) 
+        ]]>
+    </query>
+    
+    <query name="SEL_SAL_COR_MST_WHERE_TEAM">
+        <![CDATA[
+           AND ORG.TEAM_CD   = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_SAL_COR_MST_WHERE_PC">
+        <![CDATA[
+           AND ORG.PC_CD     = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_SAL_COR_MST_WHERE_PUMBUN">
+        <![CDATA[
+           AND ITM.PUMBUN_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_SAL_COR_MST_WHERE_POSNO">
+        <![CDATA[
+           AND HDR.POS_NO    LIKE ?||'%'
+        ]]>
+    </query>
+    
+    <query name="SEL_SAL_COR_MST_GROUPBY">
+        <![CDATA[
+         GROUP BY
+               HDR.STR_CD
+             , ORG.DEPT_CD
+             , ORG.TEAM_CD
+             , ORG.PC_CD
+             , ITM.PUMBUN_CD
+             , HDR.SALE_DT
+             , HDR.POS_NO
+             , HDR.SALE_USER_ID 
+        ]]>
+    </query>
+    
+    <query name="SEL_SAL_COR_DTL">
+        <![CDATA[
+        SELECT ITM.SALE_DT
+             , ITM.POS_NO
+             , ITM.TRAN_NO
+             , ITM.SEQ_NO
+             , DECODE(HDR.TRAN_FLAG, '0', '매출', '반품')               AS FLAG
+             , ITM.PUMMOK_CD
+             , DPS.FN_GET_PUMMOK_NAME(ITM.PUMMOK_CD)                   AS PUMMOK_NM
+             , ITM.ITEM_CD
+             , DPS.FN_GET_SKU_NAME_BY_BARCODE(HDR.STR_CD, ITM.ITEM_CD) AS ITEM_NM
+             , ''                                                      AS EVT_CD
+             , 0                                                       AS EVT_RATE
+             , 0                                                       AS MG_RATE
+             , ITM.SALE_QTY
+             , ITM.SALE_AMT
+             , ITM.REDU_PRC
+             , ITM.DC_PRC
+          FROM DPS.PS_TRHEADER HDR
+             , DPS.PS_TRITEM   ITM
+             , DPS.PC_ORGMST   ORG
+             , DPS.PC_STRPBN   HIS
+         WHERE HDR.STR_CD       = ITM.STR_CD
+           AND HDR.SALE_DT      = ITM.SALE_DT
+           AND HDR.POS_NO       = ITM.POS_NO
+           AND HDR.TRAN_NO      = ITM.TRAN_NO
+           -- AND ORG.ORG_CD       = ITM.ORG_CD
+           AND ITM.STR_CD       = HIS.STR_CD
+           AND ITM.PUMBUN_CD    = HIS.PUMBUN_CD
+           AND ORG.ORG_CD       = HIS.SALE_ORG_CD
+           AND HDR.STR_CD       = ?
+           AND ITM.SALE_DT      = ?
+           AND ORG.DEPT_CD      = ?
+           AND ORG.TEAM_CD      = ?
+           AND ORG.PC_CD        = ?
+           AND ITM.PUMBUN_CD    = ?
+           AND ITM.POS_NO       = ?
+           AND HDR.SALE_USER_ID = ?
+           AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD  = ORG.STR_CD
+                           AND MYORG.DEPT_CD = ORG.DEPT_CD
+                           AND MYORG.TEAM_CD = ORG.TEAM_CD
+                           AND MYORG.PC_CD   = ORG.PC_CD 
+                           AND MYORG.USER_ID = ? ) 
+        ]]>
+    </query>
+    
+</service>

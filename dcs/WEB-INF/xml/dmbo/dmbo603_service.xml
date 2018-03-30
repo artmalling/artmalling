@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : jinjung.kim
+ * 회 사 명 :
+ * 작 성 일 : 2010.03.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 영수증적립내역상세조회
+ -->
+<service name="/dmbo603.do">
+
+     <gauce name="H_CUST"> 
+        <column colName="CUST_ID"           colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"         colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH1"          colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH2"          colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH3"          colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH1"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"             colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_ADDR"         colType="TB_STRING"  size="400" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL1"            colType="TB_STRING"  size="124" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL2"            colType="TB_STRING"  size="124" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT"             colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OCCURS_POINT"      colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_POINT"    		colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_GRADE_NM"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"           colType="TB_STRING"  size="64"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_TYPE_NM"      colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+     <query name="SEL_CUST">
+     <![CDATA[
+     SELECT * 
+       FROM (
+            SELECT A.CUST_ID
+                 , A.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH1)   AS HOME_PH1
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH2)   AS HOME_PH2
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH3)   AS HOME_PH3
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1) AS MOBILE_PH1
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2) AS MOBILE_PH2
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3) AS MOBILE_PH3
+                 , DCS.SC_Crypto_FUN('DEC', A.SS_NO)      AS SS_NO
+                 , A.HOME_ADDR1 || ' ' || A.HOME_ADDR2 AS HOME_ADDR
+                 , DCS.SC_Crypto_FUN('DEC', A.EMAIL1) AS EMAIL1
+                 , DCS.SC_Crypto_FUN('DEC', A.EMAIL2) AS EMAIL2
+                 , NVL(C.POINT, 0) AS POINT
+                 , NVL(C.OCCURS_POINT, 0) AS OCCURS_POINT
+                 , C.POINT + C.OCCURS_POINT AS SUM_POINT
+                 , COM.FN_GET_COMM_NAME('D'
+                                      , 'D011'
+                                      , (SELECT CUST_GRADE
+                                                   FROM DCS.V_DO_CUST_GRADE_CURR
+                                                  WHERE CUST_ID = B.CUST_ID
+                                                    AND ROWNUM = 1
+                                                 )
+                                        )  AS CUST_GRADE_NM                                                        
+                 , DCS.SC_Crypto_FUN('DEC', B.CARD_NO) AS CARD_NO
+                 , COM.FN_GET_COMM_NAME('D'
+                                      , 'D115'
+                                      , (SELECT CUST_TYPE
+                                                   FROM DCS.V_DO_CUST_TYPE_CURR
+                                                  WHERE CUST_ID = B.CUST_ID
+                                                    AND ROWNUM = 1
+                                                 )
+                                        )  AS CUST_TYPE_NM
+            FROM DCS.DM_CUSTOMER A
+               , DCS.DM_CARD B
+               , DCS.DO_CUST_TPOINT C
+            WHERE A.CUST_ID        = B.CUST_ID
+              AND A.CUST_ID        = C.CUST_ID(+)
+              AND A.CUST_STAT_FLAG = '0'
+            
+      ]]>
+    </query>
+    
+    <query name="SEL_CUSTINFO_SS_NO">
+        <![CDATA[
+        	AND A.SS_NO   = DCS.SC_Crypto_FUN('ENC', ?)
+         ]]>
+    </query>
+    <query name="SEL_CUSTINFO_CUST_ID">
+        <![CDATA[
+        	AND A.CUST_ID = ?
+         ]]>
+    </query>
+    <query name="SEL_CUSTINFO_CARD_NO">
+        <![CDATA[
+        	AND B.CARD_NO = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+         ]]>
+    </query>
+    
+    <query name="SEL_CUSTINFO_ORDER">
+        <![CDATA[        	 
+            ORDER BY B.CARD_NO DESC
+        ) 
+       WHERE ROWNUM = 1    
+         ]]>
+    </query> 
+
+    
+    <gauce name="H_MASTER">
+    <column colName="SALE_DT"       colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="STR_CD"        colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="POS_NO"        colType="TB_STRING"   size="4"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="POS_NAME"      colType="TB_STRING"   size="30"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="TRAN_NO"       colType="TB_STRING"   size="5"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="TRAN_FLAG"     colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="SALE_TOT_AMT"  colType="TB_DECIMAL"  size="13"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="ADD_POINT"     colType="TB_DECIMAL"  size="9"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="MBSH_NO"       colType="TB_STRING"   size="38"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    <query name="SEL_MASTER">
+    <![CDATA[
+    SELECT A.SALE_DT 
+         , A.STR_CD
+         , A.POS_NO
+         , DPS.FN_GET_POS_NAME(A.STR_CD,A.POS_NO) POS_NAME
+         , A.TRAN_NO
+         , A.TRAN_FLAG
+         --, DECODE(TRAN_FLAG, 0, 1, -1) * A.SALE_TOT_AMT  SALE_TOT_AMT
+         , DECODE(TRAN_FLAG, 0, 1, -1) * DECODE(TRAN_MODE,'93',B.PAY_TOT_AMT,A.SALE_TOT_AMT)  SALE_TOT_AMT  
+         --, DECODE(TRAN_FLAG, 0, 1, -1) * B.OCC_POINT     ADD_POINT     
+         , CASE WHEN DECODE(TRAN_FLAG, 0, 1, -1) * B.OCC_POINT <> 0 THEN DECODE(TRAN_FLAG, 0, 1, -1) * B.OCC_POINT
+                ELSE DECODE(TRAN_FLAG, 0, 1, -1) * ( SELECT ADD_POINT FROM DCS.DO_POINT_ADD WHERE RECP_NO = '1'||(SUBSTR(A.SALE_DT,3,6)||A.POS_NO||A.TRAN_NO)) END
+                AS ADD_POINT         
+         , B.MBSH_NO                
+      FROM DPS.PS_TRHEADER A
+         , DPS.PS_TRPOINT B
+     WHERE A.STR_CD  = B.STR_CD  (+)
+       AND A.SALE_DT = B.SALE_DT (+)
+       AND A.POS_NO  = B.POS_NO  (+)
+       AND A.TRAN_NO = B.TRAN_NO (+)
+       AND A.SALE_DT >= ? 
+       AND A.SALE_DT <= ?
+     ]]>
+    </query>
+    
+    <query name="SEL_MASTER_ORDER">
+    <![CDATA[
+     ORDER BY A.SALE_DT DESC
+             , A.STR_CD
+             , A.POS_NO
+             , A.TRAN_NO
+     ]]>
+    </query>
+    
+    <query name="SEL_SUB">
+    <![CDATA[
+     	SELECT DCS.SC_Crypto_FUN('DEC', B.CARD_NO) AS CARD_NO 
+       	  FROM DCS.DM_CUSTOMER A  
+          	 , DCS.DM_CARD B 
+      	 WHERE A.CUST_ID = B.CUST_ID
+           AND A.CUST_STAT_FLAG = '0'
+     ]]>
+    </query>
+    
+    <query name="SEL_SUB_SS_NO">
+        <![CDATA[
+        	AND A.SS_NO   = DCS.SC_Crypto_FUN('ENC', ?)
+         ]]>
+    </query>
+    <query name="SEL_SUB_CUST_ID">
+        <![CDATA[
+        	AND A.CUST_ID = ?
+         ]]>
+    </query>
+    <query name="SEL_SUB_CARD_NO">
+        <![CDATA[
+        	AND A.CUST_ID IN (SELECT CUST_ID
+                            FROM DCS.DM_CARD
+                           WHERE CARD_NO = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+                         )
+         ]]>
+    </query>
+    
+    <gauce name="H_DETAIL">
+    <column colName="STR_CD"     colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="SALE_DT"    colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="POS_NO"     colType="TB_STRING"   size="4"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="TRAN_NO"    colType="TB_STRING"   size="5"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="SEQ_NO"     colType="TB_DECIMAL"  size="3"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="TRAN_FLAG"  colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="ITEM_CD"    colType="TB_STRING"   size="18"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="ITEM_NAME"  colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="SALE_PRC"   colType="TB_DECIMAL"  size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="SALE_QTY"   colType="TB_DECIMAL"  size="3"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="SALE_AMT"   colType="TB_DECIMAL"  size="9"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    <query name="SEL_DETAIL">
+    <![CDATA[
+       WITH TEMP 
+         AS (SELECT ? AS STR_CD
+                  , ? AS SALE_DT
+                  , ? AS POS_NO
+                  , ? AS TRAN_NO
+               FROM DUAL) 
+        SELECT A.STR_CD
+             , A.SALE_DT
+             , A.POS_NO
+             , A.TRAN_NO
+             , B.SEQ_NO
+             , A.TRAN_FLAG
+             , B.ITEM_CD
+             , B.ITEM_NAME
+             , B.SALE_PRC
+             , DECODE(TRAN_FLAG, 0, 1, -1) * B.SALE_QTY SALE_QTY
+             , DECODE(TRAN_FLAG, 0, 1, -1) * B.SALE_AMT SALE_AMT
+          FROM DPS.PS_TRHEADER A
+             , DPS.PS_TRITEM B
+             , TEMP X
+         WHERE A.STR_CD  = B.STR_CD
+           AND A.SALE_DT = B.SALE_DT
+           AND A.POS_NO  = B.POS_NO
+           AND A.TRAN_NO = B.TRAN_NO
+           AND A.STR_CD  = X.STR_CD
+           AND A.SALE_DT = X.SALE_DT
+           AND A.POS_NO  = X.POS_NO
+           AND A.TRAN_NO = X.TRAN_NO
+           
+       UNION ALL
+       
+       SELECT A.STR_CD
+             , A.SALE_DT
+             , A.POS_NO
+             , A.TRAN_NO
+             , B.SEQ_NO
+             , A.TRAN_FLAG
+             , B.ITEM_CD
+             , B.ITEM_NAME
+             , B.SALE_PRC
+             , DECODE(TRAN_FLAG, 0, 1, -1) * B.SALE_QTY SALE_QTY
+             , DECODE(TRAN_FLAG, 0, 1, -1) * B.SALE_AMT SALE_AMT
+          FROM DPS.PS_TRHEADER A
+             , DPS.PS_TRITEM B
+             , TEMP X
+         WHERE A.STR_CD  = B.STR_CD
+           AND A.O_SALE_DT = B.SALE_DT
+           AND A.O_POS_NO  = B.POS_NO
+           AND A.O_TRAN_NO = B.TRAN_NO
+           AND A.STR_CD  = X.STR_CD
+           AND A.SALE_DT = X.SALE_DT
+           AND A.POS_NO  = X.POS_NO
+           AND A.TRAN_NO = X.TRAN_NO
+           AND A.TRAN_FLAG = '0'
+           
+           
+           
+        /*
+        UNION ALL
+        SELECT A.STR_CD
+             , A.SALE_DT
+             , A.POS_NO
+             , A.TRAN_NO
+             , 999 SEQ_NO
+             , A.TRAN_FLAG
+             , '' ITEM_CD
+             , '<<합계>>' ITEM_NAME
+             , 0 SALE_PRC
+             , 0 SALE_QTY
+             , DECODE(TRAN_FLAG, 0, 1, -1) * A.SALE_TOT_AMT SALE_AMT
+          FROM DPS.PS_TRHEADER A
+             , TEMP X
+         WHERE A.STR_CD  = X.STR_CD
+           AND A.SALE_DT = X.SALE_DT
+           AND A.POS_NO  = X.POS_NO
+           AND A.TRAN_NO = X.TRAN_NO
+        */
+        ORDER BY SEQ_NO
+        ]]>
+    </query>
+    
+    <gauce name="H_DETAIL2">
+    <column colName="STR_CD"     colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="SALE_DT"    colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="POS_NO"     colType="TB_STRING"   size="4"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="TRAN_NO"    colType="TB_STRING"   size="5"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="SEQ_NO"     colType="TB_DECIMAL"  size="3"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="ADD_TYPE"   colType="TB_STRING"   size="5"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="PAY_TYPE"   colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="PAY_NAME"   colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="PAY_AMT"    colType="TB_DECIMAL"  size="9"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="ADD_RATE"   colType="TB_DECIMAL"  size="5"   dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="ADD_POINT"  colType="TB_DECIMAL"  size="9"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    <query name="SEL_DETAIL2">
+    <![CDATA[
+     WITH TEMP 
+         AS (SELECT ? AS STR_CD
+                  , ? AS SALE_DT
+                  , ? AS POS_NO
+                  , ? AS TRAN_NO
+                  , ? AS BRCH_ID
+                  , (SELECT MAX(card_no) FROM DCS.DO_APPR_TR
+                      WHERE RECP_NO = '1' || SUBSTR(?, 3, 6) || ? || ?
+                      AND   CUST_ID IS NOT NULL
+                      AND   BRCH_ID = ?) AS CARD_NO
+               FROM DUAL) 
+    SELECT A.STR_CD
+         , A.SALE_DT
+         , A.POS_NO
+         , A.TRAN_NO
+         , A.SEQ_NO 
+         , B.ADD_TYPE
+         , A.PAY_TYPE_01 AS PAY_TYPE
+         , COM.FN_GET_COMM_NAME('D', 'D072', A.PAY_TYPE_01) PAY_NAME
+         , A.TRG_AMT_01 AS TRG_AMT
+         , DCS.F_GET_POCARD_RATE(A.PAY_TYPE_01, X.CARD_NO , X.BRCH_ID, X.SALE_DT) AS ADD_RATE
+         , TRUNC(A.TRG_AMT_01 * DCS.F_GET_POCARD_RATE(A.PAY_TYPE_01, X.CARD_NO , X.BRCH_ID , X.SALE_DT) / 100) AS ADD_POINT         
+      FROM DPS.PS_TRPOINT   A
+         , DCS.DO_POINT_ADD B                  
+         , TEMP  X
+     WHERE A.STR_CD   = X.STR_CD
+       AND A.SALE_DT  = X.SALE_DT
+       AND A.POS_NO   = X.POS_NO
+       AND A.TRAN_NO  = X.TRAN_NO       
+       --AND '1'        = SUBSTR(B.RECP_NO, 1, 1)
+       AND A.SALE_DT  = '20'|| SUBSTR(B.RECP_NO, 2, 6) 
+       AND A.POS_NO     = SUBSTR(B.RECP_NO, 8, 4)
+       AND A.TRAN_NO    = SUBSTR(B.RECP_NO, 12, 5)
+       --AND B.RECP_NO = '1'||SUBSTR(X.SALE_DT,3,6)||X.POS_NO||X.TRAN_NO
+       AND A.PAY_TYPE_01 IS NOT NULL
+       AND A.TRG_AMT_01 <> 0
+    UNION ALL
+    SELECT A.STR_CD
+         , A.SALE_DT
+         , A.POS_NO
+         , A.TRAN_NO
+         , A.SEQ_NO 
+         , B.ADD_TYPE
+         , A.PAY_TYPE_02 AS PAY_TYPE
+         , COM.FN_GET_COMM_NAME('D', 'D072', A.PAY_TYPE_02) PAY_NAME
+         , A.TRG_AMT_02 AS TRG_AMT
+         , DCS.F_GET_POCARD_RATE(A.PAY_TYPE_02, X.CARD_NO , X.BRCH_ID, X.SALE_DT) AS ADD_RATE
+         , TRUNC(A.TRG_AMT_02 * DCS.F_GET_POCARD_RATE(A.PAY_TYPE_02, X.CARD_NO , X.BRCH_ID , X.SALE_DT) / 100) AS ADD_POINT         
+      FROM DPS.PS_TRPOINT   A
+         , DCS.DO_POINT_ADD B                  
+         , TEMP  X
+     WHERE A.STR_CD   = X.STR_CD
+       AND A.SALE_DT  = X.SALE_DT
+       AND A.POS_NO   = X.POS_NO
+       AND A.TRAN_NO  = X.TRAN_NO       
+       --AND '1'        = SUBSTR(B.RECP_NO, 1, 1)
+       AND A.SALE_DT  = '20'|| SUBSTR(B.RECP_NO, 2, 6) 
+       AND A.POS_NO     = SUBSTR(B.RECP_NO, 8, 4)
+       AND A.TRAN_NO    = SUBSTR(B.RECP_NO, 12, 5)
+       --AND B.RECP_NO = '1'||SUBSTR(X.SALE_DT,3,6)||X.POS_NO||X.TRAN_NO
+       AND A.PAY_TYPE_02 IS NOT NULL
+       AND A.TRG_AMT_02 <> 0
+    UNION ALL
+    SELECT A.STR_CD
+         , A.SALE_DT
+         , A.POS_NO
+         , A.TRAN_NO
+         , A.SEQ_NO 
+         , B.ADD_TYPE
+         , A.PAY_TYPE_03 AS PAY_TYPE
+         , COM.FN_GET_COMM_NAME('D', 'D072', A.PAY_TYPE_03) PAY_NAME
+         , A.TRG_AMT_03 AS TRG_AMT
+         , DCS.F_GET_POCARD_RATE(A.PAY_TYPE_03, X.CARD_NO , X.BRCH_ID, X.SALE_DT) AS ADD_RATE
+         , TRUNC(A.TRG_AMT_03 * DCS.F_GET_POCARD_RATE(A.PAY_TYPE_03, X.CARD_NO , X.BRCH_ID , X.SALE_DT) / 100) AS ADD_POINT         
+      FROM DPS.PS_TRPOINT   A
+         , DCS.DO_POINT_ADD B                  
+         , TEMP  X
+     WHERE A.STR_CD   = X.STR_CD
+       AND A.SALE_DT  = X.SALE_DT
+       AND A.POS_NO   = X.POS_NO
+       AND A.TRAN_NO  = X.TRAN_NO       
+       --AND '1'        = SUBSTR(B.RECP_NO, 1, 1)
+       AND A.SALE_DT  = '20'|| SUBSTR(B.RECP_NO, 2, 6) 
+       AND A.POS_NO     = SUBSTR(B.RECP_NO, 8, 4)
+       AND A.TRAN_NO    = SUBSTR(B.RECP_NO, 12, 5)
+       --AND B.RECP_NO = '1'||SUBSTR(X.SALE_DT,3,6)||X.POS_NO||X.TRAN_NO
+       AND A.PAY_TYPE_03 IS NOT NULL
+       AND A.TRG_AMT_03 <> 0
+    UNION ALL
+    SELECT A.STR_CD
+         , A.SALE_DT
+         , A.POS_NO
+         , A.TRAN_NO
+         , A.SEQ_NO 
+         , B.ADD_TYPE
+         , A.PAY_TYPE_04 AS PAY_TYPE
+         , COM.FN_GET_COMM_NAME('D', 'D072', A.PAY_TYPE_04) PAY_NAME
+         , A.TRG_AMT_04 AS TRG_AMT
+         , DCS.F_GET_POCARD_RATE(A.PAY_TYPE_02, X.CARD_NO , X.BRCH_ID, X.SALE_DT) AS ADD_RATE
+         , TRUNC(A.TRG_AMT_04 * DCS.F_GET_POCARD_RATE(A.PAY_TYPE_04, X.CARD_NO , X.BRCH_ID , X.SALE_DT) / 100) AS ADD_POINT         
+      FROM DPS.PS_TRPOINT   A
+         , DCS.DO_POINT_ADD B                  
+         , TEMP  X
+     WHERE A.STR_CD   = X.STR_CD
+       AND A.SALE_DT  = X.SALE_DT
+       AND A.POS_NO   = X.POS_NO
+       AND A.TRAN_NO  = X.TRAN_NO       
+       --AND '1'        = SUBSTR(B.RECP_NO, 1, 1)
+       AND A.SALE_DT  = '20'|| SUBSTR(B.RECP_NO, 2, 6) 
+       AND A.POS_NO     = SUBSTR(B.RECP_NO, 8, 4)
+       AND A.TRAN_NO    = SUBSTR(B.RECP_NO, 12, 5)
+       --AND B.RECP_NO = '1'||SUBSTR(X.SALE_DT,3,6)||X.POS_NO||X.TRAN_NO
+       AND A.PAY_TYPE_04 IS NOT NULL
+       AND A.TRG_AMT_04 <> 0
+    UNION ALL
+    SELECT A.STR_CD
+         , A.SALE_DT
+         , A.POS_NO
+         , A.TRAN_NO
+         , A.SEQ_NO 
+         , B.ADD_TYPE
+         , A.PAY_TYPE_05 AS PAY_TYPE
+         , COM.FN_GET_COMM_NAME('D', 'D072', A.PAY_TYPE_05) PAY_NAME
+         , A.TRG_AMT_05 AS TRG_AMT
+         , DCS.F_GET_POCARD_RATE(A.PAY_TYPE_05, X.CARD_NO , X.BRCH_ID, X.SALE_DT) AS ADD_RATE
+         , TRUNC(A.TRG_AMT_05 * DCS.F_GET_POCARD_RATE(A.PAY_TYPE_05, X.CARD_NO , X.BRCH_ID , X.SALE_DT) / 100) AS ADD_POINT         
+      FROM DPS.PS_TRPOINT   A
+         , DCS.DO_POINT_ADD B                  
+         , TEMP  X
+     WHERE A.STR_CD   = X.STR_CD
+       AND A.SALE_DT  = X.SALE_DT
+       AND A.POS_NO   = X.POS_NO
+       AND A.TRAN_NO  = X.TRAN_NO       
+       --AND '1'        = SUBSTR(B.RECP_NO, 1, 1)
+       AND A.SALE_DT  = '20'|| SUBSTR(B.RECP_NO, 2, 6) 
+       AND A.POS_NO     = SUBSTR(B.RECP_NO, 8, 4)
+       AND A.TRAN_NO    = SUBSTR(B.RECP_NO, 12, 5)
+       --AND B.RECP_NO = '1'||SUBSTR(X.SALE_DT,3,6)||X.POS_NO||X.TRAN_NO
+       AND A.PAY_TYPE_05 IS NOT NULL
+       AND A.TRG_AMT_05 <> 0
+    UNION ALL
+    SELECT A.STR_CD
+         , A.SALE_DT
+         , A.POS_NO
+         , A.TRAN_NO
+         , A.SEQ_NO 
+         , B.ADD_TYPE
+         , A.PAY_TYPE_06 AS PAY_TYPE
+         , COM.FN_GET_COMM_NAME('D', 'D072', A.PAY_TYPE_06) PAY_NAME
+         , A.TRG_AMT_06 AS TRG_AMT
+         , DCS.F_GET_POCARD_RATE(A.PAY_TYPE_06, X.CARD_NO , X.BRCH_ID, X.SALE_DT) AS ADD_RATE
+         , TRUNC(A.TRG_AMT_06 * DCS.F_GET_POCARD_RATE(A.PAY_TYPE_06, X.CARD_NO , X.BRCH_ID , X.SALE_DT) / 100) AS ADD_POINT         
+      FROM DPS.PS_TRPOINT   A
+         , DCS.DO_POINT_ADD B                  
+         , TEMP  X
+     WHERE A.STR_CD   = X.STR_CD
+       AND A.SALE_DT  = X.SALE_DT
+       AND A.POS_NO   = X.POS_NO
+       AND A.TRAN_NO  = X.TRAN_NO       
+       --AND '1'        = SUBSTR(B.RECP_NO, 1, 1)
+       AND A.SALE_DT  = '20'|| SUBSTR(B.RECP_NO, 2, 6) 
+       AND A.POS_NO     = SUBSTR(B.RECP_NO, 8, 4)
+       AND A.TRAN_NO    = SUBSTR(B.RECP_NO, 12, 5)
+       --AND B.RECP_NO = '1'||SUBSTR(X.SALE_DT,3,6)||X.POS_NO||X.TRAN_NO
+       AND A.PAY_TYPE_06 IS NOT NULL
+       AND A.TRG_AMT_06 <> 0
+    UNION ALL
+    SELECT A.STR_CD
+         , A.SALE_DT
+         , A.POS_NO
+         , A.TRAN_NO
+         , A.SEQ_NO 
+         , B.ADD_TYPE
+         , A.PAY_TYPE_07 AS PAY_TYPE
+         , COM.FN_GET_COMM_NAME('D', 'D072', A.PAY_TYPE_07) PAY_NAME
+         , A.TRG_AMT_07 AS TRG_AMT
+         , DCS.F_GET_POCARD_RATE(A.PAY_TYPE_07, X.CARD_NO , X.BRCH_ID, X.SALE_DT) AS ADD_RATE
+         , TRUNC(A.TRG_AMT_07 * DCS.F_GET_POCARD_RATE(A.PAY_TYPE_07, X.CARD_NO , X.BRCH_ID , X.SALE_DT) / 100) AS ADD_POINT         
+      FROM DPS.PS_TRPOINT   A
+         , DCS.DO_POINT_ADD B                  
+         , TEMP  X
+     WHERE A.STR_CD   = X.STR_CD
+       AND A.SALE_DT  = X.SALE_DT
+       AND A.POS_NO   = X.POS_NO
+       AND A.TRAN_NO  = X.TRAN_NO       
+       --AND '1'        = SUBSTR(B.RECP_NO, 1, 1)
+       AND A.SALE_DT  = '20'|| SUBSTR(B.RECP_NO, 2, 6) 
+       AND A.POS_NO     = SUBSTR(B.RECP_NO, 8, 4)
+       AND A.TRAN_NO    = SUBSTR(B.RECP_NO, 12, 5)
+       --AND B.RECP_NO = '1'||SUBSTR(X.SALE_DT,3,6)||X.POS_NO||X.TRAN_NO
+       AND A.PAY_TYPE_07 IS NOT NULL
+       AND A.TRG_AMT_07 <> 0
+    UNION ALL
+    SELECT A.STR_CD
+         , A.SALE_DT
+         , A.POS_NO
+         , A.TRAN_NO
+         , A.SEQ_NO 
+         , B.ADD_TYPE
+         , A.PAY_TYPE_08 AS PAY_TYPE
+         , COM.FN_GET_COMM_NAME('D', 'D072', A.PAY_TYPE_08) PAY_NAME
+         , A.TRG_AMT_08 AS TRG_AMT
+         , DCS.F_GET_POCARD_RATE(A.PAY_TYPE_08, X.CARD_NO , X.BRCH_ID, X.SALE_DT) AS ADD_RATE
+         , TRUNC(A.TRG_AMT_08 * DCS.F_GET_POCARD_RATE(A.PAY_TYPE_08, X.CARD_NO , X.BRCH_ID , X.SALE_DT) / 100) AS ADD_POINT         
+      FROM DPS.PS_TRPOINT   A
+         , DCS.DO_POINT_ADD B                  
+         , TEMP  X
+     WHERE A.STR_CD   = X.STR_CD
+       AND A.SALE_DT  = X.SALE_DT
+       AND A.POS_NO   = X.POS_NO
+       AND A.TRAN_NO  = X.TRAN_NO       
+       --AND '1'        = SUBSTR(B.RECP_NO, 1, 1)
+       AND A.SALE_DT  = '20'|| SUBSTR(B.RECP_NO, 2, 6) 
+       AND A.POS_NO     = SUBSTR(B.RECP_NO, 8, 4)
+       AND A.TRAN_NO    = SUBSTR(B.RECP_NO, 12, 5)
+       --AND B.RECP_NO = '1'||SUBSTR(X.SALE_DT,3,6)||X.POS_NO||X.TRAN_NO
+       AND A.PAY_TYPE_08 IS NOT NULL
+       AND A.TRG_AMT_08 <> 0
+
+     
+     ]]>
+    </query>
+</service>

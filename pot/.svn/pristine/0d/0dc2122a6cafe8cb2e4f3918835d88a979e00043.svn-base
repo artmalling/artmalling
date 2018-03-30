@@ -1,0 +1,139 @@
+/*
+ * Copyright (c) 2010 한국후지쯔. All rights reserved.
+ *
+ * This software is the confidential and proprietary information of 한국후지쯔.
+ * You shall not disclose such Confidential Information and shall use it
+ * only in accordance with the terms of the license agreement you entered into
+ * with 한국후지쯔
+ */
+
+package common.dao;
+
+import java.util.List;
+
+import common.util.Util;
+    
+import kr.fujitsu.ffw.control.ActionForm;
+import kr.fujitsu.ffw.control.cfg.svc.shift.MultiInput;
+import kr.fujitsu.ffw.control.cfg.svc.shift.Service;
+import kr.fujitsu.ffw.model.AbstractDAO;
+import kr.fujitsu.ffw.model.SqlWrapper;
+import kr.fujitsu.ffw.util.String2;
+    
+/**
+ * <p>회원명 조회 팝업</p>
+ * 
+ * @created on 1.0, 2010/02/28
+ * @created by 김영진(FUJITSU KOREA LTD.)
+ *
+ * @modified on    
+ * @modified by
+ * @caused by
+ */
+
+public class CCom410DAO extends AbstractDAO {
+
+    /**
+     * 조회조건으로 회원 코드 조회
+     * 
+     * @param form
+     * @param mi
+     *            : 코드/코드명
+     * @return List : 분류 코드 조회 결과
+     */
+    public List getCustomer(ActionForm form, MultiInput mi) throws Exception {
+        
+        List       ret = null;
+        SqlWrapper sql = null;
+        Service    svc = null;
+        Util      util = new Util();
+        String strQuery = "";
+
+        if (!mi.next())
+            throw new Exception(
+                    "# CCom410DAO.getOneWithoutPop] MuiltiInput is null");
+        connect("pot");
+        svc = (Service) form.getService(); 
+        sql = new SqlWrapper();
+        int i = 1; 
+        String strCompPersFlag = mi.getString("COMP_PERS_FLAG");
+        String strCustName     = mi.getString("CUST_NAME");
+        String strMphone1      = mi.getString("MOBILE_PH1");
+        String strMphone2      = mi.getString("MOBILE_PH2");
+        String strMphone3      = mi.getString("MOBILE_PH3");
+        String strHphone1      = mi.getString("HOME_PH1");
+        String strHphone2      = mi.getString("HOME_PH2");
+        String strHphone3      = mi.getString("HOME_PH3");
+        String strEmail1       = mi.getString("EMAIL1");
+        String strEmail2       = mi.getString("EMAIL2");
+        String strScrId        = mi.getString("SCR_ID");
+        String strCardNo       = mi.getString("CARD_NO");
+        String strSsNo         = mi.getString("SS_NO");
+        
+        sql.put(svc.getQuery(mi.getString("SERVICE_ID")));  
+        sql.setString(i++, strCompPersFlag);
+        
+        if(!strScrId.equals("DCTM111")){
+            if(!strScrId.equals("DCTM110")){ 
+                sql.put("AND A.SCED_REQ_DT IS NULL ");
+            }else{
+                sql.put("AND A.SCED_REQ_DT IS NOT NULL ");
+            }
+        }
+    	if (!String2.isEmpty(String2.trim(strCustName))){
+            sql.setString(i++, strCustName);
+            sql.put(" AND A.CUST_NAME LIKE  ? || '%' ");
+        }
+        if (!String2.isEmpty(String2.trim(strMphone1)) && !String2.isEmpty(String2.trim(strMphone2)) 
+        		&& !String2.isEmpty(String2.trim(strMphone3))){
+            sql.setString(i++, util.encryptedStr(strMphone1));
+            sql.setString(i++, util.encryptedStr(strMphone2));
+            sql.setString(i++, util.encryptedStr(strMphone3));
+            sql.put(" AND A.MOBILE_PH1 = ? AND A.MOBILE_PH2 = ? AND A.MOBILE_PH3 = ? ");
+        }
+        if (!String2.isEmpty(String2.trim(strHphone1)) && !String2.isEmpty(String2.trim(strHphone2)) 
+        		&& !String2.isEmpty(String2.trim(strHphone3))){
+            sql.setString(i++, util.encryptedStr(strHphone1));
+            sql.setString(i++, util.encryptedStr(strHphone2));
+            sql.setString(i++, util.encryptedStr(strHphone3));   
+            sql.put(" AND A.HOME_PH1 = ? AND A.HOME_PH2 = ? AND A.HOME_PH3 = ? ");
+        } 
+        if (!String2.isEmpty(String2.trim(strEmail1)) && !String2.isEmpty(String2.trim(strEmail2))){
+            sql.setString(i++, util.encryptedStr(strEmail1));
+            sql.setString(i++, util.encryptedStr(strEmail2));
+            sql.put(" AND A.EMAIL1 = ? AND A.EMAIL2 = ? ");  
+        }  
+    	if (!String2.isEmpty(String2.trim(strCardNo))){
+    		sql.setString(i++, util.encryptedStr(strCardNo));
+            //sql.setString(i++, strCardNo);
+            sql.put(" AND B.CARD_NO LIKE  ? || '%' ");
+        }
+    	if (!String2.isEmpty(String2.trim(strSsNo))){
+    		if(strSsNo.length() == 13){
+        		sql.setString(i++, util.encryptedStr(strSsNo));
+                //sql.setString(i++, strSsNo);
+                sql.put(" AND SS_NO =  ? 		--1 ");
+    		}
+    		else{
+        		//sql.setString(i++, util.encryptedStr(strCardNo));
+                sql.setString(i++, strSsNo);
+                sql.put(" AND DCS.F_DECRYPTEDSTR_M(SS_NO) LIKE  ? || '%' 		--2 ");
+    			
+    		}
+        }    	
+        sql.put(" ORDER BY A.CUST_NAME, A.CUST_ID");
+
+        ret = select2List(sql); 
+        ret = util.decryptedStr(ret,2);     //이동전화1복호화.
+		ret = util.decryptedStr(ret,3);     //이동전화2 복호화.
+		ret = util.decryptedStr(ret,4);     //이동전화3 복호화.
+		ret = util.decryptedStr(ret,5);     //자택전화1 복호화.
+		ret = util.decryptedStr(ret,6);     //자택전화2 복호화.
+		ret = util.decryptedStr(ret,7);     //자택전화3 복호화.
+		ret = util.decryptedStr(ret,8);     //EMAIL1 복호화.
+		ret = util.decryptedStr(ret,9);     //EMAIL2 복호화.
+        ret = util.decryptedStr(ret,11);     //카드번호 복호화.
+        ret = util.decryptedStr(ret,12);     //주민번호 복호화.
+        return ret;
+    }
+}

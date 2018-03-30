@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.18
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 바이어(SM) 공통 XML
+ -->
+<service name="/ccom031.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_BUYERMST">
+      <column colName="SEL"         colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="EMP_NO"      colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="EMP_NAME"    colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BUYER_CD"    colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BUYER_NAME"  colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="MAIN_FLAG"   colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <gauce name="H_SEL_MAIN_BUYER">
+        <column colName="BUYER_CD"   colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 바이어(SM) 조회 SQL -->
+    <query name="SEL_BUYERMST">
+        <![CDATA[                                        
+            SELECT 'F'        AS SEL
+				 , ORG.EMP_NO
+				 , USR.USER_NAME AS EMP_NAME
+                 , BUY.BUYER_CD
+                 , BUY.BUYER_NAME
+                 , BUY.MAIN_FLAG
+              FROM DPS.PC_BUYERMST BUY
+                 , DPS.PC_BUYERORG ORG
+                 , COM.TC_USRMST USR
+             WHERE 1=1
+               AND BUY.BUYER_CD = ORG.BUYER_CD
+               AND ORG.EMP_NO = USR.USER_ID
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_BUYER_CD">
+        <![CDATA[
+               AND USR.USER_ID   = ?
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_LIKE_BUYER_CD">
+        <![CDATA[
+               AND USR.USER_ID   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_BUYER_NAME">
+        <![CDATA[
+               AND USR.USER_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_AUTHORITY">
+        <![CDATA[
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.USER_ID  = ?
+                               AND MYORG.ORG_FLAG = ?
+                               AND BUY.PC_ORG_CD  = MYORG.STR_CD||MYORG.DEPT_CD||MYORG.TEAM_CD||MYORG.PC_CD||'00'
+                               AND ROWNUM         = 1
+                          )
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_ORG_FLAG">
+        <![CDATA[
+               AND BUY.ORG_FLAG           = ?
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_ORG_CD">
+        <![CDATA[
+               AND BUY.PC_ORG_CD          IN (
+                                              SELECT ORG_CD
+                                                FROM DPS.PC_ORGMST
+                                               START WITH ORG_CD = ?
+                                             CONNECT BY PRIOR  ORG_CD = P_ORG_CD
+                                             )
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_MAIN_FLAG">
+        <![CDATA[
+               AND BUY.MAIN_FLAG          = ?
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_USE_YN">
+        <![CDATA[
+               AND BUY.USE_YN             = ?
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_WHERE_BUYER_FLAG">
+        <![CDATA[
+               AND BUY.BUYER_FLAG           = ?
+        ]]>
+    </query>
+    <query name="SEL_BUYERMST_ORDER">
+        <![CDATA[
+             ORDER BY BUY.BUYER_CD
+        ]]>
+    </query>
+    
+    <!-- 정 바이어(SM)을 조회 -->
+    <query name="SEL_MAIN_BUYER">
+        <![CDATA[
+            SELECT BUY.BUYER_CD
+                 , BUY.BUYER_NAME                                                
+              FROM DPS.PC_BUYERMST BUY
+                 , DPS.PC_ORGMST   ORG
+             WHERE BUY.PC_ORG_CD   = DECODE(?,'1',ORG.P_ORG_CD,'2',ORG.ORG_CD)
+               AND ORG.ORG_CD      = ? 
+               AND BUY.MAIN_FLAG   = '1'
+               AND BUY.USE_YN      = 'Y'
+        ]]>
+    </query>
+</service>

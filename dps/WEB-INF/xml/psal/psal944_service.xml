@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  재청구진행현황를 조회한다.
+ -->
+<service name="/psal944.ps">
+    <!-- 재청구진행현황 목록 -->
+    <gauce name="H_MASTER">
+        <column colName="RECV_DT"     colType="TB_STRING"    size="6"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+		<column colName="BCOMP_NM"    colType="TB_STRING"    size="43"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="JBRCH_ID"    colType="TB_STRING"    size="15"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="APPR_NO"     colType="TB_STRING"    size="10"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="CARD_NO"     colType="TB_STRING"    size="20"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="PAY_DT"      colType="TB_STRING"    size="8"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="VRTN_NM"     colType="TB_STRING"    size="43"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="CHRG_DT"     colType="TB_STRING"    size="8"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="IN_DT"       colType="TB_STRING"    size="8"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="STATUS"      colType="TB_STRING"    size="40"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="RTN_DT"      colType="TB_STRING"    size="8"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 재청구진행현황 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT B.RECV_DT 
+                 , DPS.FN_GET_CCOMP_NM(A.BCOMP_CD) BCOMP_NM   
+                 , A.JBRCH_ID
+                 , A.APPR_NO
+                 , A.CARD_NO
+                 , B.PAY_DT
+                 , COM.FN_GET_COMM_NAME('D', 'D041', B.VRTN_CD) VRTN_NM
+                 , C.CHRG_DT
+                 , TO_CHAR( TO_DATE(C.CHRG_DT, 'YYYYMMDD') + D.PAY_DAY, 'YYYYMMDD' ) IN_DT
+                 , DECODE(E.DATA_FLAG, NULL, '대기중', COM.FN_GET_COMM_NAME('D', 'D034', E.DATA_FLAG)) STATUS  -- 회신상태
+                 , DECODE(E.DATA_FLAG, NULL, '대기중', E.PAY_DT) RTN_DT                                        -- 회신일자
+              FROM DPS.PD_REBUYREQ A
+                 , DPS.PD_RTND B
+                 , DPS.PD_BUYREQPREP C
+                 , DPS.PD_BRANCH D
+                 , DPS.PD_RTND E
+             WHERE A.PAY_DT     =    B.PAY_DT 
+               AND A.PAY_SEQ    =    B.PAY_SEQ
+               AND A.SEQ_NO     =    B.SEQ_NO 
+               AND A.REQ_DT     =    C.REQ_DT   
+               AND A.FCL_FLAG   =    C.FCL_FLAG  
+               AND A.REQ_SEQ_NO =    C.SEQ_NO   
+               AND A.BCOMP_CD   =    D.BCOMP_CD
+               AND A.JBRCH_ID   =    D.JBRCH_ID
+               AND ?            =    D.STR_CD    
+               AND C.APPR_DT    =    '20' || E.SALE_DT(+)
+               AND C.APPR_NO    =    E.APPR_NO(+)
+               AND C.JBRCH_ID   =    E.JBRCH_ID(+)
+               AND C.CHRG_DT    =    '20' || E.RECV_DT(+)
+               AND C.CARD_NO    =    E.CARD_NO(+)  
+               AND C.APPR_AMT   =    E.TRADE_AMT(+)  
+               AND C.CHRG_DT    BETWEEN ?  AND  ?
+               AND A.BCOMP_CD   LIKE ? || '%'
+               AND A.JBRCH_ID   LIKE ? || '%'
+               AND A.APPR_NO    LIKE ? || '%'
+             ORDER BY B.RECV_DT, C.CHRG_DT
+        ]]>        
+    </query>
+    
+</service>

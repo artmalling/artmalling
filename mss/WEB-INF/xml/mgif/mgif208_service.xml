@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif208.mg">
+<!-- DS_Master -->
+    <gauce name="H_MASTER"> 
+        <column colName="HSTR_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="HSTR_NAME"   colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"      colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RFD_DT"      colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="RFD_SLIP_NO" colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HSTR_CONF"   colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RFD_QTY_SUM" colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="RFD_AMT_SUM" colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- DS_Detail -->   
+    <gauce name="H_DETAIL"> 
+        <column colName="RFD_SEQ_NO"    colType="TB_STRING"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"  colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME" colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE" colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+        <column colName="GIFTCERT_AMT"  colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+        <column colName="ISSUE_TYPE"    colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+        <column colName="GIFT_S_NO"     colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+        <column colName="GIFT_E_NO"     colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+        <column colName="RFD_QTY"       colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RFD_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 점별 반품  조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[   
+            SELECT RFD.HSTR_CD
+                 , DPS.FN_GET_STORE_NAME(RFD.HSTR_CD) HSTR_NAME
+                 , RFD.STR_CD
+                 , DPS.FN_GET_STORE_NAME(RFD.STR_CD) STR_NAME
+                 , RFD.RFD_DT
+                 , RFD.RFD_SLIP_NO
+                 , CASE WHEN NVL(RFD.HSTR_CONF, 'N') = 'N' THEN '미확정' ELSE '확정' END HSTR_CONF
+                 , SUM(RFD.RFD_QTY) RFD_QTY_SUM
+                 , SUM(RFD.RFD_QTY * GAM.GIFTCERT_AMT) RFD_AMT_SUM
+              FROM MSS.MG_REFUND RFD
+                 , MSS.MG_GIFTAMTMST GAM
+             WHERE RFD.GIFT_TYPE_CD  = GAM.GIFT_TYPE_CD
+               AND RFD.ISSUE_TYPE    = GAM.ISSUE_TYPE
+               AND RFD.GIFT_AMT_TYPE = GAM.GIFT_AMT_TYPE
+               AND RFD.HSTR_CD       = ?
+               AND RFD.RFD_DT        BETWEEN ? AND ?
+               AND RFD.STR_CONF      = 'Y'
+               AND RFD.STR_CD        LIKE ?||'%'
+               AND RFD.STR_CONF      LIKE ?||'%'
+               AND RFD.HSTR_CONF     LIKE ?||'%'
+            GROUP BY RFD.HSTR_CD
+                 , RFD.STR_CD
+                 , RFD.RFD_DT
+                 , RFD.RFD_SLIP_NO
+                 , HSTR_CONF
+          ORDER BY RFD.RFD_SLIP_NO DESC
+        ]]> 
+    </query> 
+    
+    <!-- 세부내역 반품  조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[  
+            SELECT RFD.RFD_SEQ_NO
+                 , RFD.GIFT_TYPE_CD
+                 , GAM.GIFT_AMT_NAME
+                 , RFD.GIFT_AMT_TYPE
+                 , GAM.GIFTCERT_AMT
+                 , RFD.ISSUE_TYPE
+                 , RFD.GIFT_S_NO
+                 , RFD.GIFT_E_NO
+                 , RFD.RFD_QTY
+                 , (RFD.RFD_QTY * GAM.GIFTCERT_AMT) RFD_AMT
+              FROM MSS.MG_REFUND RFD
+                 , MSS.MG_GIFTAMTMST GAM
+             WHERE RFD.GIFT_TYPE_CD  = GAM.GIFT_TYPE_CD
+               AND RFD.ISSUE_TYPE    = GAM.ISSUE_TYPE
+               AND RFD.GIFT_AMT_TYPE = GAM.GIFT_AMT_TYPE
+               AND RFD.RFD_DT        = ?
+               AND RFD.STR_CD        = ?
+               AND RFD.RFD_SLIP_NO   = ?
+        ]]>
+    </query>    
+    
+    <!-- 반품 확정 -->
+    <query name="COMF_REFUND">
+        <![CDATA[
+            UPDATE MSS.MG_REFUND
+               SET HSTR_CONF    = 'Y'
+                 , HSTR_CONF_DT = ?
+                 , MOD_ID       = ?
+                 , MOD_DATE     = SYSDATE
+             WHERE RFD_DT       = ?
+               AND STR_CD       = ?
+               AND RFD_SLIP_NO  = ?
+        ]]>
+    </query> 
+    
+    <!-- 반품 확정시 상태값변경 -->
+    <query name="COMF_MSTSTAT">
+        <![CDATA[
+            UPDATE MSS.MG_GIFTMST
+               SET HSTR_CONF_DT = ?
+                 , STAT_FLAG   = '01'
+                 , MOD_ID      = ?
+                 , MOD_DATE    = SYSDATE
+             WHERE GIFTCARD_NO BETWEEN ? AND ?
+        ]]>
+    </query> 
+    
+</service>

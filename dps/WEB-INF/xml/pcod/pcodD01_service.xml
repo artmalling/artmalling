@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 강진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2012.07.16
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/pcodD01.pc">
+
+    <gauce name="H_MASTER"> 
+    	<column colName="STR_CD"      		colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    	<column colName="STR_NM"      		colType="TB_STRING"      size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIN_NO"      		colType="TB_STRING"      size="6"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"    		colType="TB_STRING"      size="8"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"    		colType="TB_STRING"      size="8"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"      		colType="TB_STRING"      size="3"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CCOMP_CD"    		colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CCOMP_NM"    		colType="TB_STRING"      size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_BAS_FR_AMT"  	colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_BAS_TO_AMT"    colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"      	colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD) STR_NM
+                 , A.BIN_NO
+                 , A.APP_S_DT
+                 , A.APP_E_DT
+                 , A.SEQ_NO
+                 , A.CCOMP_CD
+                 , (SELECT CCOMP_NM 
+                      FROM DPS.PD_CARDCOMP 
+                     WHERE CCOMP_CD = A.CCOMP_CD
+                   ) CCOMP_NM  
+				 , A.USE_BAS_FR_AMT
+				 , A.USE_BAS_TO_AMT	
+                 , A.REDU_AMT
+              FROM DPS.PC_FLDDCMST A
+             WHERE A.STR_CD LIKE ? || '%'
+               AND A.CCOMP_CD LIKE ? || '%'
+               AND A.APP_S_DT <= ? 
+               AND A.APP_E_DT >= ?
+               AND A.BIN_NO BETWEEN ? AND ?                
+             ORDER BY A.STR_CD, A.BIN_NO, A.APP_S_DT, A.SEQ_NO
+        ]]>        
+    </query>
+    
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT A.STR_CD
+            	 , DPS.FN_GET_STORE_NAME(A.STR_CD) STR_NM
+                 , A.BIN_NO
+                 , A.APP_S_DT
+                 , A.APP_E_DT
+                 , A.SEQ_NO
+                 , A.CCOMP_CD
+                 , (SELECT CCOMP_NM 
+                      FROM DPS.PD_CARDCOMP 
+                     WHERE CCOMP_CD = A.CCOMP_CD
+                   ) CCOMP_NM  
+				 , A.USE_BAS_FR_AMT
+				 , A.USE_BAS_TO_AMT	
+                 , A.REDU_AMT
+              FROM DPS.PC_FLDDCMST A
+             WHERE A.STR_CD = ?
+               AND A.BIN_NO = ?
+               AND A.APP_S_DT = ?
+               AND A.SEQ_NO = ?
+        ]]>        
+    </query>    
+    
+    <!-- 카드별현장할인내역등록  -->
+    <query name="INS_CARDBIN">        
+        <![CDATA[
+            INSERT INTO DPS.PC_FLDDCMST (
+                        STR_CD 
+                      , BIN_NO
+                      , APP_S_DT
+                      , SEQ_NO 
+                      , APP_E_DT
+                      , CCOMP_CD
+                      , USE_BAS_FR_AMT
+                      , USE_BAS_TO_AMT
+                      , REDU_AMT
+                      , REG_DATE
+                      , REG_ID   
+                      , MOD_DATE
+                      , MOD_ID
+                      ) VALUES (  
+                        ?
+                      , ?
+                      , ?
+                      , ?
+                      , ?
+                      , ?
+                      , ?
+                      , ?
+                      , ?
+                      , SYSDATE
+                      , ?
+                      , SYSDATE
+                      , ?                    
+                      )
+         ]]>   
+    </query>  
+    
+    <!-- 카드별현장할인내역 수정 -->
+    <query name="UPD_CARDBIN"> 
+        <![CDATA[   
+            UPDATE DPS.PC_FLDDCMST
+               SET APP_S_DT   		= ?
+                 , APP_E_DT  		= ?
+                 , USE_BAS_FR_AMT 	= ?
+                 , USE_BAS_TO_AMT 	= ?
+                 , REDU_AMT     	= ?
+                 , MOD_DATE   = SYSDATE  
+                 , MOD_ID     = ?                  
+             WHERE STR_CD = ?
+               AND BIN_NO = ?
+               AND APP_S_DT = ?
+               AND SEQ_NO = ?
+        ]]>   
+    </query>      
+    
+    <!-- 카드별현장할인내역 삭제 -->
+    <query name="DTL_CARDBIN"> 
+        <![CDATA[   
+            DELETE DPS.PC_FLDDCMST
+             WHERE STR_CD = ?
+               AND BIN_NO = ?
+               AND APP_S_DT = ?
+               AND SEQ_NO = ?
+        ]]>   
+    </query> 
+    
+    <!-- 저장여부 -->
+    <query name="SAVE_YN"> 
+        <![CDATA[   
+			SELECT COUNT(1) AS CNT
+			  FROM DPS.PC_FLDDCMST A
+			 WHERE A.STR_CD = ? 
+			   AND A.BIN_NO = ?
+			   AND A.APP_S_DT <= ? 
+			   AND A.APP_E_DT >= ?
+			   AND A.USE_BAS_FR_AMT <= ? 
+			   AND A.USE_BAS_TO_AMT >= ?
+        ]]>   
+    </query>
+    
+</service>

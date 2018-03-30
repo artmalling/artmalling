@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.07
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal440.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="BIZ_TYPE"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"                 colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NAME"               colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"                 colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_NAME"               colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"                   colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NAME"                 colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_SALE_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_ETC">        
+        <![CDATA[
+            SELECT B.COMM_NAME1   AS BIZ_TYPE
+                 , A.DEPT_CD
+                 , C.ORG_SHORT_NAME                      AS DEPT_NAME
+                 , A.TEAM_CD
+                 , D.ORG_SHORT_NAME            AS TEAM_NAME
+                 , A.PC_CD
+                 , E.ORG_SHORT_NAME   AS PC_NAME
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , SUM(A.TOT_SALE_AMT)           AS TOT_SALE_AMT
+                 , SUM(A.REDU_AMT)               AS REDU_AMT
+                 , SUM(A.NORM_SALE_AMT)          AS NORM_SALE_AMT
+                 , SUM(A.DC_AMT)                 AS DC_AMT
+                 , SUM(A.NET_SALE_AMT)           AS NET_SALE_AMT
+                 , SUM(A.SALE_PROF_AMT)          AS SALE_PROF_AMT
+              FROM (
+                    SELECT B.BIZ_TYPE
+                         , A.STR_CD
+                         , SUBSTR(B.SALE_ORG_CD, 3, 2) AS DEPT_CD
+                         , SUBSTR(B.SALE_ORG_CD, 5, 2) AS TEAM_CD
+                         , SUBSTR(B.SALE_ORG_CD, 7, 2) AS PC_CD
+                         , A.PUMBUN_CD
+                         , B.PUMBUN_NAME
+                         , A.TOT_SALE_AMT
+                         , A.REDU_AMT
+                         , A.NORM_SALE_AMT
+                         , A.DC_AMT
+                         , A.NET_SALE_AMT
+                         , A.SALE_PROF_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_STRPBN B
+                         , DPS.PC_ORGMST C
+                     WHERE A.STR_CD      = B.STR_CD
+                       AND A.PUMBUN_CD   = B.PUMBUN_CD
+                       AND C.ORG_CD      = B.SALE_ORG_CD
+                       AND C.STR_CD     = ?
+                       AND C.DEPT_CD    LIKE ?  || '%'
+                       AND C.TEAM_CD    LIKE ?  || '%'
+                       AND C.PC_CD      LIKE ?  || '%'
+                       AND A.SALE_DT    >= ?
+                       AND A.SALE_DT    <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = C.STR_CD
+                                       AND MYORG.DEPT_CD     = C.DEPT_CD
+                                       AND MYORG.TEAM_CD     = C.TEAM_CD
+                                       AND MYORG.PC_CD       = C.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                   )
+                   ) A
+                 , COM.TC_COMMCODE B
+                 , DPS.PC_ORGMST      C
+                 , DPS.PC_ORGMST      D
+                 , DPS.PC_ORGMST      E
+             WHERE B.COMM_PART = 'P003'
+               AND A.BIZ_TYPE  = B.COMM_CODE
+               AND A.STR_CD || A.DEPT_CD || '000000'        = C.ORG_CD(+)
+               AND A.STR_CD || A.DEPT_CD || A.TEAM_CD || '0000'      = D.ORG_CD(+)
+               AND A.STR_CD || A.DEPT_CD || A.TEAM_CD || A.PC_CD || '00'        = E.ORG_CD(+)
+             GROUP BY
+                   B.COMM_NAME1
+                 , A.BIZ_TYPE
+                 , A.STR_CD
+                 , A.DEPT_CD
+                 , A.TEAM_CD
+                 , A.PC_CD
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , C.ORG_SHORT_NAME
+                 , D.ORG_SHORT_NAME
+                 , E.ORG_SHORT_NAME
+             ORDER BY
+                   A.BIZ_TYPE
+                 , A.STR_CD
+                 , A.DEPT_CD
+                 , A.TEAM_CD
+                 , A.PC_CD
+                 , A.PUMBUN_CD
+        ]]>        
+    </query>
+    <query name="SEL_SALE_ETC2">        
+        <![CDATA[
+            SELECT B.COMM_NAME1   AS BIZ_TYPE
+                 , A.DEPT_CD
+                 , C.ORG_SHORT_NAME                      AS DEPT_NAME
+                 , A.TEAM_CD
+                 , D.ORG_SHORT_NAME            AS TEAM_NAME
+                 , A.PC_CD
+                 , E.ORG_SHORT_NAME   AS PC_NAME
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , SUM(A.TOT_SALE_AMT)           AS TOT_SALE_AMT
+                 , SUM(A.REDU_AMT)               AS REDU_AMT
+                 , SUM(A.NORM_SALE_AMT)          AS NORM_SALE_AMT
+                 , SUM(A.DC_AMT)                 AS DC_AMT
+                 , SUM(A.NET_SALE_AMT)           AS NET_SALE_AMT
+                 , SUM(A.SALE_PROF_AMT)          AS SALE_PROF_AMT
+              FROM (
+                    SELECT B.BIZ_TYPE
+                         , A.STR_CD
+                         , SUBSTR(B.BUY_ORG_CD, 3, 2) AS DEPT_CD
+                         , SUBSTR(B.BUY_ORG_CD, 5, 2) AS TEAM_CD
+                         , SUBSTR(B.BUY_ORG_CD, 7, 2) AS PC_CD
+                         , A.PUMBUN_CD
+                         , B.PUMBUN_NAME
+                         , A.TOT_SALE_AMT
+                         , A.REDU_AMT
+                         , A.NORM_SALE_AMT
+                         , A.DC_AMT
+                         , A.NET_SALE_AMT
+                         , A.SALE_PROF_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_STRPBN B
+                         , DPS.PC_ORGMST C
+                     WHERE A.STR_CD      = B.STR_CD
+                       AND A.PUMBUN_CD   = B.PUMBUN_CD
+                       AND C.ORG_CD      = B.BUY_ORG_CD
+                       AND C.STR_CD     = ?
+                       AND C.DEPT_CD    LIKE ?  || '%'
+                       AND C.TEAM_CD    LIKE ?  || '%'
+                       AND C.PC_CD      LIKE ?  || '%'
+                       AND A.SALE_DT    >= ?
+                       AND A.SALE_DT    <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = C.STR_CD
+                                       AND MYORG.DEPT_CD     = C.DEPT_CD
+                                       AND MYORG.TEAM_CD     = C.TEAM_CD
+                                       AND MYORG.PC_CD       = C.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                   )
+                   ) A
+                 , COM.TC_COMMCODE B
+                 , DPS.PC_ORGMST      C
+                 , DPS.PC_ORGMST      D
+                 , DPS.PC_ORGMST      E
+             WHERE B.COMM_PART = 'P003'
+               AND A.BIZ_TYPE  = B.COMM_CODE
+               AND A.STR_CD || A.DEPT_CD || '000000'        = C.ORG_CD(+)
+               AND A.STR_CD || A.DEPT_CD || A.TEAM_CD || '0000'      = D.ORG_CD(+)
+               AND A.STR_CD || A.DEPT_CD || A.TEAM_CD || A.PC_CD || '00'        = E.ORG_CD(+)
+             GROUP BY
+                   B.COMM_NAME1
+                 , A.BIZ_TYPE
+                 , A.STR_CD
+                 , A.DEPT_CD
+                 , A.TEAM_CD
+                 , A.PC_CD
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , C.ORG_SHORT_NAME
+                 , D.ORG_SHORT_NAME
+                 , E.ORG_SHORT_NAME
+             ORDER BY
+                   A.BIZ_TYPE
+                 , A.STR_CD
+                 , A.DEPT_CD
+                 , A.TEAM_CD
+                 , A.PC_CD
+                 , A.PUMBUN_CD
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_ETC_TEMP">        
+        <![CDATA[
+             
+			SELECT B.COMM_NAME1   AS BIZ_TYPE
+			     , A.DEPT_CD
+			     , (SELECT ORG_SHORT_NAME FROM DPS.PC_ORGMST WHERE ORG_CD = A.STR_CD || A.DEPT_CD || '000000')                       AS DEPT_NAME
+			     , A.TEAM_CD
+			     , (SELECT ORG_SHORT_NAME FROM DPS.PC_ORGMST WHERE ORG_CD = A.STR_CD || A.DEPT_CD || A.TEAM_CD || '0000')            AS TEAM_NAME
+			     , A.PC_CD
+			     , (SELECT ORG_SHORT_NAME FROM DPS.PC_ORGMST WHERE ORG_CD = A.STR_CD || A.DEPT_CD || A.TEAM_CD || A.PC_CD || '00')   AS PC_NAME
+			     , A.PUMBUN_CD
+			     , A.PUMBUN_NAME
+			     , SUM(A.TOT_SALE_AMT)           AS TOT_SALE_AMT
+			     , SUM(A.REDU_AMT)               AS REDU_AMT
+			     , SUM(A.NORM_SALE_AMT)          AS NORM_SALE_AMT
+			     , SUM(A.DC_AMT)                 AS DC_AMT
+			     , SUM(A.NET_SALE_AMT)           AS NET_SALE_AMT
+			     , SUM(A.SALE_PROF_AMT)          AS SALE_PROF_AMT
+			  FROM (
+			        SELECT B.BIZ_TYPE
+			             , A.STR_CD
+			             , SUBSTR(A.ORG_CD, 3, 2) AS DEPT_CD
+			             , SUBSTR(A.ORG_CD, 5, 2) AS TEAM_CD
+			             , SUBSTR(A.ORG_CD, 7, 2) AS PC_CD
+			             , A.PUMBUN_CD
+			             , B.PUMBUN_NAME
+			             , A.TOT_SALE_AMT
+			             , A.REDU_AMT
+			             , A.NORM_SALE_AMT
+			             , A.DC_AMT
+			             , A.NET_SALE_AMT
+			             , A.SALE_PROF_AMT
+			          FROM DPS.PS_DAYPBN A
+			             , DPS.PC_STRPBN B
+			             , DPS.PC_ORGMST C
+			         WHERE A.STR_CD      = B.STR_CD
+			           AND A.PUMBUN_CD   = B.PUMBUN_CD
+			           AND A.ORG_CD      = C.ORG_CD
+			           AND C.STR_CD     = ?
+                       AND C.DEPT_CD    LIKE ?  || '%'
+                       AND C.TEAM_CD    LIKE ?  || '%'
+                       AND C.PC_CD      LIKE ?  || '%'
+                       AND A.SALE_DT    >= ?
+                       AND A.SALE_DT    <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = C.STR_CD
+                                       AND MYORG.DEPT_CD     = C.DEPT_CD
+                                       AND MYORG.TEAM_CD     = C.TEAM_CD
+                                       AND MYORG.PC_CD       = C.PC_CD
+                                       AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                   )
+			       ) A
+			     , COM.TC_COMMCODE B
+			 WHERE B.COMM_PART = 'P003'
+			   AND A.BIZ_TYPE  = B.COMM_CODE
+			 GROUP BY
+			       B.COMM_NAME1
+			     , A.BIZ_TYPE
+			     , A.STR_CD
+			     , A.DEPT_CD
+			     , A.TEAM_CD
+			     , A.PC_CD
+			     , A.PUMBUN_CD
+			     , A.PUMBUN_NAME
+			 ORDER BY
+			       A.BIZ_TYPE
+                 , A.STR_CD
+                 , A.DEPT_CD
+                 , A.TEAM_CD
+                 , A.PC_CD
+                 , A.PUMBUN_CD
+
+            
+        ]]>        
+    </query>
+    
+</service>

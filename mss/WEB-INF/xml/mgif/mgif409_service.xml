@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif409.mg">
+<!-- 상품권 종류 -->   
+    <gauce name="H_GIFT_TYPE_CD"> 
+        <column colName="CODE"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+     <!-- 상품권 종류 -->
+    <query name="SEL_GIFT_TYPE_CD">
+        <![CDATA[
+           SELECT GIFT_TYPE_CD     AS CODE
+                , GIFT_TYPE_NAME   AS NAME
+             FROM MSS.MG_GIFTTPMST
+            WHERE GIFT_TYPE_FLAG = '01' 
+         ORDER BY CODE
+        ]]>
+    </query> 
+    
+    <!-- 금종 -->   
+    <gauce name="H_GIFT_AMT_TYPE"> 
+        <column colName="CODE"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+     <!-- 금종 -->
+    <query name="SEL_GIFT_AMT_TYPE">
+        <![CDATA[
+           SELECT GIFT_AMT_TYPE AS CODE
+                , GIFT_AMT_NAME AS NAME
+             FROM MSS.MG_GIFTAMTMST
+            WHERE ISSUE_TYPE = '1'
+              AND GIFT_TYPE_CD = ?
+            UNION ALL
+           SELECT '%' AS CODE
+                , '전체' AS NAME
+             FROM DUAL
+         ORDER BY CODE
+        ]]>
+    </query> 
+    
+    <!-- 점별 상품권 재고조회 -->   
+    <gauce name="H_MASTER">  
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING"  size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PREV_QTY"          colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PREV_STBOX_QTY"    colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="IN_QTY"            colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="REUSE_IN_QTY"      colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RFD_OUT_QTY"       colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_QTY"          colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="EXCH_SALE_QTY"     colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="POS_PREP_QTY"      colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_QTY"         colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_POUT_QTY"      colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="SPS_POUT_QTY"      colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="POUT_QTY"          colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NOR_DRAWL_QTY"     colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="VEN_DRAWL_QTY"     colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EXCH_DRAWL_QTY"    colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="RFD_DRAWL_QTY"     colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="REUSE_IN_QTY_M"    colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="STBOX_PREV_QTY"    colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="QTY"               colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PREV_DRAWL_QTY"    colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NON_DRAWL_QTY"    colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SUM_DRAWL_QTY"    colType="TB_DECIMAL"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PREV_AMT"          colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PREV_STBOX_AMT"    colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="IN_AMT"            colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="REUSE_IN_AMT"      colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RFD_OUT_AMT"       colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_AMT"          colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+        <column colName="EXCH_SALE_AMT"     colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="POS_PREP_AMT"      colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_AMT"         colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="ACC_POUT_AMT"      colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SPS_POUT_AMT"      colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="POUT_AMT"          colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NOR_DRAWL_AMT"     colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="VEN_DRAWL_AMT"     colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EXCH_DRAWL_AMT"    colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="RFD_DRAWL_AMT"     colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="REUSE_IN_AMT_M"    colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="STBOX_PREV_AMT"    colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="AMT"               colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PREV_DRAWL_AMT"    colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="NON_DRAWL_AMT"     colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SUM_DRAWL_AMT"     colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_Q"     colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_A"     colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 점별 상품권 재고조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[  
+           
+           
+           SELECT MSS.GIFT_AMT_TYPE
+                , MSS.GIFT_AMT_NAME
+                /*****************************************************************************************/
+                /*                              수           량                                          */                 
+                /*****************************************************************************************/
+                /* 전월이월 */
+                , SUM(MSS.PREV_QTY)                             AS PREV_QTY             -- 전일기초수량
+                , SUM(MSS.PREV_STBOX_QTY)                       AS PREV_STBOX_QTY       -- 전일금고기초수량
+                /* 입고 */
+                , SUM(MSS.IN_QTY)                               AS IN_QTY               -- 입고수량
+                , SUM(MSS.REUSE_IN_QTY)                         AS REUSE_IN_QTY         -- 재사용입고수량
+                /* 출고 */
+                , SUM(MSS.RFD_OUT_QTY)                          AS RFD_OUT_QTY          -- 반품출고수량
+                , SUM(MSS.SALE_QTY)                             AS SALE_QTY             -- 정상판매수량
+                , SUM(MSS.EXCH_SALE_QTY)                        AS EXCH_SALE_QTY        -- 교환판매수량
+                , SUM(MSS.POS_PREP_QTY)                         AS POS_PREP_QTY         -- POS준비금
+                , SUM(MSS.EVENT_QTY)                            AS EVENT_QTY            -- 사은행사 지급용
+                , SUM(MSS.ACC_POUT_QTY)                         AS ACC_POUT_QTY         -- 재무강제불출
+                , SUM(MSS.SPS_POUT_QTY)                         AS SPS_POUT_QTY         -- 특판강제불출
+                --, SUM(MSS.STR_DRAWL_QTY)                        AS STR_DRAWL_QTY      -- 판매점기준 회수수량
+                
+                /* 불출 자료 */
+                , SUM(MSS.POUT_QTY)                             AS POUT_QTY             -- DESK 판매용
+                /* 회수 자료 */
+                , SUM(MSS.NOR_DRAWL_QTY)                        AS NOR_DRAWL_QTY        -- 정상회수
+                , SUM(MSS.VEN_DRAWL_QTY)                        AS VEN_DRAWL_QTY        -- 가맹점회수
+                , SUM(MSS.EXCH_DRAWL_QTY)                       AS EXCH_DRAWL_QTY       -- 교환회수
+                , SUM(MSS.RFD_DRAWL_QTY)                        AS RFD_DRAWL_QTY        -- 반품회수
+                , SUM(MSS.REUSE_DRAWL_QTY)                      AS REUSE_DRAWL_QTY      -- 재사용회수
+                /* 금고현재고 */
+                /* 금고이월재고 + 총입고수량 - 총불출수량  */
+                , SUM(MSS.PREV_STBOX_QTY) + SUM(TOT_IN_QTY) - SUM(TOT_POUT_QTY)      AS STBOX_QTY
+                /* 현재고 */
+                /* 이월재고 + 총입고수량 - 총출고수량  */
+                , SUM(MSS.PREV_QTY) + SUM(TOT_IN_QTY) - SUM(TOT_OUT_QTY)             AS STK_QTY
+                /* 현재 미회수내역 */
+                /* 기초미회수금액 + 기간판매(정상+교환판매) + 기간불출(POS준비금 + 사은행사지급 + 재무강제불출) - 판매점기준회수 */
+                , SUM(MSS.PREV_DRAWL_QTY)                                           AS PREV_DRAWL_QTY       -- 기초미회수
+                , (
+                    (SUM(MSS.SALE_QTY) + SUM(MSS.EXCH_SALE_QTY)) 
+                  + (SUM(MSS.POS_PREP_QTY)  + SUM(MSS.EVENT_QTY) + SUM(MSS.ACC_POUT_QTY) + SUM(MSS.SPS_POUT_QTY)) 
+                  - (SUM(MSS.STR_DRAWL_QTY)))                                       AS NON_DRAWL_QTY        -- 당기 미회수
+                , SUM(MSS.PREV_DRAWL_QTY) 
+                  + (SUM(MSS.SALE_QTY)      + SUM(MSS.EXCH_SALE_QTY)) 
+                  + (SUM(MSS.POS_PREP_QTY)  + SUM(MSS.EVENT_QTY) + SUM(MSS.ACC_POUT_QTY) + SUM(MSS.SPS_POUT_QTY)) 
+                  - (SUM(MSS.STR_DRAWL_QTY))                                         AS SUM_DRAWL_QTY       -- 누적 미회수
+   
+                /*****************************************************************************************/
+                /*                              금           액                                          */                 
+                /*****************************************************************************************/
+                /* 전월이월 */
+                , SUM(MSS.PREV_QTY)         * MSS.GIFTCERT_AMT  AS PREV_AMT             -- 전일기초
+                , SUM(MSS.PREV_STBOX_QTY)   * MSS.GIFTCERT_AMT  AS PREV_STBOX_AMT       -- 금고 전일기초
+                /* 입고 */
+                , SUM(MSS.IN_QTY)           * MSS.GIFTCERT_AMT  AS IN_AMT               -- 입고
+                , SUM(MSS.REUSE_IN_QTY)     * MSS.GIFTCERT_AMT  AS REUSE_IN_AMT         -- 재사용입고
+                /* 출고 */
+                , SUM(MSS.RFD_OUT_QTY)      * MSS.GIFTCERT_AMT  AS RFD_OUT_AMT          -- 반품출고
+                , SUM(MSS.SALE_QTY)         * MSS.GIFTCERT_AMT  AS SALE_AMT             -- 정상판매
+                , SUM(MSS.EXCH_SALE_QTY)    * MSS.GIFTCERT_AMT  AS EXCH_SALEP_AMT       -- 교환판매
+                , SUM(MSS.POS_PREP_QTY)     * MSS.GIFTCERT_AMT  AS POS_PREP_AMT         -- POS 준비금
+                , SUM(MSS.EVENT_QTY)        * MSS.GIFTCERT_AMT  AS EVENT_AMT            -- 사은행사지급용
+                , SUM(MSS.ACC_POUT_QTY)     * MSS.GIFTCERT_AMT  AS ACC_POUT_QTY         -- 재무강제불출
+                , SUM(MSS.SPS_POUT_QTY)     * MSS.GIFTCERT_AMT  AS SPS_POUT_QTY         -- 특판강제불출
+                --, SUM(MSS.STR_DRAWL_QTY)  * MSS.GIFTCERT_AMT  AS STR_DRAWL_QTY        -- 판매점기준 회수수량
+                
+                /* 불출 */
+                , SUM(MSS.POUT_QTY)         * MSS.GIFTCERT_AMT  AS POUT_AMT             -- DESK판매용
+                /* 회수 */
+                , SUM(MSS.NOR_DRAWL_QTY)    * MSS.GIFTCERT_AMT  AS NOR_DRAWL_AMT        -- 정상회수
+                , SUM(MSS.VEN_DRAWL_QTY)    * MSS.GIFTCERT_AMT  AS VEN_DRAWL_AMT        -- 가맹점회수
+                , SUM(MSS.EXCH_DRAWL_QTY)   * MSS.GIFTCERT_AMT  AS EXCH_DRAWL_AMT       -- 교환회수
+                , SUM(MSS.RFD_DRAWL_QTY)    * MSS.GIFTCERT_AMT  AS RFD_DRAWL_AMT        -- 반품회수
+                , SUM(MSS.REUSE_DRAWL_QTY)  * MSS.GIFTCERT_AMT  AS REUSE_DRAWL_AMT      -- 재사용회수
+                /* 금고현재고 */
+                /* 금고이월재고 + 총입고수량 - 총불출수량  */
+                , (SUM(MSS.PREV_STBOX_QTY) + SUM(TOT_IN_QTY) - SUM(TOT_POUT_QTY))   * MSS.GIFTCERT_AMT  AS STBOX_PREV_AMT
+                /* 현재고 */
+                /* 이월재고 + 총입고수량 - 총출고수량  */
+                , (SUM(MSS.PREV_QTY) + SUM(TOT_IN_QTY) - SUM(TOT_OUT_QTY))    * MSS.GIFTCERT_AMT  AS STK_AMT  
+                /* 현재 미회수내역 */
+                /* 
+                      기초미회수금액 
+                    + 기간판매(정상+교환판매) 
+                    + 기간불출(POS준비금 + 사은행사지급 + 재무강제불출) 
+                    - 판매점기준회수 
+                */
+                , SUM(MSS.PREV_DRAWL_QTY)          * MSS.GIFTCERT_AMT         AS PREV_DRAWL_AMT
+                , (
+                    (SUM(MSS.SALE_QTY) + SUM(MSS.EXCH_SALE_QTY)) 
+                  + (SUM(MSS.POS_PREP_QTY)  + SUM(MSS.EVENT_QTY) + SUM(MSS.ACC_POUT_QTY)  + SUM(MSS.SPS_POUT_QTY)) 
+                  - (SUM(MSS.STR_DRAWL_QTY)))       * MSS.GIFTCERT_AMT          AS NON_DRAWL_AMT 
+                , (SUM(MSS.PREV_DRAWL_QTY) 
+                  + (SUM(MSS.SALE_QTY)      + SUM(MSS.EXCH_SALE_QTY)) 
+                  + (SUM(MSS.POS_PREP_QTY)  + SUM(MSS.EVENT_QTY) + SUM(MSS.ACC_POUT_QTY) + SUM(MSS.SPS_POUT_QTY)) 
+                  - (SUM(MSS.STR_DRAWL_QTY)))       * MSS.GIFTCERT_AMT          AS SUM_DRAWL_AMT
+                , SUM(MSS.SALE_QTY) + SUM(MSS.EXCH_SALE_QTY) + SUM(MSS.POS_PREP_QTY) + SUM(MSS.EVENT_QTY) + SUM(MSS.ACC_POUT_QTY) AS SUM_Q
+                , (SUM(MSS.SALE_QTY) * MSS.GIFTCERT_AMT) + (SUM(MSS.EXCH_SALE_QTY) * MSS.GIFTCERT_AMT) + (SUM(MSS.POS_PREP_QTY) * MSS.GIFTCERT_AMT) + (SUM(MSS.EVENT_QTY) * MSS.GIFTCERT_AMT) + (SUM(MSS.ACC_POUT_QTY) * MSS.GIFTCERT_AMT) AS SUM_A
+             FROM (
+                   SELECT AMT.GIFT_TYPE_CD 
+                        , AMT.GIFT_AMT_TYPE 
+                        , AMT.GIFT_AMT_NAME
+                        , AMT.ISSUE_TYPE 
+                        , MAX(AMT.GIFTCERT_AMT) AS GIFTCERT_AMT
+                        , MSS.FN_GET_PREV_QTY('MGIF406_1', ?, ?, AMT.GIFT_AMT_TYPE, AMT.GIFT_TYPE_CD, AMT.ISSUE_TYPE)  AS PREV_QTY 
+                        , MSS.FN_GET_PREV_QTY('MGIF406_2', ?, ?, AMT.GIFT_AMT_TYPE, AMT.GIFT_TYPE_CD, AMT.ISSUE_TYPE)  AS PREV_STBOX_QTY
+                        , MSS.FN_GET_PREV_QTY('MGIF406_3', ?, ?, AMT.GIFT_AMT_TYPE, AMT.GIFT_TYPE_CD, AMT.ISSUE_TYPE)  AS PREV_DRAWL_QTY
+                        , SUM(NVL(STK.IN_QTY        , 0))       AS IN_QTY             -- 입고 : 점입고수량
+                        , SUM(NVL(STK.REUSE_IN_QTY  , 0))       AS REUSE_IN_QTY       -- 입고 : 점재사용입고수량
+                        , SUM(NVL(STK.RFD_OUT_QTY   , 0))       AS RFD_OUT_QTY        -- 출고 : 반품출고
+                        , SUM(NVL(STK.SALE_QTY      , 0)) + SUM(NVL(STK.RFD_DRAWL_QTY , 0))       AS SALE_QTY           -- 출고 : 판매(판매-반품)
+                        , SUM(NVL(STK.EXCH_SALE_QTY , 0))       AS EXCH_SALE_QTY      -- 출고 : 교환판매
+                        , SUM(NVL(STK.POS_PREP_QTY  , 0))       AS POS_PREP_QTY       -- 출고 : POS준비금
+                        , SUM(NVL(STK.EVENT_QTY     , 0))       AS EVENT_QTY          -- 출고 : 사은행사 지급용
+                        , SUM(NVL(STK.ACC_POUT_QTY  , 0))       AS ACC_POUT_QTY       -- 출고 : 재무강제불출
+                        , SUM(NVL(STK.SPS_POUT_QTY  , 0))       AS SPS_POUT_QTY       -- 출고 : 특판강제불출
+                        , SUM(NVL(STK.POUT_QTY      , 0))       AS POUT_QTY           -- 불출 : DESK판매용
+                        , SUM(NVL(STK.NOR_DRAWL_QTY , 0))       AS NOR_DRAWL_QTY      -- 회수 : 정상회수
+                        , SUM(NVL(STK.VEN_DRAWL_QTY , 0))       AS VEN_DRAWL_QTY      -- 회수 : 가맹점회수
+                        , SUM(NVL(STK.EXCH_DRAWL_QTY, 0))       AS EXCH_DRAWL_QTY     -- 회수 : 교환회수
+                        , SUM(NVL(STK.RFD_DRAWL_QTY , 0))       AS RFD_DRAWL_QTY      -- 회수 : 판매반품회수
+                        , (SUM(NVL(STK.REUSE_IN_QTY , 0)) * -1) AS REUSE_DRAWL_QTY    -- 회수 : 재사용회수
+                        , SUM(NVL(STK.STR_DRAWL_QTY , 0))       AS STR_DRAWL_QTY      -- 판매점기준 총회수수량
+                        /* 입고합계 : 입고 + 재사용입고 */
+                        , (SUM(NVL(STK.IN_QTY, 0)) + SUM(NVL(STK.REUSE_IN_QTY, 0))) AS TOT_IN_QTY     
+                        /* 출고합계 : 반품출고 + 정상판매 + 교환판매 + POS준비금 + 사은행사지급 + 재무강제불출 + 판매반품회수*/
+                        , (SUM(NVL(STK.RFD_OUT_QTY, 0)) + SUM(NVL(STK.SALE_QTY, 0)) + SUM(NVL(STK.EXCH_SALE_QTY, 0)) + SUM(NVL(STK.POS_PREP_QTY, 0)) + SUM(NVL(STK.EVENT_QTY, 0)) + SUM(NVL(STK.ACC_POUT_QTY, 0)) + SUM(NVL(STK.SPS_POUT_QTY, 0)) + SUM(NVL(STK.RFD_DRAWL_QTY, 0))) AS TOT_OUT_QTY
+                        /* 불출합계 : 반품출고 + POS준비금 + 사은행사지급 + DESK판매용 + 재무강제불출 */
+                        , (SUM(NVL(STK.RFD_OUT_QTY, 0)) + SUM(NVL(STK.POS_PREP_QTY, 0)) + SUM(NVL(STK.EVENT_QTY, 0)) + SUM(NVL(STK.POUT_QTY, 0)) + SUM(NVL(STK.ACC_POUT_QTY, 0)) + SUM(NVL(STK.SPS_POUT_QTY, 0)))   AS TOT_POUT_QTY
+                     FROM (
+                           SELECT * 
+                             FROM MSS.MG_STKDT 
+                            WHERE STR_CD = ?
+                              AND STK_DT BETWEEN ? AND ?
+                          ) STK
+                        , MSS.MG_GIFTAMTMST AMT
+                    WHERE STK.GIFT_TYPE_CD(+) = AMT.GIFT_TYPE_CD
+                      AND STK.GIFT_AMT_TYPE(+) = AMT.GIFT_AMT_TYPE
+                      AND STK.ISSUE_TYPE(+) = AMT.ISSUE_TYPE
+                      AND AMT.GIFT_TYPE_CD  = ?
+                      AND AMT.GIFT_AMT_TYPE LIKE ? || '%' 
+                      AND AMT.USE_YN = 'Y'
+                    GROUP BY AMT.GIFT_TYPE_CD 
+                        , AMT.GIFT_AMT_TYPE 
+                        , AMT.GIFT_AMT_NAME
+                        , AMT.ISSUE_TYPE  
+                 ) MSS
+         GROUP BY MSS.GIFT_AMT_TYPE
+                , MSS.GIFT_AMT_NAME
+                , MSS.GIFTCERT_AMT
+         ORDER BY MSS.GIFT_AMT_TYPE 
+        ]]>
+    </query> 
+</service>

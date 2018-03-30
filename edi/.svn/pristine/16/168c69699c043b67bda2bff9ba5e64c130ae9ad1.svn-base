@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal109.es">
+    
+   
+    <!-- 대비기간 가져오기 조회 -->
+    <query name="SEL_CMPR_DT">
+    <![CDATA[
+		SELECT NVL(MAX(CMPR_DT), TO_CHAR(ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'),-12), 'YYYYMMDD')) AS S_DATE2
+		  FROM DPS.PS_SCHEDULE
+		 WHERE STR_CD  = ?
+		   AND SALE_DT = ?
+		 ]]>
+	</query>
+	
+	<query name="SEL_CMPR_DT2">
+    <![CDATA[
+		SELECT NVL(MAX(CMPR_DT), TO_CHAR(ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'),-12), 'YYYYMMDD')) AS E_DATE2
+		  FROM DPS.PS_SCHEDULE
+		 WHERE STR_CD  = ?
+		   AND SALE_DT = ?
+		 ]]>
+	</query>                  
+
+	<!-- 기간별판매정보 조회 (정상+행사) 체크 상태-->    
+    <query name="SEL_DAYMGPBN">
+        <![CDATA[
+    SELECT X.PUMBUN_CD                    AS PUMBUN_CD
+         , MAX(X.PUMBUN_NAME)             AS PUMBUN_NAME
+         , X.EVENT_FLAG                   AS EVENT_FLAG
+         , MAX(X.EVENT_NM)                AS EVENT_NM
+         , SUM(X.SALE_QTY)                AS SALE_QTY
+         , SUM(X.TOT_SALE_AMT)            AS TOT_SALE_AMT
+         , SUM(X.REDU_AMT)                AS REDU_AMT
+         , SUM(X.NORM_SALE_AMT)           AS NORM_SALE_AMT
+         , SUM(X.COMP_NORM_SALE_AMT)      AS COMP_NORM_SALE_AMT
+         , (CASE WHEN  SUM(X.COMP_NORM_SALE_AMT) = 0 THEN 0
+            ELSE ROUND(((SUM(X.NORM_SALE_AMT)- SUM(X.COMP_NORM_SALE_AMT))/SUM(X.COMP_NORM_SALE_AMT))*100,2)
+            END)                          AS SALEIRATE
+         , SUM(X.DC_AMT)                  AS DC_AMT
+         , SUM(X.NET_SALE_AMT)            AS NET_SALE_AMT
+         , SUM(X.SALE_DAY)                AS SALE_DAY
+         , SUM(X.COMP_SALE_DAY)           AS COMP_SALE_DAY
+  FROM (
+        SELECT A.PUMBUN_CD                            AS PUMBUN_CD
+             , MAX(B.PUMBUN_NAME)                     AS PUMBUN_NAME
+             , '2'                                    AS EVENT_FLAG
+             , '행사'                                  AS EVENT_NM
+             , 0                                      AS SALE_QTY
+             , 0 		                              AS TOT_SALE_AMT
+             , 0                                      AS REDU_AMT
+             , 0                                      AS NORM_SALE_AMT
+             , 0                                      AS COMP_NORM_SALE_AMT
+             , 0                                      AS SALEIRATE
+             , 0                                      AS DC_AMT
+             , 0                                      AS NET_SALE_AMT
+             , 0                                      AS SALE_DAY
+             , 0                                      AS COMP_SALE_DAY
+          FROM DPS.PS_DAYMGPBN A
+             , DPS.PC_STRPBN B
+         WHERE A.SALE_DT  >= ?                         -- 매출 일자(시작일)
+           AND A.SALE_DT  <= ?                         -- 매출 일자(종료일)
+           AND A.STR_CD    = ?                         -- 점
+           AND A.EVENT_CD  = '00000000000'
+           AND B.VEN_CD    = ?                         -- 협력사 코드
+           AND A.PUMBUN_CD LIKE ? || '%'
+           AND A.STR_CD    = B.STR_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD
+         GROUP BY A.PUMBUN_CD
+UNION ALL
+        SELECT A.PUMBUN_CD                    AS PUMBUN_CD
+             , MAX(B.PUMBUN_NAME)             AS PUMBUN_NAME
+             , '1'                            AS EVENT_FLAG
+             , '정상'                          AS EVENT_NM
+             , SUM(NVL(A.SALE_QTY, 0))        AS SALE_QTY
+			 , SUM(NVL(A.TOT_SALE_AMT,0))     AS TOT_SALE_AMT
+             , SUM(NVL(A.REDU_AMT, 0))        AS REDU_AMT
+             , SUM(NVL(A.NORM_SALE_AMT, 0))   AS NORM_SALE_AMT
+             , 0                              AS COMP_NORM_SALE_AMT
+             , 0                              AS SALEIRATE
+             , SUM(NVL(A.DC_AMT, 0))          AS DC_AMT
+             , SUM(NVL(A.NET_SALE_AMT, 0))    AS NET_SALE_AMT
+             , (TO_DATE(?,'YYYYMMDD') - TO_DATE(?,'YYYYMMDD') + 1) AS SALE_DAY -- 매출종료시작
+             , 0                              AS COMP_SALE_DAY
+          FROM DPS.PS_DAYMGPBN A
+             , DPS.PC_STRPBN B
+         WHERE A.SALE_DT  >= ?                         -- 매출 일자(시작일)
+           AND A.SALE_DT  <= ?                         -- 매출 일자(종료일)
+           AND A.STR_CD    = ?                         -- 점
+           AND A.EVENT_CD  = '00000000000'
+           AND B.VEN_CD    = ?                         -- 협력사 코드
+           AND A.PUMBUN_CD LIKE ? || '%'
+           AND A.STR_CD    = B.STR_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD
+         GROUP BY A.PUMBUN_CD
+UNION ALL
+        SELECT A.PUMBUN_CD                    AS PUMBUN_CD
+             , MAX(B.PUMBUN_NAME)             AS PUMBUN_NAME
+             , '1'                            AS EVENT_FLAG
+             , '정상'                          AS EVENT_NM
+             , 0                              AS SALE_QTY
+             , 0                              AS TOT_SALE_AMT             
+             , 0                              AS REDU_AMT
+             , 0                              AS NORM_SALE_AMT
+             , SUM(NVL(A.NORM_SALE_AMT, 0))   AS COMP_NORM_SALE_AMT
+             , 0                              AS SALEIRATE
+             , 0                              AS DC_AMT
+             , 0                              AS NET_SALE_AMT
+             , 0                              AS SALE_DAY
+             , (TO_DATE(?,'YYYYMMDD') - TO_DATE(?,'YYYYMMDD') + 1) AS COMP_SALE_DAY -- 대비종료시작
+          FROM DPS.PS_DAYMGPBN A
+             , DPS.PC_STRPBN B
+         WHERE A.SALE_DT  >= ?                         -- 대비 일자(시작일)
+           AND A.SALE_DT  <= ?                         -- 대비 일자(종료일)
+           AND A.STR_CD    = ?                         -- 점
+           AND A.EVENT_CD  = '00000000000'
+           AND B.VEN_CD    = ?                         -- 협력사 코드
+           AND A.PUMBUN_CD LIKE ? || '%'
+           AND A.STR_CD    = B.STR_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD
+         GROUP BY A.PUMBUN_CD
+UNION ALL
+        SELECT A.PUMBUN_CD                    AS PUMBUN_CD
+             , MAX(B.PUMBUN_NAME)             AS PUMBUN_NAME
+             , '1'                            AS EVENT_FLAG
+             , '정상'                          AS EVENT_NM
+             , 0                              AS SALE_QTY
+             , 0                              AS TOT_SALE_AMT             
+             , 0                              AS REDU_AMT
+             , 0                              AS NORM_SALE_AMT
+             , 0                              AS COMP_NORM_SALE_AMT
+             , 0                              AS SALEIRATE
+             , 0                              AS DC_AMT
+             , 0                              AS NET_SALE_AMT
+             , 0                              AS SALE_DAY
+             , 0                              AS COMP_SALE_DAY
+          FROM DPS.PS_DAYMGPBN A
+             , DPS.PC_STRPBN B
+         WHERE A.SALE_DT  >= ?                         -- 매출 일자(시작일)
+           AND A.SALE_DT  <= ?                         -- 매출 일자(종료일)
+           AND A.STR_CD    = ?                         -- 점
+           AND A.EVENT_CD  <> '00000000000'
+           AND B.VEN_CD    = ?                         -- 협력사 코드
+           AND A.PUMBUN_CD LIKE ? || '%'
+           AND A.STR_CD    = B.STR_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD
+         GROUP BY A.PUMBUN_CD
+UNION ALL
+        SELECT A.PUMBUN_CD                    AS PUMBUN_CD
+             , MAX(B.PUMBUN_NAME)             AS PUMBUN_NAME
+             , '2'                            AS EVENT_FLAG
+             , '행사'                          AS EVENT_NM
+             , SUM(NVL(A.SALE_QTY, 0))        AS SALE_QTY
+             , SUM(NVL(A.TOT_SALE_AMT,0))     AS TOT_SALE_AMT             
+             , SUM(NVL(A.REDU_AMT, 0))        AS REDU_AMT
+             , SUM(NVL(A.NORM_SALE_AMT, 0))   AS NORM_SALE_AMT
+             , 0                              AS COMP_NORM_SALE_AMT
+             , 0                              AS SALEIRATE
+             , SUM(NVL(A.DC_AMT, 0))          AS DC_AMT
+             , SUM(NVL(A.NET_SALE_AMT, 0))    AS NET_SALE_AMT
+             , (TO_DATE(?,'YYYYMMDD') - TO_DATE(?,'YYYYMMDD') + 1) AS SALE_DAY -- 매출종료시작
+             , 0                              AS COMP_SALE_DAY
+          FROM DPS.PS_DAYMGPBN A
+             , DPS.PC_STRPBN B
+         WHERE A.SALE_DT  >= ?                         -- 매출 일자(시작일)
+           AND A.SALE_DT  <= ?                         -- 매출 일자(종료일)
+           AND A.STR_CD    = ?                         -- 점
+           AND A.EVENT_CD  <> '00000000000'
+           AND B.VEN_CD    = ?                         -- 협력사 코드
+           AND A.PUMBUN_CD LIKE ? || '%'
+           AND A.STR_CD    = B.STR_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD
+         GROUP BY A.PUMBUN_CD
+UNION ALL
+        SELECT A.PUMBUN_CD                    AS PUMBUN_CD
+             , MAX(B.PUMBUN_NAME)             AS PUMBUN_NAME
+             , '2'                            AS EVENT_FLAG
+             , '행사'                          AS EVENT_NM
+             , 0                              AS SALE_QTY
+             , 0                              AS TOT_SALE_AMT             
+             , 0                              AS REDU_AMT
+             , 0                              AS NORM_SALE_AMT
+             , SUM(NVL(A.NORM_SALE_AMT, 0))   AS COMP_NORM_SALE_AMT
+             , 0                              AS SALEIRATE
+             , 0                              AS DC_AMT
+             , 0                              AS NET_SALE_AMT
+             , 0                              AS SALE_DAY
+             , (TO_DATE(?,'YYYYMMDD') - TO_DATE(?,'YYYYMMDD') + 1) AS COMP_SALE_DAY -- 대비종료시작
+          FROM DPS.PS_DAYMGPBN A
+             , DPS.PC_STRPBN B
+         WHERE A.SALE_DT  >= ?                         -- 대비 일자(시작일)
+           AND A.SALE_DT  <= ?                         -- 대비 일자(종료일)
+           AND A.STR_CD    = ?                         -- 점
+           AND A.EVENT_CD  <> '00000000000'
+           AND B.VEN_CD    = ?                         -- 협력사 코드
+           AND A.PUMBUN_CD LIKE ? || '%'
+           AND A.STR_CD    = B.STR_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD
+         GROUP BY A.PUMBUN_CD
+UNION ALL
+        SELECT A.PUMBUN_CD                    AS PUMBUN_CD
+             , MAX(B.PUMBUN_NAME)             AS PUMBUN_NAME
+             , '3'                            AS EVENT_FLAG
+             , '브랜드계'                      AS EVENT_NM
+             , SUM(NVL(A.SALE_QTY, 0))        AS SALE_QTY
+             , SUM(NVL(A.TOT_SALE_AMT,0))     AS TOT_SALE_AMT             
+             , SUM(NVL(A.REDU_AMT, 0))        AS REDU_AMT
+             , SUM(NVL(A.NORM_SALE_AMT, 0))   AS NORM_SALE_AMT
+             , 0                              AS COMP_NORM_SALE_AMT
+             , 0                              AS SALEIRATE
+             , SUM(NVL(A.DC_AMT, 0))          AS DC_AMT
+             , SUM(NVL(A.NET_SALE_AMT, 0))    AS NET_SALE_AMT
+             , (TO_DATE(?,'YYYYMMDD') - TO_DATE(?,'YYYYMMDD') + 1) AS SALE_DAY -- 매출종료시작
+             , 0                              AS COMP_SALE_DAY
+          FROM DPS.PS_DAYMGPBN A
+             , DPS.PC_STRPBN B
+         WHERE A.SALE_DT  >= ?                         -- 매출 일자(시작일)
+           AND A.SALE_DT  <= ?                         -- 매출 일자(종료일)
+           AND A.STR_CD    = ?                         -- 점
+           AND B.VEN_CD    = ?                         -- 협력사 코드
+           AND A.PUMBUN_CD LIKE ? || '%'
+           AND A.STR_CD    = B.STR_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD
+      GROUP BY A.PUMBUN_CD
+UNION ALL
+        SELECT A.PUMBUN_CD                    AS PUMBUN_CD
+             , MAX(B.PUMBUN_NAME)             AS PUMBUN_NAME
+             , '3'                            AS EVENT_FLAG
+             , '브랜드계'                      AS EVENT_NM
+             , 0                              AS SALE_QTY
+             , 0                              AS TOT_SALE_AMT             
+             , 0                              AS REDU_AMT
+             , 0                              AS NORM_SALE_AMT
+             , SUM(NVL(A.NORM_SALE_AMT, 0))   AS COMP_NORM_SALE_AMT
+             , 0                              AS SALEIRATE
+             , 0                              AS DC_AMT
+             , 0                              AS NET_SALE_AMT
+             , 0                              AS SALE_DAY
+             , (TO_DATE(?,'YYYYMMDD') - TO_DATE(?,'YYYYMMDD') + 1) AS COMP_SALE_DAY -- 대비종료시작
+          FROM DPS.PS_DAYMGPBN A
+             , DPS.PC_STRPBN B
+         WHERE A.SALE_DT  >= ?                         -- 대비 일자(시작일)
+           AND A.SALE_DT  <= ?                         -- 대비 일자(종료일)
+           AND A.STR_CD    = ?                         -- 점
+           AND B.VEN_CD    = ?                         -- 협력사 코드
+           AND A.PUMBUN_CD LIKE ? || '%'
+           AND A.STR_CD    = B.STR_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD
+         GROUP BY A.PUMBUN_CD
+               ) X
+         GROUP BY X.PUMBUN_CD
+                , X.EVENT_FLAG
+         ORDER BY X.PUMBUN_CD
+                , X.EVENT_FLAG
+        ]]>
+    </query>       
+    
+    <!-- 기간별판매정보 조회 (정상+행사) 체크 해제-->    
+    <query name="SEL_DAYMGPBN2">
+    	<![CDATA[
+		SELECT X.PUMBUN_CD                    AS PUMBUN_CD
+		     , MAX(X.PUMBUN_NAME)             AS PUMBUN_NAME
+		     , SUM(X.SALE_QTY)                AS SALE_QTY
+		     , SUM(X.TOT_SALE_AMT)            AS TOT_SALE_AMT
+		     , SUM(X.REDU_AMT)                AS REDU_AMT
+		     , SUM(X.NORM_SALE_AMT)           AS NORM_SALE_AMT
+		     , SUM(X.COMP_NORM_SALE_AMT)      AS COMP_NORM_SALE_AMT
+		     , (CASE WHEN  SUM(X.COMP_NORM_SALE_AMT) = 0 THEN 0
+		             ELSE  ROUND(((SUM(X.NORM_SALE_AMT)- SUM(X.COMP_NORM_SALE_AMT))/SUM(X.COMP_NORM_SALE_AMT))*100,2) 
+		        END)                          AS SALEIRATE
+		     , SUM(X.DC_AMT)                  AS DC_AMT
+		     , SUM(X.NET_SALE_AMT)            AS NET_SALE_AMT
+		     , SUM(X.SALE_DAY)                AS SALE_DAY
+		     , SUM(X.COMP_SALE_DAY)           AS COMP_SALE_DAY
+		  FROM (
+		        SELECT A.PUMBUN_CD                    AS PUMBUN_CD
+		             , MAX(B.PUMBUN_NAME)             AS PUMBUN_NAME
+		             , SUM(NVL(A.SALE_QTY, 0))        AS SALE_QTY
+		             , SUM(NVL(A.TOT_SALE_AMT,0))     AS TOT_SALE_AMT
+		             , SUM(NVL(A.REDU_AMT, 0))        AS REDU_AMT
+		             , SUM(NVL(A.NORM_SALE_AMT, 0))   AS NORM_SALE_AMT
+		             , 0                              AS COMP_NORM_SALE_AMT
+		             , 0                              AS SALEIRATE
+		             , SUM(NVL(A.DC_AMT, 0))          AS DC_AMT
+		             , SUM(NVL(A.NET_SALE_AMT, 0))    AS NET_SALE_AMT
+		             , (TO_DATE(?,'YYYYMMDD') - TO_DATE(?,'YYYYMMDD') + 1) AS SALE_DAY
+		             , 0                              AS COMP_SALE_DAY
+		          FROM DPS.PS_DAYMGPBN A
+		             , DPS.PC_STRPBN B
+		         WHERE A.SALE_DT  >= ?					-- 매출 일자(시작일)
+           		   AND A.SALE_DT  <= ?                  -- 매출 일자(종료일)
+		           AND A.STR_CD   = ?
+		           AND A.EVENT_CD = '00000000000'
+		           AND B.VEN_CD   = ?
+		           AND A.PUMBUN_CD LIKE ? || '%'
+		           AND A.STR_CD    = B.STR_CD
+		           AND A.PUMBUN_CD = B.PUMBUN_CD
+		         GROUP BY A.PUMBUN_CD
+		        UNION ALL
+		        SELECT A.PUMBUN_CD                    AS PUMBUN_CD
+		             , MAX(B.PUMBUN_NAME)             AS PUMBUN_NAME
+		             , 0                              AS SALE_QTY
+		             , 0                              AS TOT_SALE_AMT
+		             , 0                              AS REDU_AMT
+		             , 0                              AS NORM_SALE_AMT
+		             , SUM(NVL(A.NORM_SALE_AMT, 0))   AS COMP_NORM_SALE_AMT
+		             , 0                              AS SALEIRATE
+		             , 0                              AS DC_AMT
+		             , 0                              AS NET_SALE_AMT
+		             , 0                              AS SALE_DAY
+		             , (TO_DATE(?,'YYYYMMDD') - TO_DATE(?,'YYYYMMDD') + 1) AS COMP_SALE_DAY
+		          FROM DPS.PS_DAYMGPBN A
+		             , DPS.PC_STRPBN B
+		         WHERE A.SALE_DT >= ?					-- 대비 일자(시작일)
+		           AND A.SALE_DT <= ?					-- 대비 일자(종료일)
+		           AND A.STR_CD  = ?
+		           AND A.EVENT_CD = '00000000000'
+		           AND B.VEN_CD  = ?
+		           AND A.PUMBUN_CD LIKE ? || '%'
+		           AND A.STR_CD    = B.STR_CD
+		           AND A.PUMBUN_CD = B.PUMBUN_CD
+		         GROUP BY A.PUMBUN_CD
+		       ) X
+		 GROUP BY X.PUMBUN_CD
+		 ]]>
+	</query>
+</service>

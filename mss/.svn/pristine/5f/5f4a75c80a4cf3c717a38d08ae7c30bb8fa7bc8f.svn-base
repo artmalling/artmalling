@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다. -->
+<!-- 
+* 작 성 자 : 김성미 
+* 회 사 명 : 한국후지쯔 
+* 작 성 일 : 2011.05.27 
+* 변 경 일 : 
+* 변경내용: 
+* 개 요 : 사은품 지급 등록(제휴카드)  -->
+<service name="/mcae409.mc">
+
+    <!-- 화면 로딩시 카드사 정보 조회 -->
+    <gauce name="H_CARD_COMBO">
+        <column colName="STR_CD"          colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CODE"            colType="TB_STRING" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+	<!-- 화면 로딩시 행사 정보 조회 -->
+	<gauce name="H_EVENT_INFO">
+		<column colName="STR_CD"          colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EVENT_CD"        colType="TB_STRING" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EVENT_NAME"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EVENT_TYPE"      colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_TYPE_NM"   colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EVENT_S_DT"      colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EVENT_E_DT"      colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+
+	<!-- 영수증 정보 조회 -->
+	<gauce name="H_SALE_INFO">
+		<column colName="CHK"             colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PROVIDE_GB_NM"   colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PROVIDE_GB"      colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="STR_CD"          colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_DT"         colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="POS_NO"          colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TRAN_NO"         colType="TB_STRING" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TOT_SALE_AMT"    colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_AMT"        colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DIV_AMT"         colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+    
+	<!-- 사은품 조회 -->
+	<gauce name="H_SKU_LIST">
+		<column colName="CHK"             colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TRG_CD"          colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TRG_NAME"        colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SKU_CD"          colType="TB_STRING" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SKU_NAME"        colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BUY_COST_PRC"    colType="TB_DECIMAL" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+
+    <!-- 매출정보 유무 확인 -->    
+    <gauce name="H_SALECHK">
+        <column colName="CNT"        colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 화면 로딩시 카드사 정보 조회 -->
+    <query name="SEL_CARD_COMBO">
+        <![CDATA[
+        SELECT DISTINCT 
+               A.STR_CD
+             , B.CARD_COMP AS CODE
+             , C.CCOMP_NM  AS NAME
+          FROM MSS.MC_EVTMST A, MSS.MC_CARDCOMP B, DPS.PD_CARDCOMP C, DPS.PC_STREVT D
+        WHERE A.STR_CD = B.STR_CD
+          AND A.EVENT_CD = B.EVENT_CD
+          AND B.CARD_COMP = C.CCOMP_CD
+          AND A.STR_CD = D.STR_CD
+          AND A.EVENT_CD = D.EVENT_CD
+          AND A.EVENT_TYPE = '02'
+          AND A.STR_CD = ?
+          AND ? BETWEEN D.EVENT_S_DT AND D.EVENT_E_DT
+       ORDER BY B.CARD_COMP
+        ]]>
+    </query>
+
+	<!-- 행사 정보 조회  -->
+	<query name="SEL_EVENT_INFO">
+        <![CDATA[
+        SELECT A.STR_CD
+             , A.EVENT_CD
+             , E.EVENT_NAME
+             , A.EVENT_TYPE
+             , COM.FN_GET_COMM_NAME('D','M002',A.EVENT_TYPE) AS EVENT_TYPE_NM
+             , D.EVENT_S_DT
+             , D.EVENT_E_DT
+          FROM MSS.MC_EVTMST A, MSS.MC_CARDCOMP B, DPS.PD_CARDCOMP C, DPS.PC_STREVT D, DPS.PC_EVTMST E
+        WHERE A.STR_CD = B.STR_CD
+          AND A.EVENT_CD = B.EVENT_CD
+          AND B.CARD_COMP = C.CCOMP_CD
+          AND A.STR_CD = D.STR_CD
+          AND A.EVENT_CD = D.EVENT_CD
+          AND A.EVENT_CD = E.EVENT_CD
+          AND A.EVENT_TYPE = '02'
+          AND A.STR_CD = ?
+          AND ? BETWEEN D.EVENT_S_DT AND D.EVENT_E_DT
+          AND B.CARD_COMP = ?
+        ]]>
+	</query>
+
+    <!-- 영수증 정보 조회전 매출정보 유무 확인 -->
+    <query name="SEL_SALECHK">
+        <![CDATA[
+        SELECT COUNT(*) AS CNT 
+          FROM DPS.PS_TRHEADER
+         WHERE STR_CD = ?
+           AND SALE_DT = ?
+           AND POS_NO =?
+           AND TRAN_NO = ?
+        ]]>
+    </query>
+    
+    <!-- 전점 행사 여부 체크 -->
+    <query name="SEL_CHK_ALLBRAND">
+        <![CDATA[
+        SELECT SUM(PUMBUN_CD) AS PUMBUN_CD
+          FROM (SELECT DECODE(PUMBUN_CD, '******', 0 , 1) AS PUMBUN_CD 
+                  FROM MSS.MC_EVTPUMBUN 
+                 WHERE STR_CD = ? 
+                   AND EVENT_CD = ?) 
+        ]]>
+    </query>
+
+	<!-- 영수증 정보 조회 -->
+	<query name="SEL_SALE_INFO">
+        <![CDATA[
+        SELECT DECODE(PRSNT.SEQ_NO,'','T','F') AS CHK
+             , DECODE(PRSNT.SEQ_NO,'','미지급','지급') AS PROVIDE_GB_NM
+             , DECODE(PRSNT.SEQ_NO,'','0','1') AS PROVIDE_GB
+             , SALE.STR_CD
+             , SALE.SALE_DT
+             , SALE.POS_NO
+             , SALE.TRAN_NO
+             , SUM(SALE.SALE_AMT) AS TOT_SALE_AMT
+             , SUM(SALE.APP_RATE_AMT) AS SALE_AMT
+             , 0 AS DIV_AMT
+          FROM 
+             (SELECT A.STR_CD 
+                   , A.SALE_DT
+                   , A.POS_NO
+                   , A.TRAN_NO
+                   , A.NET_SALE_AMT_TAX AS SALE_AMT
+                   , CASE WHEN PSALE_AMT > PAY_AMT THEN PAY_AMT
+                          WHEN PSALE_AMT = PAY_AMT THEN PAY_AMT
+                          WHEN PSALE_AMT < PAY_AMT THEN PSALE_AMT  END AS APP_RATE_AMT
+                FROM (
+                      SELECT A.STR_CD 
+                           , A.SALE_DT
+                           , A.POS_NO
+                           , A.TRAN_NO
+                           , SUM(A.NET_SALE_AMT_TAX) AS NET_SALE_AMT_TAX
+                           , SUM(A.NET_SALE_AMT_TAX * (NVL(B.APP_RATE,100)/100)) AS PSALE_AMT
+                        FROM (
+                              SELECT A.STR_CD
+                                   , A.SALE_DT
+                                   , A.POS_NO
+                                   , A.TRAN_NO
+                                   , A.PUMBUN_CD
+                                   , SUM(NET_SALE_AMT_TAX) AS NET_SALE_AMT_TAX
+                                FROM DPS.PS_DISITEM A, DPS.PS_TRHEADER B,
+                                (SELECT STR_CD
+                                       , PUMBUN_CD 
+                                    FROM MSS.MC_EVTPUMBUN
+                                   WHERE STR_CD = ?
+                                     AND EVENT_CD = ?) C
+                                     , DPS.PC_STRPBN D
+                               WHERE A.STR_CD = B.STR_CD 
+                                 AND A.SALE_DT = B.SALE_DT
+                                 AND A.POS_NO = B.POS_NO
+                                 AND A.TRAN_NO = B.TRAN_NO
+                                 AND A.STR_CD = C.STR_CD
+                                 AND A.PUMBUN_CD = C.PUMBUN_CD
+                                 AND A.STR_CD = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND B.TRAN_FLAG = '0' -- 정상매출 정보만 가능
+                                 AND D.PUMBUN_TYPE = '0'  -- 사은품 지급대상(정상브랜드)
+                                 AND A.REJCT_FLAG = '0'  -- 단품 취소 구분(0: 정상)
+                                 AND A.STR_CD = ?
+                                 AND A.SALE_DT = ?
+                                 AND A.POS_NO = ?
+                                 AND A.TRAN_NO = ?
+                               GROUP BY A.STR_CD
+                                   , A.SALE_DT
+                                   , A.POS_NO
+                                   , A.TRAN_NO
+                                   , A.PUMBUN_CD
+                             ) A
+                             LEFT OUTER JOIN
+                             MSS.MC_APPRATE B
+                          ON A.STR_CD = B.STR_CD
+                         AND A.PUMBUN_CD = B.PUMBUN_CD
+                       GROUP BY A.STR_CD 
+                           , A.SALE_DT
+                           , A.POS_NO
+                           , A.TRAN_NO
+                      ) A, 
+                      (
+                      SELECT STR_CD
+                           , SALE_DT
+                           , POS_NO
+                           , TRAN_NO
+                           , SUM(PAY_AMT) AS PAY_AMT
+                        FROM DPS.PS_DISCARD 
+                       WHERE STR_CD = ? 
+                         AND SALE_DT = ?
+                         AND POS_NO = ?
+                         AND TRAN_NO = ? 
+                         AND CARD_PUBLISH = ?
+                       GROUP BY STR_CD, SALE_DT, POS_NO, TRAN_NO
+                      ) B
+                WHERE A.STR_CD = B.STR_CD
+                  AND A.SALE_DT = B.SALE_DT
+                  AND A.POS_NO = B.POS_NO
+                  AND A.TRAN_NO = B.TRAN_NO) SALE
+              LEFT OUTER JOIN
+              (SELECT A.PRSNT_DT
+                    , B.SEQ_NO
+                    , A.STR_CD
+                    , A.PRSNT_NO
+                    , B.SALE_DT
+                    , B.POS_NO
+                    , B.TRAN_NO
+                    , B.CARD_COMP
+                    , B.SALE_AMT
+                    , B.DIV_AMT
+                 FROM MSS.MC_EVTSKUPRSNT A, MSS.MC_PRSNTRECP B
+                WHERE A.PRSNT_DT = B.PRSNT_DT
+                  AND A.STR_CD = B.STR_CD
+                  AND A.PRSNT_NO = B.PRSNT_NO
+                  AND A.PRSNT_FLAG IN ('1','2')
+                  AND A.CANCEL_GB = '1'
+                  AND B.STR_CD = ?
+                  AND B.SALE_DT = ?
+                  AND B.POS_NO = ?
+                  AND B.TRAN_NO = ?) PRSNT
+            ON SALE.STR_CD = PRSNT.STR_CD
+           AND SALE.SALE_DT = PRSNT.SALE_DT
+           AND SALE.POS_NO = PRSNT.POS_NO
+           AND SALE.TRAN_NO = PRSNT.TRAN_NO
+         GROUP BY PRSNT.SEQ_NO, SALE.STR_CD, SALE.SALE_DT, SALE.POS_NO, SALE.TRAN_NO
+         ]]>
+	</query>
+	
+	<!-- 영수증 정보 조회 : -->
+    <query name="SEL_SALE_INFO_ALL">
+        <![CDATA[
+        SELECT DECODE(PRSNT.SEQ_NO,'','T','F') AS CHK
+           , DECODE(PRSNT.SEQ_NO,'','미지급','지급') AS PROVIDE_GB_NM
+           , DECODE(PRSNT.SEQ_NO,'','0','1') AS PROVIDE_GB
+           , SALE.STR_CD
+           , SALE.SALE_DT
+           , SALE.POS_NO
+           , SALE.TRAN_NO
+           , SUM(SALE.SALE_AMT) AS TOT_SALE_AMT
+           , SUM(SALE.APP_RATE_AMT) AS SALE_AMT
+           , 0 AS DIV_AMT
+        FROM 
+           (SELECT A.STR_CD 
+                 , A.SALE_DT
+                 , A.POS_NO
+                 , A.TRAN_NO
+                 , A.NET_SALE_AMT_TAX AS SALE_AMT
+                 , CASE WHEN PSALE_AMT > PAY_AMT THEN PAY_AMT
+                        WHEN PSALE_AMT = PAY_AMT THEN PAY_AMT
+                        WHEN PSALE_AMT < PAY_AMT THEN PSALE_AMT  END AS APP_RATE_AMT
+              FROM (
+                    SELECT A.STR_CD 
+                         , A.SALE_DT
+                         , A.POS_NO
+                         , A.TRAN_NO
+                         , SUM(A.NET_SALE_AMT_TAX) AS NET_SALE_AMT_TAX
+                         , SUM(A.NET_SALE_AMT_TAX * (NVL(B.APP_RATE,100)/100)) AS PSALE_AMT
+                      FROM (
+                            SELECT A.STR_CD
+                                 , A.SALE_DT
+                                 , A.POS_NO
+                                 , A.TRAN_NO
+                                 , A.PUMBUN_CD
+                                 , SUM(NET_SALE_AMT_TAX) AS NET_SALE_AMT_TAX
+                              FROM DPS.PS_DISITEM A, DPS.PS_TRHEADER B, DPS.PC_STRPBN C
+                             WHERE A.STR_CD = B.STR_CD 
+                               AND A.SALE_DT = B.SALE_DT
+                               AND A.POS_NO = B.POS_NO
+                               AND A.TRAN_NO = B.TRAN_NO
+                               AND A.STR_CD = C.STR_CD
+                               AND A.PUMBUN_CD = C.PUMBUN_CD
+                               AND B.TRAN_FLAG = '0' -- 정상매출 정보만 가능
+                               AND C.PUMBUN_TYPE = '0'  -- 사은품 지급대상(정상브랜드)
+                               AND A.REJCT_FLAG = '0'  -- 단품 취소 구분(0: 정상)
+                               AND A.STR_CD = ?
+                               AND A.SALE_DT = ?
+                               AND A.POS_NO = ?
+                               AND A.TRAN_NO = ?
+                             GROUP BY A.STR_CD
+                                 , A.SALE_DT
+                                 , A.POS_NO
+                                 , A.TRAN_NO
+                                 , A.PUMBUN_CD
+                           ) A
+                           LEFT OUTER JOIN
+                           MSS.MC_APPRATE B
+                        ON A.STR_CD = B.STR_CD
+                       AND A.PUMBUN_CD = B.PUMBUN_CD
+                     GROUP BY A.STR_CD 
+                         , A.SALE_DT
+                         , A.POS_NO
+                         , A.TRAN_NO
+                    ) A, 
+                    (
+                    SELECT STR_CD
+                         , SALE_DT
+                         , POS_NO
+                         , TRAN_NO
+                         , SUM(PAY_AMT) AS PAY_AMT
+                      FROM DPS.PS_DISCARD 
+                     WHERE STR_CD = ?
+                       AND SALE_DT = ?
+                       AND POS_NO = ?
+                       AND TRAN_NO = ?
+                       AND CARD_PUBLISH = ?
+                     GROUP BY STR_CD, SALE_DT, POS_NO, TRAN_NO
+                    ) B
+              WHERE A.STR_CD = B.STR_CD
+                AND A.SALE_DT = B.SALE_DT
+                AND A.POS_NO = B.POS_NO
+                AND A.TRAN_NO = B.TRAN_NO) SALE
+            LEFT OUTER JOIN
+            (SELECT A.PRSNT_DT
+                  , B.SEQ_NO
+                  , A.STR_CD
+                  , A.PRSNT_NO
+                  , B.SALE_DT
+                  , B.POS_NO
+                  , B.TRAN_NO
+                  , B.CARD_COMP
+                  , B.SALE_AMT
+                  , B.DIV_AMT
+               FROM MSS.MC_EVTSKUPRSNT A, MSS.MC_PRSNTRECP B
+              WHERE A.PRSNT_DT = B.PRSNT_DT
+                AND A.STR_CD = B.STR_CD
+                AND A.PRSNT_NO = B.PRSNT_NO
+                AND A.PRSNT_FLAG IN ('1','2')
+                AND A.CANCEL_GB = '1'
+                AND B.STR_CD = ?
+                AND B.SALE_DT = ?
+                AND B.POS_NO = ?
+                AND B.TRAN_NO = ?) PRSNT
+          ON SALE.STR_CD = PRSNT.STR_CD
+         AND SALE.SALE_DT = PRSNT.SALE_DT
+         AND SALE.POS_NO = PRSNT.POS_NO
+         AND SALE.TRAN_NO = PRSNT.TRAN_NO
+       GROUP BY PRSNT.SEQ_NO, SALE.STR_CD, SALE.SALE_DT, SALE.POS_NO, SALE.TRAN_NO
+         ]]>
+    </query>
+
+	<!-- 사은품 조회 -->
+	<query name="SEL_SKU_LIST">
+        <![CDATA[
+            SELECT 'F' AS CHK
+                 , A.TRG_CD
+			     , B.TRG_NAME
+			     , A.SKU_CD
+			     , C.SKU_NAME
+			     , A.BUY_COST_PRC
+			FROM MSS.MC_EVTSKUMST A, MSS.MC_EVTTRGMST B, DPS.PC_SKUMST C
+			WHERE A.STR_CD = B.STR_CD
+			  AND A.TRG_CD = B.TRG_CD
+			  AND A.SKU_CD = C.SKU_CD
+			  AND A.STR_CD = ?
+			  AND A.EVENT_CD = ?
+			  AND ((? BETWEEN  B.TRG_F AND  B.TRG_T) 
+                    OR (B.TRG_T <= ?))
+         ORDER BY SKU_GB, TRG_CD
+        ]]>
+	</query>
+
+	<!-- 사은품 지급 번호 조회 -->
+	<query name="SEL_PRSNT_NO">
+        <![CDATA[
+            SELECT MSS.SQ_MC_EVTSKUPRSNT.NEXTVAL AS PRSNT_NO FROM DUAL
+        ]]>
+	</query>
+
+	<!-- 사은품 지급 등록 -->
+	<query name="INS_EVTSKUPRSNT">
+        <![CDATA[
+    INSERT INTO MSS.MC_EVTSKUPRSNT(  PRSNT_DT
+                                   , STR_CD
+                                   , PRSNT_NO
+                                   , EVENT_CD
+                                   , PRSNT_FLAG
+                                   , SKU_CD
+                                   , TRG_CD
+                                   , PRSNT_AMT
+                                   , EXCP_CONF_ID
+                                   , EXCP_PRSNT_RSN
+                                   , PRSNT_QTY
+                                   , CARD_CUST_ID
+                                   , TOT_SALE_AMT
+                                   , PRSNT_TIME
+                                   , CANCEL_GB
+                                   , REG_DATE
+                                   , REG_ID
+                                   , MOD_DATE
+                                   , MOD_ID)
+                            VALUES(  ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                    ,TO_CHAR(SYSDATE,'HH24MISS')
+                                   , ?
+                                   ,SYSDATE
+                                   , ?
+                                   ,SYSDATE
+                                   , ?)
+        ]]>
+	</query>
+
+	<!-- 사은품 지급 영수증 등록 -->
+	<query name="INS_PRSNTRECP">
+        <![CDATA[
+      INSERT INTO MSS.MC_PRSNTRECP(  PRSNT_DT
+							       , STR_CD
+							       , PRSNT_NO
+							       , SEQ_NO
+							       , SALE_DT
+							       , POS_NO
+							       , TRAN_NO
+							       , CARD_COMP
+							       , SALE_AMT
+							       , DIV_AMT
+							       , REG_DATE
+							       , REG_ID
+							       , MOD_DATE
+							       , MOD_ID)
+						   VALUES(   ?
+							       , ?
+							       , ?
+							       , (SELECT NVL(MAX(SEQ_NO),0)+1 FROM MSS.MC_PRSNTRECP WHERE PRSNT_DT = ? AND STR_CD = ? AND PRSNT_NO = ?)
+							       , ?
+							       , ?
+							       , ?
+							       , ?
+							       , ?
+							       , ?
+							       , SYSDATE
+							       , ?
+							       , SYSDATE
+							       , ?)
+		 ]]>
+	</query>
+
+	<!-- 예외지급품 대상코드, 매입원가 조회 -->
+	<query name="SEL_SKU_INFO">
+        <![CDATA[
+         SELECT '' AS CHK
+                 , A.TRG_CD
+                 , B.TRG_NAME
+                 , A.SKU_CD
+                 , C.SKU_NAME
+                 , A.BUY_COST_PRC
+         FROM MSS.MC_EVTSKUMST A, MSS.MC_EVTTRGMST B, DPS.PC_SKUMST C
+         WHERE A.STR_CD = B.STR_CD
+           AND A.TRG_CD = B.TRG_CD
+           AND A.SKU_CD = C.SKU_CD
+           AND A.STR_CD = ?
+           AND A.EVENT_CD = ?
+           AND A.SKU_CD LIKE ? || '%'
+         ]]>
+	</query>
+	
+	<!-- 사은품지급 브랜드 집계 데이터 생성 -->
+    <query name="INS_PRSNTPBN">
+        <![CDATA[
+		INSERT INTO MSS.MC_PRSNTPBN ( PRSNT_DT
+		                            , STR_CD
+		                            , PRSNT_NO
+		                            , SEQ_NO
+		                            , SALE_DT
+		                            , POS_NO
+		                            , TRAN_NO
+		                            , PUMBUN_CD
+		                            , POSSALE_AMT
+		                            , SALE_AMT
+		                            , CANCEL_GB
+		                            , REG_DATE
+		                            , REG_ID
+		                            , MOD_DATE
+		                            , MOD_ID)
+		                      (SELECT C.PRSNT_DT
+		                            , C.STR_CD
+		                            , C.PRSNT_NO
+		                            , ROWNUM
+		                            , A.SALE_DT
+		                            , A.POS_NO
+		                            , A.TRAN_NO
+		                            , A.PUMBUN_CD
+		                            , A.NET_SALE_AMT_TAX AS SALE_AMT 
+		                            , NET_SALE_AMT_TAX * (NVL(B.APP_RATE,100)/100) AS APP_RATE_AMT
+		                            , '1'
+		                            , SYSDATE
+		                            , ?
+		                            , SYSDATE
+		                            , ?
+		                      FROM DPS.PS_DISITEM A
+		                           LEFT OUTER JOIN
+		                           MSS.MC_APPRATE B
+		                        ON A.STR_CD = B.STR_CD
+		                       AND A.PUMBUN_CD = B.PUMBUN_CD
+		                         , MSS.MC_PRSNTRECP C
+		                     WHERE A.STR_CD = C.STR_CD
+		                       AND A.SALE_DT = C.SALE_DT
+		                       AND A.POS_NO = C.POS_NO
+		                       AND A.TRAN_NO = C.TRAN_NO
+		                       AND C.STR_CD = ?
+		                       AND C.PRSNT_DT = ?
+		                       AND C.PRSNT_NO = ?)
+		        ]]>
+    </query>
+</service>

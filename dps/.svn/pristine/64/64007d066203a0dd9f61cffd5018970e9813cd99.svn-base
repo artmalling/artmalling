@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.04.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  판매사원을 관리한다.
+ -->
+<service name="/pcod805.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="CHK"                colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMP_FLAG"           colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_USER_ID"       colType="TB_STRING"   size="9"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMP_NAME"           colType="TB_STRING"   size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PWD_NO"             colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"             colType="TB_STRING"   size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"          colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"        colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_AUTH_FLAG"      colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEL_NO_1"           colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEL_NO_2"           colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEL_NO_3"           colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIRTH_DT"           colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LUNAR_FLAG"         colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PWD_MOD_DT"         colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEL_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 판매사원 마스터 조회 쿼리  -->
+    <query name="SEL_SALEUSERMST">
+        <![CDATA[
+            SELECT 'F'          AS CHK        
+                 , STR_CD        
+                 , EMP_FLAG      
+                 , SALE_USER_ID  
+                 , EMP_NAME
+                 , PWD_NO        
+                 , ORG_CD
+                 , DPS.FN_GET_ORG_NAME(SUBSTR(ORG_CD,1,2)
+                                       , SUBSTR(ORG_CD,3,2)
+                                       , SUBSTR(ORG_CD,5,2)
+                                       , SUBSTR(ORG_CD,7,2)
+                                       , SUBSTR(ORG_CD,9,2))   AS ORG_NAME      
+                 , PUMBUN_CD     
+                 , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD)           AS PUMBUN_NAME   
+                 , POS_AUTH_FLAG 
+                 , TEL_NO_1      
+                 , TEL_NO_2      
+                 , TEL_NO_3      
+                 , BIRTH_DT      
+                 , LUNAR_FLAG    
+                 , PWD_MOD_DT    
+                 , USE_YN
+                 , CASE WHEN TO_CHAR(SYSDATE,'YYYYMMDD') = TO_CHAR(REG_DATE,'YYYYMMDD')
+                        THEN 'Y'
+                        ELSE 'N'
+                   END            AS DEL_YN
+              FROM DPS.PC_SALEUSERMST
+             WHERE STR_CD        = ?
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_ORG_CD">
+        <![CDATA[
+               AND ORG_CD        LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_ORG_NAME">
+        <![CDATA[
+               AND DPS.FN_GET_ORG_NAME(SUBSTR(ORG_CD,1,2)
+                                       , SUBSTR(ORG_CD,3,2)
+                                       , SUBSTR(ORG_CD,5,2)
+                                       , SUBSTR(ORG_CD,7,2)
+                                       , SUBSTR(ORG_CD,9,2))  LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_SALE_USER_ID">
+        <![CDATA[
+               AND SALE_USER_ID  LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_EMP_NAME">
+        <![CDATA[
+               AND EMP_NAME      LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_POS_AUTH_FLAG">
+        <![CDATA[
+               AND POS_AUTH_FLAG = ?
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_WHERE_EMP_FLAG">
+        <![CDATA[
+               AND EMP_FLAG      = ?
+        ]]>
+    </query>
+    <query name="SEL_SALEUSERMST_ORDER">
+        <![CDATA[
+             ORDER BY SALE_USER_ID
+        ]]>
+    </query>
+    
+    <!-- 판매사원 중복검사 -->
+    <query name="SEL_SALEUSERMST_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_SALEUSERMST
+             WHERE SALE_USER_ID  = ?
+        ]]>
+    </query>
+    <!-- 판매사원 삭제가능여부 조회-->
+    <query name="SEL_SALEUSERMST_REG_DATE">
+        <![CDATA[
+            SELECT CASE WHEN TO_CHAR(SYSDATE,'YYYYMMDD') = TO_CHAR(REG_DATE,'YYYYMMDD')
+                        THEN 'Y'
+                        ELSE 'N'
+                   END            AS DEL_YN
+              FROM DPS.PC_SALEUSERMST
+             WHERE SALE_USER_ID  = ?
+        ]]>
+    </query>
+    
+    <!-- 판매사원 ID 생성-->
+    <query name="SEL_SALEUSERMST_NEW_SALE_USER_ID">
+        <![CDATA[
+            SELECT CASE WHEN ? = '2' THEN ?
+                        ELSE (SELECT ?||LPAD( NVL( MAX( SUBSTR(SALE_USER_ID,7))+1, 1),2,'0') 
+                                FROM DPS.PC_SALEUSERMST
+                               WHERE PUMBUN_CD = ?
+                                 AND EMP_FLAG  = '1')
+                   END   AS NEW_SALE_USER_ID
+              FROM DUAL
+        ]]>
+    </query>
+    
+    <!-- 판매사원 마스터 등록 -->
+    <query name="INS_SALEUSERMST">
+        <![CDATA[
+            INSERT INTO DPS.PC_SALEUSERMST(STR_CD        
+                                         , EMP_FLAG      
+                                         , SALE_USER_ID  
+                                         , EMP_NAME      
+                                         , PWD_NO        
+                                         , ORG_CD        
+                                         , PUMBUN_CD     
+                                         , POS_AUTH_FLAG 
+                                         , TEL_NO_1      
+                                         , TEL_NO_2      
+                                         , TEL_NO_3      
+                                         , BIRTH_DT      
+                                         , LUNAR_FLAG    
+                                         , PWD_MOD_DT    
+                                         , USE_YN     
+                                         , REG_DATE
+                                         , REG_ID
+                                         , MOD_DATE
+                                         , MOD_ID
+                                          )
+                                    VALUES(?        
+                                         , ?      
+                                         , ?
+                                         , ?      
+                                         , ?        
+                                         , ?        
+                                         , ?     
+                                         , ? 
+                                         , ?      
+                                         , ?      
+                                         , ?      
+                                         , ?      
+                                         , ?    
+                                         , ?    
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                          )
+        ]]>   
+    </query>
+    <!-- 판매사원 마스터 수정 -->
+    <query name="UPD_SALEUSERMST">
+        <![CDATA[
+            UPDATE DPS.PC_SALEUSERMST
+               SET STR_CD        = ?          
+                 , EMP_NAME      = ?          
+                 , PWD_NO        = ?          
+                 , ORG_CD        = ?          
+                 , PUMBUN_CD     = ?          
+                 , POS_AUTH_FLAG = ?          
+                 , TEL_NO_1      = ?         
+                 , TEL_NO_2      = ?          
+                 , TEL_NO_3      = ?         
+                 , BIRTH_DT      = ?        
+                 , LUNAR_FLAG    = ?          
+                 , USE_YN        = ?
+                 , PWD_MOD_DT    = ?
+                 , MOD_DATE      = SYSDATE
+                 , MOD_ID        = ?
+             WHERE SALE_USER_ID  = ?
+        ]]>   
+    </query>
+    <!-- 판매사원 마스터 삭제 -->
+    <query name="DEL_SALEUSERMST">
+        <![CDATA[
+            DELETE 
+              FROM DPS.PC_SALEUSERMST
+             WHERE SALE_USER_ID = ?
+        ]]>   
+    </query>
+</service>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 한국후지쯔
+ * 작 성 일    : 2010.03.18
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  무료주차시간조회
+ -->
+<service name="/dmbo303.do">
+    <!-- 무료주차시간조회  상단-->
+    <gauce name="H_MASTER"> 
+        <column colName="CUST_ID"        colType="TB_STRING"   size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"      colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"          colType="TB_STRING"   size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_GRADE"     colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRADE_NM"       colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DT_COUNT"       colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PARKING_TIME"   colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"         colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <!-- 무료주차시간조회  하단-->
+    <gauce name="H_DETAIL"> 
+        <column colName="CUST_ID"        colType="TB_STRING"   size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"      colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"          colType="TB_STRING"   size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_GRADE"     colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRADE_NM"       colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_DT"         colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_TIME"       colType="TB_STRING"   size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PARKING_TIME"   colType="TB_STRING"   size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"         colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <!-- 무료주차시간조회  상단 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.CUST_ID
+                 , C.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', C.SS_NO) AS SS_NO
+                 , '' CUST_GRADE
+                 , COM.FN_GET_COMM_NAME('D', 'D011', D.CUST_GRADE) GRADE_NM
+                 , COUNT(B.USE_DT) DT_COUNT
+                 , SUM(B.PARKING_TIME) PARKING_TIME
+                 , '' REMARK
+              FROM DCS.DO_PARKING_TIME A
+                 , DCS.DO_PARKING_USE B
+                 , DCS.DM_CUSTOMER C
+                 , DCS.DO_CUST_GRADE D
+             WHERE A.APP_YEAR   =  B.APP_YEAR
+               AND A.STR_CD     =  B.STR_CD
+               AND A.CUST_ID    =  B.CUST_ID
+               AND A.CUST_ID    =  C.CUST_ID
+               AND D.BRCH_ID    =  (SELECT BRCH_ID FROM  DCS.DB_BRANCH WHERE STR_CD LIKE ?)
+               AND TO_CHAR(SYSDATE, 'YYYY')  =  D.APP_YEAR
+               AND A.CUST_ID    =  D.CUST_ID
+               AND B.USE_DT     BETWEEN ? AND ?
+               AND A.STR_CD   LIKE ?
+             GROUP BY A.CUST_ID
+                    , C.CUST_NAME
+                    , C.SS_NO
+                    , D.CUST_GRADE
+             ORDER BY A.CUST_ID 
+        ]]>        
+    </query>
+    
+    <!-- 무료주차시간조회   하단 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT A.CUST_ID
+                 , C.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', C.SS_NO) AS SS_NO
+                 , '' CUST_GRADE
+                 , COM.FN_GET_COMM_NAME('D', 'D011', D.CUST_GRADE) GRADE_NM
+                 , B.USE_DT
+                 , B.USE_TIME
+                 , B.PARKING_TIME
+                 , '' REMARK
+              FROM DCS.DO_PARKING_TIME A
+                 , DCS.DO_PARKING_USE B
+                 , DCS.DM_CUSTOMER C
+                 , DCS.DO_CUST_GRADE D
+             WHERE A.APP_YEAR   =  B.APP_YEAR (+)
+               AND A.STR_CD     =  B.STR_CD (+)
+               AND A.CUST_ID    =  B.CUST_ID (+)
+               AND A.CUST_ID    =  C.CUST_ID
+               AND D.BRCH_ID    =  (SELECT BRCH_ID FROM  DCS.DB_BRANCH WHERE STR_CD LIKE ?)
+               AND TO_CHAR(SYSDATE, 'YYYY')  =  D.APP_YEAR
+               AND A.CUST_ID    =  D.CUST_ID
+               AND B.USE_DT     BETWEEN ? AND ?
+               AND A.STR_CD   LIKE ?
+               AND A.CUST_ID    =  ?
+             ORDER BY A.CUST_ID
+        ]]>        
+    </query>    
+</service>

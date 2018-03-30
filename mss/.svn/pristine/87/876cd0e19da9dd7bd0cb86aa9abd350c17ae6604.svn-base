@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.05.19
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  회수등록
+ -->
+<service name="/mgif307.mg">
+    <!-- 상품권 정보조회 -->
+    <gauce name="H_GIFTCARD">
+        <column colName="GIFT_TYPE_CD"        colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISSUE_TYPE"          colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"       colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"       colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"        colType="TB_DECIMAL" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_NO"         colType="TB_STRING" size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY"                 colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_FLAG"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_FLAG_NM"        colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"             colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_STR"            colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_DT"            colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_FLAG"          colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권 정보조회 -->
+    <query name="SEL_GIFTCARD">
+       <![CDATA[
+       SELECT A.GIFT_TYPE_CD
+		    , GIFT_TYPE_NAME
+		    , A.ISSUE_TYPE
+		    , A.GIFT_AMT_TYPE
+		    , GIFT_AMT_NAME
+		    , A.GIFTCERT_AMT
+		    , GIFTCARD_NO
+		    , 1 AS QTY
+		    , STAT_FLAG
+		    , COM.FN_GET_COMM_NAME('D', 'M074', STAT_FLAG) AS STAT_FLAG_NM
+		    , SALE_DT
+		    , SALE_STR
+		    , DRAWL_DT
+		    , '' AS DRAWL_FLAG
+		 FROM MSS.MG_GIFTMST A
+		    , MSS.MG_GIFTTPMST B
+		    , MSS.MG_GIFTAMTMST C
+		WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+		  AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+		  AND A.ISSUE_TYPE = C.ISSUE_TYPE
+		  AND A.GIFT_AMT_TYPE = C.GIFT_AMT_TYPE
+		  AND A.STAT_FLAG IN ('05','06')
+		  AND ACDT_FLAG = 'N'
+		  AND A.GIFTCARD_NO = ?
+        ]]>
+    </query>
+    
+    <!-- 상품권 회수 전표번호 발번 -->
+    <query name="SEL_DRAWL_SLIP_NO">
+        <![CDATA[
+        SELECT LPAD(MSS.SQ_MG_GIFTDRAWL.NEXTVAL,6,'0') AS DRAWL_SLIP_NO FROM DUAL
+        ]]>
+    </query>
+
+    <!--회수내역 등록-->
+    <query name="INS_GIFTDRAWL">
+        <![CDATA[
+        INSERT INTO MSS.MG_GIFTDRAWL ( DRAWL_DT  
+                                     , DRAWL_STR
+                                     , DRAWL_SLIP_NO
+                                     , DRAWL_SEQ_NO
+                                     , GIFT_AMT_TYPE
+                                     , GIFT_TYPE_CD
+                                     , ISSUE_TYPE
+                                     , DRAWL_FLAG
+                                     , DRAWL_TYPE
+                                     , DRAWL_AMT
+                                     , GIFTCARD_NO
+                                     , SALE_STR
+                                     , SALE_DT
+                                     , REG_ID
+                                     , REG_DATE
+                                     , MOD_ID
+                                     , MOD_DATE)
+                               VALUES( ?  
+                                     , ?
+                                     , ?
+                                     , (SELECT NVL(MAX(DRAWL_SEQ_NO),0) + 1 
+                                                FROM MSS.MG_GIFTDRAWL 
+                                               WHERE DRAWL_DT = ?
+                                                 AND DRAWL_STR = ?
+                                                 AND DRAWL_SLIP_NO = ? )  
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , '10'
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE)
+        ]]>
+    </query>
+    
+    <!-- 상품권 마스터 상품권 회수정보 수정 -->
+    <query name="UPD_GIFTMST">
+        <![CDATA[
+        UPDATE MSS.MG_GIFTMST
+           SET DRAWL_STR = ?
+             , DRAWL_DT = ?
+             , DRAWL_FLAG = ?
+             , DRAWL_REG_EMP_ID =  ?
+             , STAT_FLAG = '07'   --(M074: 상품권상태 ) 07:회수
+             , MOD_ID = ?
+             , MOD_DATE = SYSDATE
+         WHERE STAT_FLAG IN ('05', '06')
+           AND ACDT_FLAG = 'N'
+           AND GIFTCARD_NO = ?
+        ]]>
+    </query>
+</service>

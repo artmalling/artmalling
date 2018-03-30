@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 윤지영
+ * 회 사 명 : 한국후지쯔 
+ * 작 성 일 : 2016.12.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 행사별 사은품 현황내역
+ -->
+<service name="/mcae440.mc">
+
+	<!-- 행사별 사은품 현황내역 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"          colType="TB_STRING"     size="11"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SKU_NAME"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        	colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"        	colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"        	colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"        	colType="TB_DECIMAL"    size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_NO"        	colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_AMT"   		colType="TB_DECIMAL"    size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"        	colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_SLIP_NO"      colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_PUBLISH"      colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+     
+    <query name="SEL_MASTER">
+        <![CDATA[    
+	       SELECT C.STR_CD
+			    , B.EVENT_CD
+			    , DPS.FN_GET_EVENT_NAME(B.EVENT_CD) AS EVENT_NAME
+			    , DPS.FN_GET_SKU_NAME(B.SKU_CD) AS SKU_NAME
+			    , C.SALE_DT                 AS SALE_DT
+			    , C.POS_NO                  AS POS_NO
+			    , C.TRAN_NO                 AS TRAN_NO
+			    , A.SEQ_NO                  AS SEQ_NO
+			    , C.APPR_NO                 AS APPR_NO
+			    , C.PAY_AMT                 AS APPR_AMT
+			    , C.CARD_DATA               AS CARD_NO
+			    , A.PRSNT_NO                AS GIFT_SLIP_NO
+			    , DPS.FN_GET_CCOMP_NM(C.CARD_PUBLISH)   AS CARD_PUBLISH
+			 FROM MSS.MC_PRSNTRECP A
+			,(
+				SELECT PRSNT_DT
+					 , STR_CD
+					 , PRSNT_NO
+					 , SKU_CD
+					 , EVENT_CD
+				FROM MSS.MC_EVTSKUPRSNT
+				WHERE 1=1
+				AND STR_CD =?
+				AND EVENT_CD=?
+				AND CANCEL_GB<>'2' 
+				AND PRSNT_FLAG < '4'
+				AND PRSNT_DT BETWEEN ? AND ?
+			) B
+			, DPS.PS_DISCARD C
+			WHERE 1=1
+			  AND A.PRSNT_DT = B.PRSNT_DT
+			  AND A.STR_CD = B.STR_CD 
+			  AND A.PRSNT_NO = B.PRSNT_NO
+			  AND A.STR_CD = C.STR_CD
+			  AND A.SALE_DT = C.SALE_DT
+			  AND A.POS_NO = C.POS_NO
+			  AND A.TRAN_NO = C.TRAN_NO
+			--  AND C.CARD_PUBLISH ='02'
+			ORDER BY A.PRSNT_NO, A.SEQ_NO
+			
+        ]]>        
+    </query>
+     
+</service>

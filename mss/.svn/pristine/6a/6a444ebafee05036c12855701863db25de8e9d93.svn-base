@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif501.mg">
+<!-- 상품권 폐기 마스터  조회  -->
+    <gauce name="H_MASTER"> 
+        <column colName="CHECK1"			colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />             
+		<column colName="DRAWL_STR"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DRAWL_STR_NM"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_TYPE_CD"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_TYPE_NAME"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_AMT_TYPE"     colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_AMT_NAME"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFTCARD_NO"       colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="QTY"				colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+		<column colName="STAT_FLAG"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="STAT_FLAG_NM"      colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DRAWL_DT"          colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    </gauce>
+    
+    <gauce name="H_GIFTCARDNO"> 
+        <column colName="CHECK1"            colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />             
+        <column colName="DRAWL_STR"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_STR_NM"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_NO"       colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY"               colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+        <column colName="STAT_FLAG"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_FLAG_NM"      colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRAWL_DT"          colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    </gauce>
+    
+     <!-- 상품권 폐기 마스터  조회 -->
+ <query name="SEL_GIFTDUSE_MST">
+     <![CDATA[
+         SELECT 'F' AS CHECK1,
+                TA.DRAWL_STR,  --회수점
+                DPS.FN_GET_STORE_NAME(TA.DRAWL_STR) AS DRAWL_STR_NM,
+		       TA.GIFT_TYPE_CD, --상품권 종류
+		       TC.GIFT_TYPE_NAME, --상품권 종류 명
+		       TA.GIFT_AMT_TYPE,      --금종
+		       TB.GIFT_AMT_NAME,      --금종명
+		       TA.GIFTCERT_AMT,       --상품권 금액
+		       TA.GIFTCARD_NO,         --상품권 코드
+		       1 AS QTY,
+		       TA.STAT_FLAG,
+		       TD.COMM_NAME1 AS STAT_FLAG_NM,
+		       TA.DRAWL_DT
+		FROM MSS.MG_GIFTMST TA,
+		     MSS.MG_GIFTAMTMST TB,
+		     MSS.MG_GIFTTPMST TC,
+		     COM.TC_COMMCODE TD
+		WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+		AND TA.ISSUE_TYPE = TB.ISSUE_TYPE
+		AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE 
+		AND TA.GIFT_TYPE_CD = TC.GIFT_TYPE_CD
+		AND TA.STAT_FLAG = TD.COMM_CODE
+		AND TD.COMM_PART = 'M074'
+		AND TD.SYS_PART = 'D'
+		AND TA.ISSUE_TYPE = '1'
+		AND TC.GIFT_TYPE_FLAG = '01' --자사상품권
+		AND TA.STAT_FLAG = '07'
+		AND TA.DRAWL_STR IN ( SELECT STR_CD 
+		                        FROM COM.V_MYORG
+		                       WHERE USE_YN = 'Y'
+		                         AND USER_ID = ?
+		                         AND ORG_FLAG = '1'
+		                         AND STR_CD LIKE ?||'%'
+		                         GROUP BY STR_CD 
+		                          )
+		AND TA.DRAWL_DT BETWEEN ? AND ?
+		AND TA.GIFT_TYPE_CD  = ?
+		AND TA.GIFT_AMT_TYPE LIKE ?||'%'
+     ]]>
+ </query>   
+ 
+ <!-- 상품권 폐기 마스터  조회 -->
+ <query name="SEL_GIFTDUSE_GIFTCARDNO">
+     <![CDATA[
+         SELECT 'T' AS CHECK1,
+                TA.DRAWL_STR,  --회수점
+                DPS.FN_GET_STORE_NAME(TA.DRAWL_STR) AS DRAWL_STR_NM,
+               TA.GIFT_TYPE_CD, --상품권 종류
+               TC.GIFT_TYPE_NAME, --상품권 종류 명
+               TA.GIFT_AMT_TYPE,      --금종
+               TB.GIFT_AMT_NAME,      --금종명
+               TA.GIFTCERT_AMT,       --상품권 금액
+               TA.GIFTCARD_NO,         --상품권 코드
+               1 AS QTY,
+               TA.STAT_FLAG,
+               TD.COMM_NAME1 AS STAT_FLAG_NM,
+               TA.DRAWL_DT
+        FROM MSS.MG_GIFTMST TA,
+		     MSS.MG_GIFTAMTMST TB,
+		     MSS.MG_GIFTTPMST TC,
+		     COM.TC_COMMCODE TD
+		WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+		AND TA.ISSUE_TYPE = TB.ISSUE_TYPE
+		AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE 
+		AND TA.GIFT_TYPE_CD = TC.GIFT_TYPE_CD
+		AND TA.STAT_FLAG = TD.COMM_CODE
+		AND TD.COMM_PART = 'M074'
+		AND TD.SYS_PART = 'D'
+		AND TA.ISSUE_TYPE = '1'
+		AND TC.GIFT_TYPE_FLAG = '01' --자사상품권
+		AND TA.STAT_FLAG = '07'
+		AND TA.DRAWL_STR = ?
+		AND TA.GIFTCARD_NO BETWEEN ? AND ?
+     ]]>
+ </query>   
+ 
+ <!-- 상품권 폐기 등록 -->
+ <query name="INS_GIFTDUSE">
+     <![CDATA[
+         
+		INSERT INTO MSS.MG_GIFTDUSE
+		            (DUSE_DT,
+		              DRAWL_STR,
+		              DUSE_SEQ_NO,
+		              DUSE_QTY,
+		              GIFTCARD_NO,
+		              GIFT_TYPE_CD,
+		              GIFT_AMT_TYPE,
+		              ISSUE_TYPE,
+		              REMARK,
+		              MOD_ID,
+		              MOD_DATE,
+		              REG_ID,
+		              REG_DATE
+		             )
+		       VALUES (?,
+		              ?,
+		              (SELECT CASE WHEN COUNT(DUSE_SEQ_NO) = 0 THEN 1
+		                          ELSE MAX(DUSE_SEQ_NO) + 1
+		                          END 
+		              FROM  MSS.MG_GIFTDUSE
+		              WHERE DUSE_DT  = ?
+		              AND DRAWL_STR = ?),
+		              ?,
+		              ?,
+		              ?,
+		              ?,
+		              '1',
+		              ?,
+		              ?,
+		              SYSDATE,
+		              ?,
+		              SYSDATE
+		              )
+			              
+     ]]>
+ </query>   
+ <!-- 상품권 마스터 상태 정보 변경 (폐기) -->
+ <query name="UPD_GIFTMST">
+     <![CDATA[
+         UPDATE MSS.MG_GIFTMST
+			SET STAT_FLAG = '08'
+			  , MOD_ID = ?
+			  , MOD_DATE = SYSDATE
+			WHERE GIFTCARD_NO = ?     
+                          
+     ]]>
+ </query>   
+</service>

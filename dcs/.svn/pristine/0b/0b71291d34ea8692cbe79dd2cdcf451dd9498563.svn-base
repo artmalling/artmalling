@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  기부회계분개실적생성
+ -->
+<service name="/dmtc705.dc">
+
+    <!-- 기부기획 검색 -->
+    <gauce name="H_MASTER"> 
+        <column colName="SAVE_CHK"      colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+        <column colName="DON_NAME"      colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DON_ID"        colType="TB_STRING"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="DON_TARGET"    colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="ACC_POINT"     colType="TB_DECIMAL" size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DON_DT"        colType="TB_STRING"  size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DON_POINT"     colType="TB_DECIMAL" size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ACCNT_MIG_DT"  colType="TB_STRING"  size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+    </gauce>   
+    
+    <!-- 기부회계분개실적생성 리스트 조회 -->
+    <query name="SEL_DC_DON_TARGET">        
+        <![CDATA[
+            SELECT DECODE(A.ACCNT_MIG_DT,null,'F','') AS SAVE_CHK            
+                 , B.DON_NAME 
+                 , A.DON_ID
+                 , B.DON_TARGET
+                 , C.DON_POINT AS ACC_POINT
+                 , A.DON_DT
+                 , A.DON_POINT
+                 , A.ACCNT_MIG_DT  -- 회계전표생성일자 ----  
+              FROM DCS.DC_DON_TARGET A, 
+                   DCS.DC_DON_PLAN B,
+                   ( SELECT A.DON_ID 
+                          , COUNT(*) DON_COUNT
+                          , SUM(DON_POINT) DON_POINT
+                       FROM DCS.DC_DON_CUST A
+                      WHERE A.TRG_DON_DT IS NOT NULL
+                   GROUP BY A.DON_ID
+                   ) C
+             WHERE A.DON_ID = B.DON_ID
+               AND A.DON_ID = C.DON_ID
+               AND A.DON_DT BETWEEN ? AND ?
+               AND A.DON_ID LIKE '%' || ?
+        ]]>        
+    </query>     
+</service>

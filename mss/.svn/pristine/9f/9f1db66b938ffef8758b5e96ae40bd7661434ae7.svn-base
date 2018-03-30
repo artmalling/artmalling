@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  사은행사 상품권 불출/반납
+ -->
+<service name="/mcae304.mc">
+
+ <!-- 사은행사 조회 -->
+    <gauce name="H_EVTINFO"> 
+        <column colName="STR_CD"              colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"              colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"            colType="TB_STRING" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"          colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"          colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 사은행사 상품권 마스터 조회 -->
+    <gauce name="H_GIFTINOUTINFO"> 
+        <column colName="INOUT_DT"          colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"            colType="TB_STRING" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"           colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INOUT_FLAG"        colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INOUT_FLAG_NM"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY"               colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"               colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DESK_CHAR_ID"      colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DESK_CHAR_NM"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"          colType="TB_STRING" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 사은행사 상품권 마스터 -->
+    <gauce name="H_MASTER"> 
+        <column colName="INOUT_DT"          colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"            colType="TB_STRING" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"           colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INOUT_FLAG"        colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"          colType="TB_STRING" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"        colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DESK_CHAR_ID"      colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DESK_CHAR_NM"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 사은행사 상품권 상세 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="SEQ_NO"            colType="TB_STRING" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"            colType="TB_STRING" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY"               colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_COST_PRC"      colType="TB_DECIMAL" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"               colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+     
+    <!-- 사은행사 조회-->
+    <query name="SEL_EVTINFO">
+        <![CDATA[
+             SELECT B.STR_CD
+                  , DPS.FN_GET_STORE_NAME(B.STR_CD) AS STR_NM 
+                  , A.EVENT_CD
+                  , A.EVENT_NAME
+                  , B.EVENT_S_DT
+                  , B.EVENT_E_DT
+               FROM DPS.PC_EVTMST A, DPS.PC_STREVT B, MSS.MC_EVTMST C
+              WHERE A.EVENT_CD = B.EVENT_CD
+                AND B.STR_CD = C.STR_CD
+                AND B.EVENT_CD = C.EVENT_CD
+                AND C.STR_CD = ?
+                 AND ((? >= B.EVENT_S_DT AND ? <= B.EVENT_E_DT) OR
+                    (? >= B.EVENT_S_DT AND ? <= B.EVENT_E_DT) OR
+                    (B.EVENT_S_DT >= ? AND B.EVENT_S_DT <= ?) OR
+                    (B.EVENT_E_DT >= ? AND B.EVENT_E_DT <= ?)) 
+                AND A.EVENT_CD LIKE ? || '%'
+                AND C.EVENT_GIFT_TYPE <> '02'
+           ORDER BY B.STR_CD, A.EVENT_CD                
+        ]]>
+    </query>   
+    
+    <!-- 사은행사 상품권 불출/반납 조회-->
+    <query name="SEL_GIFTINOUTINFO">
+        <![CDATA[
+         SELECT MAX(INOUT_DT) AS INOUT_DT       
+              , MAX(STR_CD) AS STR_CD
+              , MAX(SLIP_NO) AS SLIP_NO
+              , MAX(INOUT_FLAG) AS INOUT_FLAG
+              , MAX(COM.FN_GET_COMM_NAME('D','M007',INOUT_FLAG)) AS INOUT_FLAG_NM
+              , DECODE(MAX(INOUT_FLAG) ,'2',SUM(QTY) * -1, SUM(QTY)) AS QTY
+              , DECODE(MAX(INOUT_FLAG) ,'2',SUM(QTY * BUY_COST_PRC) * -1, SUM(QTY * BUY_COST_PRC)) AS AMT
+              , MAX(DESK_CHAR_ID) AS DESK_CHAR_ID
+              , MAX(COM.FN_GET_USER_NAME(DESK_CHAR_ID)) AS DESK_CHAR_NM
+              , MAX(A.EVENT_CD) AS EVENT_CD 
+              , MAX(EVENT_NAME) AS EVENT_NAME
+           FROM MSS.MC_GIFTINOUT A, DPS.PC_EVTMST B
+         WHERE A.EVENT_CD = B.EVENT_CD
+           AND STR_CD = ?
+           AND A.EVENT_CD = ?
+    GROUP BY INOUT_DT, STR_CD, SLIP_NO, INOUT_FLAG, DESK_CHAR_ID, A.EVENT_CD
+    ORDER BY INOUT_DT, STR_CD, SLIP_NO
+        ]]>
+    </query> 
+    
+     <!-- 사은행사 상품권 불출/반납 마스터  조회-->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT DISTINCT 
+			       NVL(B.INOUT_DT, A.INOUT_DT) AS INOUT_DT
+			     , NVL(B.STR_CD, A.STR_CD) AS STR_CD 
+			     , NVL(NVL(B.SLIP_NO, A.SLIP_NO), ' ')  AS SLIP_NO 
+			     , NVL(B.INOUT_FLAG, A.INOUT_FLAG) AS INOUT_FLAG 
+			     , NVL(B.EVENT_CD, A.EVENT_CD) AS EVENT_CD 
+			     , NVL(B.EVENT_NAME, A.EVENT_NAME) AS EVENT_NAME 
+			     , NVL(B.DESK_CHAR_ID, A.DESK_CHAR_ID) AS DESK_CHAR_ID 
+			     , NVL(B.DESK_CHAR_NM, A.DESK_CHAR_NM) AS DESK_CHAR_NM 
+			     FROM
+					   (SELECT ? AS INOUT_DT
+					         , ? AS STR_CD
+					         , ? AS SLIP_NO
+					         , ? AS INOUT_FLAG
+					         , ? AS EVENT_CD
+					         , EVENT_NAME
+					         , '' AS DESK_CHAR_ID
+					         , '' AS DESK_CHAR_NM
+					       FROM DUAL D, DPS.PC_EVTMST E
+                         WHERE E.EVENT_CD = ?) A
+					      LEFT OUTER JOIN 
+					   (SELECT X.INOUT_DT
+					         , X.STR_CD
+					         , X.SLIP_NO
+					         , X.INOUT_FLAG
+					         , X.EVENT_CD
+					         , EVENT_NAME
+					         , X.DESK_CHAR_ID
+					         , COM.FN_GET_USER_NAME(DESK_CHAR_ID) AS DESK_CHAR_NM
+					      FROM MSS.MC_GIFTINOUT X, DPS.PC_EVTMST Y
+					     WHERE X.EVENT_CD = Y.EVENT_CD
+					       AND STR_CD = ?
+					       AND INOUT_DT = ?
+					       AND SLIP_NO = ?
+					       AND X.EVENT_CD = ?) B
+					      ON A.INOUT_DT = B.INOUT_DT
+					      AND A.STR_CD = B.STR_CD
+					      AND A.SLIP_NO = B.SLIP_NO
+					      AND A.EVENT_CD = B.EVENT_CD
+        ]]>
+    </query> 
+    
+    <!-- 사은행사 상품권 상세 정보 등록 여부 확인 -->
+    <query name="SEL_SLIP_NO">
+        <![CDATA[
+               SELECT NVL(MAX(SLIP_NO),0) + 1 AS SLIP_NO
+                 FROM MSS.MC_GIFTINOUT 
+                WHERE INOUT_DT = ?
+                  AND STR_CD = ?
+        ]]>
+    </query>
+    
+     <!-- 사은행사 상품권 상세 : 신규 데이터-->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+            SELECT D.SEQ_NO AS SEQ_NO
+                 , A.SKU_CD
+                 , DECODE(INOUT_FLAG, '2', QTY*-1, QTY) AS QTY
+                 , A.BUY_COST_PRC
+                 , GIFT_AMT_NAME
+                 , DECODE(INOUT_FLAG, '2', QTY*-1, QTY) * A.BUY_COST_PRC AS AMT
+              FROM MSS.MC_EVTSKUMST A
+                    LEFT OUTER JOIN 
+                   MSS.MC_GIFTINOUT D
+                ON A.STR_CD = D.STR_CD
+               AND A.EVENT_CD = D.EVENT_CD
+               AND A.SKU_CD = D.SKU_CD
+               AND NVL(D.SLIP_NO, ' ') = ?
+               AND D.INOUT_DT = ?
+                 , DPS.PC_SKUMST B
+                 , MSS.MG_GIFTAMTMST C 
+             WHERE A.SKU_CD = B.SKU_CD
+               AND B.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+               AND B.GIFT_AMT_TYPE = C.GIFT_AMT_TYPE
+               AND A.STR_CD = ?
+               AND A.EVENT_CD = ?
+        ]]>
+    </query>
+    
+       <!-- 사은행사 상품권 불출 / 반납 등록-->
+    <query name="INS_GIFTINOUT">
+     <![CDATA[
+        INSERT INTO MSS.MC_GIFTINOUT ( INOUT_DT
+			                          , STR_CD
+			                          , SLIP_NO
+			                          , SEQ_NO
+			                          , EVENT_CD
+			                          , INOUT_FLAG
+			                          , SKU_CD
+			                          , DESK_CHAR_ID
+			                          , BUY_COST_PRC
+			                          , QTY
+			                          , REG_DATE
+			                          , REG_ID
+			                          , MOD_DATE
+			                          , MOD_ID)
+			                  VALUES  ( ?
+			                          , ?
+			                          , ?
+			                          , (SELECT NVL(MAX(SEQ_NO),0) + 1 
+			                               FROM MSS.MC_GIFTINOUT 
+			                              WHERE INOUT_DT = ?
+			                                AND STR_CD = ?
+			                                 AND SLIP_NO =?)
+			                          , ?
+			                          , ?
+			                          , ?
+			                          , ?
+			                          , ?
+			                          , ?
+			                          , SYSDATE
+			                          , ?
+			                          , SYSDATE
+			                          , ?)
+      ]]>
+    </query>
+    
+      <!-- 사은행사 상품권 불출 / 반납 등록-->
+    <query name="UPD_GIFTINOUT">
+     <![CDATA[
+                  UPDATE MSS.MC_GIFTINOUT 
+                     SET DESK_CHAR_ID = ?
+                       , QTY = ?
+                       , MOD_ID = ?
+                       , MOD_DATE = SYSDATE
+                   WHERE INOUT_DT = ?
+                     AND STR_CD = ?
+                     AND SLIP_NO = ?
+                     AND SEQ_NO = ?
+      ]]>
+    </query>
+</service>

@@ -1,0 +1,72 @@
+﻿/*
+ * BoardManager.java
+ *
+ * Version 1.0
+ *
+ * Created on 2005. 9. 14.
+ *
+ * Copyright(C) 2005 FUJITSU KOREA LTD.
+ * All rights reserved.
+ */
+
+
+
+package old.jsp.gauce;
+
+import java.util.List;
+
+import kr.fujitsu.ffw.control.cfg.svc.shift.MultiInput;
+import kr.fujitsu.ffw.control.cfg.svc.shift.Service;
+import kr.fujitsu.ffw.model.SqlWrapper;
+
+public class BoardDAO extends AbstractDAO {
+	public List getList(Service svc) throws Exception {
+        List list = null;
+		SqlWrapper sql = null;
+		
+		try {
+			sql = new SqlWrapper();
+            sql.put(svc.getQuery("SEL_BOARD"));
+            list = select(sql);
+        } catch (Throwable e) {
+			e.printStackTrace();
+			throw new Exception("BoardManger.getList():\n" + e.getMessage());
+		} 
+		
+		return list;
+	}
+
+    public int insertBoardData(MultiInput mi) throws Exception {
+        SqlWrapper   sql   = null;
+        int ret =0;
+
+        try {
+            int res = 0;
+            sql = new SqlWrapper();
+            begin();
+            while(mi.next()) {
+                sql.close();
+                sql.put(mi.getQuery("INS_BOARD"));
+                sql.setString(1, mi.getString("F_No"));
+                sql.setString(2, mi.getString("F_TITLE"));
+                sql.setString(3, mi.getString("F_WRITER"));
+                sql.setString(4, mi.getString("F_WRITE_DATE"));
+                res = update(sql);
+                if (res != 1 ) {
+                    throw new Throwable("데이터의 정합성으로 인하여 수정할 수 없습니다.");
+                }
+                ret += res;
+            }
+
+        } catch (Throwable e) {
+            rollback();
+            throw new Exception(e);
+        } finally {
+            commit();
+        }
+        
+        return ret;
+    }
+    
+
+}

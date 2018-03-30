@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.31
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  재고실사일정 관리한다.
+ -->
+<service name="/pstk201.pt">
+
+  <gauce name="H_SEL_MASTER"> 
+        <column colName="CHECK1"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OLD_STR_CD"    colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_YM"        colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG"      colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_DT"       colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_S_DT"     colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_E_DT"     colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIGO"          colType="TB_STRING" size="2000" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG"          colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />             
+        <column colName="SYS_DATE"      colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_S_DT"      colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_E_DT"      colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOSS_APP_DATE" colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+  </gauce>
+  
+  <gauce name="H_SEL_CNT"> 
+        <column colName="CNT"          colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                  
+  </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_SCHEDULE">
+        <![CDATA[
+            SELECT CASE WHEN A.CLOSE_FLAG  = '1' THEN 'T' 
+                        ELSE 'F'
+                   END    AS CHECK1
+                 , A.STR_CD
+                 , A.STR_CD       AS OLD_STR_CD 
+                 , A.STK_YM 
+                 , A.STK_FLAG 
+                 , A.SRVY_DT 
+                 , A.SRVY_S_DT 
+                 , A.SRVY_E_DT 
+                 , A.BIGO
+                 , 1 AS FLAG   
+                 , TO_CHAR(SYSDATE, 'YYYYMMDD') AS SYS_DATE
+                 , A.STK_S_DT
+                 , A.STK_E_DT
+                 , A.LOSS_APP_DATE
+              FROM (SELECT CLOSE_DT
+                         , SCH.STR_CD
+                         , SCH.STR_CD           AS OLD_STR_CD 
+                         , SCH.STK_YM 
+                         , SCH.STK_FLAG 
+                         , SCH.SRVY_DT 
+                         , SCH.SRVY_S_DT 
+                         , SCH.SRVY_E_DT 
+                         , BGO.BIGO
+                         , 1 AS FLAG   
+                         , (SELECT COUNT(*) 
+                              FROM DPS.PT_STKSKU X
+                             WHERE X.CLOSE_DT IS NOT NULL 
+                               AND X.STR_CD = SCH.STR_CD
+                               AND X.STK_YM = SCH.STK_YM)   AS SKU_COUNT
+                         , (SELECT COUNT(*) 
+                              FROM DPS.PT_STKPBN X
+                             WHERE X.CLOSE_DT IS NOT NULL 
+                               AND X.STR_CD = SCH.STR_CD 
+                               AND X.STK_YM = SCH.STK_YM)   AS PBN_COUNT
+                          , SCH.STK_S_DT
+                          , SCH.STK_E_DT
+                          , SCH.CLOSE_FLAG
+                          , SCH.LOSS_APP_DATE
+                       FROM DPS.PT_SCHEDULE SCH
+                          , DPS.PT_SCHEDULEBIGO BGO
+                      WHERE SCH.STR_CD = BGO.STR_CD(+)
+                        AND SCH.STK_YM = BGO.STK_YM(+)
+                        AND EXISTS (SELECT 1 
+                                      FROM COM.V_MYORG VMY
+                                     WHERE SCH.STR_CD = VMY.STR_CD
+                                       AND USER_ID  = ?
+                                       AND ORG_FLAG = ?) 
+                                       AND SCH.STR_CD = ?) A
+             WHERE 1=1 
+        ]]>    
+    </query> 
+    <query name="SEL_SCHEDULE_WHERE_STK_S_YM">
+        <![CDATA[
+               AND A.STK_YM >= ?
+        ]]>    
+    </query> 
+    <query name="SEL_SCHEDULE_WHERE_STK_E_YM">
+        <![CDATA[
+               AND A.STK_YM <= ?
+        ]]>    
+    </query> 
+    <query name="SEL_SCHEDULE_ORDER">
+        <![CDATA[
+            ORDER BY A.STR_CD
+                   , A.STK_YM
+        ]]>    
+    </query>
+    
+    <!-- 중복 체크  -->
+    <query name="SEL_SCHEDULE_STRCD_CNT">
+        <![CDATA[
+        SELECT COUNT(*) AS CNT
+          FROM DPS.PT_SCHEDULE
+         WHERE STR_CD = ?
+           AND STK_YM = ?
+        ]]> 
+    </query>
+    <!--재고실사기간 중복 체크  -->
+    <query name="SEL_SCHEDULE_SRVY_DT_CNT">
+        <![CDATA[
+        SELECT COUNT(*) AS CNT
+          FROM DPS.PT_SCHEDULE
+         WHERE STR_CD     = ?           
+           AND ( ? BETWEEN SRVY_S_DT AND SRVY_E_DT
+             OR  ? BETWEEN SRVY_S_DT AND SRVY_E_DT)
+        ]]> 
+    </query>
+       
+    <!-- 재고실사일정 신규 입력  -->    
+    <query name="INS_SCHEDULE">    
+        <![CDATA[
+        INSERT INTO DPS.PT_SCHEDULE(
+                                    STR_CD       
+                                  , STK_YM
+                                  , STK_FLAG
+                                  , SRVY_DT
+                                  , SRVY_S_DT
+                                  , SRVY_E_DT
+                                  , REG_DATE
+                                  , REG_ID
+                                  , MOD_DATE
+                                  , MOD_ID
+                                  , STK_S_DT
+                                  , STK_E_DT
+                                  , LOSS_APP_DATE
+                                   )                                  
+                             VALUES(
+                                    ?  
+                                  , ?         
+                                  , ?        
+                                  , ?        
+                                  , ?       
+                                  , ? 
+                                  , SYSDATE
+                                  , ?
+                                  , SYSDATE
+                                  , ?    
+                                  , ?
+                                  , ?        
+                                  , ?                    
+                                   )  
+        ]]>                                 
+    </query>
+    
+    <!-- 공지내역 신규 입력  -->    
+    <query name="INS_SCHEDULEBIGO">    
+        <![CDATA[
+            INSERT INTO DPS.PT_SCHEDULEBIGO(STR_CD
+                                          , STK_YM
+                                          , BIGO
+                                          , RED_DATE
+                                          , REG_ID
+                                          , MOD_DATE
+                                          , MOD_ID                                   
+                                           )                                  
+                                     VALUES(?  
+                                          , ?         
+                                          , ?                                          
+                                          , SYSDATE
+                                          , ?
+                                          , SYSDATE
+                                          , ?                                
+                                           ) 
+        ]]>                                 
+    </query>
+    
+    <!-- 공지사항 신규 입력  -->    
+    <query name="INS_NOTI">    
+        <![CDATA[
+            INSERT INTO COM.TC_NOTI       ( NOTI_ID
+                                          , NOTI_TITLE
+                                          , NOTI_CONTENT
+                                          , S_DATE
+                                          , E_DATE
+                                          , SEND_TO_ALL
+                                          , FILE_NM
+                                          , TEL1
+                                          , TEL2
+                                          , TEL3
+                                          , REG_DATE
+                                          , REG_ID
+                                          , MOD_DATE
+                                          , MOD_ID    
+                                          , NOTI_FLAG                               
+                                           )                                  
+                                     VALUES((SELECT TO_CHAR(SYSDATE, 'YYYYMMDD')||LTRIM(RTRIM(TO_CHAR(TO_NUMBER(SUBSTR(MAX(NOTI_ID), 9, 4)) + 1, '0000'))) 
+                                              FROM COM.TC_NOTI 
+                                             WHERE ROWNUM = 1)                                          
+                                          , ?||' 재고조사'         
+                                          , ?
+                                          , TO_CHAR((TO_DATE(?,'YYYYMMDD')-7),'YYYYMMDD') 
+                                          , ?
+                                          , 'Y'
+                                          , NULL
+                                          , NULL
+                                          , NULL
+                                          , NULL                                          
+                                          , SYSDATE
+                                          , ?
+                                          , SYSDATE
+                                          , ?     
+                                          , '2'                           
+                                           ) 
+        ]]>                                 
+    </query>
+    
+    <!--재고조사일정 수정시 중복 체크  -->
+    <query name="SEL_SCHEDULE_UPD_CNT">
+        <![CDATA[
+        SELECT COUNT(*) AS CNT
+          FROM DPS.PT_SCHEDULE
+         WHERE STR_CD     = ?           
+           AND STK_YM     = ?     
+           AND STK_FLAG   = ? 
+           AND SRVY_DT    = ?  
+           AND SRVY_S_DT  = ?    
+           AND SRVY_E_DT  = ?
+        ]]> 
+    </query>
+
+    <!-- 재고조사일정 수정 입력  -->
+    <query name="UPD_SCHEDULE">
+        <![CDATA[
+        UPDATE DPS.PT_SCHEDULE
+           SET STR_CD    = ?    , STK_YM       = ?     , STK_FLAG    = ?          , SRVY_DT    = ? 
+             , SRVY_S_DT = ?    , SRVY_E_DT    = ?     , MOD_DATE    = SYSDATE    , MOD_ID     = ?
+             , STK_S_DT  = ?    , STK_E_DT     = ?     , LOSS_APP_DATE = ?
+         WHERE STR_CD   = ?
+           AND STK_YM   = ?
+        ]]>
+    </query> 
+    <!-- 재고조사일정 수정 입력  -->
+    <query name="UPD_SCHEDULEBIGO">
+        <![CDATA[
+        UPDATE DPS.PT_SCHEDULEBIGO
+           SET BIGO = ?
+         WHERE STR_CD   = ?
+           AND STK_YM   = ?
+        ]]>
+    </query> 
+    <!-- 재고조사일정 삭제-->
+    <query name="DEL_SCHEDULE">
+        <![CDATA[
+            DELETE
+              FROM DPS.PT_SCHEDULE
+             WHERE STR_CD    = ?     
+               AND STK_YM     = ?
+               AND STK_FLAG   = ?
+               AND SRVY_DT    = ?
+               AND SRVY_S_DT  = ?
+               AND SRVY_E_DT  = ?
+        ]]>
+    </query>
+    
+    <!-- 공지내역 삭제-->
+    <query name="DEL_SCHEDULEBIGO">
+        <![CDATA[
+            DELETE
+              FROM DPS.PT_SCHEDULEBIGO
+             WHERE STR_CD    = ?     
+               AND STK_YM    = ?               
+        ]]>
+    </query>
+    
+</service>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 
+ * 작 성 일 : 2010.05.17
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 바이어(SM) 공통 XML
+ -->
+<service name="/ccom026.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_BUYERMST">
+      <column colName="SEL"               colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BUYER_CD"          colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BUYER_NAME"        colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="MAIN_FLAG"         colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="BUYER_CHAR_NAME"   colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <gauce name="H_SEL_MAIN_BUYER">
+        <column colName="BUYER_CD"   colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 바이어(SM) 조회(매입조직) SQL -->
+    <query name="SEL_BUYERMST_BUY">
+        <![CDATA[                                        
+		SELECT 'F'        AS SEL
+		     , BUY.BUYER_CD
+		     , BUY.BUYER_NAME
+		     , BUY.MAIN_FLAG
+		     , DPS.FN_GET_BUYER_NAME(BUY.BUYER_CD) AS BUYER_CHAR_NAME
+		  FROM DPS.PC_BUYERMST BUY
+		 WHERE BUY.MAIN_FLAG    = '1' 
+		   AND BUY.USE_YN       = 'Y'
+		   AND BUY.PC_ORG_CD    IN (SELECT SPBN.BUY_ORG_CD
+		                              FROM DPS.PC_STRPBN SPBN
+		                             WHERE SPBN.BUY_ORG_CD IN (
+		                                                        SELECT ORG.ORG_CD
+		                                                          FROM DPS.PC_ORGMST ORG
+		                                                         START WITH ORG.ORG_CD = ?
+		                                                       CONNECT BY PRIOR  ORG.ORG_CD = ORG.P_ORG_CD
+		                                                       )
+		                               AND EXISTS ( SELECT MYORG.USER_ID
+		                                              FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.USER_ID  = ?
+		                                               AND MYORG.ORG_FLAG = ?
+		                                               AND SPBN.STR_CD = MYORG.STR_CD
+		                                               AND SPBN.PUMBUN_CD = MYORG.PUMBUN_CD
+		                                               AND ROWNUM         = 1
+		                                          )
+		                           )
+		   
+			AND BUY.BUYER_CD   LIKE ?||'%'
+			AND BUY.BUYER_NAME LIKE '%'||?||'%'    
+        ]]>
+    </query>
+    
+    
+     <!-- 바이어(SM) 조회(판매조직) SQL -->
+    <query name="SEL_BUYERMST_SALE">
+        <![CDATA[                                        
+		SELECT 'F'        AS SEL
+		     , BUY.BUYER_CD
+		     , BUY.BUYER_NAME
+		     , BUY.MAIN_FLAG
+		     , DPS.FN_GET_BUYER_NAME(BUY.BUYER_CD) AS BUYER_CHAR_NAME
+		  FROM DPS.PC_BUYERMST BUY
+		 WHERE BUY.MAIN_FLAG    = '1' 
+		   AND BUY.USE_YN       = 'Y'
+		   AND BUY.PC_ORG_CD    IN (SELECT SPBN.BUY_ORG_CD
+		                              FROM DPS.PC_STRPBN SPBN
+		                             WHERE SPBN.SALE_ORG_CD IN (
+		                                                        SELECT ORG.ORG_CD
+		                                                          FROM DPS.PC_ORGMST ORG
+		                                                         START WITH ORG.ORG_CD = ?
+		                                                       CONNECT BY PRIOR  ORG.ORG_CD = ORG.P_ORG_CD
+		                                                       )
+		                               AND EXISTS ( SELECT MYORG.USER_ID
+		                                              FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.USER_ID  = ?
+		                                               AND MYORG.ORG_FLAG = ?
+		                                               AND SPBN.STR_CD = MYORG.STR_CD
+		                                               AND SPBN.PUMBUN_CD = MYORG.PUMBUN_CD
+		                                               AND ROWNUM         = 1
+		                                          )
+		                           )
+		   AND BUY.BUYER_CD   LIKE ?||'%'
+           AND BUY.BUYER_NAME LIKE '%'||?||'%' 
+        ]]>
+    </query>
+</service>

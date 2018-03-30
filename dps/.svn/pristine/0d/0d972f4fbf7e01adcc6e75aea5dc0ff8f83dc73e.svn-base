@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.04
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : F&B매장을 관리한다.
+ -->
+<service name="/pcod901.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FNB_SHOP_CD"        colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FNB_SHOP_NAME"      colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FNB_SHOP_FLAG"      colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"             colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHNAL_FLAG"         colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FNB_FLAG"           colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FNB_BIZ_KIND_CD"    colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_SHOP_CD"        colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_SHOP_NAME"      colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEL_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DTL_CNT"            colType="TB_INT"      size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- F&B매장 마스터 조회 쿼리  -->
+    <query name="SEL_FNBSHOPMST">
+        <![CDATA[
+            SELECT STR_CD        
+                 , FNB_SHOP_CD      
+                 , FNB_SHOP_NAME
+                 , FNB_SHOP_FLAG
+                 , VEN_CD        
+                 , DPS.FN_GET_VENDOR_NAME(VEN_CD)                AS VEN_NAME
+                 , CHNAL_FLAG
+                 , FNB_FLAG     
+                 , FNB_BIZ_KIND_CD
+                 , REP_SHOP_CD        
+                 , DPS.FN_GET_FNB_SHOP_NAME(STR_CD,REP_SHOP_CD)  AS REP_SHOP_NAME
+                 , USE_YN     
+                 , CASE WHEN TO_CHAR(REG_DATE,'YYYYMMDD') = TO_CHAR(SYSDATE,'YYYYMMDD') 
+                        THEN 'Y'
+                        ELSE 'N'
+                   END                                           AS DEL_YN
+                 , (SELECT COUNT(*) FROM DPS.PC_FNBMENUKIND WHERE STR_CD = FSM.STR_CD AND FNB_SHOP_CD = FSM.FNB_SHOP_CD)
+                   + (SELECT COUNT(*) FROM DPS.PC_FNBMENUMST WHERE STR_CD = FSM.STR_CD AND FNB_SHOP_CD = FSM.FNB_SHOP_CD) AS DTL_CNT
+                   
+              FROM DPS.PC_FNBSHOPMST FSM
+             WHERE STR_CD                         = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBSHOPMST_WHERE_VEN_CD">
+        <![CDATA[
+               AND VEN_CD                         LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBSHOPMST_WHERE_VEN_NAME">
+        <![CDATA[
+               AND DPS.FN_GET_VENDOR_NAME(VEN_CD) LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBSHOPMST_WHERE_FNB_SHOP_CD">
+        <![CDATA[
+               AND FNB_SHOP_CD                    LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBSHOPMST_WHERE_FNB_SHOP_NAME">
+        <![CDATA[
+               AND FNB_SHOP_NAME                  LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBSHOPMST_WHERE_USE_YN">
+        <![CDATA[
+               AND USE_YN                         = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBSHOPMST_ORDER">
+        <![CDATA[
+             ORDER BY FNB_SHOP_CD
+        ]]>
+    </query>
+    <!-- F&B매장 새로운 코드 생성  -->
+    <query name="SEL_FNBSHOPMST_NEW_FNB_SHOP_CD">
+        <![CDATA[
+            SELECT LPAD( NVL( MAX(FNB_SHOP_CD)+1, 1), 4, '0') AS NEW_FNB_SHOP_CD
+              FROM DPS.PC_FNBSHOPMST 
+             WHERE STR_CD = ?
+        ]]>
+    </query>
+    
+    <!-- F&B매장 상세 데이터 수  -->
+    <query name="SEL_FNBSHOPMST_DETAIL_CNT">
+        <![CDATA[
+            SELECT COUNT(*)    AS CNT
+              FROM DPS.PC_FNBMENUKIND 
+             WHERE STR_CD      = ?
+               AND FNB_SHOP_CD = ?
+        ]]>
+    </query>
+    <!-- F&B매장 마스터 등록 -->
+    <query name="INS_FNBSHOPMST">
+        <![CDATA[
+            INSERT INTO DPS.PC_FNBSHOPMST(STR_CD         
+                                        , FNB_SHOP_CD    
+                                        , FNB_SHOP_NAME  
+                                        , FNB_SHOP_FLAG  
+                                        , VEN_CD         
+                                        , CHNAL_FLAG     
+                                        , FNB_FLAG       
+                                        , FNB_BIZ_KIND_CD
+                                        , REP_SHOP_CD    
+                                        , USE_YN 
+                                        , REG_DATE
+                                        , REG_ID
+                                        , MOD_DATE
+                                        , MOD_ID
+                                         )
+                                   VALUES(?         
+                                        , ?
+                                        , ?  
+                                        , ?  
+                                        , ?         
+                                        , ?     
+                                        , ?       
+                                        , ?
+                                        , ?    
+                                        , ? 
+                                        , SYSDATE
+                                        , ?
+                                        , SYSDATE
+                                        , ?
+                                         )
+        ]]>   
+    </query>
+    <!-- F&B매장 마스터 수정 -->
+    <query name="UPD_FNBSHOPMST">
+        <![CDATA[
+            UPDATE DPS.PC_FNBSHOPMST
+               SET FNB_SHOP_NAME   = ?          
+                 , FNB_SHOP_FLAG   = ?          
+                 , VEN_CD          = ?          
+                 , CHNAL_FLAG      = ?          
+                 , FNB_FLAG        = ? 
+                 , FNB_BIZ_KIND_CD = ?          
+                 , REP_SHOP_CD     = ? 
+                 , USE_YN          = ? 
+                 , MOD_DATE        = SYSDATE
+                 , MOD_ID          = ?
+             WHERE STR_CD          = ?
+               AND FNB_SHOP_CD     = ?
+        ]]>   
+    </query>
+    <!-- F&B매장 마스터 삭제 -->
+    <query name="DEL_FNBSHOPMST">
+        <![CDATA[
+            DELETE 
+              FROM DPS.PC_FNBSHOPMST
+             WHERE STR_CD          = ?
+               AND FNB_SHOP_CD     = ?
+        ]]>   
+    </query>
+    <!-- F&B메뉴분류 사용여부'N'수정 -->
+    <query name="UPD_FNBMENUKIND_USE_N">
+        <![CDATA[
+            UPDATE DPS.PC_FNBMENUKIND
+               SET USE_YN          = ? 
+                 , MOD_DATE        = SYSDATE
+                 , MOD_ID          = ?
+             WHERE STR_CD          = ?
+               AND FNB_SHOP_CD     = ?
+        ]]>   
+    </query>
+    <!-- F&B메뉴마스터 사용여부'N'수정 -->
+    <query name="UPD_FNBMENUMST_USE_N">
+        <![CDATA[
+            UPDATE DPS.PC_FNBMENUMST
+               SET USE_YN          = ? 
+                 , MOD_DATE        = SYSDATE
+                 , MOD_ID          = ?
+             WHERE STR_CD          = ?
+               AND FNB_SHOP_CD     = ?
+        ]]>   
+    </query>
+</service>

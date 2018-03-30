@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.06.16
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  세금계산서관리
+ -->
+<service name="/mcae604.mc">
+    <gauce name="H_SEL_MR_CALMST">
+        <column colName="CHK_BOX"          colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+	    <column colName="STR_CD"           colType="TB_STRING"   size="2"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="EVENT_CD"         colType="TB_STRING"   size="11" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="EVENT_NM"         colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_CD"           colType="TB_STRING"   size="6"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"           colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CARD_COMP"        colType="TB_STRING"   size="2"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CCOMP_NM"         colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_GB"           colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CPN_REC_AMT"      colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="SUP_AMT"          colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VAT_AMT"          colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TOT_AMT"          colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_ISSUE"        colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_ISSUE_NM"     colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ETAX_STAT"        colType="TB_STRING"   size="5"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_ISSUE_FLAG"   colType="TB_STRING"   size="2"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+
+    <query name="SEL_MR_CALMST">
+        <![CDATA[
+            SELECT 'F' AS CHK_BOX 
+                 , STR_CD
+                 , EVENT_CD
+                 , EVENT_NM
+                 , VEN_CD
+                 , VEN_NM
+                 , CARD_COMP
+                 , CCOMP_NM
+                 , '1' AS TAX_GB
+                 , CPN_REC_AMT
+                 , SUP_AMT
+                 , VAT_AMT
+                 , TOT_AMT
+                 , TAX_ISSUE
+                 , DECODE(TAX_ISSUE, 'Y', '발행', '미발행') AS  TAX_ISSUE_NM /*계산서 발행구분*/
+                 , CASE WHEN TAX_ISSUE = 'Y' THEN DPS.FN_GET_TAX_STATE(EDI_SEQ_NO)
+                        ELSE '미발행' END  AS ETAX_STAT  /*전자세금계산서상태*/
+                 , '70' AS TAX_ISSUE_FLAG /*사은행 사세금계산서구분 코드 : 70*/
+              FROM (SELECT EVC.STR_CD
+                         , EVC.EVENT_CD
+                         , ENT.EVENT_NAME AS EVENT_NM
+                         , EVC.VEN_CD
+                         , VEN.VEN_NAME AS VEN_NM
+                         , EVC.CARD_COMP
+                         , CAR.CCOMP_NM
+                         , '1' AS TAX_GB
+                         , (EVC.CAL_AMT+EVC.GIFT_CAL_AMT) AS CPN_REC_AMT
+                         , DECODE(TAX.TAX_ISSUE_SEQ_NO, NULL, 'N', 'Y') AS TAX_ISSUE /*계산서 발행구분*/
+                         , TAX.EDI_SEQ_NO
+                         , NVL(TAX.SUP_AMT, 0) AS SUP_AMT
+                         , NVL(TAX.VAT_AMT, 0) AS VAT_AMT
+                         , NVL( TAX.TOT_AMT, 0) AS TOT_AMT
+			          FROM MSS.MC_EVTSKUCAL EVC
+			             , DPS.PP_TAXMST    TAX
+			             , DPS.PC_EVTMST    ENT
+			             , DPS.PC_VENMST    VEN
+			             , DPS.PD_CARDCOMP  CAR
+			         WHERE EVC.CAL_FLAG = '1' /*0:지급(물품협력사대상), 1:수취(카드협력사대상)수취*/
+			           AND EVC.STR_CD = TAX.STR_CD(+)
+			           AND EVC.TAX_ISSUE_DT = TAX.TAX_ISSUE_DT(+)
+			           AND EVC.TAX_ISSUE_SEQ_NO = TAX.TAX_ISSUE_SEQ_NO(+)
+			           AND EVC.EVENT_CD = ENT.EVENT_CD
+			           AND EVC.VEN_CD = VEN.VEN_CD
+			           AND EVC.CARD_COMP = CAR.CCOMP_CD 
+			           AND EVC.VEN_CD LIKE ?||'%' 
+			           AND EVC.STR_CD = ?)
+			    WHERE TAX_ISSUE LIKE ?||'%' 
+                ORDER BY EVENT_CD, VEN_CD
+        ]]>
+    </query>
+</service>

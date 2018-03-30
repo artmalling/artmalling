@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  브랜드별 수수료조회(일별)
+ -->
+<service name="/psal955.ps">
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"     colType="TB_STRING"    size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"   colType="TB_STRING"    size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="KSNET"      colType="TB_DECIMAL"   size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NICE"    colType="TB_DECIMAL"   size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="KFTC"    colType="TB_DECIMAL"   size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="KEYIN"    colType="TB_DECIMAL"   size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <query name="SEL_MASTER">
+        <![CDATA[            
+            SELECT  ? STR_CD,(SELECT STR_NAME FROM DPS.PC_STRMST A WHERE A.STR_CD =  ?) STR_NAME,
+		        DPS.FN_GET_VAN_APPR_CNT(?,?,?,?) KSNET,
+		        DPS.FN_GET_VAN_APPR_CNT(?,?,?,?) NICE,
+		        DPS.FN_GET_VAN_APPR_CNT(?,?,?,?) KFTC,
+		        DPS.FN_GET_VAN_APPR_CNT(?,?,?,?) KEYIN FROM DUAL
+        
+        ]]>        
+    </query>
+</service>

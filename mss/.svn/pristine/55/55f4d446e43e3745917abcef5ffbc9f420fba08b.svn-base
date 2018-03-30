@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.02.15
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  인정률 마스터 관리
+ -->
+<service name="/mcae104.mc">
+    <!-- 인정률마스터 헤더 -->
+    <gauce name="H_SEL_APPRATE">
+        <column colName="CHK_BOX"       colType="TB_STRING"     size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"        colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"       colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NM"       colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"       colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_NM"       colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"         colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NM"         colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"     colType="TB_STRING"     size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"     colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_RATE"      colType="TB_DECIMAL"    size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 인정률마스터 조회 Query  -->
+    <query name="SEL_APPRATE">
+        <![CDATA[  
+           SELECT CHK_BOX
+                , STR_CD 
+                , STR_NM
+                , DEPT_CD
+                , DEPT_NM
+                , TEAM_CD
+                , TEAM_NM
+                , PC_CD
+                , PC_NM
+                , PUMBUN_CD
+                , PUMBUN_NM
+                , APP_RATE
+             FROM ( 
+		           SELECT 'F' AS CHK_BOX
+		                , SP.STR_CD 
+		                , OP.STR_NM
+		                , OM.DEPT_CD
+		                , OP.DEPT_NM
+		                , OM.TEAM_CD
+		                , OP.TEAM_NM
+		                , OM.PC_CD
+		                , OP.PC_NM
+		                , SP.PUMBUN_CD
+		                , SP.PUMBUN_NAME AS PUMBUN_NM
+		                , NVL(AP.APP_RATE, 0) AS APP_RATE
+		             FROM DPS.PC_PBNMST     PM
+		                , DPS.PC_STRPBN     SP
+		                , DPS.PC_ORGMST     OM   
+		                , MSS.MC_APPRATE    AP  
+		                , DPS.V_ORGPART     OP
+		            WHERE PM.PUMBUN_CD    = SP.PUMBUN_CD 
+		              AND SP.SALE_ORG_CD  = OM.ORG_CD
+		              AND OP.ORG_CD       = OM.ORG_CD
+		              AND SP.STR_CD       = OP.STR_CD
+					  AND SP.STR_CD       = AP.STR_CD(+)
+					  AND SP.PUMBUN_CD    = AP.PUMBUN_CD(+)
+					  --AND SP.SALE_BUY_FLAG= '1'						--판매분매입구분 1:사전매입, 2:판매분매입
+					  AND SP.STR_CD  = ?
+					  AND OM.DEPT_CD LIKE ?||'%'
+					  AND OM.TEAM_CD LIKE ?||'%'
+					  AND OM.PC_CD   LIKE ?||'%'
+					  AND SP.PUMBUN_CD   LIKE ?||'%')
+			WHERE APP_RATE   LIKE ?||'%'
+			ORDER BY STR_CD, DEPT_CD, TEAM_CD, PC_CD
+        ]]>        
+    </query>
+    
+    <!-- 인정률마스터 등록/수정 Query  -->
+    <query name="UPD_APPRATE">
+        <![CDATA[   
+            MERGE INTO MSS.MC_APPRATE
+                USING ( SELECT COUNT(1) AS CNT FROM MSS.MC_APPRATE WHERE STR_CD = ? AND PUMBUN_CD = ?) TG
+                   ON ( TG.CNT > 0 )
+                 WHEN MATCHED THEN
+                    UPDATE 
+                       SET APP_RATE = ?
+                         , MOD_DATE = SYSDATE
+                         , MOD_ID   = ? 
+                     WHERE STR_CD   = ?
+                       AND PUMBUN_CD= ?
+                 WHEN NOT MATCHED THEN
+                    INSERT 
+                         ( STR_CD
+                         , PUMBUN_CD
+                         , APP_RATE
+                         , REG_DATE
+                         , REG_ID
+                         , MOD_DATE
+                         , MOD_ID)
+                    VALUES
+                         ( ?
+                         , ?
+                         , ?
+                         , SYSDATE
+                         , ?
+                         , SYSDATE
+                         , ?)
+        ]]>        
+    </query>
+    
+     <!-- 인정률마스터 등록 HISTORY  -->
+    <query name="INS_APPRATE_HIS">
+        <![CDATA[   
+        INSERT INTO MSS.MC_APPRATE_HIS ( STR_CD
+				                       , PUMBUN_CD
+				                       , APP_RATE
+				                       , REG_DATE
+				                       , REG_ID
+				                       , MOD_DATE
+				                       , MOD_ID)
+				                  VALUES
+				                       ( ?
+				                       , ?
+				                       , ?
+				                       , SYSDATE
+				                       , ?
+				                       , SYSDATE
+				                       , ?)
+        ]]>        
+    </query>
+    
+</service>

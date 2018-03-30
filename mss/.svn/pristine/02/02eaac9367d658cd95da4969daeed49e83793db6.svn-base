@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상품권 회수율 조회
+ -->
+<service name="/mgif321.mg">
+ <!-- 상품권 회수율 조회  -->
+
+    <gauce name="H_MASTER"> 
+        <column colName="POUT_TYPE"        	colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POUT_TYPE_NM"     	colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_QTY"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_SUM"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTDRAWL_QTY"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTDRAWL_SUM"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTDRAWL_RATE"    colType="TB_DECIMAL" size="13" dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+
+    <!-- 상품권 회수율 조회  -->
+     <query name="SEL_POUTRREQ_MASTER">
+         <![CDATA[ 
+			SELECT POUT_TYPE,POUT_TYPE_NM,GIFT_AMT_NAME,MAX(GIFTCERT_AMT) GIFTCERT_AMT,SUM(GIFTCERT_QTY) GIFTCERT_QTY,SUM(GIFTCERT_AMT) GIFTCERT_SUM,
+                                    SUM(GIFTDRAWL) GIFTDRAWL_QTY, SUM(GIFTDRAWL) * MAX(GIFTCERT_AMT) GIFTDRAWL_SUM ,  ROUND(SUM(GIFTDRAWL) / SUM(GIFTCERT_QTY) * 100,2) AS GIFTDRAWL_RATE
+                        FROM
+                                    (SELECT
+
+                                                       VA.POUT_TYPE,
+                                           (SELECT COMM_NAME1 FROM COM.TC_COMMCODE WHERE COMM_PART = 'M014' AND SYS_PART = 'D' AND COMM_CODE = VA.POUT_TYPE) AS POUT_TYPE_NM,
+                                           TB.GIFT_AMT_NAME,
+                                                       TB.GIFTCERT_AMT,
+                                                       1 AS GIFTCERT_QTY,
+                                                       (SELECT COUNT(*) FROM MSS.MG_GIFTDRAWL GD WHERE GD.GIFTCARD_NO = TD.GIFTCARD_NO) GIFTDRAWL
+                                                FROM (
+                                                      SELECT TA.STR_CD,
+                                                             TA.CONF_DT,
+                                                             TA.GIFT_TYPE_CD,
+                                                             TA.ISSUE_TYPE,
+                                                             TA.GIFT_AMT_TYPE,
+                                                             TA.POUT_FLAG,
+                                                             TA.POUT_TYPE,
+                                                             TA.GIFT_S_NO,
+                                                             TA.GIFT_E_NO
+                                                      FROM MSS.MG_POUTREQCONF TA
+                                                      WHERE TA.STR_CD = '01'
+                                                        AND TA.CONF_DT BETWEEN ? AND ?
+                                                        AND TA.POUT_FLAG = '1'                  --불출구분
+                                                        AND TA.POUT_TYPE LIKE ? || '%'               --불출유형
+                                                      GROUP BY  TA.STR_CD,
+                                                             TA.CONF_DT,
+                                                             TA.GIFT_TYPE_CD,
+                                                             TA.ISSUE_TYPE,
+                                                             TA.GIFT_AMT_TYPE,
+                                                             TA.GIFT_S_NO,
+                                                             TA.GIFT_E_NO,
+                                                             TA.POUT_FLAG,
+                                                             TA.POUT_TYPE
+                                                      ) VA  ,
+                                                      MSS.MG_GIFTAMTMST TB,
+                                                      MSS.MG_GIFTMST TD
+                                                WHERE VA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+                                                AND VA.ISSUE_TYPE = TB.ISSUE_TYPE
+                                                AND VA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE
+                                                AND TD.GIFTCARD_NO BETWEEN VA.GIFT_S_NO AND VA.GIFT_E_NO
+                                                )
+                        GROUP BY POUT_TYPE,POUT_TYPE_NM,GIFT_AMT_NAME
+                        ORDER BY POUT_TYPE,GIFTCERT_AMT
+         ]]>
+     </query>  
+      
+</service>

@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 배임주
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.07.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 브랜드 판매형태별 매출현황
+ -->
+<service name="/psal451.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"				colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"				colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"				colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_ORG_NAME"			colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"					colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_ORG_NAME"			colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"				colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NM" 			colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_CD"				colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_NM" 				colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NOR_TOT_SALE_AMT"		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TOT_SALE_AMT"		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_TOT_SALE_AMT"	colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_TOT_SALE_AMT"		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NOR_TOT_SALE_AMT2"		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TOT_SALE_AMT2"	colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_TOT_SALE_AMT2"	colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_TOT_SALE_AMT2"		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INC_NOR_SALE_RATE"		colType="TB_DECIMAL"     size="5"        dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INC_SALE_SALE_RATE"	colType="TB_DECIMAL"     size="5"        dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INC_EVENT_SALE_RATE"	colType="TB_DECIMAL"     size="5"        dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INC_TOT_SALE_RATE"		colType="TB_DECIMAL"     size="5"        dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <query name="SEL_SALE_BRAND">        
+        <![CDATA[
+              SELECT STR_CD
+                  , DEPT_CD
+                  , TEAM_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 6) || '0000') AS TEAM_ORG_NAME
+                  , PC_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 8) || '00') AS PC_ORG_NAME
+                  , PUMMOK_CD
+                  , PUMMOK_NAME           
+                  , BRAND_CD
+                  , BRAND_NM
+                  , NOR_TOT_SALE_AMT   AS NOR_TOT_SALE_AMT
+                  , SALE_TOT_SALE_AMT  AS SALE_TOT_SALE_AMT
+                  , (TOT_TOT_SALE_AMT - NOR_TOT_SALE_AMT - SALE_TOT_SALE_AMT)  AS EVENT_TOT_SALE_AMT
+                  , TOT_TOT_SALE_AMT    AS TOT_TOT_SALE_AMT
+                  , NOR_TOT_SALE_AMT2   AS NOR_TOT_SALE_AMT2
+                  , SALE_TOT_SALE_AMT2  AS SALE_TOT_SALE_AMT2
+                  , (TOT_TOT_SALE_AMT2 - NOR_TOT_SALE_AMT2 - SALE_TOT_SALE_AMT2)  AS EVENT_TOT_SALE_AMT2
+                  , TOT_TOT_SALE_AMT2  AS TOT_TOT_SALE_AMT2
+                  , CASE WHEN NOR_TOT_SALE_AMT2  = 0 THEN 0 ELSE ROUND(((NOR_TOT_SALE_AMT  - NOR_TOT_SALE_AMT2)  / NOR_TOT_SALE_AMT2  * 100), 1) END AS INC_NOR_SALE_RATE
+                  , CASE WHEN SALE_TOT_SALE_AMT2 = 0 THEN 0 ELSE ROUND(((SALE_TOT_SALE_AMT - SALE_TOT_SALE_AMT2) / SALE_TOT_SALE_AMT2 * 100), 1) END AS INC_SALE_SALE_RATE
+                  , CASE WHEN (TOT_TOT_SALE_AMT2 - NOR_TOT_SALE_AMT2 - SALE_TOT_SALE_AMT2) = 0 THEN 0 ELSE ROUND(((((TOT_TOT_SALE_AMT - NOR_TOT_SALE_AMT - SALE_TOT_SALE_AMT))-((TOT_TOT_SALE_AMT2 - NOR_TOT_SALE_AMT2 - SALE_TOT_SALE_AMT2)))/((TOT_TOT_SALE_AMT2 - NOR_TOT_SALE_AMT2 - SALE_TOT_SALE_AMT2))), 1) END AS INC_EVENT_SALE_RATE
+                  , CASE WHEN TOT_TOT_SALE_AMT2  = 0 THEN 0 ELSE ROUND(((TOT_TOT_SALE_AMT  - TOT_TOT_SALE_AMT2 ) / TOT_TOT_SALE_AMT2  * 100), 1) END AS INC_TOT_SALE_RATE
+               FROM (SELECT B.STR_CD
+                          , B.DEPT_CD
+                          , B.TEAM_CD
+                          , SUBSTR(F.SALE_ORG_CD, 1, 8) AS ORG_CD
+                          , B.PC_CD
+                          , A.PUMMOK_CD
+                          , PMK.PUMMOK_NAME PUMMOK_NAME
+                          , BRD.BRAND_CD
+                          , BRD.BRAND_NM
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ? AND ?) AND ((A.EVENT_FLAG BETWEEN '00' AND '10' AND A.EVENT_RATE = '00') OR (A.EVENT_FLAG = '90' AND A.EVENT_RATE = '00')) THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS NOR_TOT_SALE_AMT
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ? AND ?) AND ((A.EVENT_FLAG BETWEEN '11' AND '69') OR (A.EVENT_FLAG = '90' AND A.EVENT_RATE <> '00'))THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS SALE_TOT_SALE_AMT
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ? AND ?) THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS TOT_TOT_SALE_AMT
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12) AND ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12)) AND ((A.EVENT_FLAG BETWEEN '00' AND '10' AND A.EVENT_RATE = '00') OR (A.EVENT_FLAG = '90' AND A.EVENT_RATE = '00')) THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS NOR_TOT_SALE_AMT2
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12) AND ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12)) AND ((A.EVENT_FLAG BETWEEN '11' AND '69') OR (A.EVENT_FLAG = '90' AND A.EVENT_RATE <> '00'))THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS SALE_TOT_SALE_AMT2
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12) AND ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12)) THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS TOT_TOT_SALE_AMT2
+                       FROM DPS.PS_DAYMGPBN    A
+                          , DPS.PC_ORGMST      B
+                          , DPS.PC_STRPBN      F
+                          , DPS.PC_PBNMST      PBN
+                          , DPS.PC_BRDMST      BRD
+                          , DPS.PC_PMKMST      PMK
+                      WHERE B.ORG_CD     = F.SALE_ORG_CD
+                        AND A.STR_CD     = F.STR_CD
+                        AND A.PUMBUN_CD  = F.PUMBUN_CD
+                        AND A.PUMMOK_CD  = PMK.PUMMOK_CD
+                        AND PBN.PUMBUN_CD = F.PUMBUN_CD
+                        AND BRD.BRAND_CD  = PBN.BRAND_CD
+                        AND B.STR_CD     = ?
+                        AND B.DEPT_CD    = ?
+                        AND B.TEAM_CD    LIKE ? || '%'
+                        AND B.PC_CD      LIKE ? || '%'
+                        AND ((A.SALE_DT    >= ?  AND A.SALE_DT    <= ?)
+                        OR   (A.SALE_DT    >= ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12)  AND A.SALE_DT    <= ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12)))
+                        AND EXISTS ( SELECT MYORG.USER_ID
+                                       FROM COM.V_MYORG MYORG
+                                      WHERE MYORG.STR_CD      = B.STR_CD
+                                        AND MYORG.DEPT_CD     = B.DEPT_CD
+                                        AND MYORG.TEAM_CD     = B.TEAM_CD
+                                        AND MYORG.PC_CD       = B.PC_CD
+                                        AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                        AND MYORG.USER_ID     = ?
+                                   )
+                      GROUP BY
+                            B.STR_CD
+                          , SUBSTR(F.SALE_ORG_CD, 1, 8)
+                          , B.DEPT_CD
+                          , B.TEAM_CD
+                          , B.PC_CD
+                          , BRD.BRAND_CD
+                          , BRD.BRAND_NM
+                          , A.PUMMOK_CD
+                          , PMK.PUMMOK_NAME
+                    ) X
+              ORDER BY
+                    X.STR_CD
+                  , X.DEPT_CD
+                  , X.TEAM_CD
+                  , X.PC_CD
+                  , X.PUMMOK_CD
+                  , X.PUMMOK_NAME
+                  , X.BRAND_CD
+                  , X.BRAND_NM
+        ]]>        
+    </query>
+    <query name="SEL_SALE_BRAND2">        
+        <![CDATA[
+              SELECT STR_CD
+                  , DEPT_CD
+                  , TEAM_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 6) || '0000') AS TEAM_ORG_NAME
+                  , PC_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 8) || '00') AS PC_ORG_NAME
+                  , PUMMOK_CD
+                  , PUMMOK_NAME           
+                  , BRAND_CD
+                  , BRAND_NM
+                  , NOR_TOT_SALE_AMT   AS NOR_TOT_SALE_AMT
+                  , SALE_TOT_SALE_AMT  AS SALE_TOT_SALE_AMT
+                  , (TOT_TOT_SALE_AMT - NOR_TOT_SALE_AMT - SALE_TOT_SALE_AMT)  AS EVENT_TOT_SALE_AMT
+                  , TOT_TOT_SALE_AMT    AS TOT_TOT_SALE_AMT
+                  , NOR_TOT_SALE_AMT2   AS NOR_TOT_SALE_AMT2
+                  , SALE_TOT_SALE_AMT2  AS SALE_TOT_SALE_AMT2
+                  , (TOT_TOT_SALE_AMT2 - NOR_TOT_SALE_AMT2 - SALE_TOT_SALE_AMT2)  AS EVENT_TOT_SALE_AMT2
+                  , TOT_TOT_SALE_AMT2  AS TOT_TOT_SALE_AMT2
+                  , CASE WHEN NOR_TOT_SALE_AMT2  = 0 THEN 0 ELSE ROUND(((NOR_TOT_SALE_AMT  - NOR_TOT_SALE_AMT2)  / NOR_TOT_SALE_AMT2  * 100), 1) END AS INC_NOR_SALE_RATE
+                  , CASE WHEN SALE_TOT_SALE_AMT2 = 0 THEN 0 ELSE ROUND(((SALE_TOT_SALE_AMT - SALE_TOT_SALE_AMT2) / SALE_TOT_SALE_AMT2 * 100), 1) END AS INC_SALE_SALE_RATE
+                  , CASE WHEN (TOT_TOT_SALE_AMT2 - NOR_TOT_SALE_AMT2 - SALE_TOT_SALE_AMT2) = 0 THEN 0 ELSE ROUND(((((TOT_TOT_SALE_AMT - NOR_TOT_SALE_AMT - SALE_TOT_SALE_AMT))-((TOT_TOT_SALE_AMT2 - NOR_TOT_SALE_AMT2 - SALE_TOT_SALE_AMT2)))/((TOT_TOT_SALE_AMT2 - NOR_TOT_SALE_AMT2 - SALE_TOT_SALE_AMT2))), 1) END AS INC_EVENT_SALE_RATE
+                  , CASE WHEN TOT_TOT_SALE_AMT2  = 0 THEN 0 ELSE ROUND(((TOT_TOT_SALE_AMT  - TOT_TOT_SALE_AMT2 ) / TOT_TOT_SALE_AMT2  * 100), 1) END AS INC_TOT_SALE_RATE
+               FROM (SELECT B.STR_CD
+                          , B.DEPT_CD
+                          , B.TEAM_CD
+                          , SUBSTR(F.BUY_ORG_CD, 1, 8) AS ORG_CD
+                          , B.PC_CD
+                          , A.PUMMOK_CD
+                          , PMK.PUMMOK_NAME PUMMOK_NAME
+                          , BRD.BRAND_CD
+                          , BRD.BRAND_NM
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ? AND ?) AND ((A.EVENT_FLAG BETWEEN '00' AND '10' AND A.EVENT_RATE = '00') OR (A.EVENT_FLAG = '90' AND A.EVENT_RATE = '00')) THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS NOR_TOT_SALE_AMT
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ? AND ?) AND ((A.EVENT_FLAG BETWEEN '11' AND '69') OR (A.EVENT_FLAG = '90' AND A.EVENT_RATE <> '00'))THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS SALE_TOT_SALE_AMT
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ? AND ?) THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS TOT_TOT_SALE_AMT
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12) AND ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12)) AND ((A.EVENT_FLAG BETWEEN '00' AND '10' AND A.EVENT_RATE = '00') OR (A.EVENT_FLAG = '90' AND A.EVENT_RATE = '00')) THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS NOR_TOT_SALE_AMT2
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12) AND ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12)) AND ((A.EVENT_FLAG BETWEEN '11' AND '69') OR (A.EVENT_FLAG = '90' AND A.EVENT_RATE <> '00'))THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS SALE_TOT_SALE_AMT2
+                          , SUM(CASE WHEN (A.SALE_DT BETWEEN ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12) AND ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12)) THEN (NVL(A.TOT_SALE_AMT,0)) ELSE 0 END) AS TOT_TOT_SALE_AMT2
+                       FROM DPS.PS_DAYMGPBN    A
+                          , DPS.PC_ORGMST      B
+                          , DPS.PC_STRPBN      F
+                          , DPS.PC_PBNMST      PBN
+                          , DPS.PC_BRDMST      BRD
+                          , DPS.PC_PMKMST      PMK
+                      WHERE B.ORG_CD     = F.BUY_ORG_CD
+                        AND A.STR_CD     = F.STR_CD
+                        AND A.PUMBUN_CD  = F.PUMBUN_CD
+                        AND A.PUMMOK_CD  = PMK.PUMMOK_CD
+                        AND PBN.PUMBUN_CD = F.PUMBUN_CD
+                        AND BRD.BRAND_CD  = PBN.BRAND_CD
+                        AND B.STR_CD     = ?
+                        AND B.DEPT_CD    = ?
+                        AND B.TEAM_CD    LIKE ? || '%'
+                        AND B.PC_CD      LIKE ? || '%'
+                        AND ((A.SALE_DT    >= ?  AND A.SALE_DT    <= ?)
+                        OR   (A.SALE_DT    >= ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12)  AND A.SALE_DT    <= ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'), -12)))
+                        AND EXISTS ( SELECT MYORG.USER_ID
+                                       FROM COM.V_MYORG MYORG
+                                      WHERE MYORG.STR_CD      = B.STR_CD
+                                        AND MYORG.DEPT_CD     = B.DEPT_CD
+                                        AND MYORG.TEAM_CD     = B.TEAM_CD
+                                        AND MYORG.PC_CD       = B.PC_CD
+                                        AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                        AND MYORG.USER_ID     = ?
+                                   )
+                      GROUP BY
+                            B.STR_CD
+                          , SUBSTR(F.BUY_ORG_CD, 1, 8)
+                          , B.DEPT_CD
+                          , B.TEAM_CD
+                          , B.PC_CD
+                          , BRD.BRAND_CD
+                          , BRD.BRAND_NM
+                          , A.PUMMOK_CD
+                          , PMK.PUMMOK_NAME
+                    ) X
+              ORDER BY
+                    X.STR_CD
+                  , X.DEPT_CD
+                  , X.TEAM_CD
+                  , X.PC_CD
+                  , X.PUMMOK_CD
+                  , X.PUMMOK_NAME
+                  , X.BRAND_CD
+                  , X.BRAND_NM
+        ]]>        
+    </query>
+    
+    
+</service>

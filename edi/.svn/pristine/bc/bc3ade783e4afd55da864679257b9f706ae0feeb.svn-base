@@ -1,0 +1,465 @@
+package ecmn.dao;
+
+import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import kr.fujitsu.ffw.model.AbstractDAO2;
+import kr.fujitsu.ffw.model.SqlWrapper;
+import kr.fujitsu.ffw.util.String2;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import ecom.util.Util;
+
+public class EDcs101DAO extends AbstractDAO2{
+	public String getXmlInfo(String strCardNo, String strFromDt, String strToDt)throws Exception {
+        SqlWrapper sql = null;
+        Util util = new Util();
+        String query  = "";
+        String strXml = "";
+        
+        try {            
+            sql = new SqlWrapper();
+            connect("pot");
+            
+            // 변수선언
+            int i = 0;
+            boolean paramCheck = true;
+            List resultList = null;
+            int resultListCount = 0;
+            
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+            SimpleDateFormat monthFormat = new SimpleDateFormat("yyyyMM");
+            
+            Calendar cal = Calendar.getInstance(); 
+            Date date = dateFormat.parse(new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date())); 
+            cal.setTime(date); 
+            cal.add(Calendar.MONTH, 1);            
+            
+            String strResult 		= "FAILURE";
+            String strCustId 		= "";	//고객아이디
+            String strAddPoint 		= "0";	//가용포인트
+            String strOccursPoint 	= "0";	//발생포인트
+            String strCurrExpMonth 	= monthFormat.format(new java.util.Date());	//소멸예정월(당월)
+            String strCurrExpPoint 	= "0";	//소멸예정액(당월)
+            String strNextExpMonth 	= monthFormat.format(cal.getTime());	//소멸예정월(익월)
+            String strNextExpPoint 	= "0";	//소멸예정액(익월)            
+            
+            // 파라미터 체크
+            if (isNull(strCardNo, strFromDt, strToDt)) {
+                paramCheck = false;                
+            }else{
+            	strCardNo = util.encryptedStr(strCardNo); //카드번호
+            }	
+            
+            if (paramCheck == true) {
+            	
+            	// 고객아이디조회
+            	query  = "SELECT UNIQUE A.CUST_ID\n"; 
+                query += "  FROM DCS.DM_CARD A\n";
+                query += "     , DCS.DM_CUSTOMER B\n";
+                query += " WHERE A.CUST_ID = B.CUST_ID\n";
+                query += "   AND A.CARD_NO = DCS.F_GET_POCARD_NO(?)\n";
+              
+                sql.close();
+               
+                i = 0;
+                sql.put(query);
+                sql.setString(++i, strCardNo);
+                Map custIdMap = executeQueryByMap(sql);
+                strCustId = String2.trimToEmpty((String)custIdMap.get("CUST_ID"));
+
+                if(!strCustId.equals("")){
+	                // 마리오 포인트조회
+	                query  = "SELECT NVL(POINT,0) POINT\n";
+	                query += "     , NVL(OCCURS_POINT,0) OCCURS_POINT\n";
+	                query += "  FROM DCS.DO_CUST_TPOINT\n";
+	                query += " WHERE CUST_ID = ?\n"; 
+	
+	                sql.close();
+	                i = 0;
+	                sql.put(query); 
+	                sql.setString(++i, strCustId);
+	                Map map = executeQueryByMap(sql);
+	                
+	                strAddPoint	   = String2.trimToEmpty((String)map.get("POINT")).equals("") ? strAddPoint : String2.trimToEmpty((String)map.get("POINT"));
+	                strOccursPoint = String2.trimToEmpty((String)map.get("OCCURS_POINT")).equals("") ? strOccursPoint : String2.trimToEmpty((String)map.get("OCCURS_POINT"));
+	                
+	                // 소멸예정포인트조회
+	                query  = "SELECT MAX(DECODE(A,1,EXP_MONTH)) CURR_EXP_MONTH\n";
+	                query += "     , MAX(DECODE(A,1,EXP_POINT)) CURR_EXP_POINT\n";
+	                query += "     , MAX(DECODE(A,2,EXP_MONTH)) NEXT_EXP_MONTH\n";   
+	                query += "     , MAX(DECODE(A,2,EXP_POINT)) NEXT_EXP_POINT\n";
+	                query += "  FROM (\n";    
+	                query += "    SELECT EXP_MONTH\n";
+	                query += "             , SUM(EXP_POINT) EXP_POINT\n";
+	                query += "             , ROW_NUMBER() OVER (PARTITION BY CUST_ID ORDER BY EXP_MONTH) A\n";
+	                query += "          FROM (\n";  
+	                query += "               SELECT B.CUST_ID\n";
+	                query += "                    , TO_CHAR(ADD_MONTHS(TO_DATE(A.ADD_DT, 'YYYYMMDD'), 12), 'YYYYMM') EXP_MONTH\n";
+	                query += "                    , NVL(E.REMND_POINT, A.ADD_POINT) EXP_POINT\n";
+	                query += "                 FROM DCS.DO_POINT_ADD A\n";
+	                query += "                    , DCS.DM_CARD      B\n";
+	                query += "                    , (\n"; 
+	                query += "                        SELECT M.ADD_ID\n";
+	                query += "                             , M.REMND_POINT\n";
+	                query += "                          FROM DCS.DO_PADD_PUSE M\n";
+	                query += "                             , (\n"; 
+	                query += "                                 SELECT ADD_ID\n";
+	                query += "                                      , MAX(USE_ID) USE_ID\n";
+	                query += "                                      , SUBSTR(MAX(REG_DATE||REG_SEQ),1,14) REG_DATE\n";
+	                query += "                                      , SUBSTR(MAX(REG_DATE||REG_SEQ),15,9) REG_SEQ\n";
+	                query += "                                   FROM DCS.DO_PADD_PUSE\n";
+	                query += "                                  WHERE ADD_ID IN (\n";
+	                query += "                                                    SELECT ADD_ID\n"; 
+	                query += "                                                      FROM DCS.DO_POINT_ADD\n";
+	                query += "                                                     WHERE ADD_DT BETWEEN TO_CHAR(ADD_MONTHS(sysdate, -12), 'YYYYMM')||'01'\n"; 
+	                query += "                                                                      AND TO_CHAR(ADD_MONTHS(LAST_DAY(ADD_MONTHS(sysdate,1)), -12), 'YYYYMMDD')\n";
+	                query += "                                                   )\n";  
+	                query += "                                  GROUP BY ADD_ID\n"; 
+	                query += "                               ) N\n";
+	                query += "                         WHERE M.ADD_ID   = N.ADD_ID\n";      
+//	                query += "                           AND M.USE_ID   = N.USE_ID\n";      
+	                query += "                           AND M.REG_DATE = N.REG_DATE\n";  
+	                query += "                           AND M.REG_SEQ  = N.REG_SEQ\n";  
+	                query += "                      ) E\n";       
+	                query += "                WHERE A.CARD_NO = B.CARD_NO\n";
+	                query += "                  AND A.ADD_DT BETWEEN TO_CHAR(ADD_MONTHS(sysdate, -12), 'YYYYMM')||'01'\n";
+	                query += "                                   AND TO_CHAR(ADD_MONTHS(LAST_DAY(ADD_MONTHS(sysdate,1)), -12), 'YYYYMMDD')\n";
+	                query += "                  AND A.ADD_ID  = E.ADD_ID(+)\n";
+	                query += "                  AND B.CUST_ID = ?\n";
+	                query += "                  AND NVL(E.REMND_POINT, A.ADD_POINT) <> 0\n";
+	                query += "               )\n";
+	                query += "         GROUP BY CUST_ID, EXP_MONTH\n";
+	                query += "  )\n";
+	            	  
+	                sql.close();
+	                i = 0;
+	                sql.put(query);
+	                sql.setString(++i, strCustId);
+	                Map safeMap = executeQueryByMap(sql);
+	                strCurrExpMonth = String2.trimToEmpty((String)safeMap.get("CURR_EXP_MONTH")).equals("") ? strCurrExpMonth : String2.trimToEmpty((String)safeMap.get("CURR_EXP_MONTH"));
+	                strCurrExpPoint = String2.trimToEmpty((String)safeMap.get("CURR_EXP_POINT")).equals("") ? strCurrExpPoint : String2.trimToEmpty((String)safeMap.get("CURR_EXP_POINT")); 
+	                strNextExpMonth = String2.trimToEmpty((String)safeMap.get("NEXT_EXP_MONTH")).equals("") ? strNextExpMonth : String2.trimToEmpty((String)safeMap.get("NEXT_EXP_MONTH")); 
+	                strNextExpPoint = String2.trimToEmpty((String)safeMap.get("NEXT_EXP_POINT")).equals("") ? strNextExpPoint : String2.trimToEmpty((String)safeMap.get("NEXT_EXP_POINT")); 	                
+	
+	                // 포인트내역조회
+	                query  ="SELECT PROC_DT\n";												
+	                query +="     --, PROC_TIME\n";
+	                query +="     --, CARD_NO\n";
+	                query +="     --, BRCH_ID\n";
+	                query +="     , BRCH_NAME\n";
+	                query +="     --,DEAL_TYPE\n";
+	                query +="     , DEAL_GUBUN\n";
+	                query +="     , DEAL_TYPE_NM\n";
+	                query +="     , DEAL_AMT\n";
+	                query +="     , DEAL_POINT\n";	                
+	                query +="     , RECP_NO\n";
+	                query +="  FROM\n";
+	                query +="       (\n";
+	                query +="         SELECT A.ADD_DT AS PROC_DT\n";
+	                query +="              , A.ADD_TIME AS PROC_TIME\n";
+	                query +="              , A.CARD_NO\n";
+	                query +="              , B.BRCH_ID\n";
+	                query +="              , B.BRCH_NAME\n";
+	                query +="              , NVL(A.ADD_POINT,0) AS DEAL_POINT\n";
+	                query +="              , A.ADD_TYPE AS DEAL_TYPE\n";
+	                query +="              , COM.FN_GET_COMM_NAME('D', 'D006', A.ADD_TYPE) DEAL_TYPE_NM\n";
+	                query +="              , NVL(C.SALE_AMT,0) AS DEAL_AMT\n";
+	                query +="              , A.RECP_NO\n";
+	                query +="              , '적립' DEAL_GUBUN\n";
+	                query +="           FROM DCS.DO_POINT_ADD A\n";
+	                query +="              , DCS.DB_BRANCH B\n";
+	                query +="              , (\n";
+	                query +="                    SELECT '1' || SUBSTR(A.SALE_DT,3,8) || A.POS_NO || A.TRAN_NO AS RECP_NO\n";
+	                query +="                         , (CASE WHEN C.TRAN_FLAG = '0' THEN (CASE WHEN C.TRAN_MODE = '92' THEN 0 ELSE SUM(CASE WHEN REJCT_FLAG = '1' THEN 0 ELSE 1 END * A.TOT_SALE_AMT_TAX)-SUM(A.REDU_PRC) END) ELSE (SUM(A.TOT_SALE_AMT_TAX)-SUM(A.REDU_PRC))*-1 END) AS SALE_AMT\n";
+	                query +="                      FROM DPS.PS_DISITEM   A\n";
+	                query +="                         , DPS.PC_ORGMST    B\n";
+	                query +="                         , DPS.PS_DISHEADER C\n";
+	                query +="                         , DPS.PC_POSMST    D\n";
+	                query +="                         , COM.TC_COMMCODE  E\n";
+	                query +="                     WHERE A.ORG_CD        = B.ORG_CD   \n";
+	                query +="                       AND A.SALE_DT       = C.SALE_DT  \n";
+	                query +="                       AND A.STR_CD        = C.STR_CD   \n";
+	                query +="                       AND A.POS_NO        = C.POS_NO   \n";
+	                query +="                       AND A.TRAN_NO       = C.TRAN_NO  \n";
+	                query +="                       AND A.STR_CD        = D.STR_CD   \n";
+	                query +="                       AND A.POS_NO        = D.POS_NO   \n";
+	                query +="                       AND E.COMM_PART     = 'P611'     \n";
+	                query +="                       AND E.COMM_CODE     = C.TRAN_MODE\n";
+	                query +="                       AND A.STR_CD        = '02'       \n";
+	                query +="                       AND A.SALE_DT       >= ?\n";
+	                query +="                       AND A.SALE_DT       <= ?\n";
+	                query +="                     GROUP BY\n";
+	                query +="                           A.SALE_DT  \n";
+	                query +="                         , A.POS_NO   \n";
+	                query +="                         , A.TRAN_NO  \n";
+	                query +="                         , C.TRAN_FLAG\n";
+	                query +="                         , C.TRAN_MODE\n";
+	                query +="                ) C                   \n";
+	                query +="          WHERE A.BRCH_ID = B.BRCH_ID\n";
+	                query +="            AND A.ADD_DT  >= ? \n";
+	                query +="            AND A.ADD_DT  <= ? \n";
+	                query +="            AND A.RECP_NO = C.RECP_NO(+)\n";
+	                query +="            AND A.CARD_NO IN (\n";
+	                query +="                               SELECT N.CARD_NO\n";
+	                query +="                                 FROM DCS.DM_CUSTOMER M\n";
+	                query +="                                    , DCS.DM_CARD     N\n";
+	                query +="                                WHERE M.CUST_ID = N.CUST_ID\n";
+	                query +="                                  AND M.CUST_ID = (\n";
+	                query +="                                                    SELECT UNIQUE A.CUST_ID\n";
+	                query +="                                                      FROM DCS.DM_CUSTOMER A\n";
+	                query +="                                                         , DCS.DM_CARD B\n";
+	                query +="                                                     WHERE A.CUST_ID  =  B.CUST_ID\n";
+	                query +="                                                       AND A.COMP_PERS_FLAG ='P'\n";
+	                query +="                                                       AND A.CUST_ID    = ?\n";
+	                query +="                                                       AND B.CARD_NO    = DCS.F_GET_POCARD_NO(?)\n";
+	                query +="                                                        )\n";
+	                query +="                      )\n";
+	                query +="         UNION ALL\n";
+	                query +="         SELECT A.USE_DT AS  PROC_DT\n";
+	                query +="              , A.USE_TIME AS PROC_TIME\n";
+	                query +="              , A.CARD_NO\n";
+	                query +="              , B.BRCH_ID\n";
+	                query +="              , B.BRCH_NAME\n";
+	                query +="              , NVL(A.USE_POINT,0) AS DEAL_POINT\n";
+	                query +="              , A.USE_TYPE AS DEAL_TYPE\n";
+	                query +="              , COM.FN_GET_COMM_NAME('D', 'D007', A.USE_TYPE) DEAL_TYPE_NM\n";
+	                query +="              , NVL(C.SALE_AMT,0) AS DEAL_AMT\n";
+	                query +="              , A.RECP_NO\n";
+	                query +="              , '사용' DEAL_GUBUN\n";
+	                query +="           FROM DCS.DO_POINT_USE A\n";
+	                query +="              , DCS.DB_BRANCH B\n";
+	                query +="              , (\n";
+	                query +="                    SELECT '1' || SUBSTR(A.SALE_DT,3,8) || A.POS_NO || A.TRAN_NO AS RECP_NO\n";
+	                query +="                         , (CASE WHEN C.TRAN_FLAG = '0' THEN (CASE WHEN C.TRAN_MODE = '92' THEN 0 ELSE SUM(CASE WHEN REJCT_FLAG = '1' THEN 0 ELSE 1 END * A.TOT_SALE_AMT_TAX)-SUM(A.REDU_PRC) END) ELSE (SUM(A.TOT_SALE_AMT_TAX)-SUM(A.REDU_PRC))*-1 END) AS SALE_AMT\n";
+	                query +="                      FROM DPS.PS_DISITEM   A\n";
+	                query +="                         , DPS.PC_ORGMST    B\n";
+	                query +="                         , DPS.PS_DISHEADER C\n";
+	                query +="                         , DPS.PC_POSMST    D\n";
+	                query +="                         , COM.TC_COMMCODE  E\n";
+	                query +="                     WHERE A.ORG_CD        = B.ORG_CD   \n";
+	                query +="                       AND A.SALE_DT       = C.SALE_DT  \n";
+	                query +="                       AND A.STR_CD        = C.STR_CD   \n";
+	                query +="                       AND A.POS_NO        = C.POS_NO   \n";
+	                query +="                       AND A.TRAN_NO       = C.TRAN_NO  \n";
+	                query +="                       AND A.STR_CD        = D.STR_CD   \n";
+	                query +="                       AND A.POS_NO        = D.POS_NO   \n";
+	                query +="                       AND E.COMM_PART     = 'P611'     \n";
+	                query +="                       AND E.COMM_CODE     = C.TRAN_MODE\n";
+	                query +="                       AND A.STR_CD        = '02'       \n";
+	                query +="                       AND A.SALE_DT       >= ?\n";
+	                query +="                       AND A.SALE_DT       <= ?\n";
+	                query +="                     GROUP BY\n";
+	                query +="                           A.SALE_DT  \n";
+	                query +="                         , A.POS_NO   \n";
+	                query +="                         , A.TRAN_NO  \n";
+	                query +="                         , C.TRAN_FLAG\n";
+	                query +="                         , C.TRAN_MODE\n";
+	                query +="                ) C\n";
+	                query +="          WHERE A.BRCH_ID = B.BRCH_ID\n";
+	                query +="            AND A.RECP_NO = C.RECP_NO(+)\n";
+	                query +="            AND A.USE_DT  >= ?\n";
+	                query +="            AND A.USE_DT  <= ?\n";
+	                query +="            AND A.CARD_NO IN (\n";
+	                query +="                               SELECT N.CARD_NO\n";
+	                query +="                                 FROM DCS.DM_CUSTOMER M\n";
+	                query +="                                    , DCS.DM_CARD     N\n";
+	                query +="                                WHERE M.CUST_ID = N.CUST_ID\n";
+	                query +="                                  AND M.CUST_ID = (\n";
+	                query +="                                                    SELECT UNIQUE A.CUST_ID\n";
+	                query +="                                                      FROM DCS.DM_CUSTOMER A\n";
+	                query +="                                                         , DCS.DM_CARD B\n";
+	                query +="                                                     WHERE A.CUST_ID  =  B.CUST_ID\n";
+	                query +="                                                       AND A.COMP_PERS_FLAG ='P'\n";
+	                query +="                                                       AND A.CUST_ID    = ?\n";
+	                query +="                                                       AND B.CARD_NO    = DCS.F_GET_POCARD_NO(?)\n";
+	                query +="                                                        )\n";
+	                query +="            )\n";
+	                query +="  )\n";
+//	                query +=" WHERE PROC_DT >= TO_CHAR(ADD_MONTHS(SYSDATE, -3),'YYYYMMDD')\n";
+	                query +=" ORDER BY PROC_DT DESC, PROC_TIME DESC\n";
+	                
+	                sql.close();
+	                i = 0;
+	                sql.put(query);
+	                sql.setString(++i, strFromDt);
+	                sql.setString(++i, strToDt);
+	                sql.setString(++i, strFromDt);
+	                sql.setString(++i, strToDt);
+	                sql.setString(++i, strCustId);
+	                sql.setString(++i, strCardNo);
+	                sql.setString(++i, strFromDt);
+	                sql.setString(++i, strToDt);
+	                sql.setString(++i, strFromDt);
+	                sql.setString(++i, strToDt);
+	                sql.setString(++i, strCustId);
+	                sql.setString(++i, strCardNo);
+	                
+	                // 결과리스트
+	                resultList = executeQueryByList(sql);    
+	                resultListCount = resultList.size();
+	                
+	                // 성공여부
+	                strResult = "SUCCESS";
+                }    
+            }
+            
+            // xml 생성
+            DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder parser = docBuilderFactory.newDocumentBuilder();
+            Document doc = parser.newDocument();
+            
+            // root 생성
+            Element root = doc.createElement("root");
+            doc.appendChild(root);
+            
+            // 성공여부
+            Element resultNode = doc.createElement("result");
+            resultNode.appendChild(doc.createTextNode(strResult));
+            root.appendChild(resultNode);
+            
+            // 누적포인트
+            Element addPoint = doc.createElement("add_point");
+            addPoint.appendChild(doc.createTextNode(strAddPoint));
+            root.appendChild(addPoint);
+            
+            // 발생포인트
+            Element occursPoint = doc.createElement("occurs_point");
+            occursPoint.appendChild(doc.createTextNode(strOccursPoint));
+            root.appendChild(occursPoint);
+            
+            // 소멸예정월(당월)
+            Element currExpMonth = doc.createElement("curr_exp_month");
+            currExpMonth.appendChild(doc.createTextNode(strCurrExpMonth));
+            root.appendChild(currExpMonth);
+            
+            // 소멸예정포인트(당월)
+            Element currExpPoint = doc.createElement("curr_exp_point");
+            currExpPoint.appendChild(doc.createTextNode(strCurrExpPoint));
+            root.appendChild(currExpPoint);
+            
+            // 소멸예정월(익월)
+            Element nextExpMonth = doc.createElement("next_exp_month");
+            nextExpMonth.appendChild(doc.createTextNode(strNextExpMonth));
+            root.appendChild(nextExpMonth);
+            
+            // 소멸예정포인트(익월)
+            Element nextExpPoint = doc.createElement("next_exp_point");
+            nextExpPoint.appendChild(doc.createTextNode(strNextExpPoint));
+            root.appendChild(nextExpPoint);            
+         
+            // 결과리스트
+            if (resultListCount > 0) {
+                int m = 0;
+                for (m = 0; m < resultListCount; m++) {
+                    List row = (List) resultList.get(m);
+                   
+                    String prodDt	     = (String) row.get(0);  // 처리일자
+                    String brchName	     = (String) row.get(1);  // 가명점명
+                    String dealGubun	 = (String) row.get(2);  // 거래
+                    String dealTypeNm	 = (String) row.get(3);  // 상세내역
+                    String dealAmt	 	 = (String) row.get(4);  // 거래금액
+                    String dealPoint	 = (String) row.get(5);  // 포인트
+                    String recpNo	     = (String) row.get(6);  // 거래고유번호
+
+                    Element rowNode = doc.createElement("row");
+                    root.appendChild(rowNode);
+                    
+                    //처리일자
+                    Element entry0 = doc.createElement("prod_dt");
+                    entry0.appendChild(doc.createTextNode(prodDt));
+                    rowNode.appendChild(entry0);
+                    
+                    // 가명점명
+                    Element entry2 = doc.createElement("brch_name");
+                    entry2.appendChild(doc.createTextNode(brchName));
+                    rowNode.appendChild(entry2);
+                    
+                    // 거래
+                    Element entry3 = doc.createElement("deal_gubun");
+                    entry3.appendChild(doc.createTextNode(dealGubun));
+                    rowNode.appendChild(entry3);
+                    
+                    // 상세내역
+                    Element entry4 = doc.createElement("deal_type_nm");
+                    entry4.appendChild(doc.createTextNode(dealTypeNm));
+                    rowNode.appendChild(entry4);
+                    
+                    // 거래금액
+                    Element entry5 = doc.createElement("deal_amt");
+                    entry5.appendChild(doc.createTextNode(dealAmt));
+                    rowNode.appendChild(entry5);
+                    
+                    // 포인트
+                    Element entry6 = doc.createElement("deal_point");
+                    entry6.appendChild(doc.createTextNode(dealPoint));
+                    rowNode.appendChild(entry6);                    
+                    
+                    // 거래고유번호
+                    //Element entry7 = doc.createElement("recp_no");
+                    //entry7.appendChild(doc.createTextNode(recpNo));
+                    //rowNode.appendChild(entry7);                     
+
+                }
+            }
+            
+            TransformerFactory factory = TransformerFactory.newInstance();
+            Transformer former = factory.newTransformer();
+            former.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            former.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+            former.setOutputProperty(OutputKeys.INDENT, "yes");
+            
+            StringWriter sw = new StringWriter();
+            StreamResult result = new StreamResult(sw);
+            DOMSource source = new DOMSource(doc);
+            former.transform(source, result);
+            System.out.println(sw.toString());
+            strXml = sw.toString();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+        
+        return strXml;
+	}
+	
+    /**
+     * null 체크
+     * 
+     * @param Service
+     * @param MultiInput
+     * @return boolean
+     * @throws Exception
+     */
+    private boolean isNull(String str1, String str2, String str3) throws Exception {
+        boolean result = false;
+        
+        if (str1 == null || str1.trim().equals("")) {  
+            result = true;
+        }
+        if (str2 == null || str2.trim().equals("")) {  
+            result = true;
+        }
+        if (str3 == null || str3.trim().equals("")) {  
+            result = true;
+        }
+        
+        return result;
+    }	
+}

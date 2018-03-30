@@ -1,0 +1,206 @@
+﻿/*
+ * @(#)WFA_020Action.java 1.0 06/02/06
+ *
+ * Copyright 2006 Korea Exchange Bank. All rights reserved.
+ * KEB PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+package loan.wf.wfa.action;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import kr.fujitsu.ffw.control.ActionForm;
+import kr.fujitsu.ffw.control.ActionForward;
+import kr.fujitsu.ffw.control.ActionMapping;
+import kr.fujitsu.ffw.control.DispatchAction;
+import kr.fujitsu.ffw.control.cfg.svc.tobe.MiPlatformData;
+import kr.fujitsu.ffw.control.cfg.svc.tobe.MiPlatformHelper;
+import kr.fujitsu.ffw.util.String2;
+import loan.wf.wfa.dao.WFA_020DAO;
+import loan.wf.wfa.dao.WFA_020DAO_;
+
+import org.apache.log4j.Logger;
+
+import com.tobesoft.platform.data.Dataset;
+
+/**
+ * 코딩 표준을 설명하기 위한 셈플 DispatchAction 클래스입니다.
+ * <p>
+ * WFA_020Action 예시로는 게시판입니다. 게시물의 리스트를 출력하고, <br>
+ * 상세내용을 출력하고, 게시물에대한 입력, 수정, 삭제 업무를 수행 할 <br>
+ * 수 있습니다.
+ * 
+ * @created  on 1.0, 06/02/05
+ * @created  by 홍길동(FUJITSU KOREA LTD.)
+ * 
+ * @modified on 1.1, 06/02/06
+ * @modified by 아무개(Other Company)
+ * @caused   by 보다 낳은 셈플을 제공하기 위한 예시...
+ */
+public class WFA_020Action extends DispatchAction {
+    //log4j의 인스턴스를 생성합니다. 
+    //이때 로거는 PakageName.ClassName으로 자신의 클래스명을 지정합니다.
+    private static Logger logger = Logger.getLogger("loan.wf.wfa.action.WFA_020Action");
+    
+    /**
+     * wf_config.xml의 controller-config/action/foward/name의 값이 list 일때 호출<br>
+     * 게시물의 리스트를 출력합니다.
+     * 
+     * @param mapping 프레임워크 사용
+     * @param form 프레임워크 사용
+     * @param request HttpServletRequest 객체 
+     * @param response HttpServletResponse 객체
+     * @return ActionForward
+     * @throws Exception 
+     */
+    public ActionForward list(ActionMapping mapping, ActionForm form,
+            HttpServletRequest request, HttpServletResponse response)
+            throws Exception {
+    	
+    	/* 메서드내의 변수는 가급적 try{} catch{}이전에 null로 초기화 시키며 선언합니다.*/
+        WFA_020DAO_ dao = null;
+        List list = null;
+        
+        /* 
+         * MiPlatformHelper는 MiPlatform 사용을 위해 반복적으로 사용되는 몇몇 문법을 
+         * 단순화 시킨 Wrapper클래스입니다.
+         */
+        MiPlatformHelper helper = null;
+        /*
+         * 아웃풋 데이터셋을 위한 인스턴스 변수를 선언합니다.
+         */
+        Dataset outDs = null;
+        /*
+         * 인풋 데이터셋을 위한 인스턴스 변수를 선언합니다.
+         */
+        Dataset board = null;
+        /*
+         * 화면에서 보내여진 변수를(HttpServletRequest와는 다릅니다.) 받아오기 위해 선언
+         */
+        String in_var2 = null;
+                
+        try {        	
+            helper = new MiPlatformHelper(request, response);
+            /*
+             * 화면으로부터 보낸 데이터셋(DS_KebBoard)을 받아옵니다.
+             */
+            board = helper.getDataset("DS_KebBoard");
+            
+            /* 
+             * 화면으로 보낼 빈 데이터셋을 만듭니다.
+             */
+            outDs = helper.makeDataset();
+            /*
+             * 화면에서 보낸 데이터셋을 기준으로 화면으로 보낼 데이터셋의
+             * 헤더를 생성합니다.
+             */
+            outDs = helper.setDatasetHeader(board, outDs);
+            
+            in_var2 = String2.nvl(helper.getValueAsString("in_var2"));
+            logger.info("화면으로 부터 받은 instring:" + in_var2);
+            /* 주의 데이터셋은 반드시 new keyword를 통해 생성하십시오 */
+            dao = new WFA_020DAO_();
+            list = dao.getBoardList(form);
+            /*
+             * DAO의 결과값(list)을 데이터셋에 맵핑시킵니다.
+             */
+            helper.setListToDataset(list, outDs);
+            /*
+             * 화면에서 받을 데이터셋의 이름으로 데이터셋을 보낼 준비합니다.
+             */
+            helper.addDataset("DS_KebBoard", outDs);
+
+        } catch (Exception e) {
+        	/*
+        	 * 모든 Exception은 Exception으로 받습니다. 
+        	 * 여기서 Exception등은 User Define해서 사용해도 상관없습니다.
+        	 */
+        	e.printStackTrace();
+        	/*
+        	 * 에러의 로거는 메서드명에 Exception 객체의 인스턴스인 e를 넘기시기 바랍니다.
+        	 */
+            logger.error("list", e);
+            helper.setError("-1", e.getMessage(), "게시판의 리스트를 가져오지 못했습니다.");
+        }
+        helper.sendData();
+        
+        return mapping.findForward("list");
+    }
+    
+    /**
+     * wf_config.xml의 controller-config/action/foward/name의 값이 update 일때 호출<br>
+     * 게시물의 내용을 입력, 수정, 삭제하는 기능을 수행합니다.
+     * 
+     * @param mapping 프레임워크 사용
+     * @param form 프레임워크 사용
+     * @param request HttpServletRequest 객체 
+     * @param response HttpServletResponse 객체
+     * @return ActionForward
+     * @throws Exception 
+     */
+    public ActionForward update(ActionMapping mapping, ActionForm form,
+            HttpServletRequest request, HttpServletResponse response)
+            throws Exception {
+    	
+    	/* 메서드내의 변수는 가급적 try{} catch{}이전에 null로 초기화 시키며 선언합니다.*/
+        WFA_020DAO_ dao = null;
+        List list = null;
+        
+        /* 
+         * MiPlatformHelper는 MiPlatform 사용을 위해 반복적으로 사용되는 몇몇 문법을 
+         * 단순화 시킨 Wrapper클래스입니다.
+         */
+        MiPlatformHelper helper = null;
+        /*
+         * 출력을 위한 데이터셋을 선언합니다.
+         */
+        Dataset outDs = null;
+        /*
+         * 입력 데이터셋을 선언합니다.
+         */
+        Dataset inDs = null;
+        /*
+         * 화면에서 변경된 데이터셋만 가져옵니다.
+         */
+        MiPlatformData board = null;
+        
+        try {
+            helper = new MiPlatformHelper(request, response);
+            /*
+             * 화면으로부터 데이터셋의 스키마를 읽어옵니다.
+             */
+            inDs = helper.getDataset("DS_KebBoard");
+            /*
+             * 화면에서 사용자에 의해 변경, 수정된 데이터셋을 읽어옵니다.
+             */
+            board = helper.getMiPlatformData("DS_KebBoard");
+            
+            /*
+             * 출력을 위한 빈 데이터셋을 만듭니다.
+             */
+            outDs = helper.makeDataset();
+            /*
+             * 화면으로부터 읽은 데이터셋의 스키마정보를 기준으로 출력을 위한 데이터셋의 
+             * 스키마정보(데이터셋헤더)를 생성합니다.
+             */
+            outDs = helper.setDatasetHeader(inDs, outDs);
+
+            dao = new WFA_020DAO_();
+            dao.insertBoard(board);
+            
+            list = dao.getBoardList(form);
+            helper.setListToDataset(list, outDs);
+            helper.addDataset("DS_KebBoard", outDs);
+
+        } catch (Exception e) {
+        	e.printStackTrace();
+            logger.error("list", e);
+            helper.setError("-1", e.getMessage(), "비정상적으로 종료되었습니다.");
+        }
+        helper.sendData();
+        
+        return mapping.findForward("list");
+    }
+}

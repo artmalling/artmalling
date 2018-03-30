@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 조승배
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2012.06.26
+ * 변 경 일 :
+ * 변경내용 :
+ * 개    요 : 단골 고객 등록
+ -->
+<service name="/esal110.es">
+
+
+    <!-- 브랜드별 고객 리스트 조회 -->
+    <query name="SEL_LIST">
+        <![CDATA[
+            SELECT A.REGUCUST_ID
+                 , A.CUST_NAME
+                 , A.BIRTH_DT
+                 , A.CARD_NO
+                 , A.MOBILE_PH1
+                 , A.MOBILE_PH2
+                 , A.MOBILE_PH3
+                 , TO_CHAR(A.REG_DATE, 'YYYY/MM/DD') AS REG_DATE
+                 , B.SEQ_NO
+              FROM DPS.PC_REGUCUSTMST A
+                 , DPS.PC_REGUCUSTDTL B
+             WHERE B.STR_CD = ?
+               AND B.VEN_CD = ?
+               AND B.PUMBUN_CD = ?
+               AND A.REGUCUST_ID = B.REGUCUST_ID
+        ]]>
+    </query>
+    <query name="SEL_LIST_CARD_NO">
+        <![CDATA[
+               AND A.CARD_NO = ?
+        ]]>
+    </query>
+    <query name="SEL_LIST_CUST_NAME">
+        <![CDATA[
+               AND A.CUST_NAME LIKE '%' || ? || '%'
+        ]]>
+    </query>
+    <query name="SEL_LIST_REG_DATE">
+        <![CDATA[
+               AND TO_CHAR(A.REG_DATE ,'YYYY/MM/DD') >= ?
+               AND TO_CHAR(A.REG_DATE ,'YYYY/MM/DD') <= ?
+        ]]>
+    </query>
+
+    <!-- 바이어코드 & 카드번호 중복체크 -->
+    <query name="CHK_CARDNO">
+        <![CDATA[
+       SELECT COUNT(*) AS CNT
+      	FROM DPS.PC_REGUCUSTMST A
+           , DPS.PC_REGUCUSTDTL B
+		WHERE A.CARD_NO = ?
+		  AND B.PUMBUN_CD = ?
+		  AND A.REGUCUST_ID = B.REGUCUST_ID
+        
+        ]]>
+    </query>
+
+    <!-- 브랜드별 고객 리스트 상세 조회 -->
+    <query name="SEL_DETAILLIST">
+        <![CDATA[
+            SELECT B.STR_CD
+                 , B.VEN_CD
+                 , B.PUMBUN_CD
+                 , A.CUST_ID
+                 , A.CARD_NO
+                 , A.CUST_NAME
+                 , A.SEX_CD            -- 'M':남자, 'F':여자 (D002)
+                 , TO_CHAR(TO_DATE(A.BIRTH_DT, 'YYYYMMDD'), 'YYYY/MM/DD') AS BIRTH_DT
+                 , A.BIRTH_LUNAR_FLAG  -- 'S':양력, 'L':음력 (D001)
+                 , TO_CHAR(TO_DATE(A.WED_DT, 'YYYYMMDD'), 'YYYY/MM/DD') AS WED_DT
+                 , A.WED_LUNAR_FLAG    -- 'S':양력, 'L':음력 (D001)
+                 , A.HOME_NEW_YN
+                 , A.HOME_ZIP_CD1
+                 , A.HOME_ZIP_CD2
+                 , A.HOME_ADDR1
+                 , A.HOME_ADDR2
+                 , A.HOME_PH1
+                 , A.HOME_PH2
+                 , A.HOME_PH3
+                 , A.MOBILE_PH1
+                 , A.MOBILE_PH2
+                 , A.MOBILE_PH3
+                 , A.OFFI_NEW_YN
+                 , A.OFFI_ZIP_CD1
+                 , A.OFFI_ZIP_CD2
+                 , A.OFFI_ADDR1
+                 , A.OFFI_ADDR2
+                 , A.OFFI_PH1
+                 , A.OFFI_PH2
+                 , A.OFFI_PH3
+                 , A.OFFI_INTER_PH
+                 , A.OFFI_FAX1
+                 , A.OFFI_FAX2
+                 , A.OFFI_FAX3
+                 , A.HOBBY
+                 , (SELECT SUM(NVL(C.SALE_AMT, 0)) - SUM(NVL(C.RETURN_AMT,0)) AS SALE_AMT
+                      FROM DPS.PS_DAYCUST C
+                         , DPS.PC_STRPBN  D
+                     WHERE C.SALE_DT BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, -3), 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+                       AND C.STR_CD    = B.STR_CD
+                       AND C.CUST_NO   = A.CUST_ID
+                       AND D.STR_CD    = B.STR_CD
+                       AND C.PUMBUN_CD = B.PUMBUN_CD
+                       AND D.PUMBUN_CD = B.PUMBUN_CD
+                       AND D.VEN_CD    = B.VEN_CD
+                   ) AS SALE_AMT
+                 , A.RELIGION
+                 , TO_CHAR(A.REG_DATE, 'YYYY/MM/DD') AS REG_DATE
+                 , A.ETC
+                 , A.FAMILY1
+                 , A.FAMILY1_NM
+                 , A.FAMILY2
+                 , A.FAMILY2_NM
+                 , A.FAMILY3
+                 , A.FAMILY3_NM
+                 , A.FAMILY4
+                 , A.FAMILY4_NM
+                 , A.ETC2
+                 , A.EMAIL1
+                 , A.EMAIL2
+                 , A.DOMAIN_FLAG
+                 , A.REGUCUST_ID
+                 , B.SEQ_NO
+                 , A.GRADE
+	             , A.SMS_FLAG
+	             , A.EMAIL_FLAG
+	             , A.WED_FLAG
+	             , A.TEXT_SALEAMT
+              FROM DPS.PC_REGUCUSTMST A
+                 , DPS.PC_REGUCUSTDTL B
+             WHERE B.STR_CD = ?
+               AND B.VEN_CD = ?
+               AND B.SEQ_NO = ?
+               AND B.REGUCUST_ID = ?
+               AND A.REGUCUST_ID = B.REGUCUST_ID
+        ]]>
+    </query>
+
+    <!-- 3개월 매출 조회 -->
+    <query name="SEL_SALE_AMT">
+        <![CDATA[
+            SELECT A.SALE_DT          AS SALE_DT
+                 , B.PUMBUN_CD        AS PUMBUN_CD
+                , MAX(D.PUMBUN_NAME) AS PUMBUN_NAME
+                , C.PUMMOK_CD        AS PUMMOK_CD
+                , MAX(C.PUMMOK_NAME) AS PUMMOK_NAME
+                , SUM(CASE WHEN A.TRAN_FLAG = 0 THEN NVL(B.SALE_QTY,0) ELSE NVL(B.SALE_QTY,0)*(-1) END) AS SALE_QTY
+                , SUM(CASE WHEN A.TRAN_FLAG = 0 THEN NVL(B.TOT_SALE_AMT,0) ELSE NVL(B.TOT_SALE_AMT,0)*(-1) END) AS SALE_TOT_AMT
+             FROM DPS.PS_TRHEADER A
+                , DPS.PS_DISITEM B
+                , DPS.PC_PMKMST C
+                , DPS.PC_STRPBN D
+            WHERE A.SALE_DT BETWEEN '20111001' AND '20111130'
+              AND A.STR_CD = '02'
+              AND A.CUST_NO = 'C00077070'  -- 고객id
+              AND B.SALE_DT = A.SALE_DT
+              AND B.STR_CD  = A.STR_CD
+              AND B.POS_NO  = A.POS_NO
+              AND B.TRAN_NO = A.TRAN_NO
+              AND B.PUMBUN_CD LIKE '' || '%'  -- 입력받은 PUMBUN_CD, 전체일때 '%'로 처리
+              AND C.PUMMOK_CD = B.PUMMOK_CD
+              AND D.STR_CD    = B.STR_CD
+              AND D.PUMBUN_CD = B.PUMBUN_CD
+            GROUP BY A.SALE_DT
+                   , A.STR_CD
+                   , C.PUMMOK_CD;
+        ]]>
+    </query>
+
+    <!-- 고객 상세 정보 등록 -->
+    <query name="INS_REGUCUSTMST">
+        <![CDATA[
+            MERGE INTO DPS.PC_REGUCUSTMST
+                  USING DUAL ON (REGUCUST_ID = ?)
+                   WHEN MATCHED THEN
+                        UPDATE SET BIRTH_DT  = ?
+                                 , BIRTH_LUNAR_FLAG  = ?
+                                 , CARD_NO  = ?
+                                 , CUST_ID  = ?
+                                 , CUST_NAME  = ?
+                                 , DOMAIN_FLAG  = ?
+                                 , EMAIL1  = ?
+                                 , EMAIL2  = ?
+                                 , ETC  = ?
+                                 , ETC2  = ?
+                                 , FAMILY1  = ?
+                                 , FAMILY1_NM  = ?
+                                 , FAMILY2  = ?
+                                 , FAMILY2_NM  = ?
+                                 , FAMILY3  = ?
+                                 , FAMILY3_NM  = ?
+                                 , FAMILY4  = ?
+                                 , FAMILY4_NM  = ?
+                                 , HOBBY  = ?
+                                 , HOME_ADDR1  = ?
+                                 , HOME_ADDR2  = ?
+                                 , HOME_PH1  = ?
+                                 , HOME_PH2  = ?
+                                 , HOME_PH3  = ?
+                                 , HOME_ZIP_CD1  = ?
+                                 , HOME_ZIP_CD2  = ?
+                                 , MOBILE_PH1  = ?
+                                 , MOBILE_PH2  = ?
+                                 , MOBILE_PH3  = ?
+                                 , MOD_ID  = ?
+                                 , OFFI_ADDR1  = ?
+                                 , OFFI_ADDR2  = ?
+                                 , OFFI_FAX1  = ?
+                                 , OFFI_FAX2  = ?
+                                 , OFFI_FAX3  = ?
+                                 , OFFI_PH1  = ?
+                                 , OFFI_PH2  = ?
+                                 , OFFI_PH3  = ?
+                                 , OFFI_ZIP_CD1  = ?
+                                 , OFFI_ZIP_CD2  = ?
+                                 , RELIGION  = ?
+                                 , SEX_CD  = ?
+                                 , WED_DT  = ?
+	                             , GRADE = ?
+	                             , SMS_FLAG = ?
+	                             , EMAIL_FLAG = ?
+	                             , WED_FLAG = ?
+                                 , WED_LUNAR_FLAG  = ?
+                                 , TEXT_SALEAMT = ?
+                   WHEN NOT MATCHED THEN
+                        INSERT (BIRTH_DT
+                              , BIRTH_LUNAR_FLAG
+                              , CARD_NO
+                              , CUST_ID
+                              , CUST_NAME
+                              , DOMAIN_FLAG
+                              , EMAIL1
+                              , EMAIL2
+                              , ETC
+                              , ETC2
+                              , FAMILY1
+                              , FAMILY1_NM
+                              , FAMILY2
+                              , FAMILY2_NM
+                              , FAMILY3
+                              , FAMILY3_NM
+                              , FAMILY4
+                              , FAMILY4_NM
+                              , HNEW_ADDR1
+                              , HNEW_ADDR2
+                              , HNEW_ZIP_CD1
+                              , HNEW_ZIP_CD2
+                              , HOBBY
+                              , HOME_ADDR1
+                              , HOME_ADDR2
+                              , HOME_NEW_YN
+                              , HOME_PH1
+                              , HOME_PH2
+                              , HOME_PH3
+                              , HOME_ZIP_CD1
+                              , HOME_ZIP_CD2
+                              , MOBILE_PH1
+                              , MOBILE_PH2
+                              , MOBILE_PH3
+                              , MOD_DATE
+                              , MOD_ID
+                              , OFFI_ADDR1
+                              , OFFI_ADDR2
+                              , OFFI_FAX1
+                              , OFFI_FAX2
+                              , OFFI_FAX3
+                              , OFFI_INTER_PH
+                              , OFFI_NEW_YN
+                              , OFFI_PH1
+                              , OFFI_PH2
+                              , OFFI_PH3
+                              , OFFI_ZIP_CD1
+                              , OFFI_ZIP_CD2
+                              , ONEW_ADDR1
+                              , ONEW_ADDR2
+                              , ONEW_ZIP_CD1
+                              , ONEW_ZIP_CD2
+                              , REGUCUST_ID
+                              , REG_DATE
+                              , REG_ID
+                              , RELIGION
+                              , SEX_CD
+                              , WED_DT
+                              , GRADE
+                              , SMS_FLAG
+                              , EMAIL_FLAG
+                              , WED_FLAG
+                              , WED_LUNAR_FLAG
+                              , TEXT_SALEAMT)
+                         VALUES (?        -- BIRTH_DT
+                               , ?        -- BIRTH_LUNAR_FLAG
+                               , ?        -- CARD_NO
+                               , ?        -- CUST_ID
+                               , ?        -- CUST_NAME
+                               , ?        -- DOMAIN_FLAG
+                               , ?        -- EMAIL1
+                               , ?        -- EMAIL2
+                               , ?        -- ETC
+                               , ?        -- ETC2
+                               , ?        -- FAMILY1
+                               , ?        -- FAMILY1_NM
+                               , ?        -- FAMILY2
+                               , ?        -- FAMILY2_NM
+                               , ?        -- FAMILY3
+                               , ?        -- FAMILY3_NM
+                               , ?        -- FAMILY4
+                               , ?        -- FAMILY4_NM
+                               , ''       -- HNEW_ADDR1
+                               , ''       -- HNEW_ADDR2
+                               , ''       -- HNEW_ZIP_CD1
+                               , ''       -- HNEW_ZIP_CD2
+                               , ?        -- HOBBY
+                               , ?        -- HOME_ADDR1
+                               , ?        -- HOME_ADDR2
+                               , 'N'      -- HOME_NEW_YN
+                               , ?        -- HOME_PH1
+                               , ?        -- HOME_PH2
+                               , ?        -- HOME_PH3
+                               , ?        -- HOME_ZIP_CD1
+                               , ?        -- HOME_ZIP_CD2
+                               , ?        -- MOBILE_PH1
+                               , ?        -- MOBILE_PH2
+                               , ?        -- MOBILE_PH3
+                               , SYSDATE  -- MOD_DATE
+                               , ?        -- MOD_ID
+                               , ?        -- OFFI_ADDR1
+                               , ?        -- OFFI_ADDR2
+                               , ?        -- OFFI_FAX1
+                               , ?        -- OFFI_FAX2
+                               , ?        -- OFFI_FAX3
+                               , ''       -- OFFI_INTER_PH
+                               , 'N'      -- OFFI_NEW_YN
+                               , ?        -- OFFI_PH1
+                               , ?        -- OFFI_PH2
+                               , ?        -- OFFI_PH3
+                               , ?        -- OFFI_ZIP_CD1
+                               , ?        -- OFFI_ZIP_CD2
+                               , ''       -- ONEW_ADDR1
+                               , ''       -- ONEW_ADDR2
+                               , ''       -- ONEW_ZIP_CD1
+                               , ''       -- ONEW_ZIP_CD2
+                               , ?        -- REGUCUST_ID
+                               , SYSDATE  -- REG_DATE
+                               , ?        -- REG_ID
+                               , ?        -- RELIGION
+                               , ?        -- SEX_CD
+                               , ?        -- WED_DT
+                               , ?        -- GRADE
+                               , ?        -- SMS_FLAG
+                               , ?        -- EMAIL_FLAG
+                               , ?        -- WED_FLAG
+                               , ?        -- WED_LUNAR_FLAG
+                               , ?)       -- TEXT_SALEAMT
+        ]]>
+    </query>
+
+    <!--카드번호  생성  -->
+    <query name="SEL_SQ_REGUCUST_ID">
+        <![CDATA[
+            SELECT DPS.SQ_PC_REGUCUSTID.NEXTVAL FROM DUAL
+        ]]>
+    </query>
+
+    <!-- 브랜드별 단골 고객 정보 등록 -->
+    <query name="INS_REGUCUSTDTL">
+        <![CDATA[
+            MERGE INTO DPS.PC_REGUCUSTDTL
+                  USING DUAL ON (STR_CD = ?
+                             AND VEN_CD = ?
+                             AND SEQ_NO = ?
+                             AND REGUCUST_ID = ?)
+                   WHEN MATCHED THEN
+                        UPDATE SET PUMBUN_CD = ?
+                                 , MOD_DATE  = SYSDATE
+                                 , MOD_ID  = ?
+                   WHEN NOT MATCHED THEN
+                        INSERT (MOD_DATE
+                              , MOD_ID
+                              , PUMBUN_CD
+                              , REGUCUST_ID
+                              , REG_DATE
+                              , REG_ID
+                              , STR_CD
+                              , VEN_CD
+                              , SEQ_NO)
+                        VALUES (SYSDATE  -- MOD_DATE
+                              , ?        -- MOD_ID
+                              , ?        -- PUMBUN_CD
+                              , ?        -- REGUCUST_ID
+                              , SYSDATE  -- REG_DATE
+                              , ?        -- REG_ID
+                              , ?        -- STR_CD
+                              , ?        -- VEN_CD
+                              , (SELECT NVL(MAX(SEQ_NO)+1, 1)
+                                   FROM DPS.PC_REGUCUSTDTL
+                                  WHERE STR_CD = ?
+                                    AND VEN_CD = ?
+                                    AND REGUCUST_ID = ?))    -- SEQ_NO
+        ]]>
+    </query>
+
+    <!-- 브랜드별 단골 고객 정보 등록 -->
+    <query name="DEL_PC_REGUCUSTDTL">
+        <![CDATA[
+            DELETE FROM DPS.PC_REGUCUSTDTL
+             WHERE STR_CD = ?
+               AND VEN_CD = ?
+               AND SEQ_NO = ?
+               AND REGUCUST_ID = ?
+        ]]>
+    </query>
+    
+    <!-- 고객정보 조회 쿼리 시작 -->
+    <query name="SEL_DM_CUSTOMER_START">
+        <![CDATA[
+            SELECT X.CARD_NO --카드번호
+			     , X.CUST_ID --고객ID
+			     , X.CUST_NAME --고객명
+			     , X.BIRTH_DT -- 생년월일
+			     , X.MOBILE_PH1
+			     , X.MOBILE_PH2
+			     , X.MOBILE_PH3
+			     , '' AS REGUCUST_ID
+			  FROM (
+					SELECT
+						   B.CARD_NO          AS CARD_NO         -- 보너스카드번호_암호화
+						 , A.CUST_ID          AS CUST_ID         -- 고객ID
+						 , A.CUST_NAME        AS CUST_NAME       -- 고객명
+						 , A.BIRTH_DT         AS BIRTH_DT        -- 생년월일
+						 , A.MOBILE_PH1       AS MOBILE_PH1      -- 휴대폰번호1_암호화
+						 , A.MOBILE_PH2       AS MOBILE_PH2      -- 휴대폰번호2_암호화
+						 , A.MOBILE_PH3       AS MOBILE_PH3      -- 휴대폰번호3_암호화
+						 , RANK() OVER (PARTITION BY A.CUST_ID ORDER BY B.ISSUE_DT DESC ) AS ISSUE_DT_RANK
+					  FROM DCS.DM_CUSTOMER A
+						 , DCS.DM_CARD B
+					 WHERE B.CUST_ID      = A.CUST_ID
+        ]]>
+    </query>
+    
+    <!-- 고객정보 조회 WHERE B.CARD_NO -->
+    <query name="SEL_DM_CUSTOMER_CARD_NO">
+        <![CDATA[
+					   AND B.CARD_NO = ?
+        ]]>
+    </query>
+    
+    <!-- 고객정보 조회 WHERE A.CUST_NAME -->
+    <query name="SEL_DM_CUSTOMER_CUST_NAME">
+        <![CDATA[
+					   AND A.CUST_NAME LIKE ? || '%'
+        ]]>
+    </query>
+    
+    <!-- 고객정보 조회 WHERE BIRTH_DT -->
+    <query name="SEL_DM_CUSTOMER_BIRTH_DT">
+        <![CDATA[
+					   AND A.BIRTH_DT     = REPLACE(?,'/','')
+        ]]>
+    </query>
+
+    <!-- 고객정보 조회 WHERE MOBILE_PH -->
+    <query name="SEL_DM_CUSTOMER_MOBILE_PH">
+        <![CDATA[
+					   AND A.MOBILE_PH1   = ?
+					   AND A.MOBILE_PH2   = ?
+					   AND A.MOBILE_PH3   = ?
+        ]]>
+    </query>
+    
+    <!-- 고객정보 조회 WHERE ENTR_DT -->
+    <query name="SEL_DM_CUSTOMER_ENTR_DT">
+        <![CDATA[
+					   AND A.ENTR_DT     >= REPLACE(?,'/','')
+					   AND A.ENTR_DT     <= REPLACE(?,'/','')
+        ]]>
+    </query>
+    
+    <!-- 고객정보 조회 쿼리 종료 -->
+    <query name="SEL_DM_CUSTOMER_END">
+        <![CDATA[
+				   ) X
+			 WHERE X.ISSUE_DT_RANK = 1
+        ]]>
+    </query>
+    
+        <!-- 단골 고객정보 조회 쿼리 시작 -->
+    <query name="SEL_PC_REGULIST_START">
+        <![CDATA[
+            SELECT  
+			       A.CARD_NO	      AS CARD_NO		 --카드번호 
+			     , A.CUST_ID          AS CUST_ID         -- 고객ID      
+			     , A.CUST_NAME        AS CUST_NAME       -- 고객명      
+			     , A.BIRTH_DT         AS BIRTH_DT        -- 생년월일    
+			     , A.MOBILE_PH1       AS MOBILE_PH1      -- 휴대폰번호1_암호화
+			     , A.MOBILE_PH2       AS MOBILE_PH2      -- 휴대폰번호2_암호화
+			     , A.MOBILE_PH3       AS MOBILE_PH3      -- 휴대폰번호3_암호화 
+			     , A.REGUCUST_ID      AS REGUCUST_ID     -- 단골고객 ID
+			  FROM DPS.PC_REGUCUSTMST A
+			 WHERE 1=1
+        ]]>
+    </query>
+    
+    <!-- 단골 고객정보 조회 WHERE B.CARD_NO -->
+    <query name="SEL_PC_REGULIST_CARD_NO">
+        <![CDATA[ ]]>
+    </query>
+    
+    <!-- 단골 고객정보 조회 WHERE A.CUST_NAME -->
+    <query name="SEL_PC_REGULIST_CUST_NAME">
+        <![CDATA[
+			  AND A.CUST_NAME LIKE ? || '%'
+        ]]>
+    </query>
+    
+    <!-- 단골 고객정보 조회 WHERE BIRTH_DT -->
+    <query name="SEL_PC_REGULIST_BIRTH_DT">
+        <![CDATA[
+			  AND A.BIRTH_DT     = ''
+        ]]>
+    </query>
+
+    <!-- 단골 고객정보 조회 WHERE MOBILE_PH -->
+    <query name="SEL_PC_REGULIST_MOBILE_PH">
+        <![CDATA[
+			  AND A.MOBILE_PH1   = ?
+			  AND A.MOBILE_PH2   = ?
+			  AND A.MOBILE_PH3   = ?
+        ]]>
+    </query>
+    
+    <!-- 단골 고객정보 조회 WHERE ENTR_DT -->
+    <query name="SEL_PC_REGULIST_ENTR_DT">
+        <![CDATA[
+			  AND A.REG_DATE     >= ?
+			  AND A.REG_DATE     <= ?
+        ]]>
+    </query>
+    
+    <!-- 단골 고객정보 조회 쿼리 종료 -->
+    <query name="SEL_PC_REGULIST_END">
+        <![CDATA[ ]]>
+    </query>
+    
+    <!-- 단골 고객정보 화면 셋팅용 -->
+    <query name="SEL_PC_REGUCUSTMST_N">
+        <![CDATA[
+        	SELECT  
+			       A.REGUCUST_ID      AS REGUCUST_ID     -- 단골고객 ID
+			     , A.CARD_NO          AS CARD_NO         -- 보너스카드번호_암호화 
+			     , A.CUST_ID          AS CUST_ID         -- 고객ID      
+			     , A.CUST_NAME        AS CUST_NAME       -- 고객명      
+			     , A.SEX_CD           AS SEX_CD          -- 성별        
+			     , A.BIRTH_DT         AS BIRTH_DT        -- 생년월일    
+			     , A.BIRTH_LUNAR_FLAG AS BIRTH_LUNAR_FLAG-- 생일구분    
+			     , A.WED_DT           AS WED_DT          -- 결혼기념일  
+			     , WED_LUNAR_FLAG     AS WED_LUNAR_FLAG  -- 기념일구분  
+			     , A.HOME_NEW_YN      AS HOME_NEW_YN     -- 자택새주소선택여부 
+			     , A.HOME_ZIP_CD1     AS HOME_ZIP_CD1    -- 자택우편번호1 
+			     , A.HOME_ZIP_CD2     AS HOME_ZIP_CD2    -- 자택우편번호2 
+			     , A.HOME_ADDR1       AS HOME_ADDR1      -- 자택주소1   
+			     , A.HOME_ADDR2       AS HOME_ADDR2      -- 자택주소2   
+			     , A.HNEW_ZIP_CD1     AS HNEW_ZIP_CD1    -- 자택새우편번호1 
+			     , A.HNEW_ZIP_CD2     AS HNEW_ZIP_CD2    -- 자택새우편번호2 
+			     , A.HNEW_ADDR1       AS HNEW_ADDR1      -- 자택새주소1 
+			     , A.HNEW_ADDR2       AS HNEW_ADDR2      -- 자택새주소2 
+			     , A.HOME_PH1         AS HOME_PH1        -- 자택전화번호1_암호화 
+			     , A.HOME_PH2         AS HOME_PH2        -- 자택전화번호2_암호화 
+			     , A.HOME_PH3         AS HOME_PH3        -- 자택전화번호3_암호화 
+			     , A.MOBILE_PH1       AS MOBILE_PH1      -- 휴대폰번호1_암호화 
+			     , A.MOBILE_PH2       AS MOBILE_PH2      -- 휴대폰번호2_암호화 
+			     , A.MOBILE_PH3       AS MOBILE_PH3      -- 휴대폰번호3_암호화 
+			     , A.OFFI_ZIP_CD1     AS OFFI_ZIP_CD1    -- 직장우편번호1 
+			     , A.OFFI_ZIP_CD2     AS OFFI_ZIP_CD2    -- 직장우편번호2 
+			     , A.OFFI_ADDR1       AS OFFI_ADDR1      -- 직장주소1   
+			     , A.OFFI_ADDR2       AS OFFI_ADDR2      -- 직장주소2   
+			     , A.OFFI_NEW_YN      AS OFFI_NEW_YN     -- 직장새주소선택여부 
+			     , A.ONEW_ZIP_CD1     AS ONEW_ZIP_CD1    -- 직장새우편번호1 
+			     , A.ONEW_ZIP_CD2     AS ONEW_ZIP_CD2    -- 직장새우편번호2 
+			     , A.ONEW_ADDR1       AS ONEW_ADDR1      -- 직장새주소1 
+			     , A.ONEW_ADDR2       AS ONEW_ADDR2      -- 직장새주소2 
+			     , A.OFFI_PH1         AS OFFI_PH1        -- 직장전화번호1 
+			     , A.OFFI_PH2         AS OFFI_PH2        -- 직장전화번호2 
+			     , A.OFFI_PH3         AS OFFI_PH3        -- 직장전화번호3 
+			     , A.OFFI_FAX1        AS OFFI_FAX1       -- 직장FAX번호1 
+			     , A.OFFI_FAX2        AS OFFI_FAX2       -- 직장FAX번호2 
+			     , A.OFFI_FAX3        AS OFFI_FAX3       -- 직장FAX번호3 
+			     , A.OFFI_INTER_PH    AS OFFI_INTER_PH   -- 직장내선번호 
+			     , A.EMAIL1           AS EMAIL1          -- EMAIL1_암호화 
+			     , A.EMAIL2           AS EMAIL2          -- EMAIL2_암호화 
+			     , A.HOBBY            AS HOBBY           -- 취미        
+			     , A.RELIGION         AS RELIGION        -- 종교        
+			     , A.ETC              AS ETC             -- 기타        
+			     , A.FAMILY1          AS FAMILY1         -- 가족관계1   
+			     , A.FAMILY1_NM       AS FAMILY1_NM      -- 가족1       
+			     , A.FAMILY2          AS FAMILY2         -- 가족관계2   
+			     , A.FAMILY2_NM       AS FAMILY2_NM      -- 가족2       
+			     , A.FAMILY3          AS FAMILY3         -- 가족관계3   
+			     , A.FAMILY3_NM       AS FAMILY3_NM      -- 가족3       
+			     , A.FAMILY4          AS FAMILY4         -- 가족관계4   
+			     , A.FAMILY4_NM       AS FAMILY4_NM      -- 가족4 
+			     , '' ISSUE_DT_RANK  
+			  FROM DPS.PC_REGUCUSTMST A
+			 WHERE A.REGUCUST_ID = ?
+         ]]>
+    </query>
+    <!-- 단골 고객정보 화면 셋팅용 -->
+    <query name="SEL_PC_REGUCUSTMST_C">
+        <![CDATA[
+        	SELECT
+			       X.REGUCUST_ID     
+			     , X.CARD_NO         
+			     , X.CUST_ID         
+			     , X.CUST_NAME       
+			     , X.SEX_CD          
+			     , X.BIRTH_DT        
+			     , X.BIRTH_LUNAR_FLAG
+			     , X.WED_DT          
+			     , X.WED_LUNAR_FLAG  
+			     , X.HOME_NEW_YN     
+			     , X.HOME_ZIP_CD1    
+			     , X.HOME_ZIP_CD2    
+			     , X.HOME_ADDR1      
+			     , X.HOME_ADDR2      
+			     , X.HNEW_ZIP_CD1    
+			     , X.HNEW_ZIP_CD2    
+			     , X.HNEW_ADDR1      
+			     , X.HNEW_ADDR2      
+			     , X.HOME_PH1        
+			     , X.HOME_PH2        
+			     , X.HOME_PH3        
+			     , X.MOBILE_PH1      
+			     , X.MOBILE_PH2      
+			     , X.MOBILE_PH3      
+			     , X.OFFI_ZIP_CD1    
+			     , X.OFFI_ZIP_CD2    
+			     , X.OFFI_ADDR1      
+			     , X.OFFI_ADDR2      
+			     , X.OFFI_NEW_YN     
+			     , X.ONEW_ZIP_CD1    
+			     , X.ONEW_ZIP_CD2    
+			     , X.ONEW_ADDR1      
+			     , X.ONEW_ADDR2      
+			     , X.OFFI_PH1        
+			     , X.OFFI_PH2        
+			     , X.OFFI_PH3        
+			     , X.OFFI_FAX1       
+			     , X.OFFI_FAX2       
+			     , X.OFFI_FAX3       
+			     , X.OFFI_INTER_PH   
+			     , X.EMAIL1          
+			     , X.EMAIL2          
+			     , X.HOBBY           
+			     , X.RELIGION        
+			     , X.ETC             
+			     , X.FAMILY1         
+			     , X.FAMILY1_NM      
+			     , X.FAMILY2         
+			     , X.FAMILY2_NM      
+			     , X.FAMILY3         
+			     , X.FAMILY3_NM      
+			     , X.FAMILY4         
+			     , X.FAMILY4_NM      
+			
+			  FROM (
+			        SELECT 
+			               ''                 AS REGUCUST_ID     -- 단골고객 ID
+			             , B.CARD_NO          AS CARD_NO         -- 보너스카드번호_암호화 
+			             , A.CUST_ID          AS CUST_ID         -- 고객ID      
+			             , A.CUST_NAME        AS CUST_NAME       -- 고객명      
+			             , A.SEX_CD           AS SEX_CD          -- 성별        
+			             , A.BIRTH_DT         AS BIRTH_DT        -- 생년월일    
+			             , A.LUNAR_FLAG       AS BIRTH_LUNAR_FLAG-- 생일구분    
+			             , A.WED_DT           AS WED_DT          -- 결혼기념일  
+			             , 'S'                AS WED_LUNAR_FLAG  -- 기념일구분  
+			             , A.HOME_NEW_YN      AS HOME_NEW_YN     -- 자택새주소선택여부 
+			             , A.HOME_ZIP_CD1     AS HOME_ZIP_CD1    -- 자택우편번호1 
+			             , A.HOME_ZIP_CD2     AS HOME_ZIP_CD2    -- 자택우편번호2 
+			             , A.HOME_ADDR1       AS HOME_ADDR1      -- 자택주소1   
+			             , A.HOME_ADDR2       AS HOME_ADDR2      -- 자택주소2   
+			             , A.HNEW_ZIP_CD1     AS HNEW_ZIP_CD1    -- 자택새우편번호1 
+			             , A.HNEW_ZIP_CD2     AS HNEW_ZIP_CD2    -- 자택새우편번호2 
+			             , A.HNEW_ADDR1       AS HNEW_ADDR1      -- 자택새주소1 
+			             , A.HNEW_ADDR2       AS HNEW_ADDR2      -- 자택새주소2 
+			             , A.HOME_PH1         AS HOME_PH1        -- 자택전화번호1_암호화 
+			             , A.HOME_PH2         AS HOME_PH2        -- 자택전화번호2_암호화 
+			             , A.HOME_PH3         AS HOME_PH3        -- 자택전화번호3_암호화 
+			             , A.MOBILE_PH1       AS MOBILE_PH1      -- 휴대폰번호1_암호화 
+			             , A.MOBILE_PH2       AS MOBILE_PH2      -- 휴대폰번호2_암호화 
+			             , A.MOBILE_PH3       AS MOBILE_PH3      -- 휴대폰번호3_암호화 
+			             , A.OFFI_ZIP_CD1     AS OFFI_ZIP_CD1    -- 직장우편번호1 
+			             , A.OFFI_ZIP_CD2     AS OFFI_ZIP_CD2    -- 직장우편번호2 
+			             , A.OFFI_ADDR1       AS OFFI_ADDR1      -- 직장주소1   
+			             , A.OFFI_ADDR2       AS OFFI_ADDR2      -- 직장주소2   
+			             , A.OFFI_NEW_YN      AS OFFI_NEW_YN     -- 직장새주소선택여부 
+			             , A.ONEW_ZIP_CD1     AS ONEW_ZIP_CD1    -- 직장새우편번호1 
+			             , A.ONEW_ZIP_CD2     AS ONEW_ZIP_CD2    -- 직장새우편번호2 
+			             , A.ONEW_ADDR1       AS ONEW_ADDR1      -- 직장새주소1 
+			             , A.ONEW_ADDR2       AS ONEW_ADDR2      -- 직장새주소2 
+			             , A.OFFI_PH1         AS OFFI_PH1        -- 직장전화번호1 
+			             , A.OFFI_PH2         AS OFFI_PH2        -- 직장전화번호2 
+			             , A.OFFI_PH3         AS OFFI_PH3        -- 직장전화번호3 
+			             , A.OFFI_FAX1        AS OFFI_FAX1       -- 직장FAX번호1 
+			             , A.OFFI_FAX2        AS OFFI_FAX2       -- 직장FAX번호2 
+			             , A.OFFI_FAX3        AS OFFI_FAX3       -- 직장FAX번호3 
+			             , A.OFFI_INTER_PH    AS OFFI_INTER_PH   -- 직장내선번호 
+			             , A.EMAIL1           AS EMAIL1          -- EMAIL1_암호화 
+			             , A.EMAIL2           AS EMAIL2          -- EMAIL2_암호화 
+			             , ''                 AS HOBBY           -- 취미        
+			             , ''                 AS RELIGION        -- 종교        
+			             , ''                 AS ETC             -- 기타        
+			             , ''                 AS FAMILY1         -- 가족관계1   
+			             , ''                 AS FAMILY1_NM      -- 가족1       
+			             , ''                 AS FAMILY2         -- 가족관계2   
+			             , ''                 AS FAMILY2_NM      -- 가족2       
+			             , ''                 AS FAMILY3         -- 가족관계3   
+			             , ''                 AS FAMILY3_NM      -- 가족3       
+			             , ''                 AS FAMILY4         -- 가족관계4   
+			             , ''                 AS FAMILY4_NM      -- 가족4   
+			             , A.ENTR_DT
+			             , A.ISSUE_DT
+			             , RANK() OVER (PARTITION BY A.CUST_ID ORDER BY B.ISSUE_DT DESC ) ISSUE_DT_RANK 
+			             , ROW_NUMBER() OVER (PARTITION BY A.CUST_ID ORDER BY B.ISSUE_DT DESC, B.REG_DATE DESC ) ROW_NUM        
+			          FROM DCS.DM_CUSTOMER A
+			             , DCS.DM_CARD B
+			         WHERE B.CUST_ID = A.CUST_ID 
+			           AND A.CUST_ID = ?
+			       ) X
+			 WHERE X.ISSUE_DT_RANK = 1 
+			   
+         ]]>
+    </query>
+</service>

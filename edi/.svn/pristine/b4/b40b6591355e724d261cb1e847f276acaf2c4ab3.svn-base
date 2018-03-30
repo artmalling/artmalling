@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/epay103.ea">
+   
+    <!-- 조회 (직매입) -->
+    <query name="SEL_BILL1">
+        <![CDATA[
+        SELECT BILL.STR_CD                                           /* 점 */
+             , DPS.FN_GET_STORE_NAME(BILL.STR_CD) AS STR_NM          /* 점명 */
+             , BILL.PAY_CYC
+             , BILL.PAY_CNT
+             , SUM(BILL.BTIME_BAL_AMT)     AS BTIME_BAL_AMT          /* 전월이월잔액*/ 
+             , SUM(BILL.NTIME_SUP_AMT)     AS NTIME_SUP_AMT          /* 공급가 */ 
+             , SUM(BILL.NTIME_VAT_AMT)     AS NTIME_VAT_AMT          /* 부가세 */  
+             , SUM(BILL.COMIS_SALE_AMT)    AS COMIS_SALE_AMT         /* 이익액 */      
+             , SUM(BILL.NTIME_PAY_AMT)     AS NTIME_PAY_AMT          /* 지불대상액 */ 
+             , SUM(BILL.NTIME_BFPAY_AMT)   AS NTIME_BFPAY_AMT        /* 선급금액 */
+             , SUM(BILL.NTIME_HOLD_AMT)    AS NTIME_HOLD_AMT         /* 공제액 */
+             , SUM(BILL.NTIME_DED_AMT)     AS NTIME_DED_AMT          /* 실지불액 */
+             , SUM(BILL.NTIME_RLPAY_AMT)   AS NTIME_RLPAY_AMT        /* 지불후잔액 */
+             , SUM(BILL.NTIME_BAL_AMT)     AS NTIME_BAL_AMT          /* 지불대상금액 */
+          FROM DPS.PP_BILLMST BILL
+          ,  ( SELECT STR_CD, CLOSE_YM, (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                                                WHEN '53' then '2' 
+                                                                WHEN '54' then '2' 
+                                                                WHEN '55' then '3' 
+                                                                WHEN '56' then '3' 
+                                                                WHEN '57' then '3'  END) PAY_CYC,
+                        (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                              WHEN '53' then '1' 
+                                              WHEN '54' then '2' 
+                                              WHEN '55' then '1' 
+                                              WHEN '56' then '2' 
+                                              WHEN '57' then '3'  END) PAY_CNT
+                   FROM DPS.PC_MCLOSE
+                  WHERE CLOSE_TASK_FLAG = 'PPAY' 
+                    AND CLOSE_YN = 'Y' 
+                    AND CLOSE_UNIT_FLAG IN ('52','53', '54', '55', '56', '57')) MCL
+         WHERE BILL.STR_CD = ?    
+           AND BILL.PAY_YM = ?
+           AND BILL.VEN_CD = ?   
+           AND BILL.STR_CD = MCL.STR_CD
+           AND BILL.PAY_YM = MCL.CLOSE_YM
+           AND BILL.PAY_CYC = MCL.PAY_CYC
+           AND BILL.PAY_CNT = MCL.PAY_CNT
+      GROUP BY BILL.STR_CD, BILL.PAY_YM, BILL.PAY_CYC, BILL.PAY_CNT, BILL.VEN_CD
+        ]]>
+    </query>
+    
+    <!-- 조회 (특정매입) -->
+    <query name="SEL_BILL2">
+        <![CDATA[
+	   SELECT MST.STR_CD
+            , DPS.FN_GET_STORE_NAME(MST.STR_CD) AS STR_NM
+            , MST.PAY_CYC
+            , MST.PAY_CNT
+            , MST.BTIME_BAL_AMT
+            , DTL.SUP_AMT
+            , DTL.VAT_AMT
+            , DTL.SALE_TOT_AMT
+            , DTL.REDU_AMT
+            , DTL.SALE_AMT
+            , MST.COMIS_SALE_AMT
+            , MST.NTIME_PAY_AMT
+            , MST.NTIME_BFPAY_AMT
+            , MST.NTIME_HOLD_AMT
+            , MST.NTIME_DED_AMT
+            , MST.NTIME_RLPAY_AMT
+            , MST.NTIME_BAL_AMT
+        FROM (SELECT STR_CD
+                   , PAY_YM
+                   , PAY_CYC
+                   , PAY_CNT
+                   , VEN_CD,
+                   , SUM(BTIME_BAL_AMT)     AS BTIME_BAL_AMT
+                   , SUM(COMIS_SALE_AMT)    AS COMIS_SALE_AMT
+                   , SUM(NTIME_PAY_AMT)     AS NTIME_PAY_AMT
+                   , SUM(NTIME_DED_AMT)     AS NTIME_DED_AMT
+                   , SUM(NTIME_HOLD_AMT)    AS NTIME_HOLD_AMT
+                   , SUM(NTIME_BFPAY_AMT)   AS NTIME_BFPAY_AMT
+                   , SUM(NTIME_RLPAY_AMT)   AS NTIME_RLPAY_AMT
+                   , SUM(NTIME_BAL_AMT)     AS NTIME_BAL_AMT
+                FROM DPS.PP_BILLMST
+            GROUP BY STR_CD, PAY_YM, PAY_CYC, PAY_CNT, VEN_CD ) MST,
+            (SELECT STR_CD
+                  , PAY_YM
+                  , VEN_CD
+                  , SUM(SUP_AMT)            AS SUP_AMT
+                  , SUM(VAT_AMT)            AS VAT_AMT
+                  , SUM(SALE_TOT_AMT)       AS SALE_TOT_AMT
+                  , SUM(REDU_AMT)           AS REDU_AMT
+                  , SUM(SALE_AMT)           AS SALE_AMT
+               FROM DPS.PP_VENPAYDTL
+           GROUP BY STR_CD, PAY_YM, VEN_CD)DTL
+           ,  ( SELECT STR_CD, CLOSE_YM, (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                                                WHEN '53' then '2' 
+                                                                WHEN '54' then '2' 
+                                                                WHEN '55' then '3' 
+                                                                WHEN '56' then '3' 
+                                                                WHEN '57' then '3'  END) PAY_CYC,
+                        (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                              WHEN '53' then '1' 
+                                              WHEN '54' then '2' 
+                                              WHEN '55' then '1' 
+                                              WHEN '56' then '2' 
+                                              WHEN '57' then '3'  END) PAY_CNT
+                   FROM DPS.PC_MCLOSE
+                  WHERE CLOSE_TASK_FLAG = 'PPAY' 
+                    AND CLOSE_YN = 'Y'
+                    AND CLOSE_UNIT_FLAG IN ('52','53', '54', '55', '56', '57')) MCL
+             WHERE MST.STR_CD = DTL.STR_CD
+               AND MST.PAY_YM = DTL.PAY_YM
+               AND MST.VEN_CD = DTL.VEN_CD
+               AND MST.STR_CD = MCL.STR_CD
+               AND MST.PAY_YM = MCL.CLOSE_YM
+	           AND MST.PAY_CYC = MCL.PAY_CYC
+	           AND MST.PAY_CNT = MCL.PAY_CNT
+               AND MST.STR_CD = ?
+               AND MST.PAY_YM = ?
+               AND MST.VEN_CD = ?      
+        ]]>
+    </query>
+    
+    <!-- 조회 (임대을) -->
+    <query name="SEL_BILL3">
+        <![CDATA[
+	   SELECT MST.STR_CD
+                , DPS.FN_GET_STORE_NAME(MST.STR_CD) AS STR_NM
+                , MST.PAY_CYC
+                , MST.PAY_CNT
+                , MST.BTIME_BAL_AMT
+                , DTL.SALE_TOT_AMT
+                , DTL.REDU_AMT
+                , DTL.SALE_AMT
+                , MST.COMIS_SALE_AMT
+                , MST.NTIME_PAY_AMT
+                , MST.NTIME_BFPAY_AMT
+                , MST.NTIME_HOLD_AMT
+                , MST.NTIME_DED_AMT
+                , MST.NTIME_RLPAY_AMT
+                , MST.NTIME_BAL_AMT
+            FROM (SELECT STR_CD
+                       , PAY_YM
+                       , PAY_CYC
+                       , PAY_CNT
+                       , VEN_CD
+                       , SUM(BTIME_BAL_AMT)     AS BTIME_BAL_AMT
+                       , SUM(COMIS_SALE_AMT)    AS COMIS_SALE_AMT
+                       , SUM(NTIME_PAY_AMT)     AS NTIME_PAY_AMT
+                       , SUM(NTIME_DED_AMT)     AS NTIME_DED_AMT
+                       , SUM(NTIME_HOLD_AMT)    AS NTIME_HOLD_AMT
+                       , SUM(NTIME_BFPAY_AMT)   AS NTIME_BFPAY_AMT
+                       , SUM(NTIME_RLPAY_AMT)   AS NTIME_RLPAY_AMT
+                       , SUM(NTIME_BAL_AMT)     AS NTIME_BAL_AMT
+                    FROM DPS.PP_BILLMST
+                GROUP BY STR_CD, PAY_YM, PAY_CYC, PAY_CNT, VEN_CD ) MST,
+                (SELECT STR_CD
+                      , PAY_YM
+                      , VEN_CD
+                      , SUM(SALE_TOT_AMT)       AS SALE_TOT_AMT
+                      , SUM(REDU_AMT)           AS REDU_AMT
+                      , SUM(SALE_AMT)           AS SALE_AMT
+                   FROM DPS.PP_VENPAYDTL
+               GROUP BY STR_CD, PAY_YM, VEN_CD)DTL
+               ,  ( SELECT STR_CD, CLOSE_YM, (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                                                WHEN '53' then '2' 
+                                                                WHEN '54' then '2' 
+                                                                WHEN '55' then '3' 
+                                                                WHEN '56' then '3' 
+                                                                WHEN '57' then '3'  END) PAY_CYC,
+                        (CASE CLOSE_UNIT_FLAG WHEN '52' then '1' 
+                                              WHEN '53' then '1' 
+                                              WHEN '54' then '2' 
+                                              WHEN '55' then '1' 
+                                              WHEN '56' then '2' 
+                                              WHEN '57' then '3'  END) PAY_CNT
+                   FROM DPS.PC_MCLOSE
+                  WHERE CLOSE_TASK_FLAG = 'PPAY' 
+                    AND CLOSE_YN = 'Y' 
+                    AND CLOSE_UNIT_FLAG IN ('52','53', '54', '55', '56', '57')) MCL
+                 WHERE MST.STR_CD = DTL.STR_CD
+                   AND MST.PAY_YM = DTL.PAY_YM
+                   AND MST.VEN_CD = DTL.VEN_CD
+                   AND MST.STR_CD = MCL.STR_CD
+                   AND MST.PAY_YM = MCL.CLOSE_YM
+		           AND MST.PAY_CYC = MCL.PAY_CYC
+		           AND MST.PAY_CNT = MCL.PAY_CNT
+                   AND MST.STR_CD = ?
+                   AND MST.PAY_YM = ?
+                   AND MST.VEN_CD = ?   
+        ]]>
+    </query>
+</service>

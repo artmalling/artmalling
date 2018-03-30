@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal427.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="SALE_DT"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"                  colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"                 colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GUBUN"                   colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BALANCE_AMT"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DM_NAME"                 colType="TB_STRING"      size="20"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DM_SABUN"                colType="TB_STRING"      size="12"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNO"> 
+        <column colName="POSNO"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNOMM"> 
+        <column colName="POSNO_MIN"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSNO_MAX"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_POS_M">        
+        <![CDATA[
+            SELECT A.SALE_DT
+                 , A.POS_NO
+                 , A.TRAN_NO
+                 , (CASE WHEN A.TRAN_FLAG = '51' THEN '사용매출' ELSE '임대외상' END) AS GUBUN
+                 , (CASE WHEN D.TRAN_FLAG = '0' THEN (CASE WHEN D.TRAN_MODE = '92' THEN A.SALE_AMT*-1 ELSE A.SALE_AMT END) ELSE A.SALE_AMT*-1 END)  AS SALE_AMT
+                 , (CASE WHEN D.TRAN_FLAG = '0' THEN (CASE WHEN D.TRAN_MODE = '92' THEN A.BALANCE_AMT*-1 ELSE A.BALANCE_AMT END) ELSE A.BALANCE_AMT*-1 END)  AS BALANCE_AMT 
+                 , A.DM_NAME
+                 , A.DM_SABUN
+              FROM DPS.PS_DISCREDIT A
+                 , DPS.PC_POSMST B
+                 , DPS.PS_DISHEADER D
+             WHERE A.POS_NO     = B.POS_NO
+               AND A.STR_CD     = B.STR_CD
+               AND A.SALE_DT    = D.SALE_DT
+               AND A.STR_CD     = D.STR_CD
+               AND A.POS_NO     = D.POS_NO
+               AND A.TRAN_NO    = D.TRAN_NO
+               AND A.STR_CD     = ?
+               AND B.FLOR_CD    LIKE ? || '%'
+               AND B.POS_FLAG   LIKE ? || '%'
+               AND A.POS_NO     >= ?
+               AND A.POS_NO     <= ?
+               AND A.TRAN_FLAG  IN ('51', '56')
+               AND A.TRAN_FLAG  LIKE (CASE WHEN ? = '01' THEN '51' WHEN ? = '02' THEN '56' ELSE '' END) || '%'
+               AND A.SALE_DT    >= ?
+               AND A.SALE_DT    <= ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = A.STR_CD
+                               AND MYORG.USER_ID     = ?
+                          )            
+             ORDER BY
+                   A.SALE_DT
+                 , A.POS_NO
+                 , A.TRAN_NO
+                         
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSNO">        
+        <![CDATA[
+            SELECT A.POS_NO
+              FROM DPS.PC_POSMST A
+             WHERE A.POS_NO = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSNOMM">        
+        <![CDATA[
+            SELECT MAX(A.POSNO_MIN) AS POSNO_MIN
+                 , MAX(A.POSNO_MAX) AS POSNO_MAX
+              FROM (
+		            SELECT MIN(A.POS_NO) AS POSNO_MIN
+		                 , ''            AS POSNO_MAX
+		              FROM DPS.PC_POSMST A
+		              
+		            UNION ALL
+		              
+		            SELECT ''            AS POSNO_MIN
+		                 , MAX(A.POS_NO) AS POSNO_MAX
+		              FROM DPS.PC_POSMST A
+		           ) A
+        ]]>        
+    </query>
+    
+    
+</service>

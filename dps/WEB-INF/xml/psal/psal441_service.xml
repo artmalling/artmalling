@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.07.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal441.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="ORG_CD"                   colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"                 colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"                colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"              colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_TYPE"              colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETC_FLAG_NAME"            colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_S_DT"                colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_E_DT"                colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="PUMMOK_CD"             colType="TB_STRING"      size="10"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"           colType="TB_STRING"      size="40"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_FLAG"            colType="TB_STRING"      size="2"         dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"            colType="TB_STRING"      size="2"         dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MG_RATE"               colType="TB_DECIMAL"     size="5"         dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"              colType="TB_DECIMAL"     size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"              colType="TB_DECIMAL"     size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <query name="SEL_SALE_ETCPUMBUN">        
+        <![CDATA[
+            SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME     AS ORG_NAME
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.PUMBUN_TYPE
+                 , C.COMM_NAME1         AS ETC_FLAG_NAME
+                 , SUM(A.SALE_QTY)      AS SALE_QTY
+                 , SUM(A.SALE_AMT)      AS SALE_AMT
+                 , ?                    AS SALE_S_DT
+                 , ?                    AS SALE_E_DT
+              FROM (
+                    SELECT SUBSTR(B.SALE_ORG_CD, 0, 8) || '00' AS ORG_CD
+                         , A.PUMBUN_CD
+                         , B.PUMBUN_NAME
+                         , B.PUMBUN_TYPE
+                         , A.SALE_QTY
+                         , A.SALE_AMT
+                      FROM DPS.PS_DISSALEETC A
+                              , DPS.PC_STRPBN B
+                     WHERE A.ORG_CD = B.SALE_ORG_CD 
+                       AND A.STR_CD      = B.STR_CD
+                       AND A.PUMBUN_CD   = B.PUMBUN_CD
+                       AND B.PUMBUN_TYPE IN ('7', '8', '9', 'A')
+                       AND B.PUMBUN_TYPE LIKE ? || '%'
+                       AND A.SALE_DT BETWEEN ? AND ?
+                       )         A
+                 , DPS.PC_ORGMST B
+                 , COM.TC_COMMCODE C
+             WHERE A.ORG_CD = B.ORG_CD
+               AND C.COMM_PART  = 'P070'
+               AND C.COMM_CODE  = A.PUMBUN_TYPE
+               AND B.STR_CD     = ?
+               AND B.DEPT_CD    LIKE ? || '%'
+               AND B.TEAM_CD    LIKE ? || '%'
+               AND B.PC_CD      LIKE ? || '%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.PUMBUN_CD = A.PUMBUN_CD
+                               AND MYORG.USER_ID     = ?
+                           )
+             GROUP BY
+                   A.ORG_CD
+                 , B.ORG_SHORT_NAME
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.PUMBUN_TYPE
+                 , C.COMM_NAME1
+        ]]>        
+    </query>
+    
+     <query name="SEL_SALE_ETCPUMBUN2">        
+        <![CDATA[
+            SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME     AS ORG_NAME
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.PUMBUN_TYPE
+                 , C.COMM_NAME1         AS ETC_FLAG_NAME
+                 , SUM(A.SALE_QTY)      AS SALE_QTY
+                 , SUM(A.SALE_AMT)      AS SALE_AMT
+                 , ?                    AS SALE_S_DT
+                 , ?                    AS SALE_E_DT
+              FROM (
+                    SELECT SUBSTR(B.BUY_ORG_CD, 0, 8) || '00' AS ORG_CD
+                         , A.PUMBUN_CD
+                         , B.PUMBUN_NAME
+                         , B.PUMBUN_TYPE
+                         , A.SALE_QTY
+                         , A.SALE_AMT
+                      FROM DPS.PS_DISSALEETC A
+                              , DPS.PC_STRPBN B
+                     WHERE A.ORG_CD = B.BUY_ORG_CD 
+                       AND A.STR_CD      = B.STR_CD
+                       AND A.PUMBUN_CD   = B.PUMBUN_CD
+                       AND B.PUMBUN_TYPE IN ('7', '8', '9', 'A')
+                       AND B.PUMBUN_TYPE LIKE ? || '%'
+                       AND A.SALE_DT BETWEEN ? AND ?
+                       )         A
+                 , DPS.PC_ORGMST B
+                 , COM.TC_COMMCODE C
+             WHERE A.ORG_CD = B.ORG_CD
+               AND C.COMM_PART  = 'P070'
+               AND C.COMM_CODE  = A.PUMBUN_TYPE
+               AND B.STR_CD     = ?
+               AND B.DEPT_CD    LIKE ? || '%'
+               AND B.TEAM_CD    LIKE ? || '%'
+               AND B.PC_CD      LIKE ? || '%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.PUMBUN_CD = A.PUMBUN_CD
+                               AND MYORG.USER_ID     = ?
+                           )
+             GROUP BY
+                   A.ORG_CD
+                 , B.ORG_SHORT_NAME
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.PUMBUN_TYPE
+                 , C.COMM_NAME1
+        ]]>        
+    </query>
+    <query name="SEL_SALE_ETCPUMMOK">        
+        <![CDATA[ 
+            SELECT A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+                 , A.EVENT_FLAG
+                 , A.EVENT_RATE
+                 , A.MG_RATE
+                 , SUM(A.SALE_QTY)     AS SALE_QTY
+                 , SUM(A.SALE_AMT)     AS SALE_AMT
+              FROM DPS.PS_DISSALEETC A
+                 , DPS.PC_PMKMST B
+                 , DPS.PC_ORGMST C
+                 , DPS.PC_STRPBN D
+             WHERE A.PUMMOK_CD   = B.PUMMOK_CD
+               AND D.PUMBUN_TYPE IN ('7', '8', '9', 'A')
+               AND A.ORG_CD      = D.SALE_ORG_CD
+               AND A.STR_CD      = D.STR_CD
+               AND A.PUMBUN_CD   = D.PUMBUN_CD
+               AND A.ORG_CD      LIKE ? || '%'
+               AND D.PUMBUN_TYPE = ?
+               AND A.SALE_DT BETWEEN ? AND ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = C.STR_CD
+                               AND MYORG.DEPT_CD     = C.DEPT_CD
+                               AND MYORG.TEAM_CD     = C.TEAM_CD
+                               AND MYORG.PC_CD       = C.PC_CD
+                               AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                               AND MYORG.USER_ID     = ?
+                           )
+             GROUP BY
+                   A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+                 , A.EVENT_FLAG
+                 , A.EVENT_RATE
+                 , A.MG_RATE
+        ]]>        
+    </query>
+    <query name="SEL_SALE_ETCPUMMOK2">        
+        <![CDATA[ 
+            SELECT A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+                 , A.EVENT_FLAG
+                 , A.EVENT_RATE
+                 , A.MG_RATE
+                 , SUM(A.SALE_QTY)     AS SALE_QTY
+                 , SUM(A.SALE_AMT)     AS SALE_AMT
+              FROM DPS.PS_DISSALEETC A
+                 , DPS.PC_PMKMST B
+                 , DPS.PC_ORGMST C
+                 , DPS.PC_STRPBN D
+             WHERE A.PUMMOK_CD   = B.PUMMOK_CD
+               AND D.PUMBUN_TYPE IN ('7', '8', '9', 'A')
+               AND A.ORG_CD      = D.BUY_ORG_CD
+               AND A.STR_CD      = D.STR_CD
+               AND A.PUMBUN_CD   = D.PUMBUN_CD
+               AND A.ORG_CD      LIKE ? || '%'
+               AND D.PUMBUN_TYPE = ?
+               AND A.SALE_DT BETWEEN ? AND ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = C.STR_CD
+                               AND MYORG.DEPT_CD     = C.DEPT_CD
+                               AND MYORG.TEAM_CD     = C.TEAM_CD
+                               AND MYORG.PC_CD       = C.PC_CD
+                               AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                               AND MYORG.USER_ID     = ?
+                           )
+             GROUP BY
+                   A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+                 , A.EVENT_FLAG
+                 , A.EVENT_RATE
+                 , A.MG_RATE
+        ]]>        
+    </query>
+    
+</service>

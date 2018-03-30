@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 이어울림
+ * 작 성 일 : 2015.10.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 행사장 매출조회한다.
+ -->
+<service name="/pcod712.pc">
+    
+    <!-- 행사장 마스터 HEADER -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"           colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_CD"   colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"         colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"     colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAT_AMT"          colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"         colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"           colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_SALE_AMT"    colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"     colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT"    colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"         colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_AMT"         colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 행사장 마스터 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT A.STR_CD                                             /* VARCHAR2(2)  PK1  점코드        */
+			     , A.EVENT_PLACE_CD                                     /* VARCHAR2(4)  PK3  행사장코드    */
+			     , SUM(A.SALE_QTY)                  AS SALE_QTY         /* NUMBER(7)         판매수량      */
+			     , ROUND(SUM(A.TOT_SALE_AMT)  / ?)  AS TOT_SALE_AMT     /* NUMBER(13)        총매출금액    */
+			     , ROUND(SUM(A.VAT_AMT)       / ?)  AS VAT_AMT          /* NUMBER(9)         부가세        */
+			     , ROUND(SUM(A.REDU_AMT)      / ?)  AS REDU_AMT         /* NUMBER(13)        할인금액      */
+			     , ROUND(SUM(A.DC_AMT)        / ?)  AS DC_AMT           /* NUMBER(13)        에누리금액    */
+			     , ROUND(SUM(A.NORM_SALE_AMT) / ?)  AS NORM_SALE_AMT    /* NUMBER(13)        정상매출금액  */
+			     , ROUND(SUM(A.NET_SALE_AMT)  / ?)  AS NET_SALE_AMT     /* NUMBER(13)        순매출금액    */
+			     , ROUND(SUM(A.SALE_PROF_AMT) / ?)  AS SALE_PROF_AMT    /* NUMBER(13)        매출이익액    */
+			     , ROUND(SUM(A.CUST_CNT)      / ?)  AS CUST_CNT         /* NUMBER(7)         객수          */
+			     , ROUND(CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0 
+			                  ELSE SUM(A.TOT_SALE_AMT) 
+			                     / SUM(A.CUST_CNT) 
+			                   END / ?)             AS CUST_AMT             /* 객단가 */
+			  FROM (
+			        SELECT A.STR_CD           /* VARCHAR2(2)  PK1  점코드        */
+			             , A.SALE_DT          /* VARCHAR2(8)  PK2  매출일자      */
+			             , A.EVENT_PLACE_CD   /* VARCHAR2(4)  PK3  행사장코드    */
+			             , A.POS_NO           /* VARCHAR2(4)  PK4  POS번호       */
+			             , A.PUMBUN_CD        /* VARCHAR2(6)  PK5  품번코드      */
+			             , B.PUMBUN_NAME      /* VARCHAR2(40)      품번명        */
+			             , A.PUMMOK_CD        /* VARCHAR2(8)  PK6  품목코드      */
+			             , A.EVENT_CD         /* VARCHAR2(11) PK7  행사코드      */
+			             , A.EVENT_FLAG       /* VARCHAR2(2)  PK8  행사구분코드  */
+			             , A.EVENT_RATE       /* VARCHAR2(2)  PK9  행사율        */
+			             , A.MG_RATE          /* NUMBER(5,2)  PK10 마진율        */
+			             , A.ORG_CD           /* VARCHAR2(10)      조직코드      */
+			             , A.FLOOR            /* VARCHAR2(2)       층            */
+			             , A.VEN_CD           /* VARCHAR2(6)       협력사코드    */
+			             , A.SALE_QTY         /* NUMBER(7)         판매수량      */
+			             , A.TOT_SALE_AMT     /* NUMBER(13)        총매출금액    */
+			             , A.VAT_AMT          /* NUMBER(9)         부가세        */
+			             , A.REDU_AMT         /* NUMBER(13)        할인금액      */
+			             , A.DC_AMT           /* NUMBER(13)        에누리금액    */
+			             , A.NORM_SALE_AMT    /* NUMBER(13)        정상매출금액  */
+			             , A.NET_SALE_AMT     /* NUMBER(13)        순매출금액    */
+			             , A.SALE_PROF_AMT    /* NUMBER(13)        매출이익액    */
+			             , A.CUST_CNT         /* NUMBER(7)         객수          */
+			          FROM DPS.PS_DAYEVTPLACEPOS A
+			             , DPS.PC_STRPBN         B
+			         WHERE A.STR_CD         LIKE ? || '%'
+			           AND A.EVENT_PLACE_CD LIKE ? || '%'
+			           AND A.SALE_DT BETWEEN ? AND ?
+			           AND A.STR_CD               = B.STR_CD
+			           AND SUBSTR(A.ORG_CD, 1, 8) = SUBSTR(B.SALE_ORG_CD, 1, 8)
+			           AND A.PUMBUN_CD            = B.PUMBUN_CD
+			           AND EXISTS (
+			                        SELECT MYORG.USER_ID
+			                          FROM COM.V_MYORG MYORG
+			                         WHERE MYORG.STR_CD    = A.STR_CD
+			                           AND MYORG.PUMBUN_CD = A.PUMBUN_CD
+			                           AND MYORG.STR_CD || MYORG.DEPT_CD || MYORG.TEAM_CD || MYORG.PC_CD = SUBSTR(A.ORG_CD, 1, 8)
+			                           AND MYORG.USER_ID   = ?
+			                      )
+			       ) A
+			GROUP BY A.STR_CD
+			       , A.EVENT_PLACE_CD
+			ORDER BY A.STR_CD
+			       , A.EVENT_PLACE_CD
+        ]]>
+    </query>
+    
+    <!-- 행사장 디테일 HEADER -->
+    <gauce name="H_SEL_DETAIL">
+        <column colName="STR_CD"           colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_CD"   colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"        colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"         colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"     colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAT_AMT"          colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"         colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"           colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_SALE_AMT"    colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"     colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT"    colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"         colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_AMT"         colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 행사장 디테일 조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+			SELECT A.STR_CD                                              /* VARCHAR2(2)  PK1  점코드        */
+			     , A.EVENT_PLACE_CD                                      /* VARCHAR2(4)  PK3  행사장코드    */
+			     , A.PUMBUN_CD                                           /* VARCHAR2(6)  PK5  품번코드      */
+			     , A.PUMBUN_NAME                                         /* VARCHAR2(40)      품번명        */
+			     , SUM(A.SALE_QTY)                  AS SALE_QTY          /* NUMBER(7)         판매수량      */
+			     , ROUND(SUM(A.TOT_SALE_AMT)  / ?)  AS TOT_SALE_AMT      /* NUMBER(13)        총매출금액    */
+			     , ROUND(SUM(A.VAT_AMT)       / ?)  AS VAT_AMT           /* NUMBER(9)         부가세        */
+			     , ROUND(SUM(A.REDU_AMT)      / ?)  AS REDU_AMT          /* NUMBER(13)        할인금액      */
+			     , ROUND(SUM(A.DC_AMT)        / ?)  AS DC_AMT            /* NUMBER(13)        에누리금액    */
+			     , ROUND(SUM(A.NORM_SALE_AMT) / ?)  AS NORM_SALE_AMT     /* NUMBER(13)        정상매출금액  */
+			     , ROUND(SUM(A.NET_SALE_AMT)  / ?)  AS NET_SALE_AMT      /* NUMBER(13)        순매출금액    */
+			     , ROUND(SUM(A.SALE_PROF_AMT) / ?)  AS SALE_PROF_AMT     /* NUMBER(13)        매출이익액    */
+			     , ROUND(SUM(A.CUST_CNT)      / ?)  AS CUST_CNT          /* NUMBER(7)         객수          */
+			     , ROUND(CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0        
+			                  ELSE SUM(A.TOT_SALE_AMT) 
+			                     / SUM(A.CUST_CNT) 
+			                   END / ?)             AS CUST_AMT             /* 객단가 */
+			  FROM (
+			        SELECT A.STR_CD           /* VARCHAR2(2)  PK1  점코드        */
+			             , A.SALE_DT          /* VARCHAR2(8)  PK2  매출일자      */
+			             , A.EVENT_PLACE_CD   /* VARCHAR2(4)  PK3  행사장코드    */
+			             , A.POS_NO           /* VARCHAR2(4)  PK4  POS번호       */
+			             , A.PUMBUN_CD        /* VARCHAR2(6)  PK5  품번코드      */
+			             , B.PUMBUN_NAME      /* VARCHAR2(40)      품번명        */
+			             , A.PUMMOK_CD        /* VARCHAR2(8)  PK6  품목코드      */
+			             , A.EVENT_CD         /* VARCHAR2(11) PK7  행사코드      */
+			             , A.EVENT_FLAG       /* VARCHAR2(2)  PK8  행사구분코드  */
+			             , A.EVENT_RATE       /* VARCHAR2(2)  PK9  행사율        */
+			             , A.MG_RATE          /* NUMBER(5,2)  PK10 마진율        */
+			             , A.ORG_CD           /* VARCHAR2(10)      조직코드      */
+			             , A.FLOOR            /* VARCHAR2(2)       층            */
+			             , A.VEN_CD           /* VARCHAR2(6)       협력사코드    */
+			             , A.SALE_QTY         /* NUMBER(7)         판매수량      */
+			             , A.TOT_SALE_AMT     /* NUMBER(13)        총매출금액    */
+			             , A.VAT_AMT          /* NUMBER(9)         부가세        */
+			             , A.REDU_AMT         /* NUMBER(13)        할인금액      */
+			             , A.DC_AMT           /* NUMBER(13)        에누리금액    */
+			             , A.NORM_SALE_AMT    /* NUMBER(13)        정상매출금액  */
+			             , A.NET_SALE_AMT     /* NUMBER(13)        순매출금액    */
+			             , A.SALE_PROF_AMT    /* NUMBER(13)        매출이익액    */
+			             , A.CUST_CNT         /* NUMBER(7)         객수          */
+			          FROM DPS.PS_DAYEVTPLACEPOS A
+			             , DPS.PC_STRPBN         B
+			         WHERE A.STR_CD         LIKE ? || '%'
+			           AND A.EVENT_PLACE_CD LIKE ? || '%'
+			           AND A.SALE_DT BETWEEN ? AND ?
+			           AND A.STR_CD               = B.STR_CD
+			           AND SUBSTR(A.ORG_CD, 1, 8) = SUBSTR(B.SALE_ORG_CD, 1, 8)
+			           AND A.PUMBUN_CD            = B.PUMBUN_CD
+			           AND EXISTS (
+			                        SELECT MYORG.USER_ID
+			                          FROM COM.V_MYORG MYORG
+			                         WHERE MYORG.STR_CD    = A.STR_CD
+			                           AND MYORG.PUMBUN_CD = A.PUMBUN_CD
+			                           AND MYORG.STR_CD || MYORG.DEPT_CD || MYORG.TEAM_CD || MYORG.PC_CD = SUBSTR(A.ORG_CD, 1, 8)
+			                           AND MYORG.USER_ID   = ?
+			                      )
+			       ) A
+			GROUP BY A.STR_CD
+			       , A.EVENT_PLACE_CD
+			       , A.PUMBUN_CD
+			       , A.PUMBUN_NAME
+			ORDER BY A.STR_CD
+			       , A.EVENT_PLACE_CD
+			       , A.PUMBUN_CD
+        ]]>
+    </query>
+    
+</service>

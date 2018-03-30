@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal101.es">
+    
+   
+    <!-- 일매출 현황 조회 -->
+    <query name="SEL_DAYMGPBN">
+        <![CDATA[
+        SELECT A.STR_CD                                             /* 점         */
+             , DPS.FN_GET_STORE_NAME(A.STR_CD)                      /* 점명       */
+             , A.SALE_DT                                            /* 매출일자   */
+             , A.PUMBUN_CD                                          /* 브랜드코드   */    
+             , F.PUMBUN_NAME                                        /* 브랜드명     */
+             , SUM(NVL(A.SALE_QTY, 0))                              /* 매출건수   */
+             , SUM(NVL(A.TOT_SALE_AMT,0)) - SUM(NVL(A.REDU_AMT, 0)) /* 매출 ( 총매출 - 할인) */
+             , SUM(NVL(A.DC_AMT, 0))                                /* 에누리     */ 
+             , SUM(NVL(A.NET_SALE_AMT, 0))                          /* 순매출     */
+             , SUM(NVL(A.REDU_AMT, 0))                              /* 할인       */
+             , SUM(NVL(A.TOT_SALE_AMT,0))                           /* 총매출     */
+	      FROM DPS.PS_DAYMGPBN    A
+			 , DPS.PC_STRPBN      F 
+	     WHERE A.STR_CD     = F.STR_CD
+		   AND A.PUMBUN_CD  = F.PUMBUN_CD
+           AND F.PUMBUN_TYPE      IN ('0', '4', 'B')
+		 --  AND F.EDI_YN = 'Y'
+		   AND A.STR_CD = ?
+		   AND F.VEN_CD = ? 
+		   AND A.PUMBUN_CD LIKE ? || '%'
+		   AND A.SALE_DT    >= ?
+		   AND A.SALE_DT    <= ?
+	  GROUP BY A.STR_CD, A.SALE_DT,  A.PUMBUN_CD  , F.PUMBUN_NAME
+	  ORDER BY A.SALE_DT DESC, A.STR_CD, A.PUMBUN_CD            
+        ]]>
+    </query>
+    
+    
+    <!-- 일매출 디테일 조회  -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+        SELECT A.PUMMOK_CD                                          /* 품목코드 */
+             , DPS.FN_GET_PUMMOK_NAME(A.PUMMOK_CD)                  /* 품목명   */
+             , A.EVENT_FLAG                                         /* 행사구분 */
+             , A.EVENT_RATE                                         /* 행사율   */
+             , NVL(A.SALE_QTY,0)                                    /* 매출건수 */
+             , NVL(A.TOT_SALE_AMT,0) - NVL(A.REDU_AMT,0)            /* 매출( 총매출 - 할인 ) */
+             , NVL(A.DC_AMT,0)                                      /* 에누리   */        
+             , NVL(A.NET_SALE_AMT,0)                                /* 순매출   */
+             , NVL(A.REDU_AMT,0)                                    /* 할인     */
+             , NVL(A.TOT_SALE_AMT,0)                                /* 총매출   */
+		  FROM DPS.PS_DAYMGPBN    A
+		     , DPS.PC_STRPBN B
+		 WHERE A.STR_CD = B.STR_CD
+		   AND A.PUMBUN_CD  = B.PUMBUN_CD
+		   AND A.STR_CD = ?
+		   AND A.PUMBUN_CD = ?
+		   AND A.SALE_DT = ?
+        ]]>
+    </query>
+          
+      
+    
+    
+
+</service>

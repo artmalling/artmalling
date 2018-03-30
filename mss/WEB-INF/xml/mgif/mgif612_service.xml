@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.29
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  제휴상품권 및 쿠폰 매출 채권관리를 조회 합니다.
+ -->
+<service name="/mgif612.mg">
+<!-- 제휴상품권(쿠폰) 매출 채권관리  조회 헤더 -->
+ <gauce name="H_MASTER"> 
+      <column colName="CAL_YM"          colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />          
+      <column colName="STR_CD"          colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />          
+      <column colName="STR_NM"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+      <column colName="VEN_CD"          colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />          
+      <column colName="VEN_NM"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+      <column colName="PAYREC_FLAG"     colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+      <column colName="CAL_FLAG"        colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+      <column colName="BASIC_BOND_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+      <column colName="BOND_AMT"        colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />            
+      <column colName="MONTH_PAY_AMT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+      <column colName="REAL_PAY_AMT"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+      <column colName="FEE_RATE"        colType="TB_DECIMAL" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+      <column colName="FEE_SUP_AMT"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+      <column colName="FEE_VAT_AMT"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+      <column colName="FEE_TOT_AMT"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+      <column colName="CAL_AMT"         colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />           
+      <column colName="PAY_AMT"         colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />          
+      <column colName="FEE_PAY_AMT"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+      <column colName="TOT_PAY_AMT"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+      <column colName="CONT_AMT"        colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+      <column colName="FINAL_BOND_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+      <column colName="TAX_SUP_DT"      colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+ </gauce>                                                                                                                     
+    
+ <!-- 제휴상품권(쿠폰) 매출 채권관리  조회 -->
+ <query name="SEL_MG_JOINCAL_MST">
+     <![CDATA[
+     SELECT CAL_YM      
+         , STR_CD
+         , DPS.FN_GET_STORE_NAME(STR_CD)                 AS STR_NM
+         , VEN_CD
+         , DPS.FN_GET_VENDOR_NAME(VEN_CD)                AS VEN_NM
+         , COM.FN_GET_COMM_NAME('D', 'M109', PAYREC_FLAG) AS PAYREC_FLAG
+         , COM.FN_GET_COMM_NAME('D', 'M110', CAL_FLAG) AS CAL_FLAG  
+         , BASIC_BOND_AMT 
+         , BOND_AMT       
+         , MONTH_PAY_AMT  
+         , REAL_PAY_AMT   
+         , FEE_RATE       
+         , FEE_SUP_AMT    
+         , FEE_VAT_AMT    
+         , FEE_TOT_AMT    
+         , CAL_AMT        
+         , PAY_AMT        
+         , FEE_PAY_AMT    
+         , PAY_AMT + FEE_PAY_AMT AS TOT_PAY_AMT    
+         , CONT_AMT       
+         , FINAL_BOND_AMT 
+         , TAX_SUP_DT      
+      FROM MSS.MG_VENCAL
+     WHERE CAL_TYPE = '1'
+       AND CAL_YM = ?
+       AND STR_CD = ?
+     ]]>
+    </query>   
+    
+     <query name="SEL_WHERE_VEN_CD">
+        <![CDATA[
+           AND VEN_CD   = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_ORDER">
+        <![CDATA[
+           ORDER BY CAL_FLAG , VEN_CD   
+        ]]>
+    </query>
+    
+</service>

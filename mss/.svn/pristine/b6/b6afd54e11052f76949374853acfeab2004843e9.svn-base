@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.06.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영계획생성
+ -->
+<service name="/meis041.me">
+    
+    <!-- 년별경영계획보고서 헤더  -->
+    <gauce name="H_SEL_BIZ_PLAN">
+        <column colName="CHECK_FLAG"   colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EDIT_FLAG"    colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLAN_YEAR"    colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"       colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"       colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CREATE_FLAG"  colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_FLAG"    colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CREATE_FLAG2" colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 년별경영계획보고서조회-->
+    <query name="SEL_BIZ_PLAN">
+        <![CDATA[
+        SELECT 'F'                                    AS CHECK_FLAG
+             , CASE NVL(CONF_YN, '1') WHEN '1' THEN '1' 
+                                      ELSE '0' END    AS EDIT_FLAG
+             , ?                                      AS PLAN_YEAR
+             , PLAN.STR_CD
+             , PLAN.STR_NM
+             , CASE NVL(RPT.STR_CD,  '1') WHEN '1' THEN '미생성' 
+                                          ELSE '생성' END AS CREATE_FLAG
+             , CASE NVL(RPT.CONF_YN, '1') WHEN '1' THEN '미확정' 
+                                          ELSE '확정' END AS CONF_FLAG
+             , CASE NVL(RPT.STR_CD, '1')  WHEN '1' THEN 'N' 
+                                          ELSE 'Y' END    AS CREATE_FLAG2
+          FROM ( SELECT STR_CD
+                      , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+                   FROM MSS.ME_BIZPLAN 
+                  WHERE BIZ_PLAN_YEAR = ?
+                  GROUP BY STR_CD 
+                  HAVING SUM(NVL(PLAN_AMT,0)+NVL(PR_DIV_RECV_AMT,0)+NVL(SD_DIV_RECV_AMT,0)-NVL(PR_DIV_AMT,0)-NVL(SD_DIV_AMT,0)) > 0 ) PLAN
+             , ( SELECT STR_CD
+                      , CONF_YN
+                   FROM MSS.ME_BIZPLANRPT 
+                  WHERE BIZ_PLAN_YEAR = ?
+                  GROUP BY STR_CD
+                      , CONF_YN ) RPT
+         WHERE PLAN.STR_CD = RPT.STR_CD(+)
+         ORDER BY PLAN.STR_CD
+        ]]>
+    </query>
+    
+    <!-- 보고서 삭제-->
+    <query name="DEL_REPORT">
+        <![CDATA[
+        DELETE
+          FROM MSS.ME_BIZPLANRPT 
+         WHERE BIZ_PLAN_YEAR = ?
+           AND STR_CD        = ?
+        ]]>
+    </query>
+    
+</service>

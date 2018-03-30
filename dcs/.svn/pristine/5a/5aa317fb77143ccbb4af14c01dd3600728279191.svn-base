@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.02.16
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  무기명카드 발급 매수 등록
+ -->
+<service name="/dctm117.dm">
+    <!--무기명카드 발급 매수 조회  -->
+    <gauce name="H_MASTER"> 
+        <column colName="CARD_CRE_DT"   colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_CRE_SEQ"  colType="TB_STRING"     size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_GRADE"    colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_QTY"      colType="TB_DECIMAL"    size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="S_CARD_NO"     colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="E_CARD_NO"     colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_CNT"      colType="TB_DECIMAL"    size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!--무기명카드 발급 매수 조회  - 엑셀용 -->
+    <gauce name="H_MASTER2"> 
+        <column colName="CARD_NO"       colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_GRADE"    colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_GRADE_NM" colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!--무기명카드 발급 매수 등록  -->
+    <gauce name="H_INS"> 
+        <column colName="CARD_CRE_DT"   colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_GRADE"    colType="TB_STRING"     size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_CNT"      colType="TB_STRING"     size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_PREFIX"   colType="TB_STRING"     size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CARD_CRE_SEQ"  colType="TB_STRING"     size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--무기명카드 발급 매수 조회  -->
+    <query name="SEL_DATA">        
+        <![CDATA[
+			SELECT A.CARD_CRE_DT
+			     , A.CARD_CRE_SEQ
+			     , COM.FN_GET_COMM_NAME('D', 'D011', A.CARD_GRADE) CARD_GRADE
+			     , A.CARD_QTY
+			     , A.S_CARD_NO
+			     , A.E_CARD_NO
+			     , COUNT(B.CARD_NO) CARD_CNT
+			  FROM DCS.DM_PRE_CARD_NO A
+			     , DCS.DM_CARD B
+			 WHERE A.CARD_CRE_DT  =  B.CARD_CRE_DT
+			   AND A.CARD_CRE_SEQ =  B.CARD_CRE_SEQ
+			   AND A.DEL_YN       =  'N'  
+			   AND A.CARD_CRE_DT  BETWEEN ? AND ?
+			 GROUP BY A.CARD_CRE_DT
+			        , A.CARD_CRE_SEQ
+			        , A.CARD_GRADE
+			        , A.CARD_QTY
+			        , A.S_CARD_NO
+			        , A.E_CARD_NO
+			 ORDER BY A.CARD_CRE_DT DESC
+			        , A.CARD_CRE_SEQ DESC
+			        , A.CARD_GRADE
+			        , A.CARD_QTY
+			        , A.S_CARD_NO
+			        , A.E_CARD_NO
+ 
+        ]]>        
+    </query>    
+    
+    <!--무기명카드 발급 매수 조회  -->
+    <query name="SEL_PRE_CARD_NO">        
+        <![CDATA[
+            SELECT A.CARD_CRE_DT
+                 , A.CARD_GRADE 
+                 , COUNT(B.CARD_NO) CARD_CNT
+                 , SUBSTR(A.S_CARD_NO, 1, 4) AS CARD_PREFIX
+                 , A.CARD_CRE_SEQ
+              FROM DCS.DM_PRE_CARD_NO A
+                 , DCS.DM_CARD B
+             WHERE A.CARD_CRE_DT  =  B.CARD_CRE_DT
+               AND A.CARD_CRE_SEQ =  B.CARD_CRE_SEQ
+               AND A.CARD_CRE_DT  =  ?
+               AND A.CARD_CRE_SEQ =  ?
+               AND A.DEL_YN       =  'N'  
+             GROUP BY A.CARD_CRE_DT
+                    , A.CARD_GRADE
+                    , SUBSTR(A.S_CARD_NO, 1, 4) 
+                    , A.CARD_CRE_SEQ
+                    
+ 
+        ]]>        
+    </query>    
+    
+    <!--무기명카드 발급 내역 조회  -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT DCS.SC_Crypto_FUN('DEC', A.CARD_NO) AS CARD_NO
+                 , A.CARD_GRADE
+                 , COM.FN_GET_COMM_NAME('D', 'D011', A.CARD_GRADE) CARD_GRADE_NM
+              FROM DCS.DM_CARD A
+             WHERE A.CARD_CRE_DT  =  ?
+               AND A.CARD_CRE_SEQ =  ?
+        ]]>        
+    </query>       
+    
+    <!--SEQ 생성  -->
+    <query name="SEL_PRE_CARD_SEQ">        
+        <![CDATA[
+            SELECT LPAD( TO_CHAR( TO_NUMBER(NVL(MAX(A.CARD_CRE_SEQ), '000')) + 1 ), 3, '0' ) CSEQ
+              FROM DCS.DM_PRE_CARD_NO A
+             WHERE A.CARD_CRE_DT  =  TO_CHAR(SYSDATE, 'YYYYMMDD')
+        ]]>        
+    </query>    
+    
+    <!-- DCS.DM_PRE_CARD_NO 입력  -->
+    <query name="INS_PRE_CARD_NO">         
+        <![CDATA[    
+            INSERT INTO DCS.DM_PRE_CARD_NO (
+                                            CARD_CRE_DT
+                                          , CARD_CRE_SEQ
+                                          , CARD_GRADE
+                                          , CARD_QTY
+                                          , S_CARD_NO
+                                          , E_CARD_NO
+                                          , DEL_YN
+                                          , DEL_DATE
+                                          , REG_DATE
+                                          , REG_ID
+                                          ) 
+                                   VALUES (
+                                            ?
+                                          , ?
+                                          , ?
+                                          , ?
+                                          , NULL
+                                          , NULL
+                                          , 'N'
+                                          , NULL
+                                          , SYSDATE
+                                          , ?
+                                          )       
+        ]]>                               
+    </query>     
+    
+    <!--카드번호  생성  -->
+    <query name="SEL_SQ_CARD">        
+        <![CDATA[
+            SELECT DCS.F_GET_SQ_CARD('2') CARD_NO  
+              FROM DUAL
+        ]]>        
+    </query> 
+    
+    <!-- DCS.DM_PRE_CARD_NO 입력  -->
+    <query name="INS_CARD">         
+        <![CDATA[    
+            INSERT INTO DCS.DM_CARD (
+                                     CARD_NO
+                                   , CUST_ID
+                                   , CARD_TYPE_CD
+                                   , PWD_NO
+                                   , CARD_STAT_CD
+                                   , REP_CARD_YN
+                                   , VALID_YN
+                                   , REG_INFORM_DT
+                                   , PWD_NO_ERR_CNT
+                                   , ISSUE_DT
+                                   , FIRST_TRADE_DT
+                                   , LOSS_NOTI_DT
+                                   , LOSS_NOTI_NM
+                                   , ENTR_PATH_CD
+                                   , SCED_REQ_DT
+                                   , SCED_PROC_DT
+                                   , CARD_CRE_DT
+                                   , CARD_CRE_SEQ
+                                   , CARD_GRADE
+                                   , ONLINE_ISSUE_YN
+                                   , ONLINE_ISSUE_DT
+                                   , REG_DATE
+                                   , REG_ID
+                                   , MOD_DATE
+                                   , MOD_ID
+                                   , POCARD_PREFIX
+                                   ) 
+                            VALUES (
+                                     ?
+                                   , NULL
+                                   , 12
+                                   , NULL
+                                   , 0
+                                   , 'Y'
+                                   , 'Y'
+                                   , NULL
+                                   , 0
+                                   , NULL
+                                   , NULL
+                                   , NULL
+                                   , NULL
+                                   , NULL
+                                   , NULL
+                                   , NULL
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , 'N'
+                                   , NULL
+                                   , SYSDATE
+                                   , ?
+                                   , SYSDATE
+                                   , ?
+                                   , '100'
+                                   )       
+        ]]>                        
+    </query>     
+    
+    <!-- 회원등급 수정 -->
+    <query name="UPD_PRE_CARD_NO">
+        <![CDATA[
+            UPDATE DCS.DM_PRE_CARD_NO
+               SET S_CARD_NO    = ?
+                 , E_CARD_NO    = ? 
+             WHERE CARD_CRE_DT  = ? 
+               AND CARD_CRE_SEQ = ?
+        ]]>
+    </query> 
+</service>

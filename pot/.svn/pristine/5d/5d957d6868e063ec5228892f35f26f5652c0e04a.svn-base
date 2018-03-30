@@ -1,0 +1,1995 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!-- 
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 :
+ * 변경내용 :
+ * 개    요 :  로그인 체크
+ -->
+<service name="/tcom001.tc">	
+
+    <gauce name="H_SEL_VISIT"> 
+        <column colName="SATY_CNT"                 colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_TODAY_SALE"> 
+        <column colName="ORG_CD"                 colType="TB_STRING"       size="10"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_LEVEL"              colType="TB_STRING"       size="1"         dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"               colType="TB_STRING"       size="40"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT"       colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"           colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACHIEVERATE"            colType="TB_DECIMAL"      size="5"         dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT_CMPR"      colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALEIRATE"              colType="TB_DECIMAL"      size="5"         dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"                 colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"           colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT"          colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROFRATE"               colType="TB_DECIMAL"      size="5"         dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"               colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_DANGA"             colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+    
+    
+    <!-- 사용자 조회-->
+    <query name="SEL_TC_USRMST">
+        <![CDATA[
+            SELECT A.USER_ID
+                 , A.USER_NAME
+                 , DCS.SC_Crypto_FUN('DEC', A.PWD_NO) AS PWD_NO
+                 , A.GROUP_CD
+                 , A.ORG_CD 
+                 , (SELECT MIN(ORG_FLAG)||MAX(ORG_FLAG) FROM COM.V_MYORG WHERE USER_ID = A.USER_ID ) ORG_FLAG
+                 , A.STR_CD
+                 , A.DEPT_CD
+                 , A.TEAM_CD
+                 , A.PC_CD 
+                 , A.CORNER_CD
+                 , A.SUB_SYS
+                 , A.VIEW_LEVEL
+                 , (SELECT BRCH_ID FROM DCS.DB_BRANCH WHERE A.STR_CD = STR_CD AND ROWNUM=1) BRCH_ID
+                 , NVL(A.MULTI_LOGIN, 'N') MULTI_LOGIN
+                 , A.USE_YN
+                 , A.HP1_NO
+                 , A.HP2_NO
+                 , A.HP3_NO
+                 , A.PHONE1_NO
+                 , A.PHONE2_NO
+                 , A.PHONE3_NO
+                 , A.E_MAIL
+                 , A.PART_NM
+                 , (SELECT B.ORG_NAME FROM DPS.PC_ORGMST B WHERE A.ORG_CD = B.STR_CD||B.DEPT_CD||'000000' AND ORG_LEVEL = '2') BU_NM
+                 , (SELECT B.ORG_NAME FROM DPS.PC_ORGMST B WHERE A.ORG_CD = B.STR_CD||B.DEPT_CD||B.TEAM_CD||'0000' AND ORG_LEVEL = '3') TEAM_NM
+                 , (SELECT B.ORG_NAME FROM DPS.PC_ORGMST B WHERE A.ORG_CD = B.STR_CD||B.DEPT_CD||B.TEAM_CD||B.PC_CD||'00' AND ORG_LEVEL = '4') PC_NM
+                 , (SELECT B.ORG_NAME FROM DPS.PC_ORGMST B WHERE A.ORG_CD = B.ORG_CD) JKNM
+              FROM COM.TC_USRMST A
+             WHERE A.USER_ID = ?
+        ]]>
+    </query>             
+             
+    <!-- 공지사항조회-->
+    <query name="SEL_NOTICE_ALL">
+        <![CDATA[
+        SELECT NOTI_ID
+             , NOTI_TITLE
+             , REG_USER
+             , TO_CHAR(REG_DATE,'YYYY/MM/DD') AS REG_DATE
+          FROM ( SELECT NOTI_ID
+                      , NOTI_TITLE
+                      , COM.FN_GET_USER_NAME(REG_ID) AS REG_USER
+                      , REG_DATE
+                   FROM COM.TC_NOTI
+                  WHERE TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN S_DATE AND E_DATE
+                  ORDER BY REG_DATE DESC
+               )
+         WHERE ROWNUM <= ?
+        ]]>
+    </query>
+    
+    <!--공지사항조회-->
+    <query name="SEL_NOTICE_LIST1">
+        <![CDATA[
+        SELECT NOTI_ID
+             , NOTI_TITLE
+             , REG_USER
+             , REG_DATE
+             , '[' || NOTI_GBN || '/' || NOTI_FLAG || ']' AS NOTI_GUBUN
+             , NEW_YN
+          FROM (          
+                    SELECT NOTI_ID
+                         , NOTI_TITLE
+                         , COM.FN_GET_USER_NAME(REG_ID)                                AS REG_USER
+                         , TO_CHAR(TO_DATE(S_DATE, 'YYYYMMDD'),'YYYY/MM/DD')           AS REG_DATE
+                         , DECODE(SEND_TO_ALL,'Y','전체','팀')                        AS NOTI_GBN
+                         , DECODE(TO_CHAR(TO_DATE(S_DATE, 'YYYYMMDD'),'YYYYMMDD')
+                                , TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                ,'Y','N')                                              AS NEW_YN
+                         , COM.FN_GET_COMM_NAME('D','TC05', NOTI_FLAG)                 AS NOTI_FLAG
+                         , ROW_NUMBER() OVER(ORDER BY S_DATE DESC , NOTI_ID DESC)      AS RN
+                      FROM (
+                                 SELECT NOTI_ID, NOTI_TITLE, REG_ID, S_DATE, SEND_TO_ALL, NOTI_FLAG
+                                   FROM COM.TC_NOTI
+                                  WHERE SEND_TO_ALL = 'Y'
+                                    AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN S_DATE AND E_DATE
+                                  UNION ALL
+                                 SELECT A.NOTI_ID, A.NOTI_TITLE, A.REG_ID, A.S_DATE, A.SEND_TO_ALL, A.NOTI_FLAG
+                                   FROM COM.TC_NOTI      A
+                                      , COM.TC_NOTI_RECV B
+                                  WHERE A.NOTI_ID = B.NOTI_ID
+                                    AND A.SEND_TO_ALL = 'N'
+        ]]>
+    </query>
+    <query name="SEL_NOTICE_WHERE1">
+        <![CDATA[
+                                    AND B.ORG_CD =  ?
+        ]]>
+    </query>
+    <query name="SEL_NOTICE_LIST2">
+        <![CDATA[
+                                    AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A.S_DATE AND A.E_DATE
+                             )
+                       WHERE 1=1
+        ]]>
+    </query>
+    <query name="SEL_NOTICE_WHERE2">
+        <![CDATA[
+                        AND NOTI_FLAG = ?
+        ]]>
+    </query>
+    <query name="SEL_NOTICE_ORDER">
+        <![CDATA[ 
+               )
+         WHERE RN BETWEEN ? AND ?
+        ]]>
+    </query>
+    
+    <!-- 공지사항 게시물 총 건수 -->
+	<query name="SEL_NOTICE_TOTAL_CNT1">
+        <![CDATA[
+	          SELECT SUM(TOTAL_ALL) AS TOTAL_ALL 
+	            FROM (
+	                    SELECT COUNT(*) AS TOTAL_ALL
+	                      FROM COM.TC_NOTI 
+	                     WHERE TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN S_DATE AND E_DATE
+	                       AND SEND_TO_ALL = 'Y' 
+        ]]>
+    </query>
+	<query name="SEL_NOTICE_TOTAL_CNT2">
+        <![CDATA[ 
+                         GROUP BY NOTI_FLAG            
+                         UNION ALL 
+                        SELECT COUNT(*) AS TOTAL_ALL
+                          FROM COM.TC_NOTI      A
+                             , COM.TC_NOTI_RECV B
+                         WHERE A.NOTI_ID = B.NOTI_ID
+                           AND A.SEND_TO_ALL = 'N'
+                           AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN S_DATE AND E_DATE
+        ]]>
+    </query>
+    
+    
+    <!-- 공지사항 게시물 총 건수 _ 조회조건 -->
+	<query name="SEL_NOTICE_TOTAL_CNT_WHERE1">
+        <![CDATA[
+			                AND NOTI_FLAG = ?
+        ]]>
+    </query> 
+    
+    
+    <!-- 공지사항 게시물 총 건수 _ 조회조건 -->
+	<query name="SEL_NOTICE_TOTAL_CNT_WHERE2">
+        <![CDATA[
+			                AND ORG_CD =  ?
+        ]]>
+    </query> 
+    
+    <!-- 공지사항 게시물 총 건수 -->
+	<query name="SEL_NOTICE_TOTAL_CNT_END">
+        <![CDATA[
+
+                          )
+			  
+        ]]>
+    </query>
+    
+    <!-- 날씨 예보일자조회 -->
+    <query name="SEL_WEATHER">
+        <![CDATA[  
+			SELECT MAX(R1_COL1)R1_COL1, MAX(R1_COL2)R1_COL2, MAX(R1_COL3)R1_COL3, MAX(R1_COL4)R1_COL4
+			     , MAX(R1_COL5)R1_COL5, MAX(R1_COL6)R1_COL6, MAX(R1_COL7)R1_COL7
+                 , MAX(R1_COL1_DATE)R1_COL1_DATE 
+			  FROM (
+			         SELECT 'X' AS GBN
+			             , DECODE(RN, 1, SUBSTR(WTHR_DATE,7,8) || ' ('||DAY_OF_WEEK || ')') AS R1_COL1  
+			             , DECODE(RN, 2, SUBSTR(WTHR_DATE,7,8) || ' ('||DAY_OF_WEEK || ')') AS R1_COL2
+			             , DECODE(RN, 3, SUBSTR(WTHR_DATE,7,8) || ' ('||DAY_OF_WEEK || ')') AS R1_COL3
+			             , DECODE(RN, 4, SUBSTR(WTHR_DATE,7,8) || ' ('||DAY_OF_WEEK || ')') AS R1_COL4
+			             , DECODE(RN, 5, SUBSTR(WTHR_DATE,7,8) || ' ('||DAY_OF_WEEK || ')') AS R1_COL5
+			             , DECODE(RN, 6, SUBSTR(WTHR_DATE,7,8) || ' ('||DAY_OF_WEEK || ')') AS R1_COL6
+			             , DECODE(RN, 7, SUBSTR(WTHR_DATE,7,8) || ' ('||DAY_OF_WEEK || ')') AS R1_COL7 
+			             , DECODE(RN, 1, WTHR_ISSUE) AS R1_COL1_DATE
+			          FROM (
+			                    SELECT A.*, ROW_NUMBER() OVER (ORDER BY WTHR_DATE) AS RN
+			                      FROM (
+			                                SELECT WTHR_DATE 
+			                                     , DAY_OF_WEEK  
+                                                 ,    SUBSTR(WTHR_DATE,1,4) || '년 ' 
+                                                   || SUBSTR(WTHR_DATE,5,2) || '월 ' 
+                                                   || SUBSTR(WTHR_DATE,7,2) || '일 '
+                                                   || WTHR_TIME             || '시 발표' AS WTHR_ISSUE
+			                                  FROM (
+                                                        SELECT A.*, ROW_NUMBER() OVER(ORDER BY WTHR_DATE || WTHR_TIME DESC) AS RN 
+                                                          FROM COM.TC_WEATHER A
+			                                       )A
+			                                 WHERE RN = 1 
+			                                 UNION ALL 
+			                                 SELECT WTHR_DATE 
+			                                      , DAY_OF_WEEK , '' 
+			                                 FROM COM.TC_WEATHERCAST WHERE WTHR_DATE > TO_CHAR(SYSDATE, 'YYYYMMDD')
+			                           ) A
+			               )
+			       )X
+			 GROUP BY GBN
+        ]]>
+    </query>
+  
+    <!-- 날씨 예보정보조회  -->
+    <query name="SEL_WEATHERCAST">
+        <![CDATA[  
+			SELECT SUBSTR(WTHR_D,7,8) AS WTHR_DATE 
+                 , DAY_OF_WEEK, WTHR_CONDITION, WTHR_ICON
+                 , MIN_TEMPERATURE, MAX_TEMPERATURE, WTHR_RAINFALL
+              FROM (
+                        SELECT 1 GBN
+                             , WTHR_DATE AS WTHR_D
+                             , DAY_OF_WEEK
+                             , WTHR_CONDITION
+                             , WTHR_ICON 
+                             , MIN_TEMPERATURE
+                             , MAX_TEMPERATURE
+                             , WTHR_RAINFALL || 'mm' AS WTHR_RAINFALL
+                          FROM (
+                                     SELECT A.*, B.MIN_TEMPERATURE, MAX_TEMPERATURE, ROW_NUMBER() OVER(ORDER BY A.WTHR_DATE || A.WTHR_TIME DESC) AS RN 
+                                      FROM COM.TC_WEATHER     A
+                                         , COM.TC_WEATHERCAST B
+                                     WHERE A.WTHR_DATE = B.WTHR_DATE
+                               )A
+                         WHERE RN = 1 
+                         UNION ALL 
+                         SELECT 2
+                              , WTHR_DATE AS WTHR_D
+                              , DAY_OF_WEEK
+                              , WTHR_CONDITION
+                              , WTHR_ICON 
+                              , MIN_TEMPERATURE
+                              , MAX_TEMPERATURE 
+                              , RAINFALL_PROB || '%'
+                           FROM COM.TC_WEATHERCAST WHERE WTHR_DATE > TO_CHAR(SYSDATE, 'YYYYMMDD')
+                   )
+             ORDER BY GBN, WTHR_D 
+   
+        ]]>
+    </query>
+    
+    <query name="SEL_BANNER">
+    <![CDATA[
+		SELECT BAN_NAME
+		     , BAN_LINK
+		     , FILE_NM  
+		  FROM COM.TC_BANNER 
+		 WHERE USE_YN = 'Y'
+		 ORDER BY BAN_NO
+    ]]>
+    </query>
+    
+    <query name="SEL_TIMEPBN_ORG">
+        <![CDATA[        
+            SELECT CASE WHEN SUBSTR(SALE_TIME,0,2) < 10 THEN '10' 
+                        WHEN SUBSTR(SALE_TIME,0,2) > 21 THEN '21'
+                        ELSE SUBSTR(SALE_TIME,0,2)
+                   END ||'00'                  AS TIME_GUBN
+                 , SUBSTR(ORG_CD,1,8)||'00'    AS TEAM_CD
+                 , NORM_SALE_AMT
+                 , CUST_CNT
+              FROM DPS.PS_TIMEPBN
+             WHERE STR_CD    = ?
+               AND SALE_DT   = ?
+               AND ORG_CD    IS NOT NULL
+               /*
+            SELECT SUBSTR(SALE_TIME,0,2)||'00' AS TIME_GUBN
+                 , SUBSTR(ORG_CD,0,6)||'0000'  AS TEAM_CD
+                 , NORM_SALE_AMT
+                 , CUST_CNT
+              FROM DPS.PS_TIMEPBN
+             WHERE STR_CD    = ''
+               AND SALE_DT   = ''
+               AND ORG_CD    IS NOT NULL
+               */
+        ]]>
+    </query>
+    
+    <query name="SEL_VISIT">
+        <![CDATA[            
+			SELECT NVL(TO_CHAR(DPS.FN_GET_BLOCK_STAYCNT('S',?,'0',?), '9,999,999,999,999'), 0)   AS SATY_CNT      -- 체류고객 
+			  FROM DUAL
+        ]]>
+    </query>
+    
+    <query name="SEL_TIME_BLOCK">
+        <![CDATA[           
+            SELECT TIME_GUBN
+                 , SUM(IN_CNT) AS IN_CNT
+                 , SUM(IN_TOT_CNT) AS IN_TOT_CNT
+              FROM (SELECT CASE WHEN SUBSTR(TIME_CD,0,2) < 10 THEN '10' 
+                                WHEN SUBSTR(TIME_CD,0,2) > 21 THEN '21'
+                                ELSE SUBSTR(TIME_CD,0,2)
+                           END ||'00'                  AS TIME_GUBN
+                         , IN_CNT
+                         , IN_TOT_CNT
+                      FROM DPS.PS_CUSTBLOCK       
+                     WHERE STR_CD    = ?
+                       AND SALE_DT   = ?
+                       AND BLOCK_CD  = ?      
+                       /* 
+                   SELECT SUBSTR(TIME_CD,0,2)||'00' AS TIME_GUBN
+                         , IN_CNT
+                         , IN_TOT_CNT
+                      FROM DPS.PS_CUSTBLOCK       
+                     WHERE STR_CD    = ''
+                       AND SALE_DT   = ''
+                       AND BLOCK_CD  = ''
+                       */         
+                   )
+             GROUP BY TIME_GUBN
+        ]]>
+    </query>
+    
+    <query name="SEL_TIME_TAB_INFO">
+        <![CDATA[
+        /*
+            SELECT LPAD(ROWNUM+8,2,'0')||'00' AS TIME_GUBN
+                 , LPAD(ROWNUM+8,2,'0')||'시' AS TIME_GUBN_NAME
+              FROM COM.TC_COMMCODE
+             WHERE ROWNUM < 16
+          */
+             SELECT LPAD(ROWNUM+9,2,'0')||'00' AS TIME_GUBN
+                 , LPAD(ROWNUM+9,2,'0')||'시' AS TIME_GUBN_NAME
+              FROM COM.TC_COMMCODE
+             WHERE ROWNUM < 13
+        ]]>
+    </query>
+     
+    <query name="SEL_TODOLIST">
+    <![CDATA[ 
+         SELECT MAX(SLPM.NEXT_PGM_NM)||' '||TO_CHAR(COUNT(1))||'건' AS TDL_NAME
+              , MAX(PGMM.URL)                                  AS TDL_URL
+              , TO_CHAR(SYSDATE, 'YYYYMMDD')                   AS TDL_DATE
+              , PAUT.USER_ID                                   AS TDL_USER_ID
+              , 0                                              AS TDL_SEQ
+              , MAX(MENU.LCODE)                                AS LCODE
+              , MAX(MENU.MCODE)                                AS MCODE
+              , PAUT.PID                                       AS PID 
+              , MAX(PGMM.PNAME1)                               AS PNAME1
+              , 'N'                                            AS TDL_READ_FLAG
+           FROM (     
+                 SELECT SUBSTR(DPS.FN_GET_ORDNEXTCONF_CHK(A.BIZ_TYPE, A.SLIP_FLAG,B.SKU_FLAG, A.SLIP_PROC_STAT), 9, 100) AS NEXT_PGM_NM
+                      , SUBSTR(DPS.FN_GET_ORDNEXTCONF_CHK(A.BIZ_TYPE, A.SLIP_FLAG,B.SKU_FLAG, A.SLIP_PROC_STAT), 1, 7) AS NEXT_PGM_ID
+                      , A.STR_CD    AS STR_CD
+                      , A.SLIP_NO   AS SLIP_NO
+                      , A.BIZ_TYPE  AS BIZ_TYPE
+                      , A.SLIP_FLAG AS SLIP_FLAG
+                      , B.SKU_FLAG  AS SKU_FLAG
+                      , A.SLIP_PROC_STAT
+                   FROM DPS.PO_SLPMST A
+                      , DPS.PC_STRPBN B
+                  WHERE A.SLIP_PROC_STAT <> '09'
+                    AND A.DEL_FLAG  = 'N'
+                    AND A.AUTO_SLIP_FLAG = '0'
+                    AND B.STR_CD    = A.STR_CD
+                    AND B.PUMBUN_CD = A.PUMBUN_CD
+                    AND EXISTS ( SELECT MYORG.USER_ID
+                         FROM COM.V_MYORG MYORG
+                        WHERE MYORG.STR_CD      = A.STR_CD
+                          AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                          AND MYORG.USER_ID     = ?
+                          AND MYORG.ORG_FLAG    = ?
+                          AND ROWNUM            = 1
+                     )                   
+                ) SLPM
+              , (
+                 SELECT DISTINCT USER_ID
+                               , PID
+                   FROM (
+                         SELECT UPGM.USER_ID AS USER_ID--, UMST.HP1_NO,HP2_NO,HP3_NO
+                              , UPGM.PID     AS PID
+                           FROM COM.TC_USRPGM UPGM   
+                          WHERE UPGM.USER_ID = ?
+                            AND (UPGM.IS_CONFIRM = 'Y' OR UPGM.IS_ALL = 'Y')
+                         UNION ALL
+                         SELECT UMST.USER_ID AS USER_ID
+                              , GPGM.PID     AS PID
+                           FROM COM.TC_GRPPGM GPGM
+                              , COM.TC_USRMST UMST
+                          WHERE UMST.USER_ID = ?
+                            AND GPGM.GROUP_CD = UMST.GROUP_CD 
+                            AND (GPGM.IS_CONFIRM = 'Y' OR GPGM.IS_ALL = 'Y')) 
+                 ) PAUT
+              , COM.TC_PGMMST PGMM
+              , COM.TC_PGMSMENU MENU
+          WHERE SLPM.NEXT_PGM_ID = PAUT.PID
+            AND PGMM.PID = PAUT.PID
+            AND MENU.SCODE = PGMM.SCODE
+          GROUP BY PAUT.USER_ID, PAUT.PID 
+          UNION ALL
+              SELECT TDL_NAME  AS  TDL_NAME
+              , TDL_URL         AS TDL_URL
+              , TDL_DATE        AS TDL_DATE
+              , TDL_USER_ID     AS TDL_USER_ID       
+              , TDL_SEQ         AS TDL_SEQ
+              , LCODE           AS LCODE
+              , MCODE           AS MCODE
+              , PID             AS PID
+              , PNAME1		    AS PNAME1
+              , TDL_READ_FLAG   AS    TDL_READ_FLAG
+          FROM COM.TC_TODOLIST A
+             , COM.TC_PGMMST   B
+             , COM.TC_PGMSMENU C
+         WHERE A.TDL_URL = B.URL(+)
+           AND B.SCODE = C.SCODE(+) 
+		   AND TDL_FLAG 		= 'N'
+		   AND TDL_USER_ID 		= ?
+		   AND TDL_LIMIT_DATE 	>= TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+		 ORDER BY TDL_DATE, TDL_NAME
+    ]]>
+    </query>
+    
+    <!-- TODOLIST 상세정보-->
+    <gauce name="H_TODO_DETAIL">
+        <column colName="TDL_NAME"			colType="TB_STRING" size="100"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="TDL_CONTENTS"		colType="TB_STRING" size="200"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="TDL_READ_FLAG"		colType="TB_STRING" size="10"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="TDL_REQ_USER"		colType="TB_STRING" size="20"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="TDL_LIMIT_DATE"	colType="TB_STRING" size="20"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+    </gauce>
+    <query name="SEL_TODOLIST_DETAIL">
+    <![CDATA[ 
+         SELECT TDL_NAME
+              , TDL_CONTENTS
+              , DECODE(TDL_READ_FLAG ,'Y', '열람', '미열람') 					AS TDL_READ_FLAG
+              , COM.FN_GET_USER_NAME(RQS_USER_ID) || ' (' || RQS_USER_ID || ')' AS TDL_REQ_USER
+              , TO_CHAR(TO_DATE(TDL_LIMIT_DATE,'YYYYMMDDHH24MISS')
+			     	   ,'YYYY/MM/DD HH24:MI:SS') 			  				    AS TDL_LIMIT_DATE
+          FROM COM.TC_TODOLIST  
+       	 WHERE TDL_DATE		= ?
+       	   AND TDL_USER_ID 	= ?
+       	   AND TDL_SEQ 		= ? 
+    ]]>
+    </query>
+    
+    <!-- TODOLIST 사용자수신열람 업데이트-->
+    <query name="UPT_TODOLIST_READFLAG">
+    <![CDATA[ 
+        UPDATE COM.TC_TODOLIST  
+           SET TDL_READ_FLAG = 'Y'
+       	 WHERE TDL_DATE		 = ?
+       	   AND TDL_USER_ID   = ?
+       	   AND TDL_SEQ 		 = ? 
+    ]]>
+    </query>
+    
+    
+    
+    <!-- 날씨 예보일자조회 -->
+    <query name="SEL_TODAY_SALE">
+    <![CDATA[
+        SELECT X.ORG_CD                                                                    --조직코드
+             , (SELECT ORG_LEVEL FROM DPS.PC_ORGMST WHERE ORG_CD =  X.ORG_CD) AS ORG_LEVEL -- 조직레벨(표시생략)
+             , (SELECT CASE WHEN ORG_LEVEL = '5' THEN '    '||ORG_SHORT_NAME
+                            WHEN ORG_LEVEL = '4' THEN '  '||ORG_SHORT_NAME--||' 계'
+                            WHEN ORG_LEVEL = '3' THEN ' '||ORG_SHORT_NAME||' 계'
+                            ELSE ORG_SHORT_NAME||' 계' END 
+                  FROM DPS.PC_ORGMST WHERE ORG_CD =  X.ORG_CD)          AS ORG_NAME -- 조직명
+             , ROUND(X.ORIGIN_SALE_TAMT, 0)                             AS ORIGIN_SALE_TAMT   -- 매출계획
+             , ROUND(X.TOT_SALE_AMT, 0)                                 AS TOT_SALE_AMT       -- 총매출
+             , ROUND(X.ACHIEVERATE,2)                                   AS ACHIEVERATE        -- 달성률
+             , ROUND(X.TOT_SALE_AMT_CMPR, 0)                            AS TOT_SALE_AMT_CMPR  -- 대비실적
+             , ROUND(X.SALEIRATE, 2)                                    AS SALEIRATE          -- 신장률
+             , ROUND(X.DC_AMT, 0)                                       AS DC_AMT             -- 에누리
+             , ROUND(X.NET_SALE_AMT, 0)                                 AS NET_SALE_AMT       -- 순매출
+             , ROUND(X.SALE_PROF_AMT, 0)                                AS SALE_PROF_AMT      -- 이익액
+             , ROUND(X.PROFRATE,2)                                      AS PROFRATE           -- 이익률
+             , X.CUST_CNT                                               AS CUST_CNT         -- 객수
+             , ROUND(X.CUST_DANGA, 0)                                   AS CUST_DANGA-- 객단가(원)
+         FROM (
+              SELECT  A.ORG_CD||'99'                                                    AS ORG_SEQ
+                    , A.ORG_CD||'00'                                                    AS ORG_CD
+                    , SUM(NVL(A.ORIGIN_SALE_TAMT,0))                                    AS ORIGIN_SALE_TAMT
+                    , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                    , (CASE WHEN SUM(NVL(A.ORIGIN_SALE_TAMT,0))  = 0 THEN 0 
+                            ELSE ( SUM(NVL(A.TOT_SALE_AMT,0))/SUM(NVL(A.ORIGIN_SALE_TAMT,0)))*100 END)                          AS ACHIEVERATE
+                    , SUM(NVL(A.TOT_SALE_AMT_CMPR,0))                                        AS TOT_SALE_AMT_CMPR
+                    , (CASE WHEN  SUM(NVL(A.TOT_SALE_AMT_CMPR,0)) = 0 THEN 0 
+                            ELSE  ((SUM(NVL(A.TOT_SALE_AMT,0))- SUM(NVL(A.TOT_SALE_AMT_CMPR,0)))/SUM(NVL(A.TOT_SALE_AMT_CMPR,0)))*100 END)   AS SALEIRATE
+                    , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                    , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS NORM_SALE_AMT
+                    , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                    , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+                    , SUM(NVL(A.SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+                    , (CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0)) = 0 THEN 0 
+                            ELSE (SUM(NVL(A.SALE_PROF_AMT,0))/SUM(NVL(A.TOT_SALE_AMT,0)))*100 END)                                 AS PROFRATE
+                    , SUM(A.CUST_CNT)                                                   AS CUST_CNT
+                    , (CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0 ELSE (SUM(A.TOT_SALE_AMT)/SUM(A.CUST_CNT)) END)                   AS CUST_DANGA
+                 FROM (SELECT 
+                              A.STR_CD                         AS STR_CD
+                            , A.SALE_DT                        AS SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,8)        AS ORG_CD
+                            , SUM(A.SALE_QTY)                  AS SALE_QTY
+                            , SUM(A.TOT_SALE_AMT)              AS TOT_SALE_AMT 
+                            , SUM(A.VAT_AMT)                   AS VAT_AMT
+                            , SUM(A.REDU_AMT)                  AS REDU_AMT
+                            , SUM(A.NORM_SALE_AMT)             AS NORM_SALE_AMT
+                            , SUM(A.DC_AMT)                    AS DC_AMT
+                            , SUM(A.NET_SALE_AMT)              AS NET_SALE_AMT
+                            , SUM(A.SALE_PROF_AMT)             AS SALE_PROF_AMT
+                            , SUM(A.CUST_CNT)                  AS CUST_CNT
+                            , SUM(A.SAL_COST_PRC)              AS SAL_COST_PRC
+                            , 0                                AS TOT_SALE_AMT_CMPR
+                            , 0                                AS ORIGIN_SALE_TAMT
+                         FROM DPS.PS_DAYPBN    A
+                            , DPS.PC_ORGMST    B
+                            , DPS.PC_STRPBN    C
+                        WHERE A.ORG_CD   = B.ORG_CD
+                          AND A.SALE_DT  = ? -- 당일
+                          AND C.STR_CD   = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                        GROUP BY
+                              A.STR_CD
+                            , A.SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,8)
+                       UNION ALL
+                       SELECT 
+                              A.STR_CD                         AS STR_CD
+                            , A.SALE_DT                        AS SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,8)        AS ORG_CD
+                            , 0                                AS SALE_QTY
+                            , 0                                AS TOT_SALE_AMT 
+                            , 0                                AS VAT_AMT
+                            , 0                                AS REDU_AMT
+                            , 0                                AS NORM_SALE_AMT
+                            , 0                                AS DC_AMT
+                            , 0                                AS NET_SALE_AMT
+                            , 0                                AS SALE_PROF_AMT
+                            , 0                                AS CUST_CNT
+                            , 0                                AS SAL_COST_PRC
+                            , SUM(A.TOT_SALE_AMT)              AS TOT_SALE_AMT_CMPR
+                            , 0                                AS ORIGIN_SALE_TAMT
+                         FROM DPS.PS_DAYPBN    A
+                            , DPS.PC_ORGMST    B
+                            , DPS.PC_STRPBN    C
+                        WHERE A.ORG_CD   = B.ORG_CD
+                          AND A.SALE_DT  = ? -- 대비일 
+                          AND C.STR_CD   = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                        GROUP BY
+                              A.STR_CD
+                            , A.SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD, 1, 8)
+                       UNION ALL
+                       SELECT 
+                              A.STR_CD                           AS STR_CD           
+                            ,  A.EXE_DT                           AS SALE_DT          
+                            ,  SUBSTR(C.SALE_ORG_CD, 1, 8)        AS ORG_CD           
+                            ,  0                                  AS SALE_QTY         
+                            ,  0                                  AS TOT_SALE_AMT     
+                            ,  0                                  AS VAT_AMT          
+                            ,  0                                  AS REDU_AMT         
+                            ,  0                                  AS NORM_SALE_AMT    
+                            ,  0                                  AS DC_AMT           
+                            ,  0                                  AS NET_SALE_AMT     
+                            ,  0                                  AS SALE_PROF_AMT    
+                            ,  0                                  AS CUST_CNT         
+                            ,  0                                  AS SAL_COST_PRC     
+                            ,  0                                  AS TOT_SALE_AMT_CMPR
+                            ,  SUM(A.ORIGIN_SALE_TAMT)            AS ORIGIN_SALE_TAMT 
+                         FROM DPS.PS_ACTPUMBUN A
+                            , DPS.PC_STRPBN C
+                        WHERE A.EXE_DT = ? -- 당일
+                          AND C.STR_CD = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD   
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                       GROUP BY A.STR_CD
+                              , A.EXE_DT
+                              , SUBSTR(C.SALE_ORG_CD, 1, 8)
+                      )      A
+                    , DPS.PS_SCHEDULE    D
+                WHERE A.STR_CD     = D.STR_CD
+                  AND A.SALE_DT    = D.SALE_DT
+                GROUP BY
+                      A.ORG_CD  
+               UNION ALL       
+               SELECT A.ORG_CD||'9999'                                                          AS ORG_SEQ
+                    , A.ORG_CD||'0000'                                                          AS ORG_CD
+                    , SUM(NVL(A.ORIGIN_SALE_TAMT,0))                                    AS ORIGIN_SALE_TAMT
+                    , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                    , (CASE WHEN SUM(NVL(A.ORIGIN_SALE_TAMT,0))  = 0 THEN 0 
+                            ELSE ( SUM(NVL(A.TOT_SALE_AMT,0))/SUM(NVL(A.ORIGIN_SALE_TAMT,0)))*100 END)                          AS ACHIEVERATE
+                    , SUM(NVL(A.TOT_SALE_AMT_CMPR,0))                                        AS TOT_SALE_AMT_CMPR
+                    , (CASE WHEN  SUM(NVL(A.TOT_SALE_AMT_CMPR,0)) = 0 THEN 0 
+                            ELSE  ((SUM(NVL(A.TOT_SALE_AMT,0))- SUM(NVL(A.TOT_SALE_AMT_CMPR,0)))/SUM(NVL(A.TOT_SALE_AMT_CMPR,0)))*100 END)   AS SALEIRATE
+                    , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                    , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS NORM_SALE_AMT
+                    , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                    , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+                    , SUM(NVL(A.SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+                    , (CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0)) = 0 THEN 0 
+                            ELSE (SUM(NVL(A.SALE_PROF_AMT,0))/SUM(NVL(A.TOT_SALE_AMT,0)))*100 END)                                 AS PROFRATE
+                    , SUM(A.CUST_CNT)                                                   AS CUST_CNT
+                    , (CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0 ELSE (SUM(A.TOT_SALE_AMT)/SUM(A.CUST_CNT)) END)                   AS CUST_DANGA
+                 FROM (SELECT 
+                              A.STR_CD                         AS STR_CD
+                            , A.SALE_DT                        AS SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,6)        AS ORG_CD
+                            , SUM(A.SALE_QTY)                  AS SALE_QTY
+                            , SUM(A.TOT_SALE_AMT)              AS TOT_SALE_AMT 
+                            , SUM(A.VAT_AMT)                   AS VAT_AMT
+                            , SUM(A.REDU_AMT)                  AS REDU_AMT
+                            , SUM(A.NORM_SALE_AMT)             AS NORM_SALE_AMT
+                            , SUM(A.DC_AMT)                    AS DC_AMT
+                            , SUM(A.NET_SALE_AMT)              AS NET_SALE_AMT
+                            , SUM(A.SALE_PROF_AMT)             AS SALE_PROF_AMT
+                            , SUM(A.CUST_CNT)                  AS CUST_CNT
+                            , SUM(A.SAL_COST_PRC)              AS SAL_COST_PRC
+                            , 0                                AS TOT_SALE_AMT_CMPR
+                            , 0                                AS ORIGIN_SALE_TAMT
+                         FROM DPS.PS_DAYPBN    A
+                            , DPS.PC_ORGMST    B
+                            , DPS.PC_STRPBN    C
+                        WHERE A.ORG_CD   = B.ORG_CD
+                          AND A.SALE_DT  = ? -- 당일
+                          AND C.STR_CD   = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                        GROUP BY
+                              A.STR_CD
+                            , A.SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,6)
+                       UNION ALL
+                       SELECT 
+                              A.STR_CD                         AS STR_CD
+                            , A.SALE_DT                        AS SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,6)        AS ORG_CD
+                            , 0                                AS SALE_QTY
+                            , 0                                AS TOT_SALE_AMT 
+                            , 0                                AS VAT_AMT
+                            , 0                                AS REDU_AMT
+                            , 0                                AS NORM_SALE_AMT
+                            , 0                                AS DC_AMT
+                            , 0                                AS NET_SALE_AMT
+                            , 0                                AS SALE_PROF_AMT
+                            , 0                                AS CUST_CNT
+                            , 0                                AS SAL_COST_PRC
+                            , SUM(A.TOT_SALE_AMT)              AS TOT_SALE_AMT_CMPR
+                            , 0                                AS ORIGIN_SALE_TAMT
+                         FROM DPS.PS_DAYPBN    A
+                            , DPS.PC_ORGMST    B
+                            , DPS.PC_STRPBN    C
+                        WHERE A.ORG_CD   = B.ORG_CD
+                          AND A.SALE_DT  = ? -- 대비일 
+                          AND C.STR_CD   = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                        GROUP BY
+                              A.STR_CD
+                            , A.SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD, 1, 6)
+                       UNION ALL
+                       SELECT 
+                              A.STR_CD                           AS STR_CD           
+                            ,  A.EXE_DT                           AS SALE_DT          
+                            ,  SUBSTR(C.SALE_ORG_CD, 1, 6)        AS ORG_CD           
+                            ,  0                                  AS SALE_QTY         
+                            ,  0                                  AS TOT_SALE_AMT     
+                            ,  0                                  AS VAT_AMT          
+                            ,  0                                  AS REDU_AMT         
+                            ,  0                                  AS NORM_SALE_AMT    
+                            ,  0                                  AS DC_AMT           
+                            ,  0                                  AS NET_SALE_AMT     
+                            ,  0                                  AS SALE_PROF_AMT    
+                            ,  0                                  AS CUST_CNT         
+                            ,  0                                  AS SAL_COST_PRC     
+                            ,  0                                  AS TOT_SALE_AMT_CMPR
+                            ,  SUM(A.ORIGIN_SALE_TAMT)            AS ORIGIN_SALE_TAMT 
+                         FROM DPS.PS_ACTPUMBUN A
+                            , DPS.PC_STRPBN C
+                        WHERE A.EXE_DT = ? -- 당일
+                          AND C.STR_CD = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD   
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                       GROUP BY A.STR_CD
+                              , A.EXE_DT
+                              , SUBSTR(C.SALE_ORG_CD, 1, 6)
+                      )      A
+                    , DPS.PS_SCHEDULE    D
+                WHERE A.STR_CD     = D.STR_CD
+                  AND A.SALE_DT    = D.SALE_DT
+                GROUP BY
+                      A.ORG_CD       
+               UNION ALL
+               SELECT A.ORG_CD||'999999'                                                          AS ORG_SEQ
+                    , A.ORG_CD||'000000'                                                          AS ORG_CD
+                    , SUM(NVL(A.ORIGIN_SALE_TAMT,0))                                    AS ORIGIN_SALE_TAMT
+                    , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                    , (CASE WHEN SUM(NVL(A.ORIGIN_SALE_TAMT,0))  = 0 THEN 0 
+                            ELSE ( SUM(NVL(A.TOT_SALE_AMT,0))/SUM(NVL(A.ORIGIN_SALE_TAMT,0)))*100 END)                          AS ACHIEVERATE
+                    , SUM(NVL(A.TOT_SALE_AMT_CMPR,0))                                        AS TOT_SALE_AMT_CMPR
+                    , (CASE WHEN  SUM(NVL(A.TOT_SALE_AMT_CMPR,0)) = 0 THEN 0 
+                            ELSE  ((SUM(NVL(A.TOT_SALE_AMT,0))- SUM(NVL(A.TOT_SALE_AMT_CMPR,0)))/SUM(NVL(A.TOT_SALE_AMT_CMPR,0)))*100 END)   AS SALEIRATE
+                    , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                    , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS NORM_SALE_AMT
+                    , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                    , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+                    , SUM(NVL(A.SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+                    , (CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0)) = 0 THEN 0 
+                            ELSE (SUM(NVL(A.SALE_PROF_AMT,0))/SUM(NVL(A.TOT_SALE_AMT,0)))*100 END)                                 AS PROFRATE
+                    , SUM(A.CUST_CNT)                                                   AS CUST_CNT
+                    , (CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0 ELSE (SUM(A.TOT_SALE_AMT)/SUM(A.CUST_CNT)) END)                   AS CUST_DANGA
+                 FROM (SELECT 
+                              A.STR_CD                         AS STR_CD
+                            , A.SALE_DT                        AS SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,4)        AS ORG_CD
+                            , SUM(A.SALE_QTY)                  AS SALE_QTY
+                            , SUM(A.TOT_SALE_AMT)              AS TOT_SALE_AMT 
+                            , SUM(A.VAT_AMT)                   AS VAT_AMT
+                            , SUM(A.REDU_AMT)                  AS REDU_AMT
+                            , SUM(A.NORM_SALE_AMT)             AS NORM_SALE_AMT
+                            , SUM(A.DC_AMT)                    AS DC_AMT
+                            , SUM(A.NET_SALE_AMT)              AS NET_SALE_AMT
+                            , SUM(A.SALE_PROF_AMT)             AS SALE_PROF_AMT
+                            , SUM(A.CUST_CNT)                  AS CUST_CNT
+                            , SUM(A.SAL_COST_PRC)              AS SAL_COST_PRC
+                            , 0                                AS TOT_SALE_AMT_CMPR
+                            , 0                                AS ORIGIN_SALE_TAMT
+                         FROM DPS.PS_DAYPBN    A
+                            , DPS.PC_ORGMST    B
+                            , DPS.PC_STRPBN    C
+                        WHERE A.ORG_CD   = B.ORG_CD
+                          AND A.SALE_DT  = ? -- 당일
+                          AND C.STR_CD   = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                        GROUP BY
+                              A.STR_CD
+                            , A.SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,4)
+                       UNION ALL
+                       SELECT 
+                              A.STR_CD                         AS STR_CD
+                            , A.SALE_DT                        AS SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,4)        AS ORG_CD
+                            , 0                                AS SALE_QTY
+                            , 0                                AS TOT_SALE_AMT 
+                            , 0                                AS VAT_AMT
+                            , 0                                AS REDU_AMT
+                            , 0                                AS NORM_SALE_AMT
+                            , 0                                AS DC_AMT
+                            , 0                                AS NET_SALE_AMT
+                            , 0                                AS SALE_PROF_AMT
+                            , 0                                AS CUST_CNT
+                            , 0                                AS SAL_COST_PRC
+                            , SUM(A.TOT_SALE_AMT)              AS TOT_SALE_AMT_CMPR
+                            , 0                                AS ORIGIN_SALE_TAMT
+                         FROM DPS.PS_DAYPBN    A
+                            , DPS.PC_ORGMST    B
+                            , DPS.PC_STRPBN    C
+                        WHERE A.ORG_CD   = B.ORG_CD
+                          AND A.SALE_DT  = ? -- 대비일 
+                          AND C.STR_CD   = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                        GROUP BY
+                              A.STR_CD
+                            , A.SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD, 1, 4)
+                       UNION ALL
+                       SELECT 
+                              A.STR_CD                           AS STR_CD           
+                            ,  A.EXE_DT                           AS SALE_DT          
+                            ,  SUBSTR(C.SALE_ORG_CD, 1, 4)        AS ORG_CD           
+                            ,  0                                  AS SALE_QTY         
+                            ,  0                                  AS TOT_SALE_AMT     
+                            ,  0                                  AS VAT_AMT          
+                            ,  0                                  AS REDU_AMT         
+                            ,  0                                  AS NORM_SALE_AMT    
+                            ,  0                                  AS DC_AMT           
+                            ,  0                                  AS NET_SALE_AMT     
+                            ,  0                                  AS SALE_PROF_AMT    
+                            ,  0                                  AS CUST_CNT         
+                            ,  0                                  AS SAL_COST_PRC     
+                            ,  0                                  AS TOT_SALE_AMT_CMPR
+                            ,  SUM(A.ORIGIN_SALE_TAMT)            AS ORIGIN_SALE_TAMT 
+                         FROM DPS.PS_ACTPUMBUN A
+                            , DPS.PC_STRPBN C
+                        WHERE A.EXE_DT = ? -- 당일
+                          AND C.STR_CD = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD   
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                       GROUP BY A.STR_CD
+                              , A.EXE_DT
+                              , SUBSTR(C.SALE_ORG_CD, 1, 4)
+                      )      A
+                    , DPS.PS_SCHEDULE    D
+                WHERE A.STR_CD     = D.STR_CD
+                  AND A.SALE_DT    = D.SALE_DT
+                GROUP BY
+                      A.ORG_CD    
+               UNION ALL     
+               SELECT A.ORG_CD||'99999999'                                                          AS ORG_SEQ
+                    , A.ORG_CD||'00000000'                                                          AS ORG_CD
+                    , SUM(NVL(A.ORIGIN_SALE_TAMT,0))                                    AS ORIGIN_SALE_TAMT
+                    , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                    , (CASE WHEN SUM(NVL(A.ORIGIN_SALE_TAMT,0))  = 0 THEN 0 
+                            ELSE ( SUM(NVL(A.TOT_SALE_AMT,0))/SUM(NVL(A.ORIGIN_SALE_TAMT,0)))*100 END)                          AS ACHIEVERATE
+                    , SUM(NVL(A.TOT_SALE_AMT_CMPR,0))                                        AS TOT_SALE_AMT_CMPR
+                    , (CASE WHEN  SUM(NVL(A.TOT_SALE_AMT_CMPR,0)) = 0 THEN 0 
+                            ELSE  ((SUM(NVL(A.TOT_SALE_AMT,0))- SUM(NVL(A.TOT_SALE_AMT_CMPR,0)))/SUM(NVL(A.TOT_SALE_AMT_CMPR,0)))*100 END)   AS SALEIRATE
+                    , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                    , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS NORM_SALE_AMT
+                    , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                    , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+                    , SUM(NVL(A.SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+                    , (CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0)) = 0 THEN 0 
+                            ELSE (SUM(NVL(A.SALE_PROF_AMT,0))/SUM(NVL(A.TOT_SALE_AMT,0)))*100 END)                                 AS PROFRATE
+                    , SUM(A.CUST_CNT)                                                   AS CUST_CNT
+                    , (CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0 ELSE (SUM(A.TOT_SALE_AMT)/SUM(A.CUST_CNT)) END)                   AS CUST_DANGA
+                 FROM (SELECT 
+                              A.STR_CD                         AS STR_CD
+                            , A.SALE_DT                        AS SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,2)        AS ORG_CD
+                            , SUM(A.SALE_QTY)                  AS SALE_QTY
+                            , SUM(A.TOT_SALE_AMT)              AS TOT_SALE_AMT 
+                            , SUM(A.VAT_AMT)                   AS VAT_AMT
+                            , SUM(A.REDU_AMT)                  AS REDU_AMT
+                            , SUM(A.NORM_SALE_AMT)             AS NORM_SALE_AMT
+                            , SUM(A.DC_AMT)                    AS DC_AMT
+                            , SUM(A.NET_SALE_AMT)              AS NET_SALE_AMT
+                            , SUM(A.SALE_PROF_AMT)             AS SALE_PROF_AMT
+                            , SUM(A.CUST_CNT)                  AS CUST_CNT
+                            , SUM(A.SAL_COST_PRC)              AS SAL_COST_PRC
+                            , 0                                AS TOT_SALE_AMT_CMPR
+                            , 0                                AS ORIGIN_SALE_TAMT
+                         FROM DPS.PS_DAYPBN    A
+                            , DPS.PC_ORGMST    B
+                            , DPS.PC_STRPBN    C
+                        WHERE A.ORG_CD   = B.ORG_CD
+                          AND A.SALE_DT  = ? -- 당일
+                          AND C.STR_CD   = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                        GROUP BY
+                              A.STR_CD
+                            , A.SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,2)
+                       UNION ALL
+                       SELECT 
+                              A.STR_CD                         AS STR_CD
+                            , A.SALE_DT                        AS SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD,1,2)        AS ORG_CD
+                            , 0                                AS SALE_QTY
+                            , 0                                AS TOT_SALE_AMT 
+                            , 0                                AS VAT_AMT
+                            , 0                                AS REDU_AMT
+                            , 0                                AS NORM_SALE_AMT
+                            , 0                                AS DC_AMT
+                            , 0                                AS NET_SALE_AMT
+                            , 0                                AS SALE_PROF_AMT
+                            , 0                                AS CUST_CNT
+                            , 0                                AS SAL_COST_PRC
+                            , SUM(A.TOT_SALE_AMT)              AS TOT_SALE_AMT_CMPR
+                            , 0                                AS ORIGIN_SALE_TAMT
+                         FROM DPS.PS_DAYPBN    A
+                            , DPS.PC_ORGMST    B
+                            , DPS.PC_STRPBN    C
+                        WHERE A.ORG_CD   = B.ORG_CD
+                          AND A.SALE_DT  = ? -- 대비일 
+                          AND C.STR_CD   = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                        GROUP BY
+                              A.STR_CD
+                            , A.SALE_DT
+                            , SUBSTR(C.SALE_ORG_CD, 1, 2)
+                       UNION ALL
+                       SELECT 
+                              A.STR_CD                           AS STR_CD           
+                            ,  A.EXE_DT                           AS SALE_DT          
+                            ,  SUBSTR(C.SALE_ORG_CD, 1, 2)        AS ORG_CD           
+                            ,  0                                  AS SALE_QTY         
+                            ,  0                                  AS TOT_SALE_AMT     
+                            ,  0                                  AS VAT_AMT          
+                            ,  0                                  AS REDU_AMT         
+                            ,  0                                  AS NORM_SALE_AMT    
+                            ,  0                                  AS DC_AMT           
+                            ,  0                                  AS NET_SALE_AMT     
+                            ,  0                                  AS SALE_PROF_AMT    
+                            ,  0                                  AS CUST_CNT         
+                            ,  0                                  AS SAL_COST_PRC     
+                            ,  0                                  AS TOT_SALE_AMT_CMPR
+                            ,  SUM(A.ORIGIN_SALE_TAMT)            AS ORIGIN_SALE_TAMT 
+                         FROM DPS.PS_ACTPUMBUN A
+                            , DPS.PC_STRPBN C
+                        WHERE A.EXE_DT = ? -- 당일
+                          AND C.STR_CD = A.STR_CD
+                          AND C.PUMBUN_CD = A.PUMBUN_CD   
+                          AND C.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                                         FROM COM.V_MYORG MYORG
+                                        WHERE MYORG.USER_ID     = ?
+                                     )
+                       GROUP BY A.STR_CD
+                              , A.EXE_DT
+                              , SUBSTR(C.SALE_ORG_CD, 1, 2)
+                      )      A
+                    , DPS.PS_SCHEDULE    D
+                WHERE A.STR_CD     = D.STR_CD
+                  AND A.SALE_DT    = D.SALE_DT
+                GROUP BY
+                      A.ORG_CD      
+             ) X
+       ORDER BY X.ORG_SEQ                              
+        ]]>
+    </query>
+    
+    
+    
+	<!-- 점별 파트별 헤더 -->
+    <gauce name="H_SEL_MASTER_ART"> 
+		<column colName="STR_CD"               colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TEAM_CD"              colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PART_CD"              colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PART_NM"              colType="TB_STRING"   size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SEARCH_CD"            colType="TB_STRING"   size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_ORIGIN_SALE_TAMT"  colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_TOT_SALE_AMT"      colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_ACHIEVE_RATE"      colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_REDU_AMT"          colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_NORM_SALE_AMT"     colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_DC_AMT"            colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_NET_SALE_AMT"      colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_SALE_PROF_AMT"     colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_PROF_RATE"         colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_CUST_CNT"          colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_CUST_DANGA"        colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_SALE_QTY"          colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_VAT_AMT"           colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ORIGIN_SALE_TAMT"     colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TOT_SALE_AMT"         colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ACHIEVE_RATE"         colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REDU_AMT"             colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="NORM_SALE_AMT"        colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DC_AMT"               colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="NET_SALE_AMT"         colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_PROF_AMT"        colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PROF_RATE"            colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_CNT"             colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_DANGA"           colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_QTY"             colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="VAT_AMT"              colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_ACHV_RATE"       colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PROF_ACHV_RATE"       colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_CNT_ACHV_RATE"   colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_DANGA_ACHV_RATE" colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ORDER_FLAG"           colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 점별 파트별 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			-- 마스터
+			SELECT A.STR_CD
+			     , A.TEAM_CD                                          /* 팀코드             */
+			     , A.PART_CD                                          /* 파트코드           */
+			     , A.PART_NM                                          /* 파트명             */
+			     , A.STR_CD || A.TEAM_CD || A.PART_CD AS SEARCH_CD    /* 조회               */
+			     , A.BF_ORIGIN_SALE_TAMT / ?  AS BF_ORIGIN_SALE_TAMT  /* (대비)목표매출     */
+			     , A.BF_TOT_SALE_AMT     / ?  AS BF_TOT_SALE_AMT      /* (대비)총매출금액   */
+			     , A.BF_ACHIEVE_RATE          AS BF_ACHIEVE_RATE      /* (대비)달성율       */
+			     , A.BF_REDU_AMT         / ?  AS BF_REDU_AMT          /* (대비)할인금액     */
+			     , A.BF_NORM_SALE_AMT    / ?  AS BF_NORM_SALE_AMT     /* (대비)정상매출금액 */
+			     , A.BF_DC_AMT           / ?  AS BF_DC_AMT            /* (대비)에누리금액   */
+			     , A.BF_NET_SALE_AMT     / ?  AS BF_NET_SALE_AMT      /* (대비)순매출금액   */
+			     , A.BF_SALE_PROF_AMT    / ?  AS BF_SALE_PROF_AMT     /* (대비)매출이익액   */
+			     , A.BF_PROF_RATE             AS BF_PROF_RATE         /* (대비)매출이익율   */
+			     , A.BF_CUST_CNT              AS BF_CUST_CNT          /* (대비)객수         */
+			     , A.BF_CUST_DANGA       / ?  AS BF_CUST_DANGA        /* (대비)객단가       */
+			     , A.BF_SALE_QTY              AS BF_SALE_QTY          /* (대비)판매수량     */
+			     , A.BF_VAT_AMT          / ?  AS BF_VAT_AMT           /* (대비)부가세       */
+			     , A.ORIGIN_SALE_TAMT    / ?  AS ORIGIN_SALE_TAMT     /* (실적)목표매출     */
+			     , A.TOT_SALE_AMT        / ?  AS TOT_SALE_AMT         /* (실적)총매출금액   */
+			     , A.ACHIEVE_RATE             AS ACHIEVE_RATE         /* (실적)달성율       */
+			     , A.REDU_AMT            / ?  AS REDU_AMT             /* (실적)할인금액     */
+			     , A.NORM_SALE_AMT       / ?  AS NORM_SALE_AMT        /* (실적)정상매출금액 */
+			     , A.DC_AMT              / ?  AS DC_AMT               /* (실적)에누리금액   */
+			     , A.NET_SALE_AMT        / ?  AS NET_SALE_AMT         /* (실적)순매출금액   */
+			     , A.SALE_PROF_AMT       / ?  AS SALE_PROF_AMT        /* (실적)매출이익액   */
+			     , A.PROF_RATE                AS PROF_RATE            /* (실적)매출이익율   */
+			     , A.CUST_CNT                 AS CUST_CNT             /* (실적)객수         */
+			     , A.CUST_DANGA          / ?  AS CUST_DANGA           /* (실적)객단가       */
+			     , A.SALE_QTY            / ?  AS SALE_QTY             /* (실적)판매수량     */
+			     , A.VAT_AMT             / ?  AS VAT_AMT              /* (실적)부가세       */
+			     , DECODE( A.BF_TOT_SALE_AMT, 0, 0
+			             , (A.TOT_SALE_AMT  - A.BF_TOT_SALE_AMT)  / A.BF_TOT_SALE_AMT  * 100
+			             ) AS SALE_ACHV_RATE              /* 매출액 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_SALE_PROF_AMT, 0, 0
+			             , (A.SALE_PROF_AMT - A.BF_SALE_PROF_AMT) / A.BF_SALE_PROF_AMT * 100
+			             ) AS PROF_ACHV_RATE              /* 이익액 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_CUST_CNT, 0, 0
+			             , (A.CUST_CNT - A.BF_CUST_CNT) / A.BF_CUST_CNT * 100
+			             ) AS CUST_CNT_ACHV_RATE          /* 고객수 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_CUST_CNT, 0, 0
+			             , (A.CUST_DANGA - A.BF_CUST_DANGA) / A.BF_CUST_DANGA * 100
+			             ) AS CUST_DANGA_ACHV_RATE        /* 객단가 신장률 (실적 - 대비 / 대비 * 100) */
+			     , A.ORDER_FLAG
+			  FROM ( 
+			        -- 점별 합계
+			        SELECT A.STR_CD
+			             , ''                           AS TEAM_CD                  /* 팀코드             */
+			             , ''                           AS PART_CD                  /* 파트코드           */
+			             , '합계'                       AS PART_NM                  /* 파트명             */
+			             , SUM(A.BF_ORIGIN_SALE_TAMT)   AS BF_ORIGIN_SALE_TAMT      /* (대비)목표매출     */
+			             , SUM(A.BF_TOT_SALE_AMT)       AS BF_TOT_SALE_AMT          /* (대비)총매출금액   */
+			             , DECODE(SUM(A.BF_ORIGIN_SALE_TAMT), 0, 0
+			                    , ROUND(SUM(A.BF_TOT_SALE_AMT) 
+			                          / SUM(A.BF_ORIGIN_SALE_TAMT)
+			                          * 100, 2))        AS BF_ACHIEVE_RATE          /* (대비)달성율       */
+			             , SUM(A.BF_REDU_AMT)           AS BF_REDU_AMT              /* (대비)할인금액     */
+			             , SUM(A.BF_NORM_SALE_AMT)      AS BF_NORM_SALE_AMT         /* (대비)정상매출금액 */
+			             , SUM(A.BF_DC_AMT)             AS BF_DC_AMT                /* (대비)에누리금액   */
+			             , SUM(A.BF_NET_SALE_AMT)       AS BF_NET_SALE_AMT          /* (대비)순매출금액   */
+			             , SUM(A.BF_SALE_PROF_AMT)      AS BF_SALE_PROF_AMT         /* (대비)매출이익액   */
+			             , DECODE(SUM(A.BF_NORM_SALE_AMT_VAT), 0, 0
+			                    , ROUND(SUM(A.BF_SALE_PROF_AMT) 
+			                          / ROUND(SUM(A.BF_NORM_SALE_AMT_VAT), 0)
+			                          * 100, 2))        AS BF_PROF_RATE             /* (대비)매출이익율   */
+			             , SUM(A.BF_CUST_CNT)           AS BF_CUST_CNT              /* (대비)객수         */
+			             , DECODE(SUM(A.BF_CUST_CNT), 0, 0
+			                    , ROUND(SUM(A.BF_TOT_SALE_AMT) 
+			                          / SUM(A.BF_CUST_CNT)
+			                          , 2))             AS BF_CUST_DANGA            /* (대비)객단가       */
+			             , SUM(A.BF_SALE_QTY)           AS BF_SALE_QTY              /* (대비)판매수량     */
+			             , SUM(A.BF_VAT_AMT)            AS BF_VAT_AMT               /* (대비)부가세       */
+			             , SUM(A.ORIGIN_SALE_TAMT)      AS ORIGIN_SALE_TAMT         /* (실적)목표매출     */
+			             , SUM(A.TOT_SALE_AMT)          AS TOT_SALE_AMT             /* (실적)총매출금액   */
+			             , DECODE(SUM(A.ORIGIN_SALE_TAMT), 0, 0
+			                    , ROUND(SUM(A.TOT_SALE_AMT) 
+			                          / SUM(A.ORIGIN_SALE_TAMT)
+			                          * 100, 2))        AS ACHIEVE_RATE             /* (실적)달성율       */
+			             , SUM(A.REDU_AMT)              AS REDU_AMT                 /* (실적)할인금액     */
+			             , SUM(A.NORM_SALE_AMT)         AS NORM_SALE_AMT            /* (실적)정상매출금액 */
+			             , SUM(A.DC_AMT)                AS DC_AMT                   /* (실적)에누리금액   */
+			             , SUM(A.NET_SALE_AMT)          AS NET_SALE_AMT             /* (실적)순매출금액   */
+			             , SUM(A.SALE_PROF_AMT)         AS SALE_PROF_AMT            /* (실적)매출이익액   */
+			             , DECODE(SUM(A.NORM_SALE_AMT_VAT), 0, 0
+			                    , ROUND(SUM(A.SALE_PROF_AMT) 
+			                          / ROUND(SUM(A.NORM_SALE_AMT_VAT), 0)
+			                          * 100, 2))        AS PROF_RATE                /* (실적)매출이익율   */
+			             , SUM(A.CUST_CNT)              AS CUST_CNT                 /* (실적)객수         */
+			             , DECODE(SUM(A.CUST_CNT), 0, 0
+			                    , ROUND(SUM(A.TOT_SALE_AMT) 
+			                          / SUM(A.CUST_CNT)
+			                          , 2))             AS CUST_DANGA               /* (실적)객단가       */
+			             , SUM(A.SALE_QTY)              AS SALE_QTY                 /* (실적)판매수량     */
+			             , SUM(A.VAT_AMT)               AS VAT_AMT                  /* (실적)부가세       */
+			             , A.ORDER_FLAG
+			          FROM (
+			                SELECT A.STR_CD
+			                     , A.ORG_CD                             /* 조직코드     */
+			                     , SUBSTR(A.ORG_CD, 3, 2) AS TEAM_CD    /* 팀코드       */
+			                     , SUBSTR(A.ORG_CD, 5, 2) AS PART_CD    /* 파트코드     */
+			                     , C.ORG_NAME             AS PART_NM    /* 파트명       */
+			                     , SUBSTR(A.ORG_CD, 7, 2) AS PC_CD      /* PC코드       */
+			                     , D.ORG_NAME             AS PC_NM      /* PC명         */
+			                     , SUBSTR(A.ORG_CD, 9, 2) AS CORNER_CD  /* 코너코드     */
+			                     , E.ORG_NAME             AS CORNER_NM  /* 코너명       */
+			                     , A.PUMBUN_CD                          /* 브랜드 코드  */
+			                     , B.PUMBUN_NAME                        /* 브랜드 명    */
+			                     , A.BF_ORIGIN_SALE_TAMT                /* (대비)목표매출     */
+			                     , A.BF_TOT_SALE_AMT                    /* (대비)총매출금액   */
+			                     , A.BF_REDU_AMT                        /* (대비)할인금액     */
+			                     , A.BF_NORM_SALE_AMT                   /* (대비)정상매출금액 */
+			                     , A.BF_DC_AMT                          /* (대비)에누리금액   */
+			                     , A.BF_NET_SALE_AMT                    /* (대비)순매출금액   */
+			                     , A.BF_SALE_PROF_AMT                   /* (대비)매출이익액   */
+			                     , A.BF_CUST_CNT                        /* (대비)객수         */
+			                     , A.BF_SALE_QTY                        /* (대비)판매수량     */
+			                     , A.BF_VAT_AMT                         /* (대비)부가세       */
+			                     , A.BF_NORM_SALE_AMT_VAT               /* (대비)부가세 계산  */
+			                     , A.ORIGIN_SALE_TAMT                   /* (실적)목표매출     */
+			                     , A.TOT_SALE_AMT                       /* (실적)총매출금액   */
+			                     , A.REDU_AMT                           /* (실적)할인금액     */
+			                     , A.NORM_SALE_AMT                      /* (실적)정상매출금액 */
+			                     , A.DC_AMT                             /* (실적)에누리금액   */
+			                     , A.NET_SALE_AMT                       /* (실적)순매출금액   */
+			                     , A.SALE_PROF_AMT                      /* (실적)매출이익액   */
+			                     , A.CUST_CNT                           /* (실적)객수         */
+			                     , A.SALE_QTY                           /* (실적)판매수량     */
+			                     , A.VAT_AMT                            /* (실적)부가세       */
+			                     , A.NORM_SALE_AMT_VAT                  /* (실적)부가세 계산  */             
+			                     , '0'   AS ORDER_FLAG                  /* 정렬구분           */
+			                  FROM (
+			                        -- 매출  
+			                        SELECT A.STR_CD
+			                             , A.SALE_DT
+			                             , A.ORG_CD
+			                             , A.PUMBUN_CD                         /* 브랜드 코드        */
+			                             , A.BF_SALE_QTY                       /* (대비)판매수량     */
+			                             , A.BF_TOT_SALE_AMT                   /* (대비)총매출금액   */
+			                             , A.BF_VAT_AMT                        /* (대비)부가세       */
+			                             , A.BF_REDU_AMT                       /* (대비)할인금액     */
+			                             , A.BF_NORM_SALE_AMT                  /* (대비)정상매출금액 */
+			                             , A.BF_DC_AMT                         /* (대비)에누리금액   */
+			                             , A.BF_NET_SALE_AMT                   /* (대비)순매출금액   */
+			                             , A.BF_SALE_PROF_AMT                  /* (대비)매출이익액   */
+			                             , A.BF_CUST_CNT                       /* (대비)객수         */
+			                             , 0    AS BF_ORIGIN_SALE_TAMT         /* (대비)목표매출금액 */
+			                             , CASE WHEN A.BF_NORM_SALE_AMT = 0 THEN 0
+			                                    ELSE (CASE WHEN B.TAX_FLAG = '1' THEN A.BF_NORM_SALE_AMT-- / 1.1
+			                                                                     ELSE A.BF_NORM_SALE_AMT
+			                                          END)
+			                               END  AS BF_NORM_SALE_AMT_VAT
+			                             , A.SALE_QTY                          /* (실적)판매수량     */
+			                             , A.TOT_SALE_AMT                      /* (실적)총매출금액   */
+			                             , A.VAT_AMT                           /* (실적)부가세       */
+			                             , A.REDU_AMT                          /* (실적)할인금액     */
+			                             , A.NORM_SALE_AMT                     /* (실적)정상매출금액 */
+			                             , A.DC_AMT                            /* (실적)에누리금액   */
+			                             , A.NET_SALE_AMT                      /* (실적)순매출금액   */
+			                             , A.SALE_PROF_AMT                     /* (실적)매출이익액   */
+			                             , A.CUST_CNT                          /* (실적)객수         */
+			                             , 0    AS ORIGIN_SALE_TAMT            /* (실적)목표매출금액 */
+			                             , CASE WHEN A.NORM_SALE_AMT = 0 THEN 0
+			                                    ELSE (CASE WHEN B.TAX_FLAG = '1' THEN A.NORM_SALE_AMT-- / 1.1
+			                                                                     ELSE A.NORM_SALE_AMT
+			                                          END)
+			                               END  AS NORM_SALE_AMT_VAT
+			                          FROM (
+			                                SELECT A.STR_CD
+			                                     , A.SALE_DT
+			                                     , B.SALE_ORG_CD AS ORG_CD
+			                                     , A.PUMBUN_CD                 /* 브랜드 코드 */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_QTY      ELSE 0 END BF_SALE_QTY       /* (대비)판매수량     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.TOT_SALE_AMT  ELSE 0 END BF_TOT_SALE_AMT   /* (대비)총매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.VAT_AMT       ELSE 0 END BF_VAT_AMT        /* (대비)부가세       */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.REDU_AMT      ELSE 0 END BF_REDU_AMT       /* (대비)할인금액     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NORM_SALE_AMT ELSE 0 END BF_NORM_SALE_AMT  /* (대비)정상매출금액 */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.DC_AMT        ELSE 0 END BF_DC_AMT         /* (대비)에누리금액   */             
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NET_SALE_AMT  ELSE 0 END BF_NET_SALE_AMT   /* (대비)순매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_PROF_AMT ELSE 0 END BF_SALE_PROF_AMT  /* (대비)매출이익액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.CUST_CNT      ELSE 0 END BF_CUST_CNT       /* (대비)객수         */             
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_QTY      ELSE 0 END SALE_QTY          /* (실적)판매수량     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.TOT_SALE_AMT  ELSE 0 END TOT_SALE_AMT      /* (실적)총매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.VAT_AMT       ELSE 0 END VAT_AMT           /* (실적)부가세       */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.REDU_AMT      ELSE 0 END REDU_AMT          /* (실적)할인금액     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NORM_SALE_AMT ELSE 0 END NORM_SALE_AMT     /* (실적)정상매출금액 */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.DC_AMT        ELSE 0 END DC_AMT            /* (실적)에누리금액   */             
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NET_SALE_AMT  ELSE 0 END NET_SALE_AMT      /* (실적)순매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_PROF_AMT ELSE 0 END SALE_PROF_AMT     /* (실적)매출이익액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.CUST_CNT      ELSE 0 END CUST_CNT          /* (실적)객수         */
+			                                  FROM DPS.PS_DAYPBN A
+                                                 , DPS.PC_STRPBN B
+			                                 WHERE A.STR_CD    = ?
+			                                   AND A.STR_CD    = B.STR_CD
+			                                   AND A.PUMBUN_CD = B.PUMBUN_CD
+			                                   AND B.SALE_ORG_CD  LIKE ? || ? || ? || ? || '%'
+			                                   AND (  A.SALE_DT   BETWEEN ? AND ?     -- 대비
+			                                       OR A.SALE_DT   BETWEEN ? AND ?     -- 실적
+			                                       )
+			                                   AND A.PUMBUN_CD LIKE ? || '%'
+			                                   AND A.PUMBUN_CD IN ( 
+			                                                        SELECT MYORG.PUMBUN_CD
+			                                                          FROM COM.V_MYORG MYORG
+			                                                         WHERE MYORG.USER_ID     = ?
+			                                                           AND MYORG.ORG_FLAG    = ?
+			                                                      )
+			                               ) A
+			                             , DPS.PC_PBNMST B
+			                         WHERE A.PUMBUN_CD = B.PUMBUN_CD
+			                        -- 실행계획(목표매출금액)  
+			                         UNION ALL
+			                        SELECT A.STR_CD
+			                             , A.EXE_DT
+			                             , B.SALE_ORG_CD  AS ORG_CD
+			                             , A.PUMBUN_CD
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0   
+			                             , CASE WHEN A.EXE_DT BETWEEN ? AND ? THEN A.ORIGIN_SALE_TAMT ELSE 0 END AS BF_ORIGIN_SALE_TAMT 
+			                             , 0
+			                             , 0 
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , CASE WHEN A.EXE_DT BETWEEN ? AND ? THEN A.ORIGIN_SALE_TAMT ELSE 0 END AS ORIGIN_SALE_TAMT
+			                             , 0
+			                          FROM DPS.PS_ACTPUMBUN A   -- 브랜드별 실행계획
+			                             , DPS.PC_STRPBN B
+			                         WHERE A.STR_CD    = B.STR_CD
+			                           AND A.PUMBUN_CD = B.PUMBUN_CD
+			                           AND A.STR_CD    = ?
+			                           AND B.SALE_ORG_CD LIKE ? || ? || ? || ? || '%'
+			                           AND (  A.EXE_YM   BETWEEN SUBSTR(?, 1, 6) AND SUBSTR(?, 1, 6)  -- 대비
+			                               OR A.EXE_YM   BETWEEN SUBSTR(?, 1, 6) AND SUBSTR(?, 1, 6)  -- 실적
+			                               )
+			                           AND (  A.EXE_DT   BETWEEN ? AND ?     -- 대비
+			                               OR A.EXE_DT   BETWEEN ? AND ?     -- 실적
+			                               )
+			                           AND A.PUMBUN_CD LIKE ? || '%'
+			                           AND A.PUMBUN_CD IN ( 
+			                                                SELECT MYORG.PUMBUN_CD
+			                                                  FROM COM.V_MYORG MYORG
+			                                                 WHERE MYORG.USER_ID     = ?
+			                                                   AND MYORG.ORG_FLAG    = ?
+			                                              )
+			                       ) A
+			                     , DPS.PC_STRPBN B             
+			                     , DPS.PC_ORGMST C  /* 파트 */
+			                     , DPS.PC_ORGMST D  /* PC   */
+			                     , DPS.PC_ORGMST E  /* 코너 */
+			                 WHERE A.STR_CD    = B.STR_CD
+			                   AND A.PUMBUN_CD = B.PUMBUN_CD
+			                   AND SUBSTR(A.ORG_CD, 1, 8) = DECODE(?, '1', SUBSTR(B.SALE_ORG_CD, 1, 8), SUBSTR(B.BUY_ORG_CD, 1, 8))
+			                   AND SUBSTR(A.ORG_CD, 1, 6) || '0000' = C.ORG_CD 
+			                   AND SUBSTR(A.ORG_CD, 1, 8) || '00'   = D.ORG_CD
+			                   AND A.ORG_CD    = E.ORG_CD
+			               )   A
+			        GROUP BY A.STR_CD
+			               , A.ORDER_FLAG
+			               
+			        --점별 파트별
+			         UNION ALL
+			        SELECT A.STR_CD
+			             , A.TEAM_CD                                                /* 팀코드             */
+			             , A.PART_CD                                                /* 파트코드           */
+			             , A.PART_NM                                                /* 파트명             */
+			             , SUM(A.BF_ORIGIN_SALE_TAMT)   AS BF_ORIGIN_SALE_TAMT      /* (대비)목표매출     */
+			             , SUM(A.BF_TOT_SALE_AMT)       AS BF_TOT_SALE_AMT          /* (대비)총매출금액   */
+			             , DECODE(SUM(A.BF_ORIGIN_SALE_TAMT), 0, 0
+			                    , ROUND(SUM(A.BF_TOT_SALE_AMT) 
+			                          / SUM(A.BF_ORIGIN_SALE_TAMT)
+			                          * 100, 2))        AS BF_ACHIEVE_RATE          /* (대비)달성율       */
+			             , SUM(A.BF_REDU_AMT)           AS BF_REDU_AMT              /* (대비)할인금액     */
+			             , SUM(A.BF_NORM_SALE_AMT)      AS BF_NORM_SALE_AMT         /* (대비)정상매출금액 */
+			             , SUM(A.BF_DC_AMT)             AS BF_DC_AMT                /* (대비)에누리금액   */
+			             , SUM(A.BF_NET_SALE_AMT)       AS BF_NET_SALE_AMT          /* (대비)순매출금액   */
+			             , SUM(A.BF_SALE_PROF_AMT)      AS BF_SALE_PROF_AMT         /* (대비)매출이익액   */
+			             , DECODE(SUM(A.BF_NORM_SALE_AMT_VAT), 0, 0
+			                    , ROUND(SUM(A.BF_SALE_PROF_AMT) 
+			                          / ROUND(SUM(A.BF_NORM_SALE_AMT_VAT), 0)
+			                          * 100, 2))        AS BF_PROF_RATE             /* (대비)매출이익율   */
+			             , SUM(A.BF_CUST_CNT)           AS BF_CUST_CNT              /* (대비)객수         */
+			             , DECODE(SUM(A.BF_CUST_CNT), 0, 0
+			                    , ROUND(SUM(A.BF_TOT_SALE_AMT) 
+			                          / SUM(A.BF_CUST_CNT)
+			                          , 2))             AS BF_CUST_DANGA            /* (대비)객단가       */
+			             , SUM(A.BF_SALE_QTY)           AS BF_SALE_QTY              /* (대비)판매수량     */
+			             , SUM(A.BF_VAT_AMT)            AS BF_VAT_AMT               /* (대비)부가세       */
+			             , SUM(A.ORIGIN_SALE_TAMT)      AS ORIGIN_SALE_TAMT         /* (실적)목표매출     */
+			             , SUM(A.TOT_SALE_AMT)          AS TOT_SALE_AMT             /* (실적)총매출금액   */
+			             , DECODE(SUM(A.ORIGIN_SALE_TAMT), 0, 0
+			                    , ROUND(SUM(A.TOT_SALE_AMT) 
+			                          / SUM(A.ORIGIN_SALE_TAMT)
+			                          * 100, 2))        AS ACHIEVE_RATE             /* (실적)달성율       */
+			             , SUM(A.REDU_AMT)              AS REDU_AMT                 /* (실적)할인금액     */
+			             , SUM(A.NORM_SALE_AMT)         AS NORM_SALE_AMT            /* (실적)정상매출금액 */
+			             , SUM(A.DC_AMT)                AS DC_AMT                   /* (실적)에누리금액   */
+			             , SUM(A.NET_SALE_AMT)          AS NET_SALE_AMT             /* (실적)순매출금액   */
+			             , SUM(A.SALE_PROF_AMT)         AS SALE_PROF_AMT            /* (실적)매출이익액   */
+			             , DECODE(SUM(A.NORM_SALE_AMT_VAT), 0, 0
+			                    , ROUND(SUM(A.SALE_PROF_AMT) 
+			                          / ROUND(SUM(A.NORM_SALE_AMT_VAT), 0)
+			                          * 100, 2))        AS PROF_RATE                /* (실적)매출이익율   */
+			             , SUM(A.CUST_CNT)              AS CUST_CNT                 /* (실적)객수         */
+			             , DECODE(SUM(A.CUST_CNT), 0, 0
+			                    , ROUND(SUM(A.TOT_SALE_AMT) 
+			                          / SUM(A.CUST_CNT)
+			                          , 2))             AS CUST_DANGA               /* (실적)객단가       */
+			             , SUM(A.SALE_QTY)              AS SALE_QTY                 /* (실적)판매수량     */
+			             , SUM(A.VAT_AMT)               AS VAT_AMT                  /* (실적)부가세       */
+			             , A.ORDER_FLAG
+			          FROM (
+			                SELECT A.STR_CD
+			                     , A.ORG_CD                             /* 조직코드     */
+			                     , SUBSTR(A.ORG_CD, 3, 2) AS TEAM_CD    /* 팀코드       */
+			                     , SUBSTR(A.ORG_CD, 5, 2) AS PART_CD    /* 파트코드     */
+			                     , C.ORG_NAME             AS PART_NM    /* 파트명       */
+			                     , SUBSTR(A.ORG_CD, 7, 2) AS PC_CD      /* PC코드       */
+			                     , D.ORG_NAME             AS PC_NM      /* PC명         */
+			                     , SUBSTR(A.ORG_CD, 9, 2) AS CORNER_CD  /* 코너코드     */
+			                     , E.ORG_NAME             AS CORNER_NM  /* 코너명       */
+			                     , A.PUMBUN_CD                          /* 브랜드 코드  */
+			                     , B.PUMBUN_NAME                        /* 브랜드 명    */
+			                     , A.BF_ORIGIN_SALE_TAMT                /* (대비)목표매출     */
+			                     , A.BF_TOT_SALE_AMT                    /* (대비)총매출금액   */
+			                     , A.BF_REDU_AMT                        /* (대비)할인금액     */
+			                     , A.BF_NORM_SALE_AMT                   /* (대비)정상매출금액 */
+			                     , A.BF_DC_AMT                          /* (대비)에누리금액   */
+			                     , A.BF_NET_SALE_AMT                    /* (대비)순매출금액   */
+			                     , A.BF_SALE_PROF_AMT                   /* (대비)매출이익액   */
+			                     , A.BF_CUST_CNT                        /* (대비)객수         */
+			                     , A.BF_SALE_QTY                        /* (대비)판매수량     */
+			                     , A.BF_VAT_AMT                         /* (대비)부가세       */
+			                     , A.BF_NORM_SALE_AMT_VAT               /* (대비)부가세 계산  */
+			                     , A.ORIGIN_SALE_TAMT                   /* (실적)목표매출     */
+			                     , A.TOT_SALE_AMT                       /* (실적)총매출금액   */
+			                     , A.REDU_AMT                           /* (실적)할인금액     */
+			                     , A.NORM_SALE_AMT                      /* (실적)정상매출금액 */
+			                     , A.DC_AMT                             /* (실적)에누리금액   */
+			                     , A.NET_SALE_AMT                       /* (실적)순매출금액   */
+			                     , A.SALE_PROF_AMT                      /* (실적)매출이익액   */
+			                     , A.CUST_CNT                           /* (실적)객수         */
+			                     , A.SALE_QTY                           /* (실적)판매수량     */
+			                     , A.VAT_AMT                            /* (실적)부가세       */
+			                     , A.NORM_SALE_AMT_VAT                  /* (실적)부가세 계산  */             
+			                     , '1'   AS ORDER_FLAG                  /* 정렬구분           */
+			                  FROM (
+			                        -- 매출  
+			                        SELECT A.STR_CD
+			                             , A.SALE_DT
+			                             , A.ORG_CD
+			                             , A.PUMBUN_CD                         /* 브랜드 코드        */
+			                             , A.BF_SALE_QTY                       /* (대비)판매수량     */
+			                             , A.BF_TOT_SALE_AMT                   /* (대비)총매출금액   */
+			                             , A.BF_VAT_AMT                        /* (대비)부가세       */
+			                             , A.BF_REDU_AMT                       /* (대비)할인금액     */
+			                             , A.BF_NORM_SALE_AMT                  /* (대비)정상매출금액 */
+			                             , A.BF_DC_AMT                         /* (대비)에누리금액   */
+			                             , A.BF_NET_SALE_AMT                   /* (대비)순매출금액   */
+			                             , A.BF_SALE_PROF_AMT                  /* (대비)매출이익액   */
+			                             , A.BF_CUST_CNT                       /* (대비)객수         */
+			                             , 0    AS BF_ORIGIN_SALE_TAMT         /* (대비)목표매출금액 */
+			                             , CASE WHEN A.BF_NORM_SALE_AMT = 0 THEN 0
+			                                    ELSE (CASE WHEN B.TAX_FLAG = '1' THEN A.BF_NORM_SALE_AMT-- / 1.1
+			                                                                     ELSE A.BF_NORM_SALE_AMT
+			                                          END)
+			                               END  AS BF_NORM_SALE_AMT_VAT
+			                             , A.SALE_QTY                          /* (실적)판매수량     */
+			                             , A.TOT_SALE_AMT                      /* (실적)총매출금액   */
+			                             , A.VAT_AMT                           /* (실적)부가세       */
+			                             , A.REDU_AMT                          /* (실적)할인금액     */
+			                             , A.NORM_SALE_AMT                     /* (실적)정상매출금액 */
+			                             , A.DC_AMT                            /* (실적)에누리금액   */
+			                             , A.NET_SALE_AMT                      /* (실적)순매출금액   */
+			                             , A.SALE_PROF_AMT                     /* (실적)매출이익액   */
+			                             , A.CUST_CNT                          /* (실적)객수         */
+			                             , 0    AS ORIGIN_SALE_TAMT            /* (실적)목표매출금액 */
+			                             , CASE WHEN A.NORM_SALE_AMT = 0 THEN 0
+			                                    ELSE (CASE WHEN B.TAX_FLAG = '1' THEN A.NORM_SALE_AMT-- / 1.1
+			                                                                     ELSE A.NORM_SALE_AMT
+			                                          END)
+			                               END  AS NORM_SALE_AMT_VAT
+			                          FROM (
+			                                SELECT A.STR_CD
+			                                     , A.SALE_DT
+			                                     , B.SALE_ORG_CD AS ORG_CD
+			                                     , A.PUMBUN_CD                 /* 브랜드 코드 */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_QTY      ELSE 0 END BF_SALE_QTY       /* (대비)판매수량     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.TOT_SALE_AMT  ELSE 0 END BF_TOT_SALE_AMT   /* (대비)총매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.VAT_AMT       ELSE 0 END BF_VAT_AMT        /* (대비)부가세       */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.REDU_AMT      ELSE 0 END BF_REDU_AMT       /* (대비)할인금액     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NORM_SALE_AMT ELSE 0 END BF_NORM_SALE_AMT  /* (대비)정상매출금액 */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.DC_AMT        ELSE 0 END BF_DC_AMT         /* (대비)에누리금액   */             
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NET_SALE_AMT  ELSE 0 END BF_NET_SALE_AMT   /* (대비)순매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_PROF_AMT ELSE 0 END BF_SALE_PROF_AMT  /* (대비)매출이익액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.CUST_CNT      ELSE 0 END BF_CUST_CNT       /* (대비)객수         */             
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_QTY      ELSE 0 END SALE_QTY          /* (실적)판매수량     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.TOT_SALE_AMT  ELSE 0 END TOT_SALE_AMT      /* (실적)총매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.VAT_AMT       ELSE 0 END VAT_AMT           /* (실적)부가세       */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.REDU_AMT      ELSE 0 END REDU_AMT          /* (실적)할인금액     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NORM_SALE_AMT ELSE 0 END NORM_SALE_AMT     /* (실적)정상매출금액 */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.DC_AMT        ELSE 0 END DC_AMT            /* (실적)에누리금액   */             
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NET_SALE_AMT  ELSE 0 END NET_SALE_AMT      /* (실적)순매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_PROF_AMT ELSE 0 END SALE_PROF_AMT     /* (실적)매출이익액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.CUST_CNT      ELSE 0 END CUST_CNT          /* (실적)객수         */
+			                                  FROM DPS.PS_DAYPBN A
+                                                 , DPS.PC_STRPBN B
+			                                 WHERE A.STR_CD    = ?
+			                                   AND A.STR_CD    = B.STR_CD
+			                                   AND A.PUMBUN_CD = B.PUMBUN_CD
+			                                   AND B.SALE_ORG_CD  LIKE ? || ? || ? || ? || '%'
+			                                   AND (  A.SALE_DT   BETWEEN ? AND ?     -- 대비
+			                                       OR A.SALE_DT   BETWEEN ? AND ?     -- 실적
+			                                       )
+			                                   AND A.PUMBUN_CD LIKE ? || '%'
+			                                   AND A.PUMBUN_CD IN ( 
+			                                                        SELECT MYORG.PUMBUN_CD
+			                                                          FROM COM.V_MYORG MYORG
+			                                                         WHERE MYORG.USER_ID     = ?
+			                                                           AND MYORG.ORG_FLAG    = ?
+			                                                      )
+			                               ) A
+			                             , DPS.PC_PBNMST B
+			                         WHERE A.PUMBUN_CD = B.PUMBUN_CD
+			                        -- 실행계획(목표매출금액)  
+			                         UNION ALL
+			                        SELECT A.STR_CD
+			                             , A.EXE_DT
+			                             , B.SALE_ORG_CD  AS ORG_CD
+			                             , A.PUMBUN_CD
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0   
+			                             , CASE WHEN A.EXE_DT BETWEEN ? AND ? THEN A.ORIGIN_SALE_TAMT ELSE 0 END AS BF_ORIGIN_SALE_TAMT 
+			                             , 0
+			                             , 0 
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , CASE WHEN A.EXE_DT BETWEEN ? AND ? THEN A.ORIGIN_SALE_TAMT ELSE 0 END AS ORIGIN_SALE_TAMT
+			                             , 0
+			                          FROM DPS.PS_ACTPUMBUN A   -- 브랜드별 실행계획
+			                             , DPS.PC_STRPBN B
+			                         WHERE A.STR_CD    = B.STR_CD
+			                           AND A.PUMBUN_CD = B.PUMBUN_CD
+			                           AND A.STR_CD    = ?
+			                           AND B.SALE_ORG_CD LIKE ? || ? || ? || ? || '%'
+			                           AND (  A.EXE_YM   BETWEEN SUBSTR(?, 1, 6) AND SUBSTR(?, 1, 6)  -- 대비
+			                               OR A.EXE_YM   BETWEEN SUBSTR(?, 1, 6) AND SUBSTR(?, 1, 6)  -- 실적
+			                               )
+			                           AND (  A.EXE_DT   BETWEEN ? AND ?     -- 대비
+			                               OR A.EXE_DT   BETWEEN ? AND ?     -- 실적
+			                               )
+			                           AND A.PUMBUN_CD LIKE ? || '%'
+			                           AND A.PUMBUN_CD IN ( 
+			                                                SELECT MYORG.PUMBUN_CD
+			                                                  FROM COM.V_MYORG MYORG
+			                                                 WHERE MYORG.USER_ID     = ?
+			                                                   AND MYORG.ORG_FLAG    = ?
+			                                              )
+			                       ) A
+			                     , DPS.PC_STRPBN B             
+			                     , DPS.PC_ORGMST C  /* 파트 */
+			                     , DPS.PC_ORGMST D  /* PC   */
+			                     , DPS.PC_ORGMST E  /* 코너 */
+			                 WHERE A.STR_CD    = B.STR_CD
+			                   AND A.PUMBUN_CD = B.PUMBUN_CD
+			                   AND SUBSTR(A.ORG_CD, 1, 8) = DECODE(?, '1', SUBSTR(B.SALE_ORG_CD, 1, 8), SUBSTR(B.BUY_ORG_CD, 1, 8))
+			                   AND SUBSTR(A.ORG_CD, 1, 6) || '0000' = C.ORG_CD 
+			                   AND SUBSTR(A.ORG_CD, 1, 8) || '00'   = D.ORG_CD
+			                   AND A.ORG_CD    = E.ORG_CD
+			               )   A
+			        GROUP BY A.STR_CD
+			               , A.TEAM_CD
+			               , A.PART_CD
+			               , A.PART_NM
+			               , A.ORDER_FLAG
+			       ) A
+			 ORDER BY A.ORDER_FLAG
+			        , A.STR_CD
+			        , A.TEAM_CD
+			        , A.PART_CD
+        ]]>        
+    </query>
+
+    <!-- PC/코너/브랜드별 헤더 -->
+    <gauce name="H_SEL_DETAIL_ART"> 
+		<column colName="STR_CD"               colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GRP_CD"               colType="TB_STRING"   size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GRP_NM"               colType="TB_STRING"   size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_ORIGIN_SALE_TAMT"  colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_TOT_SALE_AMT"      colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_ACHIEVE_RATE"      colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_REDU_AMT"          colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_NORM_SALE_AMT"     colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_DC_AMT"            colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_NET_SALE_AMT"      colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_SALE_PROF_AMT"     colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_PROF_RATE"         colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_CUST_CNT"          colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_CUST_DANGA"        colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_SALE_QTY"          colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="BF_VAT_AMT"           colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ORIGIN_SALE_TAMT"     colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TOT_SALE_AMT"         colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ACHIEVE_RATE"         colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REDU_AMT"             colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="NORM_SALE_AMT"        colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DC_AMT"               colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="NET_SALE_AMT"         colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_PROF_AMT"        colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PROF_RATE"            colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_CNT"             colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_DANGA"           colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_QTY"             colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="VAT_AMT"              colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_ACHV_RATE"       colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PROF_ACHV_RATE"       colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_CNT_ACHV_RATE"   colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_DANGA_ACHV_RATE" colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+     
+    
+    <!-- PC별 -->
+    <query name="SEL_DETAIL1">        
+        <![CDATA[
+        	--디테일
+			SELECT A.STR_CD
+			     , A.GRP_CD                                           /* (파트, PC, 브랜드)코드 */
+			     , A.GRP_NM                                           /* (파트, PC, 브랜드)명   */
+			     , A.BF_ORIGIN_SALE_TAMT / ?  AS BF_ORIGIN_SALE_TAMT  /* (대비)목표매출     */
+			     , A.BF_TOT_SALE_AMT     / ?  AS BF_TOT_SALE_AMT      /* (대비)총매출금액   */
+			     , A.BF_ACHIEVE_RATE          AS BF_ACHIEVE_RATE      /* (대비)달성율       */
+			     , A.BF_REDU_AMT         / ?  AS BF_REDU_AMT          /* (대비)할인금액     */
+			     , A.BF_NORM_SALE_AMT    / ?  AS BF_NORM_SALE_AMT     /* (대비)정상매출금액 */
+			     , A.BF_DC_AMT           / ?  AS BF_DC_AMT            /* (대비)에누리금액   */
+			     , A.BF_NET_SALE_AMT     / ?  AS BF_NET_SALE_AMT      /* (대비)순매출금액   */
+			     , A.BF_SALE_PROF_AMT    / ?  AS BF_SALE_PROF_AMT     /* (대비)매출이익액   */
+			     , A.BF_PROF_RATE             AS BF_PROF_RATE         /* (대비)매출이익율   */
+			     , A.BF_CUST_CNT              AS BF_CUST_CNT          /* (대비)객수         */
+			     , A.BF_CUST_DANGA       / ?  AS BF_CUST_DANGA        /* (대비)객단가       */
+			     , A.BF_SALE_QTY              AS BF_SALE_QTY          /* (대비)판매수량     */
+			     , A.BF_VAT_AMT          / ?  AS BF_VAT_AMT           /* (대비)부가세       */
+			     , A.ORIGIN_SALE_TAMT    / ?  AS ORIGIN_SALE_TAMT     /* (실적)목표매출     */
+			     , A.TOT_SALE_AMT        / ?  AS TOT_SALE_AMT         /* (실적)총매출금액   */
+			     , A.ACHIEVE_RATE             AS ACHIEVE_RATE         /* (실적)달성율       */
+			     , A.REDU_AMT            / ?  AS REDU_AMT             /* (실적)할인금액     */
+			     , A.NORM_SALE_AMT       / ?  AS NORM_SALE_AMT        /* (실적)정상매출금액 */
+			     , A.DC_AMT              / ?  AS DC_AMT               /* (실적)에누리금액   */
+			     , A.NET_SALE_AMT        / ?  AS NET_SALE_AMT         /* (실적)순매출금액   */
+			     , A.SALE_PROF_AMT       / ?  AS SALE_PROF_AMT        /* (실적)매출이익액   */
+			     , A.PROF_RATE                AS PROF_RATE            /* (실적)매출이익율   */
+			     , A.CUST_CNT                 AS CUST_CNT             /* (실적)객수         */
+			     , A.CUST_DANGA          / ?  AS CUST_DANGA           /* (실적)객단가       */
+			     , A.SALE_QTY            / ?  AS SALE_QTY             /* (실적)판매수량     */
+			     , A.VAT_AMT             / ?  AS VAT_AMT              /* (실적)부가세       */
+			     , DECODE( A.BF_TOT_SALE_AMT, 0, 0
+			             , (A.TOT_SALE_AMT  - A.BF_TOT_SALE_AMT)  / A.BF_TOT_SALE_AMT  * 100
+			             ) AS SALE_ACHV_RATE              /* 매출액 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_SALE_PROF_AMT, 0, 0
+			             , (A.SALE_PROF_AMT - A.BF_SALE_PROF_AMT) / A.BF_SALE_PROF_AMT * 100
+			             ) AS PROF_ACHV_RATE              /* 이익액 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_CUST_CNT, 0, 0
+			             , (A.CUST_CNT - A.BF_CUST_CNT) / A.BF_CUST_CNT * 100
+			             ) AS CUST_CNT_ACHV_RATE          /* 고객수 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_CUST_CNT, 0, 0
+			             , (A.CUST_DANGA - A.BF_CUST_DANGA) / A.BF_CUST_DANGA * 100
+			             ) AS CUST_DANGA_ACHV_RATE        /* 객단가 신장률 (실적 - 대비 / 대비 * 100) */
+			  FROM ( 
+			        --점별 PC별
+			        SELECT A.STR_CD
+			             , A.TEAM_CD                                                /* 팀코드           */
+			             , A.PC_CD                  AS GRP_CD                       /* 코너코드         */
+			             , A.PC_NM                  AS GRP_NM                       /* 코너명           */
+        ]]>        
+    </query>       
+    
+    <!-- PC별 -->
+    <query name="SEL_GRP_ORD1">        
+        <![CDATA[
+			        GROUP BY A.STR_CD
+			               , A.TEAM_CD     
+			               , A.PC_CD
+			               , A.PC_NM
+			       ) A
+			 ORDER BY A.STR_CD
+			        --, A.TEAM_CD
+			        , A.GRP_CD
+        ]]>        
+    </query>  
+		         
+    
+    <!-- 코너별 -->
+    <query name="SEL_DETAIL2">        
+        <![CDATA[
+        	--디테일
+			SELECT A.STR_CD
+			     , A.GRP_CD                                           /* (파트, PC, 브랜드)코드 */
+			     , A.GRP_NM                                           /* (파트, PC, 브랜드)명   */
+			     , A.BF_ORIGIN_SALE_TAMT / ?  AS BF_ORIGIN_SALE_TAMT  /* (대비)목표매출     */
+			     , A.BF_TOT_SALE_AMT     / ?  AS BF_TOT_SALE_AMT      /* (대비)총매출금액   */
+			     , A.BF_ACHIEVE_RATE          AS BF_ACHIEVE_RATE      /* (대비)달성율       */
+			     , A.BF_REDU_AMT         / ?  AS BF_REDU_AMT          /* (대비)할인금액     */
+			     , A.BF_NORM_SALE_AMT    / ?  AS BF_NORM_SALE_AMT     /* (대비)정상매출금액 */
+			     , A.BF_DC_AMT           / ?  AS BF_DC_AMT            /* (대비)에누리금액   */
+			     , A.BF_NET_SALE_AMT     / ?  AS BF_NET_SALE_AMT      /* (대비)순매출금액   */
+			     , A.BF_SALE_PROF_AMT    / ?  AS BF_SALE_PROF_AMT     /* (대비)매출이익액   */
+			     , A.BF_PROF_RATE             AS BF_PROF_RATE         /* (대비)매출이익율   */
+			     , A.BF_CUST_CNT              AS BF_CUST_CNT          /* (대비)객수         */
+			     , A.BF_CUST_DANGA       / ?  AS BF_CUST_DANGA        /* (대비)객단가       */
+			     , A.BF_SALE_QTY              AS BF_SALE_QTY          /* (대비)판매수량     */
+			     , A.BF_VAT_AMT          / ?  AS BF_VAT_AMT           /* (대비)부가세       */
+			     , A.ORIGIN_SALE_TAMT    / ?  AS ORIGIN_SALE_TAMT     /* (실적)목표매출     */
+			     , A.TOT_SALE_AMT        / ?  AS TOT_SALE_AMT         /* (실적)총매출금액   */
+			     , A.ACHIEVE_RATE             AS ACHIEVE_RATE         /* (실적)달성율       */
+			     , A.REDU_AMT            / ?  AS REDU_AMT             /* (실적)할인금액     */
+			     , A.NORM_SALE_AMT       / ?  AS NORM_SALE_AMT        /* (실적)정상매출금액 */
+			     , A.DC_AMT              / ?  AS DC_AMT               /* (실적)에누리금액   */
+			     , A.NET_SALE_AMT        / ?  AS NET_SALE_AMT         /* (실적)순매출금액   */
+			     , A.SALE_PROF_AMT       / ?  AS SALE_PROF_AMT        /* (실적)매출이익액   */
+			     , A.PROF_RATE                AS PROF_RATE            /* (실적)매출이익율   */
+			     , A.CUST_CNT                 AS CUST_CNT             /* (실적)객수         */
+			     , A.CUST_DANGA          / ?  AS CUST_DANGA           /* (실적)객단가       */
+			     , A.SALE_QTY            / ?  AS SALE_QTY             /* (실적)판매수량     */
+			     , A.VAT_AMT             / ?  AS VAT_AMT              /* (실적)부가세       */
+			     , DECODE( A.BF_TOT_SALE_AMT, 0, 0
+			             , (A.TOT_SALE_AMT  - A.BF_TOT_SALE_AMT)  / A.BF_TOT_SALE_AMT  * 100
+			             ) AS SALE_ACHV_RATE              /* 매출액 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_SALE_PROF_AMT, 0, 0
+			             , (A.SALE_PROF_AMT - A.BF_SALE_PROF_AMT) / A.BF_SALE_PROF_AMT * 100
+			             ) AS PROF_ACHV_RATE              /* 이익액 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_CUST_CNT, 0, 0
+			             , (A.CUST_CNT - A.BF_CUST_CNT) / A.BF_CUST_CNT * 100
+			             ) AS CUST_CNT_ACHV_RATE          /* 고객수 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_CUST_CNT, 0, 0
+			             , (A.CUST_DANGA - A.BF_CUST_DANGA) / A.BF_CUST_DANGA * 100
+			             ) AS CUST_DANGA_ACHV_RATE        /* 객단가 신장률 (실적 - 대비 / 대비 * 100) */
+			  FROM ( 
+			        --점별 코너별
+			        SELECT A.STR_CD
+			             , A.TEAM_CD                                                /* 팀코드           */
+			             , A.PC_CD
+			             , A.CORNER_CD                  AS GRP_CD                   /* 코너코드         */
+			             , A.CORNER_NM                  AS GRP_NM                   /* 코너명           */
+        ]]>        
+    </query>       
+    
+    <!-- 코너별 -->
+    <query name="SEL_GRP_ORD2">        
+        <![CDATA[
+			        GROUP BY A.STR_CD
+			               , A.TEAM_CD   
+			               , A.PC_CD  
+			               , A.CORNER_CD
+			               , A.CORNER_NM
+			       ) A
+			 ORDER BY A.STR_CD
+			        , A.TEAM_CD
+			        , A.PC_CD
+			        , A.GRP_CD
+        ]]>        
+    </query>    
+    
+    <!-- 브랜드별 -->
+    <query name="SEL_DETAIL3">        
+        <![CDATA[
+        	--디테일
+			SELECT A.STR_CD
+			     , A.GRP_CD                                           /* (파트, PC, 브랜드)코드 */
+			     , A.GRP_NM                                           /* (파트, PC, 브랜드)명   */
+			     , A.BF_ORIGIN_SALE_TAMT / ?  AS BF_ORIGIN_SALE_TAMT  /* (대비)목표매출     */
+			     , A.BF_TOT_SALE_AMT     / ?  AS BF_TOT_SALE_AMT      /* (대비)총매출금액   */
+			     , A.BF_ACHIEVE_RATE          AS BF_ACHIEVE_RATE      /* (대비)달성율       */
+			     , A.BF_REDU_AMT         / ?  AS BF_REDU_AMT          /* (대비)할인금액     */
+			     , A.BF_NORM_SALE_AMT    / ?  AS BF_NORM_SALE_AMT     /* (대비)정상매출금액 */
+			     , A.BF_DC_AMT           / ?  AS BF_DC_AMT            /* (대비)에누리금액   */
+			     , A.BF_NET_SALE_AMT     / ?  AS BF_NET_SALE_AMT      /* (대비)순매출금액   */
+			     , A.BF_SALE_PROF_AMT    / ?  AS BF_SALE_PROF_AMT     /* (대비)매출이익액   */
+			     , A.BF_PROF_RATE             AS BF_PROF_RATE         /* (대비)매출이익율   */
+			     , A.BF_CUST_CNT              AS BF_CUST_CNT          /* (대비)객수         */
+			     , A.BF_CUST_DANGA       / ?  AS BF_CUST_DANGA        /* (대비)객단가       */
+			     , A.BF_SALE_QTY              AS BF_SALE_QTY          /* (대비)판매수량     */
+			     , A.BF_VAT_AMT          / ?  AS BF_VAT_AMT           /* (대비)부가세       */
+			     , A.ORIGIN_SALE_TAMT    / ?  AS ORIGIN_SALE_TAMT     /* (실적)목표매출     */
+			     , A.TOT_SALE_AMT        / ?  AS TOT_SALE_AMT         /* (실적)총매출금액   */
+			     , A.ACHIEVE_RATE             AS ACHIEVE_RATE         /* (실적)달성율       */
+			     , A.REDU_AMT            / ?  AS REDU_AMT             /* (실적)할인금액     */
+			     , A.NORM_SALE_AMT       / ?  AS NORM_SALE_AMT        /* (실적)정상매출금액 */
+			     , A.DC_AMT              / ?  AS DC_AMT               /* (실적)에누리금액   */
+			     , A.NET_SALE_AMT        / ?  AS NET_SALE_AMT         /* (실적)순매출금액   */
+			     , A.SALE_PROF_AMT       / ?  AS SALE_PROF_AMT        /* (실적)매출이익액   */
+			     , A.PROF_RATE                AS PROF_RATE            /* (실적)매출이익율   */
+			     , A.CUST_CNT                 AS CUST_CNT             /* (실적)객수         */
+			     , A.CUST_DANGA          / ?  AS CUST_DANGA           /* (실적)객단가       */
+			     , A.SALE_QTY            / ?  AS SALE_QTY             /* (실적)판매수량     */
+			     , A.VAT_AMT             / ?  AS VAT_AMT              /* (실적)부가세       */
+			     , DECODE( A.BF_TOT_SALE_AMT, 0, 0
+			             , (A.TOT_SALE_AMT  - A.BF_TOT_SALE_AMT)  / A.BF_TOT_SALE_AMT  * 100
+			             ) AS SALE_ACHV_RATE              /* 매출액 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_SALE_PROF_AMT, 0, 0
+			             , (A.SALE_PROF_AMT - A.BF_SALE_PROF_AMT) / A.BF_SALE_PROF_AMT * 100
+			             ) AS PROF_ACHV_RATE              /* 이익액 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_CUST_CNT, 0, 0
+			             , (A.CUST_CNT - A.BF_CUST_CNT) / A.BF_CUST_CNT * 100
+			             ) AS CUST_CNT_ACHV_RATE          /* 고객수 신장률 (실적 - 대비 / 대비 * 100) */
+			     , DECODE( A.BF_CUST_CNT, 0, 0
+			             , (A.CUST_DANGA - A.BF_CUST_DANGA) / A.BF_CUST_DANGA * 100
+			             ) AS CUST_DANGA_ACHV_RATE        /* 객단가 신장률 (실적 - 대비 / 대비 * 100) */
+			  FROM ( 
+			        --점별 브랜드별
+			        SELECT A.STR_CD
+			             , A.TEAM_CD                                                /* 팀코드             */
+			             , A.PUMBUN_CD                  AS GRP_CD                   /* 브랜드코드         */
+			             , A.PUMBUN_NAME                AS GRP_NM                   /* 브랜드명           */
+        ]]>        
+    </query>       
+    
+    <!-- 브랜드별 -->
+    <query name="SEL_GRP_ORD3">        
+        <![CDATA[
+			        GROUP BY A.STR_CD
+			               , A.TEAM_CD    
+			               , A.PUMBUN_CD      
+			               , A.PUMBUN_NAME
+			       ) A
+			 ORDER BY A.STR_CD
+			        , A.NORM_SALE_AMT DESC
+        ]]>        
+    </query>
+    
+    <!-- PC/코너/브랜드별 -->
+    <query name="SEL_BODY">        
+        <![CDATA[
+			             , SUM(A.BF_ORIGIN_SALE_TAMT)   AS BF_ORIGIN_SALE_TAMT      /* (대비)목표매출     */
+			             , SUM(A.BF_TOT_SALE_AMT)       AS BF_TOT_SALE_AMT          /* (대비)총매출금액   */
+			             , DECODE(SUM(A.BF_ORIGIN_SALE_TAMT), 0, 0
+			                    , ROUND(SUM(A.BF_TOT_SALE_AMT) 
+			                          / SUM(A.BF_ORIGIN_SALE_TAMT)
+			                          * 100, 2))        AS BF_ACHIEVE_RATE          /* (대비)달성율       */
+			             , SUM(A.BF_REDU_AMT)           AS BF_REDU_AMT              /* (대비)할인금액     */
+			             , SUM(A.BF_NORM_SALE_AMT)      AS BF_NORM_SALE_AMT         /* (대비)정상매출금액 */
+			             , SUM(A.BF_DC_AMT)             AS BF_DC_AMT                /* (대비)에누리금액   */
+			             , SUM(A.BF_NET_SALE_AMT)       AS BF_NET_SALE_AMT          /* (대비)순매출금액   */
+			             , SUM(A.BF_SALE_PROF_AMT)      AS BF_SALE_PROF_AMT         /* (대비)매출이익액   */
+			             , DECODE(SUM(A.BF_NORM_SALE_AMT_VAT), 0, 0
+			                    , ROUND(SUM(A.BF_SALE_PROF_AMT) 
+			                          / ROUND(SUM(A.BF_NORM_SALE_AMT_VAT), 0)
+			                          * 100, 2))        AS BF_PROF_RATE             /* (대비)매출이익율   */
+			             , SUM(A.BF_CUST_CNT)           AS BF_CUST_CNT              /* (대비)객수         */
+			             , DECODE(SUM(A.BF_CUST_CNT), 0, 0
+			                    , ROUND(SUM(A.BF_TOT_SALE_AMT) 
+			                          / SUM(A.BF_CUST_CNT)
+			                          , 2))             AS BF_CUST_DANGA            /* (대비)객단가       */
+			             , SUM(A.BF_SALE_QTY)           AS BF_SALE_QTY              /* (대비)판매수량     */
+			             , SUM(A.BF_VAT_AMT)            AS BF_VAT_AMT               /* (대비)부가세       */
+			             , SUM(A.ORIGIN_SALE_TAMT)      AS ORIGIN_SALE_TAMT         /* (실적)목표매출     */
+			             , SUM(A.TOT_SALE_AMT)          AS TOT_SALE_AMT             /* (실적)총매출금액   */
+			             , DECODE(SUM(A.ORIGIN_SALE_TAMT), 0, 0
+			                    , ROUND(SUM(A.TOT_SALE_AMT) 
+			                          / SUM(A.ORIGIN_SALE_TAMT)
+			                          * 100, 2))        AS ACHIEVE_RATE             /* (실적)달성율       */
+			             , SUM(A.REDU_AMT)              AS REDU_AMT                 /* (실적)할인금액     */
+			             , SUM(A.NORM_SALE_AMT)         AS NORM_SALE_AMT            /* (실적)정상매출금액 */
+			             , SUM(A.DC_AMT)                AS DC_AMT                   /* (실적)에누리금액   */
+			             , SUM(A.NET_SALE_AMT)          AS NET_SALE_AMT             /* (실적)순매출금액   */
+			             , SUM(A.SALE_PROF_AMT)         AS SALE_PROF_AMT            /* (실적)매출이익액   */
+			             , DECODE(SUM(A.NORM_SALE_AMT_VAT), 0, 0
+			                    , ROUND(SUM(A.SALE_PROF_AMT) 
+			                          / ROUND(SUM(A.NORM_SALE_AMT_VAT), 0)
+			                          * 100, 2))        AS PROF_RATE                /* (실적)매출이익율   */
+			             , SUM(A.CUST_CNT)              AS CUST_CNT                 /* (실적)객수         */
+			             , DECODE(SUM(A.CUST_CNT), 0, 0
+			                    , ROUND(SUM(A.TOT_SALE_AMT) 
+			                          / SUM(A.CUST_CNT)
+			                          , 2))             AS CUST_DANGA               /* (실적)객단가       */
+			             , SUM(A.SALE_QTY)              AS SALE_QTY                 /* (실적)판매수량     */
+			             , SUM(A.VAT_AMT)               AS VAT_AMT                  /* (실적)부가세       */
+			          FROM (
+			                SELECT A.STR_CD
+			                     , A.ORG_CD                             /* 조직코드     */
+			                     , SUBSTR(A.ORG_CD, 3, 2) AS TEAM_CD    /* 팀코드       */
+			                     , SUBSTR(A.ORG_CD, 5, 2) AS PART_CD    /* 파트코드     */
+			                     , C.ORG_NAME             AS PART_NM    /* 파트명       */
+			                     , SUBSTR(A.ORG_CD, 7, 2) AS PC_CD      /* PC코드       */
+			                     , D.ORG_NAME             AS PC_NM      /* PC명         */
+			                     , SUBSTR(A.ORG_CD, 9, 2) AS CORNER_CD  /* 코너코드     */
+			                     , E.ORG_NAME             AS CORNER_NM  /* 코너명       */
+			                     , A.PUMBUN_CD                          /* 브랜드 코드  */
+			                     , B.PUMBUN_NAME                        /* 브랜드 명    */
+			                     , A.BF_ORIGIN_SALE_TAMT                /* (대비)목표매출     */
+			                     , A.BF_TOT_SALE_AMT                    /* (대비)총매출금액   */
+			                     , A.BF_REDU_AMT                        /* (대비)할인금액     */
+			                     , A.BF_NORM_SALE_AMT                   /* (대비)정상매출금액 */
+			                     , A.BF_DC_AMT                          /* (대비)에누리금액   */
+			                     , A.BF_NET_SALE_AMT                    /* (대비)순매출금액   */
+			                     , A.BF_SALE_PROF_AMT                   /* (대비)매출이익액   */
+			                     , A.BF_CUST_CNT                        /* (대비)객수         */
+			                     , A.BF_SALE_QTY                        /* (대비)판매수량     */
+			                     , A.BF_VAT_AMT                         /* (대비)부가세       */
+			                     , A.BF_NORM_SALE_AMT_VAT               /* (대비)부가세 계산  */
+			                     , A.ORIGIN_SALE_TAMT                   /* (실적)목표매출     */
+			                     , A.TOT_SALE_AMT                       /* (실적)총매출금액   */
+			                     , A.REDU_AMT                           /* (실적)할인금액     */
+			                     , A.NORM_SALE_AMT                      /* (실적)정상매출금액 */
+			                     , A.DC_AMT                             /* (실적)에누리금액   */
+			                     , A.NET_SALE_AMT                       /* (실적)순매출금액   */
+			                     , A.SALE_PROF_AMT                      /* (실적)매출이익액   */
+			                     , A.CUST_CNT                           /* (실적)객수         */
+			                     , A.SALE_QTY                           /* (실적)판매수량     */
+			                     , A.VAT_AMT                            /* (실적)부가세       */
+			                     , A.NORM_SALE_AMT_VAT                  /* (실적)부가세 계산  */
+			                  FROM (
+			                        -- 매출  
+			                        SELECT A.STR_CD
+			                             , A.SALE_DT
+			                             , A.ORG_CD
+			                             , A.PUMBUN_CD                         /* 브랜드 코드        */
+			                             , A.BF_SALE_QTY                       /* (대비)판매수량     */
+			                             , A.BF_TOT_SALE_AMT                   /* (대비)총매출금액   */
+			                             , A.BF_VAT_AMT                        /* (대비)부가세       */
+			                             , A.BF_REDU_AMT                       /* (대비)할인금액     */
+			                             , A.BF_NORM_SALE_AMT                  /* (대비)정상매출금액 */
+			                             , A.BF_DC_AMT                         /* (대비)에누리금액   */
+			                             , A.BF_NET_SALE_AMT                   /* (대비)순매출금액   */
+			                             , A.BF_SALE_PROF_AMT                  /* (대비)매출이익액   */
+			                             , A.BF_CUST_CNT                       /* (대비)객수         */
+			                             , 0    AS BF_ORIGIN_SALE_TAMT         /* (대비)목표매출금액 */
+			                             , CASE WHEN A.BF_NORM_SALE_AMT = 0 THEN 0
+			                                    ELSE (CASE WHEN B.TAX_FLAG = '1' THEN A.BF_NORM_SALE_AMT-- / 1.1
+			                                                                     ELSE A.BF_NORM_SALE_AMT
+			                                          END)
+			                               END  AS BF_NORM_SALE_AMT_VAT
+			                             , A.SALE_QTY                          /* (실적)판매수량     */
+			                             , A.TOT_SALE_AMT                      /* (실적)총매출금액   */
+			                             , A.VAT_AMT                           /* (실적)부가세       */
+			                             , A.REDU_AMT                          /* (실적)할인금액     */
+			                             , A.NORM_SALE_AMT                     /* (실적)정상매출금액 */
+			                             , A.DC_AMT                            /* (실적)에누리금액   */
+			                             , A.NET_SALE_AMT                      /* (실적)순매출금액   */
+			                             , A.SALE_PROF_AMT                     /* (실적)매출이익액   */
+			                             , A.CUST_CNT                          /* (실적)객수         */
+			                             , 0    AS ORIGIN_SALE_TAMT            /* (실적)목표매출금액 */
+			                             , CASE WHEN A.NORM_SALE_AMT = 0 THEN 0
+			                                    ELSE (CASE WHEN B.TAX_FLAG = '1' THEN A.NORM_SALE_AMT-- / 1.1
+			                                                                     ELSE A.NORM_SALE_AMT
+			                                          END)
+			                               END  AS NORM_SALE_AMT_VAT
+			                          FROM (
+			                                SELECT A.STR_CD
+			                                     , A.SALE_DT
+			                                     , B.SALE_ORG_CD         AS ORG_CD
+			                                     , A.PUMBUN_CD                 /* 브랜드 코드 */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_QTY      ELSE 0 END BF_SALE_QTY       /* (대비)판매수량     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.TOT_SALE_AMT  ELSE 0 END BF_TOT_SALE_AMT   /* (대비)총매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.VAT_AMT       ELSE 0 END BF_VAT_AMT        /* (대비)부가세       */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.REDU_AMT      ELSE 0 END BF_REDU_AMT       /* (대비)할인금액     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NORM_SALE_AMT ELSE 0 END BF_NORM_SALE_AMT  /* (대비)정상매출금액 */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.DC_AMT        ELSE 0 END BF_DC_AMT         /* (대비)에누리금액   */             
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NET_SALE_AMT  ELSE 0 END BF_NET_SALE_AMT   /* (대비)순매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_PROF_AMT ELSE 0 END BF_SALE_PROF_AMT  /* (대비)매출이익액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.CUST_CNT      ELSE 0 END BF_CUST_CNT       /* (대비)객수         */             
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_QTY      ELSE 0 END SALE_QTY          /* (실적)판매수량     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.TOT_SALE_AMT  ELSE 0 END TOT_SALE_AMT      /* (실적)총매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.VAT_AMT       ELSE 0 END VAT_AMT           /* (실적)부가세       */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.REDU_AMT      ELSE 0 END REDU_AMT          /* (실적)할인금액     */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NORM_SALE_AMT ELSE 0 END NORM_SALE_AMT     /* (실적)정상매출금액 */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.DC_AMT        ELSE 0 END DC_AMT            /* (실적)에누리금액   */             
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.NET_SALE_AMT  ELSE 0 END NET_SALE_AMT      /* (실적)순매출금액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.SALE_PROF_AMT ELSE 0 END SALE_PROF_AMT     /* (실적)매출이익액   */
+			                                     , CASE WHEN A.SALE_DT BETWEEN ? AND ? THEN A.CUST_CNT      ELSE 0 END CUST_CNT          /* (실적)객수         */
+			                                  FROM DPS.PS_DAYPBN A
+                                                 , DPS.PC_STRPBN B
+			                                 WHERE A.STR_CD    = ?
+			                                   AND A.STR_CD    = B.STR_CD
+			                                   AND A.PUMBUN_CD = B.PUMBUN_CD
+			                                   AND B.SALE_ORG_CD  LIKE ? || '%'
+			                                   AND (  A.SALE_DT   BETWEEN ? AND ?     -- 대비
+			                                       OR A.SALE_DT   BETWEEN ? AND ?     -- 실적
+			                                       )
+			                                   AND A.PUMBUN_CD LIKE ? || '%'
+			                                   AND A.PUMBUN_CD IN ( 
+			                                                        SELECT MYORG.PUMBUN_CD
+			                                                          FROM COM.V_MYORG MYORG
+			                                                         WHERE MYORG.USER_ID     = ?
+			                                                           AND MYORG.ORG_FLAG    = ?
+			                                                      )
+			                               ) A
+			                             , DPS.PC_PBNMST B
+			                         WHERE A.PUMBUN_CD = B.PUMBUN_CD
+			                        -- 실행계획(목표매출금액)  
+			                         UNION ALL
+			                        SELECT A.STR_CD
+			                             , A.EXE_DT
+			                             , B.SALE_ORG_CD         AS ORG_CD
+			                             , A.PUMBUN_CD
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0   
+			                             , CASE WHEN A.EXE_DT BETWEEN ? AND ? THEN A.ORIGIN_SALE_TAMT ELSE 0 END AS BF_ORIGIN_SALE_TAMT 
+			                             , 0
+			                             , 0 
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , 0
+			                             , CASE WHEN A.EXE_DT BETWEEN ? AND ? THEN A.ORIGIN_SALE_TAMT ELSE 0 END AS ORIGIN_SALE_TAMT
+			                             , 0
+			                          FROM DPS.PS_ACTPUMBUN A   -- 브랜드별 실행계획
+			                             , DPS.PC_STRPBN B
+			                         WHERE A.STR_CD    = B.STR_CD
+			                           AND A.PUMBUN_CD = B.PUMBUN_CD
+			                           AND A.STR_CD    = ?
+			                           AND B.SALE_ORG_CD LIKE ? || '%'
+			                           AND (  A.EXE_YM   BETWEEN SUBSTR(?, 1, 6) AND SUBSTR(?, 1, 6)  -- 대비
+			                               OR A.EXE_YM   BETWEEN SUBSTR(?, 1, 6) AND SUBSTR(?, 1, 6)  -- 실적
+			                               )
+			                           AND (  A.EXE_DT   BETWEEN ? AND ?    -- 대비
+			                               OR A.EXE_DT   BETWEEN ? AND ?    -- 실적
+			                               )
+			                           AND A.PUMBUN_CD LIKE ? || '%'
+			                           AND A.PUMBUN_CD IN ( 
+			                                                SELECT MYORG.PUMBUN_CD
+			                                                  FROM COM.V_MYORG MYORG
+			                                                 WHERE MYORG.USER_ID     = ?
+			                                                   AND MYORG.ORG_FLAG    = ?
+			                                              )
+			                       ) A
+			                     , DPS.PC_STRPBN B             
+			                     , DPS.PC_ORGMST C  /* 파트 */
+			                     , DPS.PC_ORGMST D  /* PC   */
+			                     , DPS.PC_ORGMST E  /* 코너 */
+			                 WHERE A.STR_CD    = B.STR_CD
+			                   AND A.PUMBUN_CD = B.PUMBUN_CD
+			                   AND SUBSTR(A.ORG_CD, 1, 8) = DECODE(?, '1', SUBSTR(B.SALE_ORG_CD, 1, 8), SUBSTR(B.BUY_ORG_CD, 1, 8))
+			                   AND SUBSTR(A.ORG_CD, 1, 6) || '0000' = C.ORG_CD 
+			                   AND SUBSTR(A.ORG_CD, 1, 8) || '00'   = D.ORG_CD
+			                   AND A.ORG_CD    = E.ORG_CD
+			               )   A
+        ]]>        
+    </query>
+    
+</service>

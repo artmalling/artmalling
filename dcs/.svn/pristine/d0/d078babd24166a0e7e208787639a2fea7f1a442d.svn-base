@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  가맹점분담금실적조회
+ -->
+<service name="/dmtc403.dc">
+
+    <gauce name="H_MASTER"> 
+        <column colName="BRCH_ID"        colType="TB_STRING"   size="10" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BRCH_NAME"      colType="TB_STRING"   size="40" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="APP_POINT"      colType="TB_DECIMAL"  size="4"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DCUBE_RATE"     colType="TB_DECIMAL"  size="4"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DCUBE_DVD_AMT"  colType="TB_DECIMAL"  size="8"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="BRCH_DVD_AMT"   colType="TB_DECIMAL"  size="7"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="BRCH_RATE"      colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ADD_FEE_AMT"    colType="TB_DECIMAL"  size="9"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>
+
+    <!-- 마감일자관리 조회 -->    
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT A.BRCH_ID
+                 , B.BRCH_NAME
+                 , SUM(A.ADD_POINT) AS ADD_POINT
+                 , SUM(A.DCUBE_DVD_AMT) / SUM(A.ADD_POINT) DCUBE_RATE
+                 , SUM(A.DCUBE_DVD_AMT) AS DCUBE_DVD_AMT
+                 , SUM(A.BRCH_DVD_AMT ) AS BRCH_DVD_AMT
+                 , 100 - SUM(A.DCUBE_DVD_AMT) / SUM(A.ADD_POINT) BRCH_RATE   
+                 , SUM(A.ADD_FEE_AMT  ) AS ADD_FEE_AMT
+              FROM DCS.DC_BR_DSUM A
+                 , DCS.DB_BRANCH B
+             WHERE A.BRCH_ID = B.BRCH_ID
+               AND A.SUM_DT  BETWEEN ? AND ?
+               AND A.BRCH_ID LIKE ? || '%'
+             GROUP BY A.BRCH_ID, B.BRCH_NAME
+        ]]>        
+    </query>   
+    
+</service>

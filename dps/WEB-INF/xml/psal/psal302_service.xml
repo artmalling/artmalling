@@ -1,0 +1,2237 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal302.ps">
+
+    <gauce name="H_SEL_MASTER">
+    	<column colName="STR_CD"                  colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ORG_CD"                  colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TARGET_SALE_AMT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACHIEVERATE"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT_CMPR"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALEIRATE"               colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+        <column colName="TARGET_SALE_AMT_M"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT_M"          colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACHIEVERATE_M"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT_M_CMPR"     colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALEIRATE_M"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+        <column colName="TARGET_SALE_AMT_Y"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT_Y"          colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACHIEVERATE_Y"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT_Y_CMPR"     colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALEIRATE_Y"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_CMPRDT"> 
+        <column colName="CMPR_DT"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 당초팀별월매출계획 조회 쿼리  -->
+   
+   <query name="SEL_SALE_PUMBUN2">        
+        <![CDATA[
+     
+   SELECT  
+   		Y.STR_CD, DPS.FN_GET_STORE_NAME(Y.STR_CD) STR_NAME,
+       Y.ORG_CD
+     , ORG.PUMBUN_NAME                                                                                                            AS ORG_NAME
+     , Y.TARGET_SALE_AMT                                                                                                          AS TARGET_SALE_AMT
+     , Y.TOT_SALE_AMT                                                                                                             AS TOT_SALE_AMT
+     , CASE WHEN Y.TARGET_SALE_AMT = 0 THEN 0 ELSE Y.TOT_SALE_AMT/Y.TARGET_SALE_AMT *100 END                                      AS ACHIEVERATE
+     , Y.TOT_SALE_AMT_CMPR                                                                                                        AS TOT_SALE_AMT_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT - Y.TOT_SALE_AMT_CMPR)/Y.TOT_SALE_AMT_CMPR * 100 END         AS SALEIRATE
+     , Y.TARGET_SALE_AMT_M                                                                                                        AS TARGET_SALE_AMT_M
+     , Y.TOT_SALE_AMT_M                                                                                                           AS TOT_SALE_AMT_M
+     , CASE WHEN Y.TARGET_SALE_AMT_M = 0 THEN 0 ELSE Y.TOT_SALE_AMT_M/Y.TARGET_SALE_AMT_M *100 END                                AS ACHIEVERATE_M
+     , Y.TOT_SALE_AMT_M_CMPR                                                                                                      AS TOT_SALE_AMT_M_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_M_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_M - Y.TOT_SALE_AMT_M_CMPR)/Y.TOT_SALE_AMT_M_CMPR * 100 END AS SALEIRATE_M
+     , Y.TARGET_SALE_AMT_Y                                                                                                        AS TARGET_SALE_AMT_Y
+     , Y.TOT_SALE_AMT_Y                                                                                                           AS TOT_SALE_AMT_Y
+     , CASE WHEN Y.TARGET_SALE_AMT_Y = 0 THEN 0 ELSE Y.TOT_SALE_AMT_Y/Y.TARGET_SALE_AMT_Y *100 END                                AS ACHIEVERATE_Y
+     , Y.TOT_SALE_AMT_Y_CMPR                                                                                                      AS TOT_SALE_AMT_Y_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_Y_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_Y - Y.TOT_SALE_AMT_Y_CMPR)/Y.TOT_SALE_AMT_Y_CMPR * 100 END AS SALEIRATE_Y
+  FROM (
+    SELECT X.STR_CD
+         , X.PUMBUN_CD                        AS ORG_CD
+         , SUM(TOT_SALE_AMT)                  AS TOT_SALE_AMT
+         , SUM(TOT_SALE_AMT_CMPR)             AS TOT_SALE_AMT_CMPR
+         , SUM(TARGET_SALE_AMT)               AS TARGET_SALE_AMT
+         , SUM(TOT_SALE_AMT_M)                AS TOT_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_M_CMPR)           AS TOT_SALE_AMT_M_CMPR
+         , SUM(TARGET_SALE_AMT_M)             AS TARGET_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_Y)                AS TOT_SALE_AMT_Y
+         , SUM(TOT_SALE_AMT_Y_CMPR)           AS TOT_SALE_AMT_Y_CMPR
+         , SUM(TARGET_SALE_AMT_Y)             AS TARGET_SALE_AMT_Y
+      FROM (
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT  ELSE 0 END TOT_SALE_AMT			-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT  ELSE 0 END TOT_SALE_AMT_CMPR		-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.SALE_DT  IN (?, ?)
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_DT  = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+                    , A.PUMBUN_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 6)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+                    , A.PUMBUN_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 TOT_SALE_AMT_M
+                 , 0 TOT_SALE_AMT_M_CMPR
+                 , 0 TARGET_SALE_AMT_M
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 4)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+          GROUP BY B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+           ) X
+     GROUP BY
+           X.STR_CD
+         , X.PUMBUN_CD
+     ) Y, DPS.PC_PBNMST ORG
+ WHERE Y.ORG_CD = ORG.PUMBUN_CD
+   -----------------------1
+   
+   ]]>        
+    </query>
+   
+    <query name="SEL_SALE_PUMBUN">        
+        <![CDATA[
+        
+   SELECT  
+   		Y.STR_CD, DPS.FN_GET_STORE_NAME(Y.STR_CD) STR_NAME,
+       Y.ORG_CD
+     , ORG.PUMBUN_NAME                                                                                                            AS ORG_NAME
+     , Y.TARGET_SALE_AMT                                                                                                          AS TARGET_SALE_AMT
+     , Y.TOT_SALE_AMT                                                                                                             AS TOT_SALE_AMT
+     , CASE WHEN Y.TARGET_SALE_AMT = 0 THEN 0 ELSE Y.TOT_SALE_AMT/Y.TARGET_SALE_AMT *100 END                                      AS ACHIEVERATE
+     , Y.TOT_SALE_AMT_CMPR                                                                                                        AS TOT_SALE_AMT_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT - Y.TOT_SALE_AMT_CMPR)/Y.TOT_SALE_AMT_CMPR * 100 END         AS SALEIRATE
+     , Y.TARGET_SALE_AMT_M                                                                                                        AS TARGET_SALE_AMT_M
+     , Y.TOT_SALE_AMT_M                                                                                                           AS TOT_SALE_AMT_M
+     , CASE WHEN Y.TARGET_SALE_AMT_M = 0 THEN 0 ELSE Y.TOT_SALE_AMT_M/Y.TARGET_SALE_AMT_M *100 END                                AS ACHIEVERATE_M
+     , Y.TOT_SALE_AMT_M_CMPR                                                                                                      AS TOT_SALE_AMT_M_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_M_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_M - Y.TOT_SALE_AMT_M_CMPR)/Y.TOT_SALE_AMT_M_CMPR * 100 END AS SALEIRATE_M
+     , Y.TARGET_SALE_AMT_Y                                                                                                        AS TARGET_SALE_AMT_Y
+     , Y.TOT_SALE_AMT_Y                                                                                                           AS TOT_SALE_AMT_Y
+     , CASE WHEN Y.TARGET_SALE_AMT_Y = 0 THEN 0 ELSE Y.TOT_SALE_AMT_Y/Y.TARGET_SALE_AMT_Y *100 END                                AS ACHIEVERATE_Y
+     , Y.TOT_SALE_AMT_Y_CMPR                                                                                                      AS TOT_SALE_AMT_Y_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_Y_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_Y - Y.TOT_SALE_AMT_Y_CMPR)/Y.TOT_SALE_AMT_Y_CMPR * 100 END AS SALEIRATE_Y
+  FROM (
+    SELECT X.STR_CD
+         , X.PUMBUN_CD                        AS ORG_CD
+         , SUM(TOT_SALE_AMT)                  AS TOT_SALE_AMT
+         , SUM(TOT_SALE_AMT_CMPR)             AS TOT_SALE_AMT_CMPR
+         , SUM(TARGET_SALE_AMT)               AS TARGET_SALE_AMT
+         , SUM(TOT_SALE_AMT_M)                AS TOT_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_M_CMPR)           AS TOT_SALE_AMT_M_CMPR
+         , SUM(TARGET_SALE_AMT_M)             AS TARGET_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_Y)                AS TOT_SALE_AMT_Y
+         , SUM(TOT_SALE_AMT_Y_CMPR)           AS TOT_SALE_AMT_Y_CMPR
+         , SUM(TARGET_SALE_AMT_Y)             AS TARGET_SALE_AMT_Y
+      FROM (
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.SALE_DT  IN (?, ?)
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_DT  = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+                    , A.PUMBUN_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 6)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+                    , A.PUMBUN_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 TOT_SALE_AMT_M
+                 , 0 TOT_SALE_AMT_M_CMPR
+                 , 0 TARGET_SALE_AMT_M
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 4)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+          GROUP BY B.STR_CD
+                 , B.ORG_CD
+                 , A.PUMBUN_CD
+           ) X
+     GROUP BY
+           X.STR_CD
+         , X.PUMBUN_CD
+     ) Y, DPS.PC_PBNMST ORG
+ WHERE Y.ORG_CD = ORG.PUMBUN_CD
+        -----------------------2
+        ]]>        
+    </query>
+    
+    
+    <query name="SEL_SALE_PC2">        
+        <![CDATA[
+        
+        
+  SELECT  
+  		Y.STR_CD, DPS.FN_GET_STORE_NAME(Y.STR_CD) STR_NAME,
+       Y.ORG_CD
+     , ORG.ORG_SHORT_NAME                                                                                                         AS ORG_NAME
+     , Y.TARGET_SALE_AMT                                                                                                          AS TARGET_SALE_AMT
+     , Y.TOT_SALE_AMT                                                                                                             AS TOT_SALE_AMT
+     , CASE WHEN Y.TARGET_SALE_AMT = 0 THEN 0 ELSE Y.TOT_SALE_AMT/Y.TARGET_SALE_AMT *100 END                                      AS ACHIEVERATE
+     , Y.TOT_SALE_AMT_CMPR                                                                                                        AS TOT_SALE_AMT_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT - Y.TOT_SALE_AMT_CMPR)/Y.TOT_SALE_AMT_CMPR * 100 END         AS SALEIRATE
+     , Y.TARGET_SALE_AMT_M                                                                                                        AS TARGET_SALE_AMT_M
+     , Y.TOT_SALE_AMT_M                                                                                                           AS TOT_SALE_AMT_M
+     , CASE WHEN Y.TARGET_SALE_AMT_M = 0 THEN 0 ELSE Y.TOT_SALE_AMT_M/Y.TARGET_SALE_AMT_M *100 END                                AS ACHIEVERATE_M
+     , Y.TOT_SALE_AMT_M_CMPR                                                                                                      AS TOT_SALE_AMT_M_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_M_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_M - Y.TOT_SALE_AMT_M_CMPR)/Y.TOT_SALE_AMT_M_CMPR * 100 END AS SALEIRATE_M
+     , Y.TARGET_SALE_AMT_Y                                                                                                        AS TARGET_SALE_AMT_Y
+     , Y.TOT_SALE_AMT_Y                                                                                                           AS TOT_SALE_AMT_Y
+     , CASE WHEN Y.TARGET_SALE_AMT_Y = 0 THEN 0 ELSE Y.TOT_SALE_AMT_Y/Y.TARGET_SALE_AMT_Y *100 END                                AS ACHIEVERATE_Y
+     , Y.TOT_SALE_AMT_Y_CMPR                                                                                                      AS TOT_SALE_AMT_Y_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_Y_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_Y - Y.TOT_SALE_AMT_Y_CMPR)/Y.TOT_SALE_AMT_Y_CMPR * 100 END AS SALEIRATE_Y
+  FROM (
+    SELECT X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 8) || '00'     AS ORG_CD
+         , SUM(TOT_SALE_AMT)                  AS TOT_SALE_AMT
+         , SUM(TOT_SALE_AMT_CMPR)             AS TOT_SALE_AMT_CMPR
+         , SUM(TARGET_SALE_AMT)               AS TARGET_SALE_AMT
+         , SUM(TOT_SALE_AMT_M)                AS TOT_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_M_CMPR)           AS TOT_SALE_AMT_M_CMPR
+         , SUM(TARGET_SALE_AMT_M)             AS TARGET_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_Y)                AS TOT_SALE_AMT_Y
+         , SUM(TOT_SALE_AMT_Y_CMPR)           AS TOT_SALE_AMT_Y_CMPR
+         , SUM(TARGET_SALE_AMT_Y)             AS TARGET_SALE_AMT_Y
+      FROM (
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.SALE_DT  IN (?, ?)
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_DT  = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 6)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 TOT_SALE_AMT_M
+                 , 0 TOT_SALE_AMT_M_CMPR
+                 , 0 TARGET_SALE_AMT_M
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 4)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+          GROUP BY B.STR_CD
+                 , B.ORG_CD
+           ) X
+     GROUP BY
+           X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 8)
+     ) Y, DPS.PC_ORGMST ORG
+ WHERE Y.ORG_CD = ORG.ORG_CD
+    -----------------------3
+    ]]>        
+    </query>
+    
+    <query name="SEL_SALE_PC">        
+        <![CDATA[
+        
+SELECT  
+	Y.STR_CD, DPS.FN_GET_STORE_NAME(Y.STR_CD) STR_NAME,
+       Y.ORG_CD
+     , ORG.ORG_SHORT_NAME                                                                                                         AS ORG_NAME
+     , Y.TARGET_SALE_AMT                                                                                                          AS TARGET_SALE_AMT
+     , Y.TOT_SALE_AMT                                                                                                             AS TOT_SALE_AMT
+     , CASE WHEN Y.TARGET_SALE_AMT = 0 THEN 0 ELSE Y.TOT_SALE_AMT/Y.TARGET_SALE_AMT *100 END                                      AS ACHIEVERATE
+     , Y.TOT_SALE_AMT_CMPR                                                                                                        AS TOT_SALE_AMT_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT - Y.TOT_SALE_AMT_CMPR)/Y.TOT_SALE_AMT_CMPR * 100 END         AS SALEIRATE
+     , Y.TARGET_SALE_AMT_M                                                                                                        AS TARGET_SALE_AMT_M
+     , Y.TOT_SALE_AMT_M                                                                                                           AS TOT_SALE_AMT_M
+     , CASE WHEN Y.TARGET_SALE_AMT_M = 0 THEN 0 ELSE Y.TOT_SALE_AMT_M/Y.TARGET_SALE_AMT_M *100 END                                AS ACHIEVERATE_M
+     , Y.TOT_SALE_AMT_M_CMPR                                                                                                      AS TOT_SALE_AMT_M_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_M_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_M - Y.TOT_SALE_AMT_M_CMPR)/Y.TOT_SALE_AMT_M_CMPR * 100 END AS SALEIRATE_M
+     , Y.TARGET_SALE_AMT_Y                                                                                                        AS TARGET_SALE_AMT_Y
+     , Y.TOT_SALE_AMT_Y                                                                                                           AS TOT_SALE_AMT_Y
+     , CASE WHEN Y.TARGET_SALE_AMT_Y = 0 THEN 0 ELSE Y.TOT_SALE_AMT_Y/Y.TARGET_SALE_AMT_Y *100 END                                AS ACHIEVERATE_Y
+     , Y.TOT_SALE_AMT_Y_CMPR                                                                                                      AS TOT_SALE_AMT_Y_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_Y_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_Y - Y.TOT_SALE_AMT_Y_CMPR)/Y.TOT_SALE_AMT_Y_CMPR * 100 END AS SALEIRATE_Y
+  FROM (
+    SELECT X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 8) ||    '00'  AS ORG_CD
+         , SUM(TOT_SALE_AMT)                  AS TOT_SALE_AMT
+         , SUM(TOT_SALE_AMT_CMPR)             AS TOT_SALE_AMT_CMPR
+         , SUM(TARGET_SALE_AMT)               AS TARGET_SALE_AMT
+         , SUM(TOT_SALE_AMT_M)                AS TOT_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_M_CMPR)           AS TOT_SALE_AMT_M_CMPR
+         , SUM(TARGET_SALE_AMT_M)             AS TARGET_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_Y)                AS TOT_SALE_AMT_Y
+         , SUM(TOT_SALE_AMT_Y_CMPR)           AS TOT_SALE_AMT_Y_CMPR
+         , SUM(TARGET_SALE_AMT_Y)             AS TARGET_SALE_AMT_Y
+      FROM (
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.SALE_DT  IN (?, ?)
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_DT  = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 6)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 TOT_SALE_AMT_M
+                 , 0 TOT_SALE_AMT_M_CMPR
+                 , 0 TARGET_SALE_AMT_M
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 4)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+          GROUP BY B.STR_CD
+                 , B.ORG_CD
+           ) X
+     GROUP BY
+           X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 8)
+     ) Y, DPS.PC_ORGMST ORG
+ WHERE Y.ORG_CD = ORG.ORG_CD
+        -----------------------4
+        
+        ]]>        
+    </query>
+    
+    
+    <query name="SEL_SALE_TEAM2">        
+        <![CDATA[
+        
+   SELECT  
+   	Y.STR_CD, DPS.FN_GET_STORE_NAME(Y.STR_CD) STR_NAME, 
+       Y.ORG_CD
+     , ORG.ORG_SHORT_NAME                                                                                                         AS ORG_NAME
+     , Y.TARGET_SALE_AMT                                                                                                          AS TARGET_SALE_AMT
+     , Y.TOT_SALE_AMT                                                                                                             AS TOT_SALE_AMT
+     , CASE WHEN Y.TARGET_SALE_AMT = 0 THEN 0 ELSE Y.TOT_SALE_AMT/Y.TARGET_SALE_AMT *100 END                                      AS ACHIEVERATE
+     , Y.TOT_SALE_AMT_CMPR                                                                                                        AS TOT_SALE_AMT_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT - Y.TOT_SALE_AMT_CMPR)/Y.TOT_SALE_AMT_CMPR * 100 END         AS SALEIRATE
+     , Y.TARGET_SALE_AMT_M                                                                                                        AS TARGET_SALE_AMT_M
+     , Y.TOT_SALE_AMT_M                                                                                                           AS TOT_SALE_AMT_M
+     , CASE WHEN Y.TARGET_SALE_AMT_M = 0 THEN 0 ELSE Y.TOT_SALE_AMT_M/Y.TARGET_SALE_AMT_M *100 END                                AS ACHIEVERATE_M
+     , Y.TOT_SALE_AMT_M_CMPR                                                                                                      AS TOT_SALE_AMT_M_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_M_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_M - Y.TOT_SALE_AMT_M_CMPR)/Y.TOT_SALE_AMT_M_CMPR * 100 END AS SALEIRATE_M
+     , Y.TARGET_SALE_AMT_Y                                                                                                        AS TARGET_SALE_AMT_Y
+     , Y.TOT_SALE_AMT_Y                                                                                                           AS TOT_SALE_AMT_Y
+     , CASE WHEN Y.TARGET_SALE_AMT_Y = 0 THEN 0 ELSE Y.TOT_SALE_AMT_Y/Y.TARGET_SALE_AMT_Y *100 END                                AS ACHIEVERATE_Y
+     , Y.TOT_SALE_AMT_Y_CMPR                                                                                                      AS TOT_SALE_AMT_Y_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_Y_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_Y - Y.TOT_SALE_AMT_Y_CMPR)/Y.TOT_SALE_AMT_Y_CMPR * 100 END AS SALEIRATE_Y
+  FROM (
+    SELECT X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 6) || '0000'   AS ORG_CD
+         , SUM(TOT_SALE_AMT)                  AS TOT_SALE_AMT
+         , SUM(TOT_SALE_AMT_CMPR)             AS TOT_SALE_AMT_CMPR
+         , SUM(TARGET_SALE_AMT)               AS TARGET_SALE_AMT
+         , SUM(TOT_SALE_AMT_M)                AS TOT_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_M_CMPR)           AS TOT_SALE_AMT_M_CMPR
+         , SUM(TARGET_SALE_AMT_M)             AS TARGET_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_Y)                AS TOT_SALE_AMT_Y
+         , SUM(TOT_SALE_AMT_Y_CMPR)           AS TOT_SALE_AMT_Y_CMPR
+         , SUM(TARGET_SALE_AMT_Y)             AS TARGET_SALE_AMT_Y
+      FROM (
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.SALE_DT  IN (?, ?)
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_DT  = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 6)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 TOT_SALE_AMT_M
+                 , 0 TOT_SALE_AMT_M_CMPR
+                 , 0 TARGET_SALE_AMT_M
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 4)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+          GROUP BY B.STR_CD
+                 , B.ORG_CD
+           ) X
+     GROUP BY
+           X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 6)
+     ) Y, DPS.PC_ORGMST ORG
+ WHERE Y.ORG_CD = ORG.ORG_CD     
+        -----------------------5
+        
+         ]]>        
+    </query>
+    
+    <query name="SEL_SALE_TEAM">        
+        <![CDATA[
+ SELECT  
+ 	Y.STR_CD, DPS.FN_GET_STORE_NAME(Y.STR_CD) STR_NAME, 
+	   Y.ORG_CD
+     , ORG.ORG_SHORT_NAME                                                                                                         AS ORG_NAME
+     , Y.TARGET_SALE_AMT                                                                                                          AS TARGET_SALE_AMT
+     , Y.TOT_SALE_AMT                                                                                                             AS TOT_SALE_AMT
+     , CASE WHEN Y.TARGET_SALE_AMT = 0 THEN 0 ELSE Y.TOT_SALE_AMT/Y.TARGET_SALE_AMT *100 END                                      AS ACHIEVERATE
+     , Y.TOT_SALE_AMT_CMPR                                                                                                        AS TOT_SALE_AMT_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT - Y.TOT_SALE_AMT_CMPR)/Y.TOT_SALE_AMT_CMPR * 100 END         AS SALEIRATE
+     , Y.TARGET_SALE_AMT_M                                                                                                        AS TARGET_SALE_AMT_M
+     , Y.TOT_SALE_AMT_M                                                                                                           AS TOT_SALE_AMT_M
+     , CASE WHEN Y.TARGET_SALE_AMT_M = 0 THEN 0 ELSE Y.TOT_SALE_AMT_M/Y.TARGET_SALE_AMT_M *100 END                                AS ACHIEVERATE_M
+     , Y.TOT_SALE_AMT_M_CMPR                                                                                                      AS TOT_SALE_AMT_M_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_M_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_M - Y.TOT_SALE_AMT_M_CMPR)/Y.TOT_SALE_AMT_M_CMPR * 100 END AS SALEIRATE_M
+     , Y.TARGET_SALE_AMT_Y                                                                                                        AS TARGET_SALE_AMT_Y
+     , Y.TOT_SALE_AMT_Y                                                                                                           AS TOT_SALE_AMT_Y
+     , CASE WHEN Y.TARGET_SALE_AMT_Y = 0 THEN 0 ELSE Y.TOT_SALE_AMT_Y/Y.TARGET_SALE_AMT_Y *100 END                                AS ACHIEVERATE_Y
+     , Y.TOT_SALE_AMT_Y_CMPR                                                                                                      AS TOT_SALE_AMT_Y_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_Y_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_Y - Y.TOT_SALE_AMT_Y_CMPR)/Y.TOT_SALE_AMT_Y_CMPR * 100 END AS SALEIRATE_Y
+  FROM (
+    SELECT X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 6) || '0000'  AS ORG_CD
+         , SUM(TOT_SALE_AMT)                  AS TOT_SALE_AMT
+         , SUM(TOT_SALE_AMT_CMPR)             AS TOT_SALE_AMT_CMPR
+         , SUM(TARGET_SALE_AMT)               AS TARGET_SALE_AMT
+         , SUM(TOT_SALE_AMT_M)                AS TOT_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_M_CMPR)           AS TOT_SALE_AMT_M_CMPR
+         , SUM(TARGET_SALE_AMT_M)             AS TARGET_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_Y)                AS TOT_SALE_AMT_Y
+         , SUM(TOT_SALE_AMT_Y_CMPR)           AS TOT_SALE_AMT_Y_CMPR
+         , SUM(TARGET_SALE_AMT_Y)             AS TARGET_SALE_AMT_Y
+      FROM (
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.SALE_DT  IN (?, ?)
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_DT  = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 6)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 TOT_SALE_AMT_M
+                 , 0 TOT_SALE_AMT_M_CMPR
+                 , 0 TARGET_SALE_AMT_M
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 4)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+          GROUP BY B.STR_CD
+                 , B.ORG_CD
+           ) X
+     GROUP BY
+           X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 6)
+     ) Y, DPS.PC_ORGMST ORG
+ WHERE Y.ORG_CD = ORG.ORG_CD
+ -----------------------6
+         
+ 		]]>
+    </query>
+    
+    <query name="SEL_SALE_DEPT2">        
+        <![CDATA[
+    SELECT 
+    	Y.STR_CD, DPS.FN_GET_STORE_NAME(Y.STR_CD) STR_NAME, 
+       Y.ORG_CD
+     , ORG.ORG_SHORT_NAME                                                                                                         AS ORG_NAME
+     , Y.TARGET_SALE_AMT                                                                                                          AS TARGET_SALE_AMT
+     , Y.TOT_SALE_AMT                                                                                                             AS TOT_SALE_AMT
+     , CASE WHEN Y.TARGET_SALE_AMT = 0 THEN 0 ELSE Y.TOT_SALE_AMT/Y.TARGET_SALE_AMT *100 END                                      AS ACHIEVERATE
+     , Y.TOT_SALE_AMT_CMPR                                                                                                        AS TOT_SALE_AMT_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT - Y.TOT_SALE_AMT_CMPR)/Y.TOT_SALE_AMT_CMPR * 100 END         AS SALEIRATE
+     , Y.TARGET_SALE_AMT_M                                                                                                        AS TARGET_SALE_AMT_M
+     , Y.TOT_SALE_AMT_M                                                                                                           AS TOT_SALE_AMT_M
+     , CASE WHEN Y.TARGET_SALE_AMT_M = 0 THEN 0 ELSE Y.TOT_SALE_AMT_M/Y.TARGET_SALE_AMT_M *100 END                                AS ACHIEVERATE_M
+     , Y.TOT_SALE_AMT_M_CMPR                                                                                                      AS TOT_SALE_AMT_M_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_M_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_M - Y.TOT_SALE_AMT_M_CMPR)/Y.TOT_SALE_AMT_M_CMPR * 100 END AS SALEIRATE_M
+     , Y.TARGET_SALE_AMT_Y                                                                                                        AS TARGET_SALE_AMT_Y
+     , Y.TOT_SALE_AMT_Y                                                                                                           AS TOT_SALE_AMT_Y
+     , CASE WHEN Y.TARGET_SALE_AMT_Y = 0 THEN 0 ELSE Y.TOT_SALE_AMT_Y/Y.TARGET_SALE_AMT_Y *100 END                                AS ACHIEVERATE_Y
+     , Y.TOT_SALE_AMT_Y_CMPR                                                                                                      AS TOT_SALE_AMT_Y_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_Y_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_Y - Y.TOT_SALE_AMT_Y_CMPR)/Y.TOT_SALE_AMT_Y_CMPR * 100 END AS SALEIRATE_Y
+  FROM (
+    SELECT X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 4) || '000000' AS ORG_CD
+         , SUM(TOT_SALE_AMT)                  AS TOT_SALE_AMT
+         , SUM(TOT_SALE_AMT_CMPR)             AS TOT_SALE_AMT_CMPR
+         , SUM(TARGET_SALE_AMT)               AS TARGET_SALE_AMT
+         , SUM(TOT_SALE_AMT_M)                AS TOT_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_M_CMPR)           AS TOT_SALE_AMT_M_CMPR
+         , SUM(TARGET_SALE_AMT_M)             AS TARGET_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_Y)                AS TOT_SALE_AMT_Y
+         , SUM(TOT_SALE_AMT_Y_CMPR)           AS TOT_SALE_AMT_Y_CMPR
+         , SUM(TARGET_SALE_AMT_Y)             AS TARGET_SALE_AMT_Y
+      FROM (
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.SALE_DT  IN (?, ?)
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_DT  = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_M_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 6)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 TOT_SALE_AMT_M
+                 , 0 TOT_SALE_AMT_M_CMPR
+                 , 0 TARGET_SALE_AMT_M
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.BUY_ORG_CD  = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 4)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+          GROUP BY B.STR_CD
+                 , B.ORG_CD
+           ) X
+     GROUP BY
+           X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 4)
+     ) Y, DPS.PC_ORGMST ORG
+ WHERE Y.ORG_CD = ORG.ORG_CD
+ -----------------------7
+    ]]>        
+    </query>
+    
+    <query name="SEL_SALE_DEPT">        
+        <![CDATA[
+  SELECT  
+  	Y.STR_CD, DPS.FN_GET_STORE_NAME(Y.STR_CD) STR_NAME,
+       Y.ORG_CD
+     , ORG.ORG_SHORT_NAME                                                                                                         AS ORG_NAME
+     , Y.TARGET_SALE_AMT                                                                                                          AS TARGET_SALE_AMT
+     , Y.TOT_SALE_AMT                                                                                                             AS TOT_SALE_AMT
+     , CASE WHEN Y.TARGET_SALE_AMT = 0 THEN 0 ELSE Y.TOT_SALE_AMT/Y.TARGET_SALE_AMT *100 END                                      AS ACHIEVERATE
+     , Y.TOT_SALE_AMT_CMPR                                                                                                        AS TOT_SALE_AMT_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT - Y.TOT_SALE_AMT_CMPR)/Y.TOT_SALE_AMT_CMPR * 100 END         AS SALEIRATE
+     , Y.TARGET_SALE_AMT_M                                                                                                        AS TARGET_SALE_AMT_M
+     , Y.TOT_SALE_AMT_M                                                                                                           AS TOT_SALE_AMT_M
+     , CASE WHEN Y.TARGET_SALE_AMT_M = 0 THEN 0 ELSE Y.TOT_SALE_AMT_M/Y.TARGET_SALE_AMT_M *100 END                                AS ACHIEVERATE_M
+     , Y.TOT_SALE_AMT_M_CMPR                                                                                                      AS TOT_SALE_AMT_M_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_M_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_M - Y.TOT_SALE_AMT_M_CMPR)/Y.TOT_SALE_AMT_M_CMPR * 100 END AS SALEIRATE_M
+     , Y.TARGET_SALE_AMT_Y                                                                                                        AS TARGET_SALE_AMT_Y
+     , Y.TOT_SALE_AMT_Y                                                                                                           AS TOT_SALE_AMT_Y
+     , CASE WHEN Y.TARGET_SALE_AMT_Y = 0 THEN 0 ELSE Y.TOT_SALE_AMT_Y/Y.TARGET_SALE_AMT_Y *100 END                                AS ACHIEVERATE_Y
+     , Y.TOT_SALE_AMT_Y_CMPR                                                                                                      AS TOT_SALE_AMT_Y_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_Y_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_Y - Y.TOT_SALE_AMT_Y_CMPR)/Y.TOT_SALE_AMT_Y_CMPR * 100 END AS SALEIRATE_Y
+  FROM (
+    SELECT X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 4) || '000000' AS ORG_CD
+         , SUM(TOT_SALE_AMT)                  AS TOT_SALE_AMT
+         , SUM(TOT_SALE_AMT_CMPR)             AS TOT_SALE_AMT_CMPR
+         , SUM(TARGET_SALE_AMT)               AS TARGET_SALE_AMT
+         , SUM(TOT_SALE_AMT_M)                AS TOT_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_M_CMPR)           AS TOT_SALE_AMT_M_CMPR
+         , SUM(TARGET_SALE_AMT_M)             AS TARGET_SALE_AMT_M
+         , SUM(TOT_SALE_AMT_Y)                AS TOT_SALE_AMT_Y
+         , SUM(TOT_SALE_AMT_Y_CMPR)           AS TOT_SALE_AMT_Y_CMPR
+         , SUM(TARGET_SALE_AMT_Y)             AS TARGET_SALE_AMT_Y
+      FROM (
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT  ELSE 0 END TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT = ? THEN A.NORM_SALE_AMT  ELSE 0 END TOT_SALE_AMT_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.SALE_DT  IN (?, ?)
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_DT  = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT  ELSE 0 END TOT_SALE_AMT_M	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.NORM_SALE_AMT  ELSE 0 END TOT_SALE_AMT_M_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 6)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             GROUP BY B.STR_CD
+                    , B.ORG_CD
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 TOT_SALE_AMT_M
+                 , 0 TOT_SALE_AMT_M_CMPR
+                 , 0 TARGET_SALE_AMT_M
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT  ELSE 0 END TOT_SALE_AMT_Y	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.NORM_SALE_AMT  ELSE 0 END TOT_SALE_AMT_Y_CMPR	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                 , 0 AS TARGET_SALE_AMT_Y
+              FROM DPS.PS_DAYPBN A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND (A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%'
+                OR  A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%')
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+             UNION ALL
+            SELECT B.STR_CD
+                 , B.ORG_CD
+                 , 0 TOT_SALE_AMT
+                 , 0 TOT_SALE_AMT_CMPR
+                 , 0 AS TARGET_SALE_AMT
+                 , 0 AS TOT_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_M_CMPR
+                 , 0 AS TARGET_SALE_AMT_M
+                 , 0 AS TOT_SALE_AMT_Y
+                 , 0 AS TOT_SALE_AMT_Y_CMPR
+                 , SUM(A.ORIGIN_SALE_TAMT) AS TARGET_SALE_AMT_M
+              FROM DPS.PS_ACTPUMBUN  A
+                 , DPS.PC_STRPBN C
+                 , DPS.PC_ORGMST B
+             WHERE C.STR_CD      = B.STR_CD
+               AND C.SALE_ORG_CD = B.ORG_CD
+               AND A.STR_CD      = C.STR_CD
+               AND A.PUMBUN_CD   = C.PUMBUN_CD
+               AND B.STR_CD   LIKE ? || '%'
+               AND B.DEPT_CD  LIKE ? || '%'
+               AND B.TEAM_CD  LIKE ? || '%'
+               AND B.PC_CD    LIKE ? || '%'
+               AND A.EXE_YM   LIKE SUBSTR(?, 1, 4)||'%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = B.STR_CD
+                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                               AND MYORG.PC_CD       = B.PC_CD
+                               AND MYORG.USER_ID     = ?
+                          )
+          GROUP BY B.STR_CD
+                 , B.ORG_CD
+           ) X
+     GROUP BY
+           X.STR_CD
+         , SUBSTR(X.ORG_CD, 1, 4)
+     ) Y, DPS.PC_ORGMST ORG
+ WHERE Y.ORG_CD = ORG.ORG_CD
+ -----------------------8
+    ]]>        
+    </query>  
+<!--     <query name="SEL_SALE_DEPT">        
+        <![CDATA[
+SELECT Y.ORG_CD
+     , ORG.ORG_SHORT_NAME                                                                                                         AS ORG_NAME
+     , Y.TARGET_SALE_AMT                                                                                                          AS TARGET_SALE_AMT
+     , Y.TOT_SALE_AMT                                                                                                             AS TOT_SALE_AMT
+     , CASE WHEN Y.TARGET_SALE_AMT = 0 THEN 0 ELSE Y.TOT_SALE_AMT/Y.TARGET_SALE_AMT *100 END                                      AS ACHIEVERATE
+     , Y.TOT_SALE_AMT_CMPR                                                                                                        AS TOT_SALE_AMT_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT - Y.TOT_SALE_AMT_CMPR)/Y.TOT_SALE_AMT_CMPR * 100 END         AS SALEIRATE
+     , Y.TARGET_SALE_AMT_M                                                                                                        AS TARGET_SALE_AMT_M
+     , Y.TOT_SALE_AMT_M                                                                                                           AS TOT_SALE_AMT_M
+     , CASE WHEN Y.TARGET_SALE_AMT_M = 0 THEN 0 ELSE Y.TOT_SALE_AMT_M/Y.TARGET_SALE_AMT_M *100 END                                AS ACHIEVERATE_M
+     , Y.TOT_SALE_AMT_M_CMPR                                                                                                      AS TOT_SALE_AMT_M_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_M_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_M - Y.TOT_SALE_AMT_M_CMPR)/Y.TOT_SALE_AMT_M_CMPR * 100 END AS SALEIRATE_M
+     , Y.TARGET_SALE_AMT_Y                                                                                                        AS TARGET_SALE_AMT_Y
+     , Y.TOT_SALE_AMT_Y                                                                                                           AS TOT_SALE_AMT_Y
+     , CASE WHEN Y.TARGET_SALE_AMT_Y = 0 THEN 0 ELSE Y.TOT_SALE_AMT_Y/Y.TARGET_SALE_AMT_Y *100 END                                AS ACHIEVERATE_Y
+     , Y.TOT_SALE_AMT_Y_CMPR                                                                                                      AS TOT_SALE_AMT_Y_CMPR
+     , CASE WHEN Y.TOT_SALE_AMT_Y_CMPR = 0 THEN 0 ELSE (Y.TOT_SALE_AMT_Y - Y.TOT_SALE_AMT_Y_CMPR)/Y.TOT_SALE_AMT_Y_CMPR * 100 END AS SALEIRATE_Y
+  FROM (
+		SELECT X.STR_CD
+		     , SUBSTR(X.ORG_CD, 1, 4) || '000000' AS ORG_CD
+		     , SUM(TOT_SALE_AMT)                  AS TOT_SALE_AMT
+		     , SUM(TOT_SALE_AMT_CMPR)             AS TOT_SALE_AMT_CMPR
+		     , SUM(TARGET_SALE_AMT)               AS TARGET_SALE_AMT
+		     , SUM(TOT_SALE_AMT_M)                AS TOT_SALE_AMT_M
+		     , SUM(TOT_SALE_AMT_M_CMPR)           AS TOT_SALE_AMT_M_CMPR
+		     , SUM(TARGET_SALE_AMT_M)             AS TARGET_SALE_AMT_M
+		     , SUM(TOT_SALE_AMT_Y)                AS TOT_SALE_AMT_Y
+		     , SUM(TOT_SALE_AMT_Y_CMPR)           AS TOT_SALE_AMT_Y_CMPR
+		     , SUM(TARGET_SALE_AMT_Y)             AS TARGET_SALE_AMT_Y
+		  FROM (
+		        SELECT A.STR_CD
+		             , A.ORG_CD
+		             , CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END TOT_SALE_AMT
+		             , CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END TOT_SALE_AMT_CMPR
+		             , 0 AS TARGET_SALE_AMT
+		             , 0 AS TOT_SALE_AMT_M
+		             , 0 AS TOT_SALE_AMT_M_CMPR
+		             , 0 AS TARGET_SALE_AMT_M
+		             , 0 AS TOT_SALE_AMT_Y
+		             , 0 AS TOT_SALE_AMT_Y_CMPR
+		             , 0 AS TARGET_SALE_AMT_Y
+		          FROM DPS.PS_DAYPBN A
+		             , DPS.PC_ORGMST B
+		         WHERE A.ORG_CD   = B.ORG_CD
+		           AND B.STR_CD   = ?
+		           AND B.DEPT_CD  LIKE ? || '%'
+		           AND B.TEAM_CD  LIKE ? || '%'
+		           AND B.PC_CD    LIKE ? || '%'
+		           AND A.SALE_DT  IN (?, ?)
+		           AND EXISTS ( SELECT MYORG.USER_ID
+		                          FROM COM.V_MYORG MYORG
+		                         WHERE MYORG.STR_CD      = B.STR_CD
+		                           AND MYORG.DEPT_CD     = B.DEPT_CD
+		                           AND MYORG.TEAM_CD     = B.TEAM_CD
+		                           AND MYORG.PC_CD       = B.PC_CD
+		                           AND MYORG.USER_ID     = ?
+		                      )
+		         UNION ALL
+		        SELECT A.STR_CD
+		             , A.ORG_CD
+		             , 0 TOT_SALE_AMT
+		             , 0 TOT_SALE_AMT_CMPR
+		             , A.ORIGIN_SALE_TAMT AS TARGET_SALE_AMT
+		             , 0 AS TOT_SALE_AMT_M
+		             , 0 AS TOT_SALE_AMT_M_CMPR
+		             , 0 AS TARGET_SALE_AMT_M
+		             , 0 AS TOT_SALE_AMT_Y
+		             , 0 AS TOT_SALE_AMT_Y_CMPR
+		             , 0 AS TARGET_SALE_AMT_Y
+		          FROM DPS.PS_ACTPC  A
+		             , DPS.PC_ORGMST B
+		         WHERE A.ORG_CD   = B.ORG_CD
+		           AND B.STR_CD   = ?
+		           AND B.DEPT_CD  LIKE ? || '%'
+		           AND B.TEAM_CD  LIKE ? || '%'
+		           AND B.PC_CD    LIKE ? || '%'
+		           AND A.EXE_DT  = ?
+		           AND EXISTS ( SELECT MYORG.USER_ID
+		                          FROM COM.V_MYORG MYORG
+		                         WHERE MYORG.STR_CD      = B.STR_CD
+		                           AND MYORG.DEPT_CD     = B.DEPT_CD
+		                           AND MYORG.TEAM_CD     = B.TEAM_CD
+		                           AND MYORG.PC_CD       = B.PC_CD
+		                           AND MYORG.USER_ID     = ?
+		                      )
+		         UNION ALL
+		        SELECT A.STR_CD
+		             , A.ORG_CD
+		             , 0 TOT_SALE_AMT
+		             , 0 TOT_SALE_AMT_CMPR
+		             , 0 AS TARGET_SALE_AMT
+		             , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.TOT_SALE_AMT ELSE 0 END TOT_SALE_AMT_M
+		             , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 6)||'%' THEN A.TOT_SALE_AMT ELSE 0 END TOT_SALE_AMT_M_CMPR
+		             , 0 AS TARGET_SALE_AMT_M
+		             , 0 AS TOT_SALE_AMT_Y
+		             , 0 AS TOT_SALE_AMT_Y_CMPR
+		             , 0 AS TARGET_SALE_AMT_Y
+		          FROM DPS.PS_DAYPBN A
+		             , DPS.PC_ORGMST B
+		         WHERE A.ORG_CD   = B.ORG_CD
+		           AND B.STR_CD   = ?
+		           AND B.DEPT_CD  LIKE ? || '%'
+		           AND B.TEAM_CD  LIKE ? || '%'
+		           AND B.PC_CD    LIKE ? || '%'
+		           AND (A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%'
+		            OR  A.SALE_DT  LIKE SUBSTR(?, 1, 6)||'%')
+		           AND EXISTS ( SELECT MYORG.USER_ID
+		                          FROM COM.V_MYORG MYORG
+		                         WHERE MYORG.STR_CD      = B.STR_CD
+		                           AND MYORG.DEPT_CD     = B.DEPT_CD
+		                           AND MYORG.TEAM_CD     = B.TEAM_CD
+		                           AND MYORG.PC_CD       = B.PC_CD
+		                           AND MYORG.USER_ID     = ?
+		                      )
+		         UNION ALL
+		        SELECT A.STR_CD
+		             , A.ORG_CD
+		             , 0 TOT_SALE_AMT
+		             , 0 TOT_SALE_AMT_CMPR
+		             , 0 AS TARGET_SALE_AMT
+		             , 0 AS TOT_SALE_AMT_M
+		             , 0 AS TOT_SALE_AMT_M_CMPR
+		             , A.ORIGIN_SALE_TAMT AS TARGET_SALE_AMT_M
+		             , 0 AS TOT_SALE_AMT_Y
+		             , 0 AS TOT_SALE_AMT_Y_CMPR
+		             , 0 AS TARGET_SALE_AMT_Y
+		          FROM DPS.PS_ACTPC  A
+		             , DPS.PC_ORGMST B
+		         WHERE A.ORG_CD   = B.ORG_CD
+		           AND B.STR_CD   = ?
+		           AND B.DEPT_CD  LIKE ? || '%'
+		           AND B.TEAM_CD  LIKE ? || '%'
+		           AND B.PC_CD    LIKE ? || '%'
+		           AND A.EXE_YM   LIKE SUBSTR(?, 1, 6)||'%'
+		           AND EXISTS ( SELECT MYORG.USER_ID
+		                          FROM COM.V_MYORG MYORG
+		                         WHERE MYORG.STR_CD      = B.STR_CD
+		                           AND MYORG.DEPT_CD     = B.DEPT_CD
+		                           AND MYORG.TEAM_CD     = B.TEAM_CD
+		                           AND MYORG.PC_CD       = B.PC_CD
+		                           AND MYORG.USER_ID     = ?
+		                      )
+		         UNION ALL
+		        SELECT A.STR_CD
+		             , A.ORG_CD
+		             , 0 TOT_SALE_AMT
+		             , 0 TOT_SALE_AMT_CMPR
+		             , 0 AS TARGET_SALE_AMT
+		             , 0 TOT_SALE_AMT_M
+		             , 0 TOT_SALE_AMT_M_CMPR
+		             , 0 TARGET_SALE_AMT_M
+		             , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.TOT_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y
+		             , CASE WHEN A.SALE_DT LIKE SUBSTR(?, 1, 4)||'%' THEN A.TOT_SALE_AMT ELSE 0 END TOT_SALE_AMT_Y_CMPR
+		             , 0 AS TARGET_SALE_AMT_Y
+		          FROM DPS.PS_DAYPBN A
+		             , DPS.PC_ORGMST B
+		         WHERE A.ORG_CD   = B.ORG_CD
+		           AND B.STR_CD   = ?
+		           AND B.DEPT_CD  LIKE ? || '%'
+		           AND B.TEAM_CD  LIKE ? || '%'
+		           AND B.PC_CD    LIKE ? || '%'
+		           AND (A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%'
+		            OR  A.SALE_DT  LIKE SUBSTR(?, 1, 4)||'%')
+		           AND EXISTS ( SELECT MYORG.USER_ID
+		                          FROM COM.V_MYORG MYORG
+		                         WHERE MYORG.STR_CD      = B.STR_CD
+		                           AND MYORG.DEPT_CD     = B.DEPT_CD
+		                           AND MYORG.TEAM_CD     = B.TEAM_CD
+		                           AND MYORG.PC_CD       = B.PC_CD
+		                           AND MYORG.USER_ID     = ?
+		                      )
+		         UNION ALL
+		        SELECT A.STR_CD
+		             , A.ORG_CD
+		             , 0 TOT_SALE_AMT
+		             , 0 TOT_SALE_AMT_CMPR
+		             , 0 AS TARGET_SALE_AMT
+		             , 0 AS TOT_SALE_AMT_M
+		             , 0 AS TOT_SALE_AMT_M_CMPR
+		             , 0 AS TARGET_SALE_AMT_M
+		             , 0 AS TOT_SALE_AMT_Y
+		             , 0 AS TOT_SALE_AMT_Y_CMPR
+		             , A.ORIGIN_SALE_TAMT AS TARGET_SALE_AMT_M
+		          FROM DPS.PS_ACTPC  A
+		             , DPS.PC_ORGMST B
+		         WHERE A.ORG_CD   = B.ORG_CD
+		           AND B.STR_CD   = ?
+		           AND B.DEPT_CD  LIKE ? || '%'
+		           AND B.TEAM_CD  LIKE ? || '%'
+		           AND B.PC_CD    LIKE ? || '%'
+		           AND A.EXE_YM   LIKE SUBSTR(?, 1, 4)||'%'
+		           AND EXISTS ( SELECT MYORG.USER_ID
+		                          FROM COM.V_MYORG MYORG
+		                         WHERE MYORG.STR_CD      = B.STR_CD
+		                           AND MYORG.DEPT_CD     = B.DEPT_CD
+		                           AND MYORG.TEAM_CD     = B.TEAM_CD
+		                           AND MYORG.PC_CD       = B.PC_CD
+		                           AND MYORG.USER_ID     = ?
+		                      )
+		       ) X
+		 GROUP BY
+		       X.STR_CD
+		     , SUBSTR(X.ORG_CD, 1, 4)
+	   ) Y, DPS.PC_ORGMST ORG
+ WHERE Y.ORG_CD = ORG.ORG_CD
+        ]]>        
+    </query>
+ -->    
+    <query name="SEL_CMPRDT">        
+        <![CDATA[
+             SELECT NVL(MAX(CMPR_DT), TO_CHAR(ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'),-12), 'YYYYMMDD'))
+              FROM DPS.PS_SCHEDULE
+             WHERE STR_CD  = ?
+               AND SALE_DT = ?
+        ]]>        
+    </query>
+    
+</service>

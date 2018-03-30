@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.06
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  OFFER 마감 처리 
+ -->
+<service name="/pord509.po">
+    
+    <!-- OFFER 마감 처리  리스트 -->
+    <gauce name="H_LIST"> 
+        <column colName="CHECK1"              colType="TB_STRING"  size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_CD"              colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="OFFER_YM"            colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="OFFER_SEQ_NO"        colType="TB_DECIMAL" size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="OFFER_DT"            colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="OFFER_SHEET_NO"      colType="TB_STRING"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BL_NO"               colType="TB_STRING"  size="30"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="PUMBUN_CD"           colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_NM"           colType="TB_STRING"  size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_CD"              colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_NM"              colType="TB_STRING"  size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="CURRENCY_CD"         colType="TB_STRING"  size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CLOSE_FLAG"          colType="TB_STRING"  size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="CHANGE_CLOSE_FLAG"   colType="TB_STRING"  size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="EXPNC_CLOSE_FLAG"    colType="TB_STRING"  size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+        <column colName="COST_CLOSE_FLAG"     colType="TB_STRING"  size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="OFFER_TOT_QTY"       colType="TB_DECIMAL" size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="OFFER_TOT_AMT"       colType="TB_DECIMAL" size="15"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="INVOICE_TOT_QTY"     colType="TB_DECIMAL" size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="INVOICE_TOT_AMT"     colType="TB_DECIMAL" size="15"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="INVOICE_WON_TOT_AMT" colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHK_TOT_QTY"         colType="TB_DECIMAL" size="8"    dec="1" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHK_EXC_TAMT"        colType="TB_DECIMAL" size="15"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHK_COST_TAMT"       colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+     <gauce name="H_CHK_CLOSE"> 
+        <column colName="EXPNC_CLOSE_FLAG"    colType="TB_STRING"    size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COST_CLOSE_FLAG"     colType="TB_STRING"    size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_FLAG"          colType="TB_STRING"    size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!--  OFFER 마감 처리 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[  
+		      SELECT 'F'               AS  CHECK1
+		           , VA.STR_CD
+		           , VA.OFFER_YM
+		           , VA.OFFER_SEQ_NO           
+		           , VA.OFFER_DT
+		           , VA.OFFER_SHEET_NO
+		           , VA.BL_NO           
+		           , VA.PUMBUN_CD
+                   , DPS.FN_GET_PUMBUN_NAME(VA.PUMBUN_CD) AS PUMBUN_NM
+                   , VA.VEN_CD
+                   , DPS.FN_GET_VENDOR_NAME(VA.VEN_CD) AS VEN_NM           
+		           , VA.CURRENCY_CD
+                   , VA.CLOSE_FLAG    
+                   , VA.CLOSE_FLAG            AS CHANGE_CLOSE_FLAG       
+		           , VA.EXPNC_CLOSE_FLAG
+		           , VA.COST_CLOSE_FLAG           
+		           , SUM(VA.OFFER_TOT_QTY)    AS OFFER_TOT_QTY
+		           , SUM(VA.OFFER_TOT_AMT)    AS OFFER_TOT_AMT
+		           , SUM(VA.INVOICE_TOT_QTY)  AS INVOICE_TOT_QTY
+		           , SUM(VA.INVOICE_TOT_AMT)  AS INVOICE_TOT_AMT
+		           , SUM(VA.INVOICE_WON_TOT_AMT) AS INVOICE_WON_TOT_AMT
+		           , SUM(VA.CHK_TOT_QTY)      AS CHK_TOT_QTY
+		           , SUM(VA.CHK_EXC_TAMT)     AS CHK_EXC_TAMT
+		           , SUM(VA.CHK_COST_TAMT)    AS CHK_COST_TAMT                            
+		        FROM (
+		              SELECT TA.STR_CD
+		                   , TA.OFFER_YM
+		                   , TA.OFFER_SEQ_NO
+		                   , TA.OFFER_DT
+		                   , TA.OFFER_SHEET_NO
+		                   , TA.BL_NO
+		                   , TA.PUMBUN_CD
+		                   , TA.VEN_CD
+		                   , TA.CURRENCY_CD
+		                   , TA.CLOSE_FLAG
+		                   , TA.EXPNC_CLOSE_FLAG
+		                   , TA.COST_CLOSE_FLAG
+		                   , 0 AS OFFER_TOT_QTY
+		                   , 0 AS OFFER_TOT_AMT
+		                   , 0 AS INVOICE_TOT_QTY
+		                   , 0 AS INVOICE_TOT_AMT
+		                   , 0 AS INVOICE_WON_TOT_AMT
+		                   , SUM(NVL(TC.CHK_TOT_QTY,0)) AS CHK_TOT_QTY
+		                   , SUM(NVL(TC.CHK_EXC_TAMT,0)) AS CHK_EXC_TAMT
+		                   , SUM(NVL(TC.CHK_COST_TAMT,0)) AS CHK_COST_TAMT 
+		                FROM DPS.PO_OFFMST TA
+		                   , DPS.PO_INVMST TB
+		                   , DPS.PO_SLPMST TC
+		               WHERE TA.STR_CD         = ?                
+		                 AND TA.OFFER_DT       BETWEEN ? AND ?  
+		                 AND TA.OFFER_SHEET_NO LIKE ? ||'%'   
+		                 AND TA.PUMBUN_CD      LIKE ? ||'%'        
+		                 AND TA.VEN_CD         LIKE ? ||'%'           
+		                 AND TA.CLOSE_FLAG     LIKE ? ||'%' 
+		                 AND TB.STR_CD       = TA.STR_CD
+		                 AND TB.OFFER_YM     = TA.OFFER_YM
+		                 AND TB.OFFER_SEQ_NO = TA.OFFER_SEQ_NO
+		                 AND TC.STR_CD       = TB.STR_CD
+		                 AND TC.INVOICE_YM   = TB.INVOICE_YM
+		                 AND TC.INVOICE_SEQ_NO = TB.INVOICE_SEQ_NO
+		                 AND TC.SLIP_PROC_STAT = '09'      
+		               GROUP BY TA.STR_CD
+		                      , TA.OFFER_YM
+		                      , TA.OFFER_SEQ_NO
+		                      , TA.OFFER_DT
+		                      , TA.OFFER_SHEET_NO
+		                      , TA.BL_NO
+		                      , TA.PUMBUN_CD
+		                      , TA.VEN_CD
+		                      , TA.CURRENCY_CD
+		                      , TA.CLOSE_FLAG
+		                      , TA.EXPNC_CLOSE_FLAG
+		                      , TA.COST_CLOSE_FLAG
+		              UNION ALL    
+		              SELECT TA.STR_CD
+		                   , TA.OFFER_YM
+		                   , TA.OFFER_SEQ_NO
+		                   , TA.OFFER_DT
+		                   , TA.OFFER_SHEET_NO
+		                   , TA.BL_NO
+		                   , TA.PUMBUN_CD
+		                   , TA.VEN_CD
+		                   , TA.CURRENCY_CD
+		                   , TA.CLOSE_FLAG
+		                   , TA.EXPNC_CLOSE_FLAG
+		                   , TA.COST_CLOSE_FLAG
+		                   , 0 AS OFFER_TOT_QTY
+		                   , 0 AS OFFER_TOT_AMT
+		                   , SUM(NVL(TB.INVOICE_TOT_QTY,0)) AS INVOICE_TOT_QTY
+		                   , SUM(NVL(TB.INVOICE_TOT_AMT,0)) AS INVOICE_TOT_AMT
+		                   , SUM(NVL(TB.INVOICE_WON_TOT_AMT,0)) AS INVOICE_WON_TOT_AMT
+		                   , 0 AS CHK_TOT_QTY
+		                   , 0 AS CHK_EXC_TAMT
+		                   , 0 AS CHK_COST_TAMT 
+		                FROM DPS.PO_OFFMST TA
+		                   , DPS.PO_INVMST TB
+		               WHERE TA.STR_CD         = ?                
+		                 AND TA.OFFER_DT       BETWEEN ? AND ?  
+		                 AND TA.OFFER_SHEET_NO LIKE ? ||'%'   
+		                 AND TA.PUMBUN_CD      LIKE ? ||'%'        
+		                 AND TA.VEN_CD         LIKE ? ||'%'           
+		                 AND TA.CLOSE_FLAG     LIKE ? ||'%' 
+		                 AND TB.STR_CD       = TA.STR_CD
+		                 AND TB.OFFER_YM     = TA.OFFER_YM
+		                 AND TB.OFFER_SEQ_NO = TA.OFFER_SEQ_NO
+		               GROUP BY TA.STR_CD
+		                      , TA.OFFER_YM
+		                      , TA.OFFER_SEQ_NO
+		                      , TA.OFFER_DT
+		                      , TA.OFFER_SHEET_NO
+		                      , TA.BL_NO
+		                      , TA.PUMBUN_CD
+		                      , TA.VEN_CD
+		                      , TA.CURRENCY_CD
+		                      , TA.CLOSE_FLAG
+		                      , TA.EXPNC_CLOSE_FLAG
+		                      , TA.COST_CLOSE_FLAG
+		              UNION ALL
+		              SELECT TA.STR_CD
+		                   , TA.OFFER_YM
+		                   , TA.OFFER_SEQ_NO
+		                   , TA.OFFER_DT
+		                   , TA.OFFER_SHEET_NO
+		                   , TA.BL_NO
+		                   , TA.PUMBUN_CD
+		                   , TA.VEN_CD
+		                   , TA.CURRENCY_CD
+		                   , TA.CLOSE_FLAG
+		                   , TA.EXPNC_CLOSE_FLAG
+		                   , TA.COST_CLOSE_FLAG
+		                   , SUM(NVL(TA.OFFER_TOT_QTY,0)) AS OFFER_TOT_QTY
+		                   , SUM(NVL(TA.OFFER_TOT_AMT,0)) AS OFFER_TOT_AMT
+		                   , 0 AS INVOICE_TOT_QTY
+		                   , 0 AS INVOICE_TOT_AMT
+		                   , 0 AS INVOICE_WON_TOT_AMT
+		                   , 0 AS CHK_TOT_QTY
+		                   , 0 AS CHK_EXC_TAMT
+		                   , 0 AS CHK_COST_TAMT 
+		                FROM DPS.PO_OFFMST TA
+		               WHERE TA.STR_CD         = ?                
+		                 AND TA.OFFER_DT       BETWEEN ? AND ?  
+		                 AND TA.OFFER_SHEET_NO LIKE ? ||'%'   
+		                 AND TA.PUMBUN_CD      LIKE ? ||'%'        
+		                 AND TA.VEN_CD         LIKE ? ||'%'           
+		                 AND TA.CLOSE_FLAG     LIKE ? ||'%' 
+		               GROUP BY TA.STR_CD
+		                      , TA.OFFER_YM
+		                      , TA.OFFER_SEQ_NO
+		                      , TA.OFFER_DT
+		                      , TA.OFFER_SHEET_NO
+		                      , TA.BL_NO
+		                      , TA.PUMBUN_CD
+		                      , TA.VEN_CD
+		                      , TA.CURRENCY_CD
+		                      , TA.CLOSE_FLAG
+		                      , TA.EXPNC_CLOSE_FLAG
+		                      , TA.COST_CLOSE_FLAG
+		              ) VA
+		              , DPS.PC_STRPBN TA
+		              , DPS.PC_STRVENMST TB
+		          WHERE VA.STR_CD = TA.STR_CD
+		            AND VA.PUMBUN_CD = TA.PUMBUN_CD
+		            AND VA.STR_CD = TB.STR_CD
+		            AND VA.VEN_CD = TB.VEN_CD
+		       GROUP BY VA.STR_CD
+		              , VA.OFFER_YM
+		              , VA.OFFER_SEQ_NO
+		              , VA.OFFER_DT
+		              , VA.OFFER_SHEET_NO
+		              , VA.BL_NO
+		              , VA.PUMBUN_CD
+		              , VA.VEN_CD
+		              , VA.CURRENCY_CD
+		              , VA.CLOSE_FLAG
+		              , VA.EXPNC_CLOSE_FLAG
+		              , VA.COST_CLOSE_FLAG
+		       ORDER BY VA.OFFER_DT DESC
+        ]]>
+    </query>
+    
+    <!--확정 -->
+    <query name="UPD_CONF">
+        <![CDATA[
+            UPDATE DPS.PO_OFFMST
+               SET CLOSE_FLAG    = ?
+                 , CLOSE_DT      = ?
+                 , MOD_DATE      = SYSDATE
+                 , MOD_ID        = ?
+             WHERE STR_CD        = ?
+               AND OFFER_YM      = ?
+               AND OFFER_SEQ_NO  = ?
+        ]]>
+    </query>   
+    
+    <!--수입제경비 확정시 체크사항 -->
+    <query name="CHK_CLOSE">
+        <![CDATA[
+            SELECT EXPNC_CLOSE_FLAG
+                 , COST_CLOSE_FLAG 
+                 , CLOSE_FLAG
+              FROM DPS.PO_OFFMST
+             WHERE STR_CD          = ?
+               AND OFFER_YM        = ?
+               AND OFFER_SEQ_NO    = ?
+               AND OFFER_SHEET_NO  = ?
+        ]]>
+    </query> 
+    
+</service>

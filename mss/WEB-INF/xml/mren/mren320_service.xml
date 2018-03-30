@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : FKSS
+ * 회 사 명 : 김광래
+ * 작 성 일 : 2016.12.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  월직접관리비등록
+ -->
+<service name="/mren320.mr">
+
+    <gauce name="H_SEL_MR_MNTNITEM">
+        <column colName="CODE"   		colType="TB_STRING"   size="2"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="NAME"   		colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TAX_INV_FLAG"  colType="TB_STRING"   size="1" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="S_DATE" 		colType="TB_STRING"   size="6"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    <!-- 관리비 항목코드 조회 -->
+    <query name="SEL_MR_MNTNITEM_ALL">
+		SELECT CODE, NAME, ? AS S_DATE
+		  FROM (SELECT '%'      AS CODE
+		             , '전체'    AS NAME
+		          FROM DUAL
+		         UNION ALL
+				SELECT MNTN_ITEM_CD AS CODE
+				     , MNTN_ITEM_NM AS NAME
+				  FROM MSS.MR_MNTNITEM
+				 WHERE MNTN_TYPE = '08'
+				   AND CAL_TYPE = '6' /*직접비만 등록*/
+				   AND MNTN_FLAG = '2'
+				   AND STR_CD = ?)
+		 ORDER BY CODE
+    </query>
+    
+    <!-- 관리비 항목코드 조회 -->
+    <query name="SEL_MR_MNTNITEM">
+		SELECT MNTN_ITEM_CD AS CODE
+		     , MNTN_ITEM_NM AS NAME
+		     , TAX_INV_FLAG				-- 면과세구분 1과세 2면세 3 영세
+		     , ? AS S_DATE
+		  FROM MSS.MR_MNTNITEM
+		WHERE MNTN_TYPE  = '08'
+		   AND CAL_TYPE  = '6' /*직접비만 등록*/
+		   AND MNTN_FLAG = '2'
+		   AND STR_CD    = ?
+		 ORDER BY MNTN_ITEM_CD
+    </query>
+    
+	<gauce name="H_SEL_MR_ITEMAMT">	    
+	    <column colName="VEN_CD"        colType="TB_STRING"    size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"        colType="TB_STRING"    size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MNTN_ITEM_CD"  colType="TB_STRING"    size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	    
+	    <column colName="USE_AMT"       colType="TB_DECIMAL"   size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="USE_AMT_NOVAT" colType="TB_DECIMAL"   size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VAT_AMT"       colType="TB_DECIMAL"   size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_YM"        colType="TB_STRING"    size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="STR_CD"        colType="TB_STRING"    size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_ID"       colType="TB_STRING"    size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_TYPE"      colType="TB_STRING"    size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	    
+	    <column colName="FLAG"          colType="TB_STRING"    size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	
+	</gauce>
+	
+	<gauce name="H_SEL_CNT">	    
+	    <column colName="CNT"        colType="TB_STRING"    size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	    	    	
+	</gauce>
+  
+    <!-- 월직접관리비 조회 -->
+    <query name="SEL_MR_CALITEM">
+       <![CDATA[   
+            SELECT CNT.VEN_CD
+                 , DPS.FN_GET_VENDOR_NAME(CNT.VEN_CD) AS VEN_NM
+                 , MNTN_ITEM_CD                 
+                 , USE_AMT
+                 , USE_AMT_NOVAT                
+                 , VAT_AMT
+                 , CAL_YM
+                 , CAL.STR_CD
+                 , CAL.CNTR_ID
+                 , CAL_TYPE                 
+                 , '1' AS FLAG
+              FROM MSS.MR_CALITEM CAL
+                 , MSS.MR_CNTRMST CNT
+             WHERE CAL.CNTR_ID = CNT.CNTR_ID
+               AND CAL.STR_CD       = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_MR_CALITEM_WHERE_CAL_YM">
+       <![CDATA[   
+               AND CAL.CAL_YM       = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_MR_CALITEM_WHERE_MNTN_ITEM_CD">
+       <![CDATA[   
+               AND CAL.MNTN_ITEM_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_MR_CALITEM_WHERE_VEN_CD">
+       <![CDATA[   
+               AND CNT.VEN_CD       = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_MR_CALITEM_ORDER">
+       <![CDATA[   
+            ORDER BY CNT.VEN_CD
+        ]]>
+    </query>
+    
+    
+    <!-- 정산/입금 체크 -->
+    <gauce name="H_CAL_CHECK">
+      <column colName="V_RETURN"       colType="TB_STRING" size="5"    dec="0" keyType="TB_NORMAL"  roundMode="" />      
+    </gauce> 
+    
+    <!-- 정산/입금 체크 SQL -->
+    <query name="SEL_CALCHECK">
+        <![CDATA[ 
+            SELECT MSS.FN_GET_CALCHECK( ? , ? , ? ) AS V_RETURN
+              FROM DUAL
+        ]]>
+    </query>
+    
+    <!-- 신규등록 중복체크 -->
+    <query name="SEL_MR_CALITEM_COUNT">
+       <![CDATA[   
+            SELECT COUNT(*) AS CNT
+              FROM MSS.MR_CALITEM
+             WHERE CAL_YM = ?
+               AND STR_CD = ?
+               AND CNTR_ID = MSS.FN_GET_CNTR_ID_M(?, ?, ?)
+               AND CAL_TYPE = '1'
+               AND MNTN_ITEM_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 신규시 협력사 조회 -->
+    <query name="SEL_VENMST">
+       <![CDATA[   
+            SELECT VEN.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , ?  AS MNTN_ITEM_CD
+                 , '' AS USE_AMT
+                 , '' AS USE_AMT_NOVAT                 
+                 , '' AS VAT_AMT
+                 , '' AS CAL_YM
+                 , '' AS STR_CD
+                 , '' AS CNTR_ID
+                 , '' AS CAL_TYPE                 
+                 , '' AS FLAG
+              FROM DPS.PC_VENMST    VEN
+                 , DPS.PC_STRVENMST STR
+             WHERE VEN.VEN_CD = STR.VEN_CD(+)
+               AND STR.STR_CD           = ?
+               --AND NOT EXISTS (SELECT CNT.VEN_CD
+               AND VEN.VEN_CD  NOT IN (SELECT CNT.VEN_CD
+                                 FROM MSS.MR_CALITEM CAL
+                                    , MSS.MR_CNTRMST CNT
+                                WHERE CAL.CNTR_ID = CNT.CNTR_ID
+                                  AND CAL.STR_CD       = ?
+                                  AND CAL.CAL_YM       = ?
+                                  AND CAL.MNTN_ITEM_CD = ?)
+               AND EXISTS ( SELECT CNT.VEN_CD
+                             FROM MSS.MR_CNTRMST CNT
+                            WHERE CNT.CNTR_ID     = MSS.FN_GET_CNTR_ID_M(VEN.VEN_CD, ?, ?)
+                              AND (CNT.CNTR_CAN_DT IS NULL OR CNT.CNTR_CAN_DT >= ?||'01') 
+                           )
+             ORDER BY VEN.VEN_CD
+        ]]>
+    </query>
+    
+    
+    <!-- 매장별 계량기마스터 매핑 등록 -->
+    <!-- 2012. 05. 03 홍종영 : 컬럼 간소화 / 수정 -->
+    <query name="INS_MR_ITEMAMT">
+        INSERT 
+          INTO MSS.MR_CALITEM
+             ( CAL_YM
+             , STR_CD
+             , CNTR_ID
+             , CAL_TYPE
+             , MNTN_ITEM_CD
+             , USE_AMT_NOVAT
+             , VAT_AMT                           
+             , USE_AMT
+             , COST_AMT
+             , REG_DATE
+             , MOD_ID
+             , MOD_DATE)
+        VALUES 
+             ( ?
+             , ?
+             , MSS.FN_GET_CNTR_ID_M(?, ?, ?)
+             , '1'       
+             , ?
+             , ?
+             , ?
+             , ?
+             , 0
+             , SYSDATE
+             , ?
+             , SYSDATE)
+    </query>   
+     
+    <!-- 매장별 계량기마스터 매핑 변경 -->
+    <query name="UPD_MR_ITEMAMT">
+       UPDATE MSS.MR_CALITEM
+          SET USE_AMT_NOVAT	= ?
+            , VAT_AMT			= ?               
+            , USE_AMT			= ?
+            , MOD_ID      		= ?
+            , MOD_DATE    		= SYSDATE
+        WHERE CAL_YM      		= ?
+          AND STR_CD      		= ?
+          AND CNTR_ID     		= ?
+          AND CAL_TYPE    		= ?
+          AND MNTN_ITEM_CD 	= ? 
+    </query>
+    
+    <!-- 매장별 계량기마스터 매핑 삭제 -->
+    <query name="DEL_MR_ITEMAMT">
+        DELETE MSS.MR_CALITEM
+         WHERE CAL_YM        = ? 
+           AND STR_CD        = ?
+           AND CNTR_ID       = ?
+           AND CAL_TYPE      = ?
+           AND MNTN_ITEM_CD  = ?
+    </query>
+    
+</service>

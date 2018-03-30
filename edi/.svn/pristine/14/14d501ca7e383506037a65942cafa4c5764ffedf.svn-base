@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 강연식
+ * 회 사 명 : (주)마리오
+ * 작 성 일 : 2013.02.05
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal112.es">
+    <!-- 보너스카드회원매출조회 -->
+        <query name="SEL_DAYMGPBN1">
+        <![CDATA[
+      SELECT A.SALE_DT                                                          AS SALE_DT
+           --,B.CUST_NAME
+            ,SUBSTR(B.CUST_NAME,1,1)                                            AS CUST_NAME
+            ,NVL((TO_CHAR(SYSDATE,'YYYY') - SUBSTR(B.BIRTH_DT, 1,4) + 1),'0')   AS CUST_AGE
+            ,DCS.F_DECRYPTEDSTR_M(C.CARD_NO)                                    AS CARDNO 
+          --  ,SUBSTR(DCS.F_DECRYPTEDSTR_M(C.CARD_NO),1,9)
+            ,(CASE WHEN E.ADD_POINT< '0' THEN -A.SALE_AMT  ELSE A.SALE_AMT END) AS AMT
+            ,SUBSTR(B.HOME_ADDR1,1,11)                                          AS HOME
+            ,B.SEX_CD                                                           AS SEX_CD
+            ,A.PUMMOK_CD                                                        AS ITEM_CD
+            ,A.ITEM_NAME                                                        AS ITEM_NAME
+            ,A.SALE_QTY                                                         AS SALE_QTY
+ 		from 
+			DPS.PS_TRITEM A
+ 		   ,DCS.DM_CUSTOMER B
+ 		   ,DCS.DM_CARD C
+ 		   ,DPS.PS_POINTADD D
+ 		   ,DCS.DO_POINT_ADD E
+ 		WHERE  A.STR_CD = ?                                                     --점코드
+   		   AND A.VEN_CD LIKE ? || '%'                                         --협력사
+    	   AND A.SALE_DT between ? AND ?                                        --거래날짜
+ 		   AND A.PUMBUN_CD LIKE ? || '%'                                      --브랜드코드
+ 		   AND D.SALE_DT = A.SALE_DT                                       
+ 		   AND D.POS_NO = A.POS_NO
+ 		   AND D.TRAN_NO = A.TRAN_NO
+  		   AND E.APPR_ID = D.ADD_APPR_NO
+  		   AND C.CARD_NO = DCS.F_ENCRYPTEDSTR_M(D.MEMBER_NO)
+ 		   AND B.CUST_ID = C.CUST_ID
+ 		   AND A.SALE_AMT <> 0
+       ]]>
+    </query>
+           
+
+    <query name="SEL_DAYMGPBN2">
+        <![CDATA[           
+			AND B.CUST_NAME = ?                                                 -- 고객명
+        ]]>
+    </query>
+
+    <query name="SEL_DAYMGPBN3">
+        <![CDATA[           
+			AND D.MEMBER_NO = ?                                                 -- 카드번호 
+        ]]>
+    </query>
+        <query name="SEL_DAYMGPBN4">
+        <![CDATA[           
+			AND B.SEX_CD LIKE ?                                                 -- 성별    
+        ]]>
+    </query>
+    <query name="SEL_DAYMGPBN5">
+        <![CDATA[           
+            AND B.HOME_ADDR1 like '%'||?||'%'                                   --지역  
+        ]]>
+    </query>
+    
+    <query name="SEL_DAYMGPBN6">
+        <![CDATA[           
+			AND A.PUMMOK_CD = ?                                                 -- 품목코드
+        ]]>
+    </query>
+    
+    <query name="SEL_DAYMGPBN7">
+        <![CDATA[           
+			AND A.SALE_AMT BETWEEN ? AND ?                                      -- 구매금액
+        ]]>
+    </query>
+    
+    <query name="SEL_DAYMGPBN8">
+        <![CDATA[           
+			AND NVL((TO_CHAR(SYSDATE,'YYYY') - SUBSTR(B.BIRTH_DT, 1,4) + 1),0) BETWEEN ? AND ? -- 연령대    
+        ]]>
+    </query>
+      
+    
+    <!-- 일매출 디테일 조회  -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+		/* 하단조회쿼리 */
+		SELECT A.SALE_DT
+			 , C.PUMMOK_CD
+			 , MAX(C.PUMMOK_NAME) AS PUMMOK_NAME
+			 , SUM(CASE	WHEN A.TRAN_FLAG = 0 THEN NVL(B.SALE_QTY,0)	ELSE NVL(B.SALE_QTY,0)*(-1)	END) AS	SALE_QTY
+			 , SUM(CASE	WHEN A.TRAN_FLAG = 0 THEN NVL(B.SALE_AMT,0)	ELSE NVL(B.SALE_AMT,0)*(-1)	END) AS	SALE_TOT_AMT
+		  FROM DPS.PS_TRHEADER A
+			 , DPS.PS_DISITEM B
+			 , DPS.PC_PMKMST C
+		 WHERE A.SALE_DT	>= ?
+		   AND A.SALE_DT	<= ?
+		   AND A.STR_CD		= ?
+		   AND A.CUST_NO	= ?			-- 고객id
+		   AND B.SALE_DT	= A.SALE_DT
+		   AND B.STR_CD		= A.STR_CD
+		   AND B.POS_NO		= A.POS_NO
+		   AND B.TRAN_NO	= A.TRAN_NO
+		   AND B.PUMBUN_CD	LIKE ? || '%'
+		   AND C.PUMMOK_CD = B.PUMMOK_CD
+		 GROUP BY A.SALE_DT
+				, A.STR_CD
+				, C.PUMMOK_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_MASTER_EXCEL">
+        <![CDATA[
+	  SELECT A.SALE_DT                                                          AS SALE_DT
+            ,CONCAT(SUBSTR(B.CUST_NAME,1,1),'XX')                               AS CUST_NAME
+            ,B.CUST_ID                                                          AS CUST_ID
+            ,(TO_CHAR(SYSDATE,'YYYY') - SUBSTR(B.BIRTH_DT, 1,4) + 1)            AS CUST_AGE
+            --,SUBSTR(B.CUST_NAME,1,1)                                            AS CUST_NAME
+            ,DCS.F_DECRYPTEDSTR_M(C.CARD_NO)                                    AS CARDNO
+          --  ,SUBSTR(DCS.F_DECRYPTEDSTR_M(C.CARD_NO),1,9)
+            ,(CASE WHEN E.ADD_POINT< '0' THEN -A.SALE_AMT  ELSE A.SALE_AMT END) AS AMT
+            ,SUBSTR(B.HOME_ADDR1,1,11)                                          AS HOME
+            ,B.SEX_CD                                                           AS SEX_CD
+            ,A.PUMMOK_CD                                                        AS ITEM_CD
+            ,A.ITEM_NAME                                                        AS ITEM_NAME
+            ,A.SALE_QTY                                                         AS SALE_QTY
+ 		from 
+			DPS.PS_TRITEM A
+ 		   ,DCS.DM_CUSTOMER B
+ 		   ,DCS.DM_CARD C
+ 		   ,DPS.PS_POINTADD D
+ 		   ,DCS.DO_POINT_ADD E
+ 		WHERE  A.STR_CD = ?                                                     --점코드
+   		   AND A.VEN_CD LIKE ? || '%'                                           --협력사
+    	   AND A.SALE_DT between ? AND ?                                        --거래날짜
+ 		   AND A.PUMBUN_CD LIKE ? || '%'                                        --브랜드코드
+ 		   AND D.SALE_DT = A.SALE_DT                                       
+ 		   AND D.POS_NO = A.POS_NO
+ 		   AND D.TRAN_NO = A.TRAN_NO
+  		   AND E.APPR_ID = D.ADD_APPR_NO
+  		   AND C.CARD_NO = DCS.F_ENCRYPTEDSTR_M(D.MEMBER_NO)
+ 		   AND B.CUST_ID = C.CUST_ID
+ 		   AND A.SALE_AMT <> 0
+        ]]>
+    </query>   
+</service>

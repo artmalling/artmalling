@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal315.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"              colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STORE_NAME"          colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"             colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NAME"           colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"             colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_NAME"           colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"               colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"              colType="TB_STRING"      size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_VEN_NAME"        colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"           colType="TB_STRING"      size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRD_NAME"            colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TOTAL"          colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE9"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE10"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE11"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE12"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE13"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE14"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE15"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE16"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE17"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE18"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE19"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE20"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE21"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE22"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE23"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT"    	          colType="TB_DECIMAL"     size="10"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_MG_PUMBUN-01">        
+        <![CDATA[
+        	 SELECT    A.STR_CD
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD)                                                          AS STORE_NAME
+                 , A.DEPT_CD
+                 , DPS.FN_GET_ORG_SHORT_NAME(A.STR_CD, A.DEPT_CD, '00', '00', '00')                         AS DEPT_NAME
+                 , A.TEAM_CD
+                 , DPS.FN_GET_ORG_SHORT_NAME(A.STR_CD, A.DEPT_CD, A.TEAM_CD, '00', '00')                    AS TEAM_NAME
+                 , A.PC_CD
+                 , DPS.FN_GET_ORG_SHORT_NAME(A.STR_CD, A.DEPT_CD, A.TEAM_CD, A.PC_CD, '00')                 AS PC_NAME
+                 , A.VEN_CD
+                 , DPS.FN_GET_VEN_NAME(A.VEN_CD)                                                            AS ACC_VEN_NAME
+                 , A.PUMBUN_CD
+                 , DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD)                                                      AS BRD_NAME
+                 , SUM(SALE_TOTAL)                                                                          AS SALE_TOTAL
+                 , SUM(SALE9)                                                                               AS SALE9
+                 , SUM(SALE10)                                                                              AS SALE10
+                 , SUM(SALE11)                                                                              AS SALE11
+                 , SUM(SALE12)                                                                              AS SALE12
+                 , SUM(SALE13)                                                                              AS SALE13
+                 , SUM(SALE14)                                                                              AS SALE14
+                 , SUM(SALE15)                                                                              AS SALE15
+                 , SUM(SALE16)                                                                              AS SALE16
+                 , SUM(SALE17)                                                                              AS SALE17
+                 , SUM(SALE18)                                                                              AS SALE18
+                 , SUM(SALE19)                                                                              AS SALE19
+                 , SUM(SALE20)                                                                              AS SALE20
+                 , SUM(SALE21)                                                                              AS SALE21
+                 , SUM(SALE22)                                                                              AS SALE22
+                 , SUM(SALE23)                                                                              AS SALE23
+                 , ? 																						AS UNIT
+              FROM (
+                    SELECT A.STR_CD
+                         , A.DEPT_CD
+                         , A.TEAM_CD
+                         , A.PC_CD
+                         , A.VEN_CD
+                         , A.PUMBUN_CD
+                         , SUM(NVL(A.SALE_AMT,0))                                                          AS SALE_TOTAL
+                         , ( CASE WHEN A.SALE_TIME < '1000' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )                               AS SALE9
+                         , ( CASE WHEN A.SALE_TIME >= '1000' AND A.SALE_TIME < '1100' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE10
+                         , ( CASE WHEN A.SALE_TIME >= '1100' AND A.SALE_TIME < '1200' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE11
+                         , ( CASE WHEN A.SALE_TIME >= '1200' AND A.SALE_TIME < '1300' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE12
+                         , ( CASE WHEN A.SALE_TIME >= '1300' AND A.SALE_TIME < '1400' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE13
+                         , ( CASE WHEN A.SALE_TIME >= '1400' AND A.SALE_TIME < '1500' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE14
+                         , ( CASE WHEN A.SALE_TIME >= '1500' AND A.SALE_TIME < '1600' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE15
+                         , ( CASE WHEN A.SALE_TIME >= '1600' AND A.SALE_TIME < '1700' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE16
+                         , ( CASE WHEN A.SALE_TIME >= '1700' AND A.SALE_TIME < '1800' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE17
+                         , ( CASE WHEN A.SALE_TIME >= '1800' AND A.SALE_TIME < '1900' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE18
+                         , ( CASE WHEN A.SALE_TIME >= '1900' AND A.SALE_TIME < '2000' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE19
+                         , ( CASE WHEN A.SALE_TIME >= '2000' AND A.SALE_TIME < '2100' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE20
+                         , ( CASE WHEN A.SALE_TIME >= '2100' AND A.SALE_TIME < '2200' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE21
+                         , ( CASE WHEN A.SALE_TIME >= '2200' AND A.SALE_TIME < '2300' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE22
+                         , ( CASE WHEN A.SALE_TIME >= '2300' AND A.SALE_TIME < '2400' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE23
+                      FROM (
+                            SELECT /*+ index(A IX_PS_TIMEPBN_01) index(B PK_PC_STRPBN)*/ A.STR_CD
+                                 , SUBSTR(B.SALE_ORG_CD, 3, 2) DEPT_CD
+                                 , SUBSTR(B.SALE_ORG_CD, 5, 2) TEAM_CD
+                                 , SUBSTR(B.SALE_ORG_CD, 7, 2) PC_CD
+                                 , A.VEN_CD
+                                 , A.PUMBUN_CD
+                                 , '매출일'                               AS GUBUN
+                                 , A.SALE_TIME                            AS SALE_TIME
+                                 , SUM(A.NORM_SALE_AMT)                   AS SALE_AMT
+                              FROM DPS.PS_TIMEPBN A
+                                 , DPS.PC_STRPBN B
+                             WHERE A.STR_CD    = ?
+                               AND A.SALE_DT   >= ?   --매출기간시작일
+                               AND A.SALE_DT   <= ?   --매출기간종료일
+                               AND B.STR_CD    = A.STR_CD
+                               AND B.PUMBUN_CD = A.PUMBUN_CD
+	                           AND NOT EXISTS (
+	                                            SELECT *
+	                                              FROM COM.TC_COMMCODE
+	                                             WHERE SYS_PART   = 'D'
+	                                               AND COMM_PART  = 'D213'
+	                                               AND USE_YN     = 'Y'
+	                                               AND REFER_CODE = A.STR_CD
+	                                               AND COMM_CODE  = A.PUMBUN_CD
+	                                          )
+                             GROUP BY A.STR_CD, B.SALE_ORG_CD, A.VEN_CD, A.PUMBUN_CD, A.SALE_TIME
+                           )   A
+                         , (
+                             SELECT DISTINCT
+                                    SUBSTR(ORG_CD, 1, 2) STR_CD
+                                  , SUBSTR(ORG_CD, 3, 2) DEPT_CD
+                                  , SUBSTR(ORG_CD, 5, 2) TEAM_CD
+                                  , SUBSTR(ORG_CD, 7, 2) PC_CD
+                               FROM COM.V_MYORG
+                              WHERE STR_CD    = ?
+        ]]>        
+    </query>
+                              
+                                
+                                
+    <query name="SEL_SALE_MG_PUMBUN-02">        
+        <![CDATA[
+                                AND USER_ID = ?
+                                AND ORG_FLAG = ?
+                           ) D
+                     WHERE A.STR_CD  = D.STR_CD
+                       AND A.DEPT_CD = D.DEPT_CD
+                       AND A.TEAM_CD = D.TEAM_CD
+                       AND A.PC_CD   = D.PC_CD
+                     GROUP BY
+                           A.STR_CD
+                         , A.DEPT_CD
+                         , A.TEAM_CD
+                         , A.PC_CD
+                         , A.VEN_CD
+                         , A.PUMBUN_CD
+                         , A.SALE_TIME
+                   ) A
+             GROUP BY A.STR_CD
+                    , A.DEPT_CD
+                    , A.TEAM_CD
+                    , A.PC_CD
+                    , A.VEN_CD
+                    , A.PUMBUN_CD
+                     ORDER BY 
+                     	A.STR_CD
+	                  , A.DEPT_CD
+	                  , A.TEAM_CD
+	                  , A.PC_CD
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_MG_PUMBUN2-01">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD)
+                 , A.DEPT_CD
+                 , DPS.FN_GET_ORG_SHORT_NAME(A.STR_CD, A.DEPT_CD, '00', '00', '00')
+                 , A.TEAM_CD
+                 , DPS.FN_GET_ORG_SHORT_NAME(A.STR_CD, A.DEPT_CD, A.TEAM_CD, '00', '00')
+                 , A.PC_CD
+                 , DPS.FN_GET_ORG_SHORT_NAME(A.STR_CD, A.DEPT_CD, A.TEAM_CD, A.PC_CD, '00')
+                 , A.VEN_CD
+                 , DPS.FN_GET_VEN_NAME(A.VEN_CD)
+                 , A.PUMBUN_CD
+                 , DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD)
+                 , SUM(SALE_TOTAL)                                                                          AS SALE_TOTAL
+                 , SUM(SALE9)                                                                               AS SALE9
+                 , SUM(SALE10)                                                                              AS SALE10
+                 , SUM(SALE11)                                                                              AS SALE11
+                 , SUM(SALE12)                                                                              AS SALE12
+                 , SUM(SALE13)                                                                              AS SALE13
+                 , SUM(SALE14)                                                                              AS SALE14
+                 , SUM(SALE15)                                                                              AS SALE15
+                 , SUM(SALE16)                                                                              AS SALE16
+                 , SUM(SALE17)                                                                              AS SALE17
+                 , SUM(SALE18)                                                                              AS SALE18
+                 , SUM(SALE19)                                                                              AS SALE19
+                 , SUM(SALE20)                                                                              AS SALE20
+                 , SUM(SALE21)                                                                              AS SALE21
+                 , SUM(SALE22)                                                                              AS SALE22
+                 , SUM(SALE23)                                                                              AS SALE23
+                 , ? 																						AS UNIT
+              FROM (
+                    SELECT A.STR_CD
+                         , A.DEPT_CD
+                         , A.TEAM_CD
+                         , A.PC_CD
+                         , A.VEN_CD
+                         , A.PUMBUN_CD
+                         , SUM(NVL(A.SALE_AMT,0))                                                          AS SALE_TOTAL
+                         , ( CASE WHEN A.SALE_TIME < '1000' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )                               AS SALE9
+                         , ( CASE WHEN A.SALE_TIME >= '1000' AND A.SALE_TIME < '1100' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE10
+                         , ( CASE WHEN A.SALE_TIME >= '1100' AND A.SALE_TIME < '1200' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE11
+                         , ( CASE WHEN A.SALE_TIME >= '1200' AND A.SALE_TIME < '1300' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE12
+                         , ( CASE WHEN A.SALE_TIME >= '1300' AND A.SALE_TIME < '1400' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE13
+                         , ( CASE WHEN A.SALE_TIME >= '1400' AND A.SALE_TIME < '1500' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE14
+                         , ( CASE WHEN A.SALE_TIME >= '1500' AND A.SALE_TIME < '1600' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE15
+                         , ( CASE WHEN A.SALE_TIME >= '1600' AND A.SALE_TIME < '1700' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE16
+                         , ( CASE WHEN A.SALE_TIME >= '1700' AND A.SALE_TIME < '1800' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE17
+                         , ( CASE WHEN A.SALE_TIME >= '1800' AND A.SALE_TIME < '1900' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE18
+                         , ( CASE WHEN A.SALE_TIME >= '1900' AND A.SALE_TIME < '2000' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE19
+                         , ( CASE WHEN A.SALE_TIME >= '2000' AND A.SALE_TIME < '2100' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE20
+                         , ( CASE WHEN A.SALE_TIME >= '2100' AND A.SALE_TIME < '2200' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE21
+                         , ( CASE WHEN A.SALE_TIME >= '2200' AND A.SALE_TIME < '2300' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE22
+                         , ( CASE WHEN A.SALE_TIME >= '2300' AND A.SALE_TIME < '2400' THEN SUM(NVL(A.SALE_AMT,0)) ELSE 0 END )     AS SALE23
+                      FROM (
+                            SELECT /*+ index(A IX_PS_TIMEPBN_01) index(B PK_PC_STRPBN)*/ A.STR_CD
+                                 , SUBSTR(B.BUY_ORG_CD, 3, 2) DEPT_CD
+                                 , SUBSTR(B.BUY_ORG_CD, 5, 2) TEAM_CD
+                                 , SUBSTR(B.BUY_ORG_CD, 7, 2) PC_CD
+                                 , A.VEN_CD
+                                 , A.PUMBUN_CD
+                                 , '매출일'                               AS GUBUN
+                                 , A.SALE_TIME                            AS SALE_TIME
+                                 , SUM(A.NORM_SALE_AMT)                   AS SALE_AMT
+                              FROM DPS.PS_TIMEPBN A
+                                 , DPS.PC_STRPBN B
+                             WHERE A.STR_CD    = ?
+                               AND A.SALE_DT   >= ?   --매출기간시작일
+                               AND A.SALE_DT   <= ?   --매출기간종료일
+                               AND B.STR_CD    = A.STR_CD
+                               AND B.PUMBUN_CD = A.PUMBUN_CD
+	                           AND NOT EXISTS (
+	                                            SELECT *
+	                                              FROM COM.TC_COMMCODE
+	                                             WHERE SYS_PART   = 'D'
+	                                               AND COMM_PART  = 'D213'
+	                                               AND USE_YN     = 'Y'
+	                                               AND REFER_CODE = A.STR_CD
+	                                               AND COMM_CODE  = A.PUMBUN_CD
+	                                          )
+                             GROUP BY A.STR_CD, B.BUY_ORG_CD, A.VEN_CD, A.PUMBUN_CD, A.SALE_TIME
+                           )   A
+                         , (
+                             SELECT DISTINCT
+                                    SUBSTR(ORG_CD, 1, 2) STR_CD
+                                  , SUBSTR(ORG_CD, 3, 2) DEPT_CD
+                                  , SUBSTR(ORG_CD, 5, 2) TEAM_CD
+                                  , SUBSTR(ORG_CD, 7, 2) PC_CD
+                               FROM COM.V_MYORG
+                              WHERE STR_CD    = ?
+        ]]>        
+    </query>
+                              
+                                
+    <query name="SEL_SALE_MG_PUMBUN2-02">        
+        <![CDATA[
+                                AND USER_ID = ?
+                                AND ORG_FLAG = ?
+                           ) D
+                     WHERE A.STR_CD  = D.STR_CD
+                       AND A.DEPT_CD = D.DEPT_CD
+                       AND A.TEAM_CD = D.TEAM_CD
+                       AND A.PC_CD   = D.PC_CD
+                     GROUP BY
+                           A.STR_CD
+                         , A.DEPT_CD
+                         , A.TEAM_CD
+                         , A.PC_CD
+                         , A.VEN_CD
+                         , A.PUMBUN_CD
+                         , A.SALE_TIME
+                   ) A
+             GROUP BY A.STR_CD
+                    , A.DEPT_CD
+                    , A.TEAM_CD
+                    , A.PC_CD
+                    , A.VEN_CD
+                    , A.PUMBUN_CD
+                    	ORDER BY 
+	                     	A.STR_CD
+		                  , A.DEPT_CD
+		                  , A.TEAM_CD
+		                  , A.PC_CD
+            
+        ]]>        
+    </query>
+    
+    <query name="WHERE_DEPT_CD">        
+        <![CDATA[
+        				AND DEPT_CD = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_TEAM_CD">        
+        <![CDATA[
+        				AND TEAM_CD = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_PC_CD">        
+        <![CDATA[
+        				AND PC_CD   = ?
+        ]]>
+	</query>
+    
+    
+</service>

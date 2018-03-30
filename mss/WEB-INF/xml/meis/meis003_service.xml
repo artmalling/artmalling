@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.05.11
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영실적항목조회
+ -->
+<service name="/meis003.me">
+    
+    <!-- 경영실적항목 마스터 헤더  -->
+    <gauce name="H_SEL_BIZ_MST">
+        <column colName="PRT_SEQ"      colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"       colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"    colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_LEVEL" colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_L_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_L_NM"     colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_M_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_M_NM"     colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_S_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_S_NM"     colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RPT_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 계정/예산항목정보 헤더  -->
+    <gauce name="H_SEL_BIZ_DTL">
+        <column colName="ACC_FLAG"  colType="TB_STRING"  size="1"  dec="0" keyType="TB_KEY"     roundMode="ROUND" />
+        <column colName="ACC_CD"    colType="TB_STRING"  size="10"  dec="0" keyType="TB_KEY"     roundMode="ROUND" />
+        <column colName="ACC_CD_NM" colType="TB_STRING"  size="60" dec="0" keyType="TB_NOTNULL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 엑셀 헤더  -->
+    <gauce name="H_SEL_BIZ_EXCEL">
+        <column colName="PRT_SEQ"      colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"       colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"    colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_LEVEL" colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_L_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_L_NM"     colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_M_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_M_NM"     colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_S_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_S_NM"     colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RPT_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_FLAG"     colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_CD"       colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_CD_NM"    colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 경영실적항목 마스터 조회쿼리-->
+    <query name="SEL_BIZ_MST">
+        <![CDATA[
+        SELECT /*+ INDEX(MST PK_ME_BIZCDMST) */ PRT_SEQ
+             , BIZ_CD
+             , BIZ_CD_NM
+             , BIZ_CD_LEVEL
+             , BIZ_L_CD                                                                                   AS BIZ_L_CD
+             , MSS.FN_GET_BIZ_NAME(BIZ_L_CD||'0000')                                                      AS BIZ_L_NM
+             , CASE BIZ_M_CD WHEN '00' THEN '' ELSE BIZ_M_CD                                          END AS BIZ_M_CD
+             , CASE BIZ_M_CD WHEN '00' THEN '' ELSE MSS.FN_GET_BIZ_NAME(BIZ_L_CD||BIZ_M_CD||'00')     END AS BIZ_M_NM
+             , CASE BIZ_S_CD WHEN '00' THEN '' ELSE BIZ_S_CD                                          END AS BIZ_S_CD
+             , CASE BIZ_S_CD WHEN '00' THEN '' ELSE MSS.FN_GET_BIZ_NAME(BIZ_L_CD||BIZ_M_CD||BIZ_S_CD) END AS BIZ_S_NM
+             , RPT_YN
+             , USE_YN
+          FROM MSS.ME_BIZCDMST MST
+         WHERE 1 = 1
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_MST_WHERE_LCD">
+        <![CDATA[
+           AND BIZ_L_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_MST_WHERE_MCD">
+        <![CDATA[
+           AND BIZ_M_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_MST_WHERE_SCD">
+        <![CDATA[
+           AND BIZ_S_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_MST_WHERE_RPT">
+        <![CDATA[
+           AND RPT_YN   = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_MST_WHERE_USE">
+        <![CDATA[
+           AND USE_YN   = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_MST_WHERE_BIZ_CD">
+        <![CDATA[
+           AND BIZ_CD   = ?
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목정보 조회쿼리-->
+    <query name="SEL_BIZ_DTL">
+        <![CDATA[
+        SELECT ACC_FLAG
+             , ACC_CD
+             , ACC_CD_NM 
+          FROM MSS.ME_BIZCDDTL
+         WHERE BIZ_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 엑셀 조회쿼리-->
+    <query name="SEL_BIZ_EXCEL">
+        <![CDATA[
+        SELECT MST.PRT_SEQ
+             , MST.BIZ_CD
+             , MST.BIZ_CD_NM
+             , MST.BIZ_CD_LEVEL
+             , MST.BIZ_L_CD                                                                                               AS BIZ_L_CD
+             , MSS.FN_GET_BIZ_NAME(MST.BIZ_L_CD||'0000')                                                                  AS BIZ_L_NM
+             , CASE MST.BIZ_M_CD WHEN '00' THEN '' ELSE MST.BIZ_M_CD                                                  END AS BIZ_M_CD
+             , CASE MST.BIZ_M_CD WHEN '00' THEN '' ELSE MSS.FN_GET_BIZ_NAME(MST.BIZ_L_CD||MST.BIZ_M_CD||'00')         END AS BIZ_M_NM
+             , CASE MST.BIZ_S_CD WHEN '00' THEN '' ELSE MST.BIZ_S_CD                                                  END AS BIZ_S_CD
+             , CASE MST.BIZ_S_CD WHEN '00' THEN '' ELSE MSS.FN_GET_BIZ_NAME(MST.BIZ_L_CD||MST.BIZ_M_CD||MST.BIZ_S_CD) END AS BIZ_S_NM
+             , MST.RPT_YN
+             , MST.USE_YN
+             , DTL.ACC_FLAG
+             , DTL.ACC_CD
+             , DTL.ACC_CD_NM
+          FROM MSS.ME_BIZCDMST MST
+             , MSS.ME_BIZCDDTL DTL
+         WHERE MST.BIZ_CD = DTL.BIZ_CD(+)
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_EXCEL_WHERE_LCD">
+        <![CDATA[
+           AND MST.BIZ_L_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_EXCEL_WHERE_MCD">
+        <![CDATA[
+           AND MST.BIZ_M_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_EXCEL_WHERE_SCD">
+        <![CDATA[
+           AND MST.BIZ_S_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_EXCEL_WHERE_RPT">
+        <![CDATA[
+           AND MST.RPT_YN   = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_EXCEL_WHERE_USE">
+        <![CDATA[
+           AND MST.USE_YN   = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_EXCEL_WHERE_BIZ_CD">
+        <![CDATA[
+           AND MST.BIZ_CD   = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_EXCEL_ORDERBY">
+        <![CDATA[
+         ORDER BY MST.BIZ_CD
+        ]]>
+    </query>
+    
+</service>

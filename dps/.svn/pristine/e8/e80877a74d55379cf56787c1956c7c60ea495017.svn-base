@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal536.ps">    
+    <gauce name="H_MASTER"> 
+        <column colName="BARCODE"         colType="TB_STRING"   size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECIEVER"        colType="TB_STRING"   size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUCHASER"        colType="TB_STRING"   size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECIEVER_HP"     colType="TB_STRING"   size="128"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORDERER_CD"      colType="TB_STRING"   size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORDER_NO"        colType="TB_STRING"   size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLOR"            colType="TB_STRING"   size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"       colType="TB_STRING"   size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"     colType="TB_STRING"   size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORDER_DT"        colType="TB_STRING"   size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STOCK_DT"        colType="TB_STRING"   size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_DT"         colType="TB_STRING"   size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_FLAG"       colType="TB_STRING"   size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WAYBILL"         colType="TB_STRING"   size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RELEASE_DT"      colType="TB_STRING"   size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CS1"             colType="TB_STRING"   size="30"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CS2"             colType="TB_STRING"   size="30"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BOX_NO"          colType="TB_DECIMAL"  size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORDER_SEQ"       colType="TB_DECIMAL"  size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRODUCT_CD"      colType="TB_STRING"   size="30"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COLOR_NM"        colType="TB_STRING"   size="30"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SIZE_NM"         colType="TB_STRING"   size="30"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRICE"           colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY"             colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"             colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRODUCT_NM"      colType="TB_STRING"   size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETC"             colType="TB_STRING"   size="200"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--일매출 미확인 list 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT BARCODE          --바코드
+                 , RECIEVER         --수취인명
+                 , PUCHASER         --구매자명
+                 , DCS.SC_Crypto_FUN('DEC', RECIEVER_HP) AS RECIEVER_HP      --수취인핸드폰번호
+                 , ORDERER_CD       --주문처코드
+                 , ORDER_NO         --주문번호
+                 , FLOR             --층
+                 , PUMBUN_CD        --품번코드
+                 , PUMBUN_NAME      --품번명
+                 , ORDER_DT         --발주일자
+                 , STOCK_DT         --입고일
+                 , CONF_DT          --확인일
+                 , COM.FN_GET_COMM_NAME('D','P193',NORM_FLAG) AS NORM_FLAG	-- 정상반품구분
+                 , WAYBILL          --운송장
+                 , RELEASE_DT       --출고일
+                 , CS1              --CS1
+                 , CS2              --CS2
+                 , BOX_NO           --박스번호
+                 , ORDER_SEQ        --주문순번
+                 , PRODUCT_CD       --상품코드
+                 , COLOR_NM         --색상
+                 , SIZE_NM          --사이즈
+                 , PRICE            --단가
+                 , QTY              --수량
+                 , AMT              --금액
+                 , PRODUCT_NM       --상품명
+                 , ETC              --비고 
+              FROM DPS.PS_DAYONLINE
+             WHERE STR_CD = ?
+               AND SALE_DT BETWEEN ? AND ?
+               AND PUMBUN_CD LIKE ? || '%'
+               AND ORDERER_CD LIKE ? || '%'
+        ]]>        
+    </query>
+</service>

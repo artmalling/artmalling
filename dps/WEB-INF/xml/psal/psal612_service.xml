@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 이어울림
+ * 작 성 일 : 2016.10.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 무인정산자료 비교표조회한다.
+ -->
+<service name="/psal612.ps">
+    
+    <!-- 무인정산자료 비교표 HEADER -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="POS_NO"         colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NM"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_NO"    colType="TB_STRING"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 무인정산자료 비교표 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+				SELECT A.STR_CD
+				     , A.SALE_DT
+				     , A.POS_NO
+				     , B.POS_NAME
+				     , A.GIFTCARD_NO 
+				 FROM DPS.PS_VALEXGIFT A
+				    , DPS.PC_POSMST B
+				WHERE A.STR_CD=?
+				  AND A.SALE_DT BETWEEN ? AND ?
+				  AND A.GIFTCARD_NO LIKE ?||'%'
+				  AND A.POS_NO LIKE ?||'%'
+				  AND A.POS_NO = B.POS_NO (+)
+        ]]>
+    </query>
+    
+    
+    <!-- 무인정산자료 비교표 조회 상세 DETAIL -->
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"      colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"    colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 무인정산자료 비교표 조회 상세 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+			SELECT A.STR_CD
+			     , A.SALE_DT
+			     , A.POS_NO
+			     , C.PUMBUN_CD
+			     , D.PUMBUN_NAME
+			     , SUM(A.PAY_AMT * DECODE(B.TRAN_FLAG, '0', 1, -1)) AS SALE_AMT
+			  FROM DPS.PS_TRPAID   A
+			     , DPS.PS_TRHEADER B
+			     , DPS.PS_TRITEM   C
+			     , DPS.PC_STRPBN   D
+			 WHERE A.STR_CD    = B.STR_CD
+			   AND A.SALE_DT   = B.SALE_DT
+			   AND A.POS_NO    = B.POS_NO
+			   AND A.TRAN_NO   = B.TRAN_NO
+			   AND A.STR_CD    = C.STR_CD
+			   AND A.SALE_DT   = C.SALE_DT
+			   AND A.POS_NO    = C.POS_NO
+			   AND A.TRAN_NO   = C.TRAN_NO
+			   AND A.SEQ_NO    = C.SEQ_NO
+			   AND C.STR_CD    = D.STR_CD
+			   AND C.PUMBUN_CD = D.PUMBUN_CD
+			   AND A.STR_CD    = ?
+			   AND A.SALE_DT   BETWEEN ? AND ?
+			   AND A.POS_NO    = ?
+			   AND A.PAY_TYPE  = '00'	-- 현금
+			 GROUP BY A.STR_CD
+			        , A.SALE_DT
+			        , A.POS_NO
+			        , C.PUMBUN_CD
+			        , D.PUMBUN_NAME
+			 ORDER BY A.SALE_DT
+			        , C.PUMBUN_CD
+        ]]>
+    </query>
+    
+     <!-- 이관자료 존재 유무 확인 조회 --> 
+    <gauce name="H_SEL_DATE">
+      <column colName="CNT"        colType="TB_DECIMAL" size="8"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+
+    <query name="SEL_DATE">
+        <![CDATA[
+			SELECT COUNT(A.SALE_DT) + COUNT(B.SALE_DT) CNT  -- 0 : 이관자료 없음, 1 : 발렉스 이관 , 2: 이미 이관된 자료
+                 
+			  FROM
+			(
+			    SELECT DISTINCT "sale_dt" AS SALE_DT
+			     FROM "ps_valexgift"@PG_LINK
+			     WHERE 1=1
+				   AND "str_cd" = ?
+			       AND "sale_dt" = ?
+			) A,
+			(
+			    SELECT DISTINCT SALE_DT 
+			     FROM DPS.PS_VALEXGIFT
+			     WHERE 1=1
+				   AND STR_CD = ?			     
+			       AND SALE_DT = ?
+			) B
+			WHERE A.SALE_DT = B.SALE_DT(+)
+		 ]]>
+    </query>
+    
+    
+</service>

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : jinjung.kim
+ * 회 사 명 : 
+ * 작 성 일 : 2010.03.18
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 카드분실신고이력
+ -->
+<service name="/dctm211.dm">
+
+    <!-- 카드분실신고이력(헤더) -->
+    <gauce name="H_MASTER"> 
+        <column colName="CARD_NO"           colType="TB_STRING"  size="64"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_TYPE_CD"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_TYPE_NM"      colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_FLAG"         colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_FLAG_NM"      colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISSUE_DT"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"           colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOSS_DT"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_ID"            colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USER_NAME"         colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH1"          colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH2"          colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH3"          colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH1"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"             colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_ADDR"         colType="TB_STRING"  size="400" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL1"            colType="TB_STRING"  size="124" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL2"            colType="TB_STRING"  size="124" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_GRADE"        colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_TPOINT"       colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_CUST"> 
+        <column colName="CUST_ID"           colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"         colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH1"          colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH2"          colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH3"          colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH1"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"             colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_ADDR"         colType="TB_STRING"  size="400" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL1"            colType="TB_STRING"  size="124" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL2"            colType="TB_STRING"  size="124" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT"             colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_GRADE_NM"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 카드분신고이력(조회) -->
+    <query name="SEL_MASTER">
+    <![CDATA[
+        SELECT DCS.SC_Crypto_FUN('DEC', A.CARD_NO) AS CARD_NO
+             , B.CARD_TYPE_CD
+             , COM.FN_GET_COMM_NAME('D', 'D005', B.CARD_TYPE_CD) CARD_TYPE_NM
+             , A.PROC_FLAG
+             , COM.FN_GET_COMM_NAME('D', 'D024', A.PROC_FLAG) PROC_FLAG_NM 
+             , B.ISSUE_DT
+             , B.CUST_ID
+             , C.CUST_NAME
+             , A.LOSS_DT
+             , A.REG_ID
+             , F.USER_NAME
+             , DECODE(C.COMP_PERS_FLAG, 'P', C.HOME_PH1,   C.OFFI_PH1) AS HOME_PH1
+             , DECODE(C.COMP_PERS_FLAG, 'P', C.HOME_PH2,   C.OFFI_PH2) AS HOME_PH2
+             , DECODE(C.COMP_PERS_FLAG, 'P', C.HOME_PH3,   C.OFFI_PH3) AS HOME_PH3
+             , DECODE(C.COMP_PERS_FLAG, 'P', C.MOBILE_PH1, C.OFFI_PH1) AS MOBILE_PH1
+             , DECODE(C.COMP_PERS_FLAG, 'P', C.MOBILE_PH2, C.OFFI_PH2) AS MOBILE_PH2
+             , DECODE(C.COMP_PERS_FLAG, 'P', C.MOBILE_PH3, C.OFFI_PH3) AS MOBILE_PH3
+             , C.SS_NO
+             , DECODE(C.COMP_PERS_FLAG, 'P', C.HOME_ADDR1 || ' ' || C.HOME_ADDR2, C.OFFI_ADDR1 || ' ' || C.OFFI_ADDR2) AS HOME_ADDR
+             , C.EMAIL1
+             , C.EMAIL2
+             , COM.FN_GET_COMM_NAME('D'
+                                  , 'D011'
+                                  , (SELECT CUST_GRADE
+                                     FROM DCS.V_DO_CUST_GRADE_CURR
+                                     WHERE  CUST_ID = B.CUST_ID
+                                                AND ROWNUM = 1 )) AS CUST_GRADE
+             , NVL((SELECT POINT
+                      FROM DCS.DO_CUST_TPOINT
+                     WHERE CUST_ID = B.CUST_ID), 0) AS CUST_TPOINT
+        FROM DCS.DM_CARD_LOSS A
+           , DCS.DM_CARD      B
+           , DCS.DM_CUSTOMER  C
+           , COM.TC_USRMST    F
+        WHERE A.CARD_NO        = B.CARD_NO
+          AND B.CUST_ID        = C.CUST_ID
+          AND A.REG_ID         = F.USER_ID
+          AND A.REG_DATE       >= ? || '000000'
+          AND A.REG_DATE       <= ? || '235959'
+          AND C.CUST_STAT_FLAG = '0'
+          AND A.PROC_FLAG IN ('R','C')  
+          AND C.CUST_ID       IN (SELECT M.CUST_ID
+                                    FROM DCS.DM_CARD M
+                                       , DCS.DM_CUSTOMER N
+                                   WHERE M.CUST_ID = N.CUST_ID
+    ]]>
+    </query>
+    
+    <query name="SEL_MASTER_CARD_NO">   
+        <![CDATA[
+                                    AND M.CARD_NO    = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_CUST_ID">   
+        <![CDATA[
+                                    AND N.CUST_ID    = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_SS_NO">   
+        <![CDATA[
+                                    AND N.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>  
+    <query name="SEL_MASTER_END">   
+        <![CDATA[
+                               )
+        ]]>        
+    </query>
+    
+    <query name="SEL_CUST">
+    <![CDATA[
+        SELECT A.CUST_ID
+             , A.CUST_NAME
+             , DCS.SC_Crypto_FUN('DEC', A.HOME_PH1) AS HOME_PH1
+             , DCS.SC_Crypto_FUN('DEC', A.HOME_PH2) AS HOME_PH2
+             , DCS.SC_Crypto_FUN('DEC', A.HOME_PH3) AS HOME_PH3
+             , DCS.SC_Crypto_FUN('DEC', DECODE(A.COMP_PERS_FLAG, 'P', A.MOBILE_PH1, A.OFFI_PH1)) AS MOBILE_PH1
+             , DCS.SC_Crypto_FUN('DEC', DECODE(A.COMP_PERS_FLAG, 'P', A.MOBILE_PH2, A.OFFI_PH2)) AS MOBILE_PH2
+             , DCS.SC_Crypto_FUN('DEC', DECODE(A.COMP_PERS_FLAG, 'P', A.MOBILE_PH3, A.OFFI_PH3)) AS MOBILE_PH3
+             , DCS.SC_Crypto_FUN('DEC', A.SS_NO) AS SS_NO
+             , A.HOME_ADDR1 || ' ' || A.HOME_ADDR2 AS HOME_ADDR
+             , DCS.SC_Crypto_FUN('DEC', A.EMAIL1) AS EMAIL1
+             , DCS.SC_Crypto_FUN('DEC', A.EMAIL2) AS EMAIL2
+             , NVL(C.POINT, 0) AS POINT
+             , COM.FN_GET_COMM_NAME('D'
+                                  , 'D011' 
+                                  , (SELECT CUST_GRADE
+                                       FROM DCS.DO_CUST_GRADE
+                                      WHERE (CUST_ID, BRCH_ID, APP_YEAR) 
+                                         IN  (SELECT CUST_ID
+                                                   , BRCH_ID
+                                                   , MAX(APP_YEAR)
+                                                FROM DCS.DO_CUST_GRADE
+                                               WHERE CUST_ID = B.CUST_ID
+                                                 AND BRCH_ID = ?
+                                               GROUP BY CUST_ID, BRCH_ID
+                                              )
+                                             )
+                                     )  AS CUST_GRADE_NM
+        FROM DCS.DM_CUSTOMER A
+           , DCS.DM_CARD B
+           , DCS.DO_CUST_TPOINT C
+        WHERE A.CUST_ID        = B.CUST_ID
+          AND A.CUST_ID        = C.CUST_ID(+)
+          AND A.CUST_STAT_FLAG = '0'
+          AND ROWNUM           = 1
+     ]]>
+    </query>
+    
+    <query name="SEL_CUST_CARD_NO">   
+        <![CDATA[
+          AND B.CARD_NO    = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_CUST_CUST_ID">   
+        <![CDATA[
+          AND A.CUST_ID    = ?
+        ]]>        
+    </query>
+    <query name="SEL_CUST_SS_NO">   
+        <![CDATA[
+          AND A.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>  
+    <query name="SEL_CUST_ROWUNM">   
+        <![CDATA[
+          AND ROWNUM           = 1
+        ]]>        
+    </query>
+</service>

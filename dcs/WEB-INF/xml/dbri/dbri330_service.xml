@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : kjy
+ * 회 사 명    : 
+ * 작 성 일    : 2017.05.18
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  지역별 회원 매출 현황
+ -->
+<service name="/dbri330.db">
+    <!-- 지역별 회원 매출 현황_GRIDHEADER  -->
+    <gauce name="H_MASTER"> 
+        <column colName="HEADER_ADDR" 			colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"       		colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_RATE"	 	     	colType="TB_DECIMAL"     size="13"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"  			colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CNT"		     	colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SIDO" 					colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+<!--        <column colName="SIGUNGU" 				colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> -->
+		<column colName="SIGUN" 				colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD" 				colType="TB_STRING"      size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SDT" 					colType="TB_STRING"      size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EDT" 					colType="TB_STRING"      size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BF_SDT"				colType="TB_STRING"      size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BF_EDT"				colType="TB_STRING"      size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="OVERSUM"       		colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 지역별 회원 매출 현황_GRIDDETAIL  -->
+    <gauce name="H_DETAIL"> 
+        <column colName="HEADER_ADDR" 			colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DETAIL_ADDR" 			colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"       		colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_RATE"	 	     	colType="TB_DECIMAL"     size="13"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"  			colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CNT"		     	colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SIDO" 					colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SIGUNGU" 				colType="TB_STRING"      size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD" 				colType="TB_STRING"      size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SDT" 					colType="TB_STRING"      size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EDT" 					colType="TB_STRING"      size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BF_SDT"				colType="TB_STRING"      size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BF_EDT"				colType="TB_STRING"      size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="OVERSUM"       		colType="TB_DECIMAL"     size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+   <!-- 지역별 회원 매출 현황_header -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+        WITH SALE_LIST AS
+          /* 회원 매출 리스트 */
+          (
+            SELECT B.CUST_NO
+                 , SUM(B.NORM_SALE_AMT) AMT
+                 , SUM(CNT) CNT
+                 , NVL(MIN(HOME_ZIP_CD1),'99999') ZIP_NO
+              FROM 
+            (
+            SELECT CASE WHEN LENGTH(A.CUST_NO) = 9 THEN A.CUST_NO
+                        ELSE NVL((SELECT CUST_ID FROM DCS.DM_CARD WHERE CARD_NO = DCS.SC_CRYPTO_FUN('ENC',A.CUST_NO)),'000000000')
+                   END AS CUST_NO
+                 , NORM_SALE_AMT
+                 , 1 CNT
+              FROM DPS.PS_DAYCUST A
+             WHERE A.STR_CD = ?
+			   AND A.SALE_DT BETWEEN ? AND ?
+            ) B
+            , DCS.DM_CUSTOMER C
+            WHERE B.CUST_NO = C.CUST_ID
+              AND C.ENTR_DT BETWEEN ? AND ?
+            GROUP BY B.CUST_NO
+            HAVING SUM(B.NORM_SALE_AMT) <>0 
+          )
+          
+          /*************** M A I N  Q U E R Y ***************/
+          SELECT SIDO||' '||SIGUN HEADER_ADDR
+               , SUM(AMT) TOT_AMT
+               , DECODE(MIN(TOT_AMT),0,0,(SUM(AMT)/MIN(TOT_AMT))*100) SALE_RATE
+			   , COUNT(DISTINCT CUST_NO) CUST_CNT
+			   , SUM(CNT) SALE_CNT
+			   , MIN(SIDO) SIDO
+			   , TRIM(MIN(SIGUN)) SIGUN
+			   , MIN(STR_CD) STR_CD
+			   , MIN(SDT) SDT
+			   , MIN(EDT) EDT
+			   , MIN(BF_SDT) BF_SDT
+			   , MIN(BF_EDT) BF_EDT
+               , MIN(TOT_AMT) OVERSUM
+             FROM
+          (
+          SELECT LST.CUST_NO
+               , MIN(LST.AMT) AMT
+               , MIN(LST.CNT) CNT
+               , MIN(NVL(ZIP.SIDO,'기타')) SIDO							/* 시,도 */
+			   , MIN(ZIP.SIGUNGU) SIGUNGU									/* 시,군,구 */
+               , MIN(TRIM(DECODE(SUBSTR(ZIP.SIDO,LENGTH(ZIP.SIDO),1),'시',NULL,SUBSTR(ZIP.SIGUNGU,1,DECODE(INSTR(ZIP.SIGUNGU,' '),0,20,INSTR(ZIP.SIGUNGU,' ')))))) SIGUN
+               , MIN(TRIM(DECODE(SUBSTR(ZIP.SIGUNGU,LENGTH(ZIP.SIGUNGU),1),'구',SUBSTR(ZIP.SIGUNGU,INSTR(ZIP.SIGUNGU,' ')+1,20),NULL))) GU
+			   , MIN(ZIP.DONG) DONG										/* 읍,동 */
+			   , MIN(ZIP.BUPDONGNM) BUPDONGNM								/* 법정동명 */
+			   , MIN(ZIP.RINM) RINM										/* 리 */
+			   , MIN(ZIP.HANGNM) HANGNM 									/* 행정동명 */
+			   , MIN(ZIP.BUILDNG_NM) BUILDNG_NM							/* 건물명 */
+			   , MIN(ZIP.DORONM) DORONM									/* 도로명 */
+               , ? STR_CD											/* 매출조회용 점코드 */
+			   , ? SDT												/* 매출조회용 조회시작일자 */
+			   , ? EDT												/* 매출조회용 조회종료일자 */
+			   , ? BF_SDT											/* 대비조회용 조회시작일자 */
+			   , ? BF_EDT											/* 대비조회용 조회종료일자 */
+               , SUM(MIN(LST.AMT)) OVER() TOT_AMT
+            FROM SALE_LIST LST
+               , COM.TC_ZIPMST ZIP
+           WHERE LST.ZIP_NO = ZIP.ZIPNO
+           GROUP BY LST.CUST_NO
+           )
+           GROUP BY SIDO||' '||SIGUN
+           HAVING SUM(AMT) <> 0
+              AND (
+              		NVL(MIN(SIDO),'기타') LIKE '%'||?||'%' OR
+			  		NVL(MIN(SIGUN),'') LIKE '%'||?||'%' 
+			  	  )           
+           ORDER BY TOT_AMT DESC
+              ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_OLD">        
+        <![CDATA[
+        WITH CUST_LIST AS
+			(
+				/* 고객 리스트 */
+				SELECT CUST_ID
+                     , SIDO
+                     , SIGUNGU
+                     , SIGUN
+                     , GU
+                     , DONG
+                     , BUPDONGNM
+                     , RINM
+                     , HANGNM 
+                     , BUILDNG_NM 
+                     , DORONM
+                     , STR_CD
+                     , SDT
+                     , EDT
+                     , BF_SDT
+                     , BF_EDT
+                 FROM
+                (
+                SELECT  A.CUST_ID											/* 회원 아이디 */
+				      , A.HOME_ZIP_CD1										/* 우편번호 */
+				      , MIN(NVL(SIDO,'기타')) SIDO							/* 시,도 */
+				      , MIN(SIGUNGU) SIGUNGU									/* 시,군,구 */
+                      , MIN(TRIM(DECODE(SUBSTR(SIDO,LENGTH(SIDO),1),'시',NULL,SUBSTR(SIGUNGU,1,DECODE(INSTR(SIGUNGU,' '),0,20,INSTR(SIGUNGU,' ')))))) SIGUN
+                      , MIN(TRIM(DECODE(SUBSTR(SIGUNGU,LENGTH(SIGUNGU),1),'구',SUBSTR(SIGUNGU,INSTR(SIGUNGU,' ')+1,20),NULL))) GU
+				      , MIN(DONG) DONG										/* 읍,동 */
+				      , MIN(BUPDONGNM) BUPDONGNM								/* 법정동명 */
+				      , MIN(RINM) RINM										/* 리 */
+				      , MIN(HANGNM) HANGNM 									/* 행정동명 */
+				      , MIN(BUILDNG_NM) BUILDNG_NM							/* 건물명 */
+				      , MIN(DORONM) DORONM									/* 도로명 */
+                      , ? STR_CD											/* 매출조회용 점코드 */
+				      , ? SDT												/* 매출조회용 조회시작일자 */
+				      , ? EDT												/* 매출조회용 조회종료일자 */
+				      , ? BF_SDT											/* 대비조회용 조회시작일자 */
+				      , ? BF_EDT											/* 대비조회용 조회종료일자 */
+				 FROM DCS.DM_CUSTOMER A
+				    , COM.TC_ZIPMST B
+				WHERE A.HOME_ZIP_CD1 = B.ZIPNO(+) 
+				  AND A.ENTR_DT BETWEEN ? AND ?
+             GROUP BY A.CUST_ID,A.HOME_ZIP_CD1
+				)  
+                WHERE ( NVL(SIDO,'기타') LIKE '%'||?||'%' OR
+				  		NVL(SIGUN,'') LIKE '%'||?||'%' 
+				  	  )
+			)
+			 /* 본 쿼리  */
+			 SELECT LEVEL1 HEADER_ADDR
+			      , SUM(NORM_SALE_AMT) TOT_AMT
+			      , DECODE(MIN(OVERSUM),0,0,(SUM(NORM_SALE_AMT)/MIN(OVERSUM))*100) SALE_RATE
+			      , COUNT(DISTINCT CUST_NO) CUST_CNT
+			      , COUNT(*) SALE_CNT
+			      , MIN(SIDO) SIDO
+			      , TRIM(MIN(SIGUN)) SIGUN
+			      , MIN(STR_CD) STR_CD
+			      , MIN(SDT) SDT
+			      , MIN(EDT) EDT
+			      , MIN(BF_SDT) BF_SDT
+			      , MIN(BF_EDT) BF_EDT			      
+			      , MIN(OVERSUM) OVERSUM
+			   FROM
+			 (
+				 SELECT A.CUST_NO
+				      , A.SALE_DT
+				      , A.PUMBUN_CD
+				      , A.NORM_SALE_AMT 
+				      , B.SIDO
+                      , B.SIGUN 
+                      , B.GU
+				      , B.DONG
+				      , B.BUPDONGNM
+				      , B.RINM
+				      , B.HANGNM
+				      , B.BUILDNG_NM
+				      , B.DORONM
+                      , B.SIDO||' '||B.SIGUN LEVEL1
+				      , B.STR_CD
+				      , B.SDT
+				      , B.EDT
+				      , B.BF_SDT
+				      , B.BF_EDT
+				      , SUM(A.NORM_SALE_AMT) OVER( ORDER BY '1') OVERSUM
+				   FROM DPS.PS_DAYCUST A
+				      , CUST_LIST B
+				 WHERE A.CUST_NO = B.CUST_ID
+				   AND A.STR_CD = B.STR_CD
+				   AND A.SALE_DT BETWEEN ? AND ?
+			  )
+			GROUP BY LEVEL1
+			ORDER BY TOT_AMT DESC
+              ]]>        
+    </query>
+    
+    
+    
+    <!-- 지역별 회원 매출 현황_detail -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+          WITH SALE_LIST AS
+          /* 회원 매출 리스트 */
+          (
+            SELECT B.CUST_NO
+                 , SUM(B.NORM_SALE_AMT) AMT
+                 , SUM(CNT) CNT
+                 , NVL(MIN(HOME_ZIP_CD1),'99999') ZIP_NO
+              FROM 
+            (
+            SELECT CASE WHEN LENGTH(A.CUST_NO) = 9 THEN A.CUST_NO
+                        ELSE NVL((SELECT CUST_ID FROM DCS.DM_CARD WHERE CARD_NO = DCS.SC_CRYPTO_FUN('ENC',A.CUST_NO)),'000000000')
+                   END AS CUST_NO
+                 , NORM_SALE_AMT
+                 , 1 CNT
+              FROM DPS.PS_DAYCUST A
+             WHERE A.STR_CD = ?
+			   AND A.SALE_DT BETWEEN ? AND ?
+            ) B
+            , DCS.DM_CUSTOMER C
+            WHERE B.CUST_NO = C.CUST_ID
+              AND C.ENTR_DT BETWEEN ? AND ?
+            GROUP BY B.CUST_NO
+            HAVING SUM(B.NORM_SALE_AMT) <>0 
+          )
+          
+          /*************** M A I N  Q U E R Y ***************/
+          SELECT LEVEL2 HEADER_ADDR
+               , LEVEL3 DETAIL_ADDR
+               , SUM(AMT) TOT_AMT
+               , DECODE(MIN(TOT_AMT),0,0,(SUM(AMT)/MIN(TOT_AMT))*100) SALE_RATE
+			   , COUNT(DISTINCT CUST_NO) CUST_CNT
+			   , SUM(CNT) SALE_CNT
+			   , MIN(SIDO) SIDO
+			   , TRIM(MIN(SIGUN)) SIGUN
+			   , MIN(STR_CD) STR_CD
+			   , MIN(SDT) SDT
+			   , MIN(EDT) EDT
+			   , MIN(BF_SDT) BF_SDT
+			   , MIN(BF_EDT) BF_EDT
+               , MIN(TOT_AMT) OVERSUM
+             FROM
+          (
+          SELECT LST.CUST_NO
+               , MIN(LST.AMT) AMT
+               , MIN(LST.CNT) CNT
+               , MIN(NVL(ZIP.SIDO,'기타')) SIDO							/* 시,도 */
+			   , MIN(ZIP.SIGUNGU) SIGUNGU									/* 시,군,구 */
+               , MIN(TRIM(DECODE(SUBSTR(ZIP.SIDO,LENGTH(ZIP.SIDO),1),'시',NULL,SUBSTR(ZIP.SIGUNGU,1,DECODE(INSTR(ZIP.SIGUNGU,' '),0,20,INSTR(ZIP.SIGUNGU,' ')))))) SIGUN
+               , MIN(TRIM(DECODE(SUBSTR(ZIP.SIGUNGU,LENGTH(ZIP.SIGUNGU),1),'구',SUBSTR(ZIP.SIGUNGU,INSTR(ZIP.SIGUNGU,' ')+1,20),NULL))) GU
+			   , MIN(ZIP.DONG) DONG										/* 읍,동 */
+			   , MIN(ZIP.BUPDONGNM) BUPDONGNM								/* 법정동명 */
+			   , MIN(ZIP.RINM) RINM										/* 리 */
+			   , MIN(ZIP.HANGNM) HANGNM 									/* 행정동명 */
+			   , MIN(ZIP.BUILDNG_NM) BUILDNG_NM							/* 건물명 */
+			   , MIN(ZIP.DORONM) DORONM									/* 도로명 */
+               , ? STR_CD											/* 매출조회용 점코드 */
+			   , ? SDT												/* 매출조회용 조회시작일자 */
+			   , ? EDT												/* 매출조회용 조회종료일자 */
+			   , ? BF_SDT											/* 대비조회용 조회시작일자 */
+			   , ? BF_EDT											/* 대비조회용 조회종료일자 */
+               , ? TOT_AMT
+               , MIN(TRIM(DECODE(SUBSTR(ZIP.SIGUNGU,LENGTH(ZIP.SIGUNGU),1),'구',SUBSTR(ZIP.SIGUNGU,INSTR(ZIP.SIGUNGU,' ')+1,20),NULL))) LEVEL2
+               , MIN(TRIM(DECODE(ZIP.DONG,NULL,ZIP.BUPDONGNM,DONG)||' '||ZIP.RINM)) LEVEL3
+            FROM SALE_LIST LST
+               , COM.TC_ZIPMST ZIP
+           WHERE LST.ZIP_NO = ZIP.ZIPNO
+           GROUP BY LST.CUST_NO
+           )
+           GROUP BY SIDO
+           		  , SIGUN
+           	      , LEVEL2
+                  , LEVEL3
+           HAVING SUM(AMT) <> 0
+              AND NVL(MIN(SIDO),'기타') LIKE ?||'%'
+			  AND (
+                    TRIM(MIN(SIGUN)) LIKE ?||'%' OR
+                    TRIM(MIN(SIGUN)) IS NULL
+                  )
+           ORDER BY TOT_AMT DESC		
+        ]]>        
+    </query> 
+    
+	<query name="SEL_DETAIL_OLD">        
+        <![CDATA[
+		WITH CUST_LIST AS
+			(
+				/* 고객 리스트 */
+				SELECT A.CUST_ID								/* 회원 아이디 */
+				      ,A.HOME_ZIP_CD1							/* 우편번호 */
+				      ,MIN(NVL(SIDO,'기타')) SIDO							/* 시,도 */
+				      ,MIN(SIGUNGU) SIGUNGU								/* 시,군,구 */
+				      ,MIN(DONG) DONG										/* 읍,동 */
+				      ,MIN(BUPDONGNM) BUPDONGNM					/* 법정동명 */
+				      ,MIN(RINM) RINM							/* 리 */
+				      ,MIN(HANGNM) HANGNM 						/* 행정동명 */
+				      ,MIN(BUILDNG_NM) BUILDNG_NM				/* 건물명 */
+				      ,MIN(DORONM) DORONM						/* 도로명 */
+				      ,MIN(DECODE(SIDO,NULL,'기타',SIDO))||' '
+				     ||MIN(SUBSTR(SIGUNGU,1,INSTR(SIGUNGU,' '))) LEVEL1									/* 시,도 + 시,군 */
+                      , ? STR_CD											/* 매출조회용 점코드 */
+				      , ? SDT												/* 매출조회용 조회시작일자 */
+				      , ? EDT												/* 매출조회용 조회종료일자 */
+				      , ? BF_SDT											/* 대비조회용 조회시작일자 */
+				      , ? BF_EDT											/* 대비조회용 조회종료일자 */
+				 FROM DCS.DM_CUSTOMER A
+				    , COM.TC_ZIPMST B
+				WHERE A.HOME_ZIP_CD1 = B.ZIPNO
+				  AND A.ENTR_DT BETWEEN ? AND ?
+				  AND NVL(B.SIDO,'기타') LIKE ?||'%'
+				  AND (
+                        B.SIGUNGU LIKE ?||'%' OR
+                        B.SIGUNGU IS NULL
+                      )
+			 GROUP BY A.CUST_ID,A.HOME_ZIP_CD1
+			)
+			 /* 본 쿼리  */
+			 SELECT LEVEL2 HEADER_ADDR
+			 	  , LEVEL3 DETAIL_ADDR
+			      , SUM(NORM_SALE_AMT) TOT_AMT
+			      , DECODE(MIN(OVERSUM),0,0,(SUM(NORM_SALE_AMT)/MIN(OVERSUM))*100) SALE_RATE
+			      , COUNT(DISTINCT CUST_NO) CUST_CNT
+			      , COUNT(*) SALE_CNT
+			      , MIN(SIDO) SIDO
+			      , MIN(SIGUN) SIGUNGU
+			      , MIN(STR_CD) STR_CD
+			      , MIN(SDT) SDT
+			      , MIN(EDT) EDT
+			      , MIN(BF_SDT) BF_SDT
+			      , MIN(BF_EDT) BF_EDT			      
+			      , MIN(OVERSUM) OVERSUM
+			   FROM
+			 (
+				 SELECT A.CUST_NO
+				      , A.SALE_DT
+				      , A.PUMBUN_CD
+				      , A.NORM_SALE_AMT 
+				      , B.SIDO
+                      , TRIM(DECODE(SUBSTR(SIDO,LENGTH(SIDO),1),'시',NULL,SUBSTR(SIGUNGU,1,DECODE(INSTR(SIGUNGU,' '),0,20,INSTR(SIGUNGU,' '))))) SIGUN 
+                      , TRIM(DECODE(SUBSTR(SIGUNGU,LENGTH(SIGUNGU),1),'구',SUBSTR(SIGUNGU,INSTR(SIGUNGU,' ')+1,20),NULL)) LEVEL2
+				      , B.DONG
+				      , B.BUPDONGNM
+				      , B.RINM
+				      , B.HANGNM
+				      , B.BUILDNG_NM
+				      , B.DORONM
+                      , B.SIDO||' '
+                      ||TRIM(DECODE(SUBSTR(SIDO,LENGTH(SIDO),1),'시',NULL,SUBSTR(SIGUNGU,1,DECODE(INSTR(SIGUNGU,' '),0,20,INSTR(SIGUNGU,' '))))) LEVEL1
+				      , B.STR_cD
+				      , B.SDT
+				      , B.EDT
+				      , B.BF_SDT
+				      , B.BF_EDT
+				      , SUM(A.NORM_SALE_AMT) OVER( ORDER BY '1') OVERSUM
+				      , TRIM(DECODE(DONG,NULL,BUPDONGNM,DONG)||' '||RINM) LEVEL3
+				   FROM DPS.PS_DAYCUST A
+				      , CUST_LIST B
+				 WHERE A.CUST_NO = B.CUST_ID
+				   AND A.STR_CD = B.STR_CD
+				   AND A.SALE_DT BETWEEN ? AND ?
+			  )
+			GROUP BY LEVEL2, LEVEL3
+			ORDER BY TOT_AMT DESC
+        ]]>        
+    </query>       
+</service>

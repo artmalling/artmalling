@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김경은
+ * 회 사 명    : 
+ * 작 성 일    : 2011.07.11
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       : 월평가내역조회(누계)
+ -->
+<service name="/psal707.ps">
+
+    <!-- 월평가내역(누계) 데이터 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"                  colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"                  colType="TB_STRING"      size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NM"                  colType="TB_STRING"      size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CORNER_CD"               colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"               colType="TB_STRING"      size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_SAMT"               colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVT_SAMT"                colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVALU_SAMT"              colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_GRADE"            colType="TB_STRING"      size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_WEIGHT"           colType="TB_DECIMAL"     size="4"     dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_SCORE"              colType="TB_DECIMAL"     size="3"     dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT"           colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_SCORE"              colType="TB_DECIMAL"     size="3"     dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_RATE"          colType="TB_DECIMAL"     size="5"     dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_RATE_SCORE"         colType="TB_DECIMAL"     size="3"     dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_IRATE"              colType="TB_DECIMAL"     size="5"     dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EXPAN_RATE_SCORE"        colType="TB_DECIMAL"     size="3"     dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AREA_SIZE"               colType="TB_DECIMAL"     size="7"     dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PYUNG_SALE"              colType="TB_DECIMAL"     size="11"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PYUNG_RATE_SCORE"        colType="TB_DECIMAL"     size="3"     dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRO_TOT_CNT"             colType="TB_DECIMAL"     size="5"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRO_DEF_CNT"             colType="TB_DECIMAL"     size="5"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CSMS_CNT"           colType="TB_DECIMAL"     size="5"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CS_SCORE"                colType="TB_DECIMAL"     size="3"     dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_CNT"                 colType="TB_DECIMAL"     size="7"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_CNT"                  colType="TB_DECIMAL"     size="7"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_SCORE"             colType="TB_DECIMAL"     size="3"     dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SCORE"               colType="TB_DECIMAL"     size="3"     dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_DT"                 colType="TB_STRING"      size="8"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEL"                     colType="TB_STRING"      size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    
+    <!-- 월평가내역 (누계) DATA  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT A.STR_CD
+                 , PBN.SALE_ORG_CD                                        AS ORG_CD
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(PBN.SALE_ORG_CD,1,2),
+                                       SUBSTR(PBN.SALE_ORG_CD,3,2),
+                                       SUBSTR(PBN.SALE_ORG_CD,5,2),
+                                       SUBSTR(PBN.SALE_ORG_CD,7,2),
+                                       SUBSTR(PBN.SALE_ORG_CD,9,2)
+                                       )                                   AS ORG_NM          /* 조직명     */
+                 , SUBSTR(PBN.SALE_ORG_CD,9,2)                             AS CORNER_CD
+                 , A.PUMBUN_CD
+                 , DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD)                     AS PUMBUN_NM       /* 품번명 */
+                 
+                 , SUM(NORM_SAMT)                                    AS NORM_SAMT        /* 정상매출  */ 
+                 , SUM(EVT_SAMT)                                     AS EVT_SAMT         /* 행사매출  */
+                 , SUM(EVALU_SAMT)                                   AS EVALU_SAMT       /* 매출합계  */
+                 , DPS.FN_GET_GRADE(A.STR_CD, A.PUMBUN_CD,?, ?, ?,?) AS PUMBUN_GRADE     /* 등급 */
+                 , AVG(A.PUMBUN_WEIGHT)                              AS PUMBUN_WEIGHT    /* 가중치 */
+                 , SUM(SALE_SCORE)                                   AS SALE_SCORE       /* 평가매출점수 */
+                 , SUM(SALE_PROF_AMT)                                AS SALE_PROF_AMT    /* 이익액 */
+                 , SUM(PROF_SCORE)                                   AS PROF_SCORE       /* 이익액 점수 */
+                 , AVG(SALE_PROF_RATE)                               AS SALE_PROF_RATE   /* 이익율 */
+                 , SUM(PROF_RATE_SCORE)                              AS PROF_RATE_SCORE  /* 이익율점수 */
+                 , AVG(SALE_IRATE)                                   AS SALE_IRATE       /* 매출신장율 */
+                 , SUM(EXPAN_RATE_SCORE)                             AS EXPAN_RATE_SCORE /* 매출신장율점수 */
+                 , AVG(A.AREA_SIZE)                                  AS AREA_SIZE        /* 면적 */
+                 , AVG(PYUNG_SAMT)                                   AS PYUNG_SAMT       /* 평당매출 */
+                 , SUM(PYUNG_RATE_SCORE )                            AS PYUNG_RATE_SCORE /* 평당매출 점수 */ 
+                 , SUM(PRO_TOT_CNT)                                  AS PRO_TOT_CNT      /* 약속전체건수 */
+                 , SUM(PRO_DEF_CNT)                                  AS PRO_DEF_CNT      /* 약속불이향건수 */
+                 , SUM(CUST_CSMS_CNT)                                AS CUST_CSMS_CNT    /* 고객수선건수 */
+                 , SUM(CS_SCORE)                                     AS CS_SCORE         /* CS평가점수 */
+                 , SUM(TOT_CNT)                                      AS TOT_CNT          /* 발주건수 */
+                 , SUM(IN_CNT)                                       AS IN_CNT           /* 납품예정일초과입고건수 */
+                 , SUM(BUYER_SCORE)                                  AS BUYER_SCORE      /* 바이어평가점수*/
+                 , SUM( TOT_SCORE)                                   AS TOT_SCORE        /* 총점 */
+                 , MAX(A.CONF_DT)                                    AS CONF_DT          /* 확정일자 */
+                 , 'F'                                               AS SEL      
+              FROM (
+                    SELECT MST.STR_CD
+                         , MST.EVALU_YM
+                         , MST.PUMBUN_CD
+                         , NORM_SAMT                                    AS NORM_SAMT        /* 정상매출  */ 
+                         , EVT_SAMT                                     AS EVT_SAMT         /* 행사매출  */
+                         , EVALU_SAMT                                   AS EVALU_SAMT       /* 매출합계  */
+                         , PUMBUN_GRADE                                 AS PUMBUN_GRADE     /* 등급  */
+                         , PUMBUN_WEIGHT                                AS PUMBUN_WEIGHT    /* 가중치 */
+                         , SALE_SCORE                                   AS SALE_SCORE       /* 평가매출점수 */
+                         , SALE_PROF_AMT                                AS SALE_PROF_AMT    /* 이익액 */
+                         , PROF_SCORE                                   AS PROF_SCORE       /* 이익액 점수 */
+                         , SALE_PROF_RATE                               AS SALE_PROF_RATE   /* 이익율 */
+                         , PROF_RATE_SCORE                              AS PROF_RATE_SCORE  /* 이익율점수 */
+                         , SALE_IRATE                                   AS SALE_IRATE       /* 매출신장율 */
+                         , EXPAN_RATE_SCORE                             AS EXPAN_RATE_SCORE /* 매출신장율점수 */
+                         , MST.AREA_SIZE                                AS AREA_SIZE        /* 면적 */
+                         , PYUNG_SAMT                                   AS PYUNG_SAMT       /* 평당매출 */
+                         , PYUNG_RATE_SCORE                             AS PYUNG_RATE_SCORE /* 평당매출 점수 */ 
+                         , PRO_TOT_CNT                                  AS PRO_TOT_CNT      /* 약속전체건수 */
+                         , PRO_DEF_CNT                                  AS PRO_DEF_CNT      /* 약속불이향건수 */
+                         , CUST_CSMS_CNT                                AS CUST_CSMS_CNT    /* 고객수선건수 */
+                         , CS_SCORE                                     AS CS_SCORE         /* CS평가점수 */
+                         , TOT_CNT                                      AS TOT_CNT          /* 발주건수 */
+                         , IN_CNT                                       AS IN_CNT           /* 납품예정일초과입고건수 */
+                         , BUYER_SCORE                                  AS BUYER_SCORE      /* 바이어평가점수*/
+                         , ( SALE_SCORE
+                           + PROF_SCORE
+                           + PROF_RATE_SCORE
+                           + EXPAN_RATE_SCORE
+                           + PYUNG_RATE_SCORE
+                           + BUYER_SCORE
+                           + CS_SCORE)                                  AS TOT_SCORE        /* 총점 */
+                         , MST.CONF_DT                                                      /* 확정일자 */
+                      FROM DPS.PS_YM_EVALUMST MST
+                         , (
+                            SELECT STR_CD
+                                 , EVALU_YM
+                                 , PUMBUN_CD
+                                 , SUM(DECODE(VEN_EVALU_CD, '01', EVALU_SCORE, 0)) AS SALE_SCORE             /* 평가매출 */
+                                 , SUM(DECODE(VEN_EVALU_CD, '02', EVALU_SCORE, 0)) AS PROF_SCORE             /* 이익액 */
+                                 , SUM(DECODE(VEN_EVALU_CD, '03', EVALU_SCORE, 0)) AS PROF_RATE_SCORE        /* 이익율 */
+                                 , SUM(DECODE(VEN_EVALU_CD, '04', EVALU_SCORE, 0)) AS EXPAN_RATE_SCORE       /* 매출신장율 */
+                                 , SUM(DECODE(VEN_EVALU_CD, '05', EVALU_SCORE, 0)) AS PYUNG_RATE_SCORE       /* 평효율 */
+                                 , SUM(DECODE(VEN_EVALU_CD, '06', EVALU_SCORE, 0)) AS BUYER_SCORE            /* 바이어평가 */
+                                 , SUM(DECODE(VEN_EVALU_CD, '07', EVALU_SCORE, 0)) AS CS_SCORE               /* 매장CS평가 */
+                              FROM DPS.PS_YM_EVALUDTL
+                             WHERE STR_CD   = ?
+                               AND EVALU_YM BETWEEN ? AND ?
+                             GROUP BY STR_CD
+                                    , EVALU_YM
+                                    , PUMBUN_CD
+                               
+                            ) DTL
+                          , ( /* 바이어평가 */
+                             SELECT STR_CD
+                                  , SUBSTR(ORD_DT,0,6)     AS EVALU_YM
+                                  , PUMBUN_CD
+                                  , COUNT(SLIP_NO)         AS TOT_CNT        /* 총발주건수 */
+                                  , SUM(CASE WHEN DELI_DT < CHK_DT THEN 1
+                                        ELSE 0 END)    AS IN_CNT             /* 납품예정일초과입고건수 */
+                               FROM DPS.PO_SLPMST
+                              WHERE STR_CD             = ?
+                                AND SUBSTR(ORD_DT,0,6) BETWEEN ? AND ?
+                                AND AUTO_SLIP_FLAG     = '0'                 /* 자동전표구분(0:일반전표) */
+                                AND AFT_ORD_FLAG       = '0'                 /* 사전사후구분(0:사전전표) */
+                                AND SLIP_FLAG          IN ('A', 'B')         /* 전표구분 (A:매입,B:반품) */
+                                AND DEL_FLAG           = 'N'                 /* 삭제구분 */
+                              GROUP BY STR_CD
+                                    , SUBSTR(ORD_DT,0,6)
+                                    , PUMBUN_CD                    
+                            ) SLP
+                          , ( /* 매장CS평가 */
+                             SELECT STR_CD                                 AS STR_CD
+                                  , SUBSTR(LAST_PROM_DT, 0, 6)             AS EVALU_YM
+                                  , PUMBUN_CD                              AS PUMBUN_CD
+                                  , COUNT(STR_CD)                          AS PRO_TOT_CNT
+                                  , SUM(CASE WHEN PROC_STAT = '1'  THEN 1
+                                        ELSE 0 END)                        AS PRO_DEF_CNT
+                                  , SUM(CASE WHEN PROC_STAT = '2' 
+                                               OR PROC_STAT = '4' THEN 1
+                                        ELSE 0 END)                        AS CUST_CSMS_CNT
+                               FROM MSS.MP_PROMISECERT
+                              WHERE STR_CD                     = ?
+                                AND SUBSTR(LAST_PROM_DT, 0, 6) BETWEEN ? AND ?
+                              GROUP BY STR_CD
+                                     , SUBSTR(LAST_PROM_DT, 0, 6) 
+                                     , PUMBUN_CD                     
+                            ) PROM
+                     WHERE MST.STR_CD    = DTL.STR_CD
+                       AND MST.EVALU_YM  = DTL.EVALU_YM
+                       AND MST.PUMBUN_CD = DTL.PUMBUN_CD
+                       AND MST.STR_CD    = SLP.STR_CD(+)
+                       AND MST.EVALU_YM  = SLP.EVALU_YM(+)
+                       AND MST.PUMBUN_CD = SLP.PUMBUN_CD(+)
+                       AND MST.STR_CD    = PROM.STR_CD(+)
+                       AND MST.EVALU_YM  = PROM.EVALU_YM(+)
+                       AND MST.PUMBUN_CD = PROM.PUMBUN_CD(+)
+                  ) A
+                , (
+                    SELECT STR_CD
+                         , MAX(EVALU_YM) AS EVALU_YM
+                         , PUMBUN_CD
+                      FROM DPS.PS_YM_EVALUMST
+                     WHERE STR_CD   = ?
+                       AND EVALU_YM BETWEEN ? AND ?
+                     GROUP BY STR_CD
+                            , PUMBUN_CD
+                       
+                    ) B
+                 , DPS.PC_STRPBN PBN
+            WHERE A.STR_CD    = B.STR_CD
+              AND A.PUMBUN_CD = B.PUMBUN_CD
+              AND A.STR_CD    = PBN.STR_CD
+              AND A.PUMBUN_CD = PBN.PUMBUN_CD
+              AND EXISTS ( SELECT MYORG.USER_ID
+                             FROM COM.V_MYORG MYORG
+                            WHERE MYORG.PUMBUN_CD = A.PUMBUN_CD
+                              AND MYORG.STR_CD    = ?
+                              AND MYORG.USER_ID   = ?
+                              AND MYORG.ORG_FLAG  = '1'
+                              AND ROWNUM          = 1
+                          )      
+              AND PBN.SALE_ORG_CD LIKE ? || '%'
+            GROUP BY A.STR_CD
+                   , PBN.SALE_ORG_CD
+                   , SUBSTR(PBN.SALE_ORG_CD,9,2)
+                   , A.PUMBUN_CD
+               
+            ORDER BY SUBSTR(PBN.SALE_ORG_CD,9,2)
+                   , A.PUMBUN_CD
+
+        ]]>
+    </query> 
+
+ </service>

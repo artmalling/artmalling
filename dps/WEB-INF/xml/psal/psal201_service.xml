@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.23
+ * 변 경 일 : 
+ * 변경내용: 
+ * 개     요 :  영업일정보 조회, 수정, 등록
+ -->
+<service name="/psal201.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"          colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"           colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY_WEEK"          colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STD_WEIGHT"        colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOLIDAY_GB"        colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_REMARK"       colType="TB_STRING"      size="200"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WEATHER"           colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOW_TEMP"          colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HIGH_TEMP"         colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AVRG_TEMP"         colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPR_DT"           colType="TB_STRING"      size="18"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPR_DAY"          colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPR_HOLIDAY_GB"   colType="TB_STRING"      size="18"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPR_STD_WEIGHT"   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPR_SALE_REMARK"  colType="TB_STRING"      size="200"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    <!-- 대비일자 데이터 -->
+    <gauce name="H_SEL_CMPR"> 
+        <column colName="STR_CD"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"           colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY_WEEK"          colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STD_WEIGHT"        colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOLIDAY_GB"        colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_REMARK"       colType="TB_STRING"      size="200"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 영업일자 데이터 -->
+    <gauce name="H_SEL_SCHEDULE"> 
+        <column colName="STR_CD"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"           colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY_WEEK"          colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STD_WEIGHT"        colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOLIDAY_GB"        colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_REMARK"       colType="TB_STRING"      size="200"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , B.STR_NAME
+                 , A.SALE_DT
+                 , A.DAY_WEEK
+                 , A.STD_WEIGHT
+                 , A.HOLIDAY_GB
+                 , A.SALE_REMARK
+                 , A.WEATHER
+                 , A.LOW_TEMP
+                 , A.HIGH_TEMP
+                 , A.AVRG_TEMP
+                 , A.CMPR_DT
+                 , A.CMPR_DAY
+                 , A.CMPR_HOLIDAY_GB
+                 , A.CMPR_STD_WEIGHT
+                 , ''               AS CMPR_SALE_REMARK
+              FROM DPS.PS_SCHEDULE     A
+                 , DPS.PC_STRMST       B
+             WHERE A.STR_CD     = B.STR_CD
+               AND A.STR_CD     = ?
+               AND A.SALE_DT    LIKE ? || '%'
+             ORDER BY
+                   A.STR_CD
+                 , A.SALE_DT
+               
+            
+        ]]>        
+    </query>
+    
+    <!-- 대비일자 데이터 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE_CMPR">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , A.SALE_DT
+                 , A.DAY_WEEK
+                 , A.STD_WEIGHT
+                 , A.HOLIDAY_GB
+                 , A.SALE_REMARK
+              FROM DPS.PS_SCHEDULE     A
+             WHERE A.STR_CD     = ?
+               AND A.SALE_DT    = ?
+             ORDER BY
+                   A.STR_CD
+                 , A.SALE_DT
+               
+            
+        ]]>        
+    </query>
+    
+    <!-- 영업일자 데이터 조회 쿼리  -->
+    <query name="SEL_PS_SCHEDULE_CHK">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , A.SALE_DT
+                 , A.DAY_WEEK
+                 , A.STD_WEIGHT
+                 , A.HOLIDAY_GB
+                 , A.SALE_REMARK
+              FROM DPS.PS_SCHEDULE     A
+             WHERE A.STR_CD     = ?
+               AND A.SALE_DT    LIKE SUBSTR(?,1,6) || '%'
+             ORDER BY
+                   A.STR_CD
+                 , A.SALE_DT
+               
+            
+        ]]>        
+    </query>
+    
+    <!-- 신규 입력  -->
+    <query name="INS_PS_SCHEDULE">        
+        <![CDATA[
+            INSERT INTO DPS.PS_SCHEDULE ( STR_CD
+						                , SALE_DT
+						                , DAY_WEEK
+						                , STD_WEIGHT
+						                , HOLIDAY_GB
+						                , SALE_REMARK	
+						                , CMPR_DT
+						                , CMPR_DAY
+						                , CMPR_HOLIDAY_GB
+						                , CMPR_STD_WEIGHT
+						                , WEATHER         
+										, LOW_TEMP        
+										, HIGH_TEMP       
+										, AVRG_TEMP									
+						                , REG_DATE
+						                , REG_ID
+						                , MOD_DATE
+						                , MOD_ID
+						                )
+						        VALUES  ( ?
+						                , ?
+						                , ?
+						                , ?
+						                , ?
+						                , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , SYSDATE
+                                        , ?
+                                        , SYSDATE
+                                        , ?
+                                        )
+						                
+            
+        ]]>        
+    </query>
+    
+    <!-- 수정  -->
+    
+    <query name="UPD_PS_SCHEDULE">
+        <![CDATA[
+            UPDATE DPS.PS_SCHEDULE
+               SET DAY_WEEK        = ?
+                 , STD_WEIGHT      = ?
+                 , HOLIDAY_GB      = ?
+                 , SALE_REMARK     = ?	
+                 , CMPR_DT         = ?
+                 , CMPR_DAY        = ?
+                 , CMPR_HOLIDAY_GB = ?
+                 , CMPR_STD_WEIGHT = ?
+                 , WEATHER         = ? 
+				 , LOW_TEMP        = ?
+				 , HIGH_TEMP       = ?
+				 , AVRG_TEMP	   = ?
+                 , MOD_DATE        = SYSDATE
+                 , MOD_ID          = ?
+             WHERE STR_CD          = ?
+               AND SALE_DT         = ?
+               
+        ]]>
+    </query>
+    
+    <!-- 삭제  -->
+    <query name="DEL_PS_SCHEDULE">
+        <![CDATA[
+            DELETE DPS.PS_SCHEDULE
+             WHERE STR_CD          = ?
+               AND SALE_DT         LIKE ? || '%'
+        ]]>
+    </query>
+    
+    
+</service>

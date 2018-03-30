@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  POS 단축키를 관리한다.
+ -->
+<service name="/pcod808.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"             colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NAME"           colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SHOP_NAME"          colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_FLAG"           colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SHORT_KEY"          colType="TB_STRING"   size="50"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />        
+    </gauce>
+    <gauce name="H_SEL_DETAIL">
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"             colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SHORTCUT_NO"        colType="TB_INT"      size="2"    dec="0"  keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="SHORTCUT_FLAG"      colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM_CD"            colType="TB_STRING"   size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM_NAME"          colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="SALE_PRC"           colType="TB_INT"      size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />    
+        <column colName="SALE_PRC_YN"        colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="DEL_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="ORG_ITEM_NAME"      colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MIX_CD1"            colType="TB_STRING"   size="12"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MIX_CD2"            colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MIX_CD3"            colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />      
+    </gauce>
+    <!-- 행사구분 헤더 -->
+    <gauce name="H_SEL_HS_MG"> 
+        <column colName="EVENT_FLAG"      colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"      colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_MG_RATE"    colType="TB_DECIMAL"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"        colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"        colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- POS 마스터 조회 쿼리  -->
+    <query name="SEL_POSMST">
+        <![CDATA[
+            SELECT STR_CD
+                 , POS_NO
+                 , POS_NAME  
+                 , SHOP_NAME                   
+                 , POS_FLAG
+                 , USE_YN
+                 , (SELECT RECP_NAME FROM DPS.PC_PBNMST MST WHERE MST.PUMBUN_CD = SUBSTR((SELECT MIN(ITEM_CD) OVER  FROM DPS.PC_POSSHORTKEY PSK 
+                    WHERE PSK.STR_CD = MST.STR_CD AND PSK.POS_NO = MST.POS_NO 
+                    AND ITEM_NAME IS NOT NULL AND SHORTCUT_FLAG <> '0'),1,6)) SHORT_KEY
+              FROM DPS.PC_POSMST MST
+             WHERE STR_CD    = ?
+               AND POS_FLAG  NOT IN ('06','07')
+        ]]>
+    </query>
+    <query name="SEL_POSMST_WHERE_POS_NO">
+        <![CDATA[
+               AND POS_NO    LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_POSMST_WHERE_POS_NAME">
+        <![CDATA[
+               AND POS_NAME  LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_POSMST_WHERE_SHOP_NAME">
+        <![CDATA[
+               AND SHOP_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_POSMST_ORDER">
+        <![CDATA[
+             ORDER BY POS_NO
+        ]]>
+    </query>
+    <!-- POS 단축키 조회 쿼리  -->
+    <query name="SEL_POSSHORTKEY">
+        <![CDATA[
+            SELECT STR_CD
+                 , POS_NO
+                 , SHORTCUT_NO
+                 , SHORTCUT_FLAG
+                 , ITEM_CD
+                 , ITEM_NAME
+                 , SALE_PRC
+                 , CASE WHEN SHORTCUT_FLAG = 4 
+                        THEN CASE WHEN (SELECT SKU_TYPE FROM DPS.PC_SKUMST WHERE SKU_CD = PSK.ITEM_CD) = '2'
+                                  THEN 'Y'
+                                  ELSE 'N'
+                             END
+                        WHEN SHORTCUT_FLAG = 3 
+                        THEN 'Y' 
+                        ELSE 'N'
+                   END                AS SALE_PRC_YN
+                 , CASE WHEN TO_CHAR(REG_DATE,'YYYYMMDD') = TO_CHAR(SYSDATE,'YYYYMMDD') 
+                        THEN 'Y'
+                        ELSE 'N'
+                   END                AS DEL_YN
+                 , ITEM_NAME          AS ORG_ITEM_NAME
+                 , ''                 AS MIX_CD1
+                 , ''                 AS MIX_CD2
+                 , ''                 AS MIX_CD3
+              FROM DPS.PC_POSSHORTKEY PSK
+             WHERE STR_CD   = ?
+               AND POS_NO   = ?
+             ORDER BY SHORTCUT_NO
+        ]]>
+    </query>
+    <!-- POS 단축번호 중복검사 -->
+    <query name="SEL_POSSHORTKEY_SHORTCUT_NO_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_POSSHORTKEY
+             WHERE STR_CD      = ?
+               AND POS_NO      = ?
+               AND SHORTCUT_NO = ?
+        ]]>
+    </query>
+    <!-- 품번코드 존재여부 -->
+    <query name="SEL_STRPBN_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_STRPBN
+             WHERE STR_CD      = ?
+               AND PUMBUN_CD   = ?
+               AND PUMBUN_CD NOT IN
+               (SELECT DISTINCT REFER_CODE FROM COM.TC_COMMCODE 
+                WHERE COMM_PART = 'P614')
+               AND ROWNUM      = 1
+        ]]>
+    </query>
+    <!-- 품목단축코드 존재여부 -->
+    <query name="SEL_PMKMST_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_PMKMST PMK
+                 , DPS.PC_PBNPMK PPK
+             WHERE PMK.PUMMOK_CD     = PPK.PUMMOK_CD
+               AND PPK.PUMBUN_CD     = ?
+               AND PMK.PUMMOK_SRT_CD = ?
+               AND ROWNUM            = 1
+        ]]>
+    </query>
+    <!-- 행사구분코드 존재여부 -->
+    <query name="SEL_MARGINMST_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_MARGINMST
+             WHERE STR_CD      = ?
+               AND PUMBUN_CD   = ?
+               AND EVENT_FLAG  = ?
+               AND ROWNUM      = 1
+        ]]>
+    </query>
+    <!-- POS 단축키 등록 -->
+    <query name="INS_POSSHORTKEY">
+        <![CDATA[
+            INSERT INTO DPS.PC_POSSHORTKEY(STR_CD
+                                         , POS_NO
+                                         , SHORTCUT_NO
+                                         , SHORTCUT_FLAG
+                                         , ITEM_CD
+                                         , ITEM_NAME
+                                         , SALE_PRC
+                                         , REG_DATE
+                                         , REG_ID
+                                         , MOD_DATE
+                                         , MOD_ID
+                                          )
+                                    VALUES(?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , NVL(?,(SELECT RECP_NAME FROM DPS.PC_PBNMST WHERE PUMBUN_CD = SUBSTR(?,1,6) AND PUMBUN_NAME NOT LIKE '%(온%'))
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                          )
+        ]]>   
+    </query>
+    <!-- POS 단축키 수정 -->
+    <query name="UPD_POSSHORTKEY">
+        <![CDATA[
+            UPDATE DPS.PC_POSSHORTKEY
+               SET SHORTCUT_FLAG = ?
+                 , ITEM_CD       = ?
+                 , ITEM_NAME     = NVL(?,(SELECT RECP_NAME FROM DPS.PC_PBNMST WHERE PUMBUN_CD = SUBSTR(?,1,6) AND PUMBUN_NAME NOT LIKE '%(온%'))
+                 , SALE_PRC      = ?
+                 , MOD_DATE      = SYSDATE
+                 , MOD_ID        = ?
+             WHERE STR_CD        = ?
+               AND POS_NO        = ?
+               AND SHORTCUT_NO   = ?
+        ]]>   
+    </query>
+    <!-- POS 단축키 삭제 -->
+    <query name="DEL_POSSHORTKEY">
+        <![CDATA[
+            DELETE
+              FROM DPS.PC_POSSHORTKEY
+             WHERE STR_CD        = ?
+               AND POS_NO        = ?
+               AND SHORTCUT_NO   = ?
+        ]]>   
+    </query>
+    
+    <!-- 행사구분 -->
+    <query name="SEL_HS_MG">        
+        <![CDATA[
+			SELECT A.EVENT_FLAG
+			     , A.EVENT_RATE
+			     , A.NORM_MG_RATE
+			     , A.APP_S_DT
+			     , A.APP_E_DT
+			  FROM DPS.PC_MARGINMST A
+			 WHERE A.STR_CD     = ?
+			   AND A.PUMBUN_CD  = ?
+			   --AND A.EVENT_FLAG = '00'
+			   --AND A.MG_FLAG    = '0'
+			   AND A.EVENT_RATE = '00'
+			   AND A.EVENT_CD   = '00000000000'
+			   AND ? BETWEEN A.APP_S_DT AND A.APP_E_DT
+        ]]>        
+    </query>
+</service>

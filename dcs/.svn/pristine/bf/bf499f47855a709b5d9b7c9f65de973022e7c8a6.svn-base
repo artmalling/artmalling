@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.31
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  데이터 검증 현황 조회
+ -->
+<service name="/dmtc201.dc">
+    <gauce name="H_MASTER"> 
+        <column colName="CHK_ID"     colType="TB_STRING"   size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CHK_NAME"   colType="TB_STRING"   size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TOT_CNT"    colType="TB_DECIMAL"  size="7"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="DAY_CNT"    colType="TB_DECIMAL"  size="7"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ERR_CNT"    colType="TB_DECIMAL"  size="7"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REMARK"     colType="TB_STRING"   size="60"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+     
+    <!-- 회원탈퇴등록 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[         
+            SELECT A.CHK_ID
+                 , B.CHK_NAME
+                 , A.TOT_CNT
+                 , A.DAY_CNT
+                 , A.ERR_CNT
+                 , B.TABLE1 || ', ' || B.TABLE2 || ', ' || B.TABLE3 REMARK
+              FROM DCS.DM_TBL_CHIST A
+                 , DCS.DM_TBL_CRULE B
+             WHERE A.CHK_ID = B.CHK_ID
+               AND A.PROC_DT =  ?
+        ]]>        
+    </query>                   
+</service>

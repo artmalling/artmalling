@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 
+ * 작 성 일 : 2011.08.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  POS상품권점검현황
+ -->
+<service name="/psal520.ps">
+    <!-- POS상품권점검현황 MASTER 헤더  -->
+    <gauce name="H_SEL_MASTER">
+        <column colName="POS_NO"            colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="ORDER_SEQ"         colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="GIFT_NAME"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="USE_CNT"           colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="USE_AMT"           colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <gauce name="H_SEL_POSNOMM"> 
+        <column colName="POSNO_MIN"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSNO_MAX"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSFLORMM"> 
+        <column colName="POSFLOR_MIN"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSFLOR_MAX"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- POS상품권점검현황 MASTER 조회쿼리  TOP-->
+    <query name="SEL_MASTER_POS">
+        <![CDATA[
+            SELECT A.POS_NO
+                 , A.BALANCE_FLAG   AS ORDER_SEQ
+                 , C.COMM_NAME1     AS GIFT_NAME
+                 , A.NORM_TRAN_CNT  AS USE_CNT
+                 , A.NORM_TRAN_AMT  AS USE_AMT
+              FROM DPS.PS_TRTOTALGIFT A
+                 , DPS.PC_POSMST     B
+                 , (SELECT COMM_CODE
+                         , COMM_NAME1
+                         , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+                      FROM COM.TC_COMMCODE
+                     WHERE COMM_PART = 'P616'
+                       AND SYS_PART  = 'D') C
+             WHERE A.STR_CD       = B.STR_CD
+               AND A.POS_NO       = B.POS_NO
+               AND A.BALANCE_FLAG = C.COMM_CODE
+               AND A.TOTAL_FLAG   = '01'
+               AND A.STR_CD       LIKE ? || '%'
+               AND B.FLOR_CD      LIKE ? || '%'
+               AND B.POS_FLAG     LIKE ? || '%'
+               AND A.POS_NO       BETWEEN ? AND ?
+               AND A.SALE_DT      = ?
+             ORDER BY A.BALANCE_FLAG, A.POS_NO
+        ]]>
+    </query>
+    
+    <query name="SEL_MASTER_FLOR">
+        <![CDATA[
+            SELECT B.FLOR_CD        AS POS_NO
+                 , A.BALANCE_FLAG   AS ORDER_SEQ
+                 , C.COMM_NAME1     AS GIFT_NAME
+                 , SUM(A.NORM_TRAN_CNT)  AS USE_CNT
+                 , SUM(A.NORM_TRAN_AMT)  AS USE_AMT
+              FROM DPS.PS_TRTOTALGIFT A
+                 , DPS.PC_POSMST     B
+                 , (SELECT COMM_CODE
+                         , COMM_NAME1
+                         , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+                      FROM COM.TC_COMMCODE
+                     WHERE COMM_PART = 'P616'
+                       AND SYS_PART  = 'D') C
+             WHERE A.STR_CD       = B.STR_CD
+               AND A.POS_NO       = B.POS_NO
+               AND A.BALANCE_FLAG = C.COMM_CODE
+               AND A.TOTAL_FLAG   = '01'
+               AND A.STR_CD       LIKE ? || '%'
+               AND B.POS_FLAG     LIKE ? || '%'
+               AND B.FLOR_CD       BETWEEN ? AND ?
+               AND A.SALE_DT      = ?
+             GROUP BY
+                   B.FLOR_CD
+                 , A.BALANCE_FLAG
+                 , C.COMM_NAME1
+             ORDER BY A.BALANCE_FLAG, B.FLOR_CD
+        ]]>
+    </query>
+    
+    <!-- POS상품권점검현황 MASTER 조회쿼리  TOP-->
+    <query name="SEL_MASTER2">
+        <![CDATA[
+			SELECT A.POS_NO,
+			       A.ORDER_SEQ,
+			       A.GIFT_NAME,
+			       SUM(A.JS_USE_CNT) + SUM(A.JH_USE_CNT) AS USE_CNT,
+			       SUM(JUNBI_AMT) + SUM(MIDDLE_AMT) + SUM(PDA_MIDDLE_AMT) + SUM(MAGAM_AMT) + SUM(A.JS_USE_AMT) + SUM(A.JH_USE_AMT) AS USE_AMT
+			FROM   (
+			            SELECT A.POS_NO,
+			                   '001'                        AS ORDER_SEQ,
+			                   '준비금'                     AS GIFT_NAME,
+			                   SUM(CASE 
+			                       WHEN A.TRAN_MODE = '81' AND B.DATA_TYPE IN ('20') THEN 
+			                            (CASE WHEN A.TRAN_FLAG = '0' THEN B.AMT ELSE B.AMT * -1 END)
+			                       ELSE 
+			                            0
+			                       END) AS JUNBI_AMT,  -- 준비금
+			                   0                            AS MIDDLE_AMT,
+			                   0                            AS PDA_MIDDLE_AMT,
+			                   0                            AS MAGAM_AMT,
+			                   0                            AS JS_USE_CNT,
+			                   0                            AS JS_USE_AMT,
+			                   0                            AS JH_USE_CNT,
+			                   0                            AS JH_USE_AMT
+			            FROM   DPS.PS_TRHEADER A, DPS.PS_TRETC B
+			            WHERE  A.STR_CD      = B.STR_CD
+			            AND    A.SALE_DT     = B.SALE_DT
+			            AND    A.POS_NO      = B.POS_NO
+			            AND    A.TRAN_NO     = B.TRAN_NO
+			            AND    A.TRAN_TYPE   = '8'
+			            AND    A.TRAN_MODE   <> '92'
+			            AND    B.SALE_DT     = ?
+			            AND    B.STR_CD      LIKE ? || '%'
+			            GROUP BY A.POS_NO
+			            UNION ALL
+			            SELECT A.POS_NO,
+			                   '002'                        AS ORDER_SEQ,
+			                   '중간입금'                   AS GIFT_NAME,
+			                   0                            AS JUNBI_AMT,
+			                   SUM(CASE 
+			                       WHEN A.TRAN_MODE = '82' AND B.DATA_TYPE IN ('20', '21') THEN 
+			                            (CASE WHEN A.TRAN_FLAG = '0' THEN B.AMT ELSE B.AMT * -1 END)
+			                       ELSE 
+			                            0
+			                       END) AS MIDDLE_AMT,  -- 중간입금
+			                   0                            AS PDA_MIDDLE_AMT,    
+			                   0                            AS MAGAM_AMT,
+			                   0                            AS JS_USE_CNT,
+			                   0                            AS JS_USE_AMT,
+			                   0                            AS JH_USE_CNT,
+			                   0                            AS JH_USE_AMT
+			            FROM   DPS.PS_TRHEADER A, DPS.PS_TRETC B
+			            WHERE  A.STR_CD  = B.STR_CD
+			            AND    A.SALE_DT = B.SALE_DT
+			            AND    A.POS_NO  = B.POS_NO
+			            AND    A.TRAN_NO = B.TRAN_NO
+			            AND    A.TRAN_TYPE   = '8'
+			            AND    A.TRAN_MODE   <> '92'
+			            AND    B.SALE_DT = ?
+			            AND    B.STR_CD LIKE ? || '%'
+			            GROUP BY A.POS_NO
+			            UNION ALL
+			            SELECT A.POS_NO,
+			                   '003'                        AS ORDER_SEQ,
+			                   'PDA_중간입금'               AS GIFT_NAME,
+			                   0                            AS JUNBI_AMT,
+			                   0                            AS MIDDLE_AMT,    
+			                   SUM(CASE 
+			                       WHEN A.TRAN_MODE = '83' AND B.DATA_TYPE IN ('20', '21') THEN 
+			                            (CASE WHEN A.TRAN_FLAG = '0' THEN B.AMT ELSE B.AMT * -1 END)
+			                       ELSE 
+			                            0
+			                       END) AS PDA_MIDDLE_AMT,  -- PDA_중간입금
+			                   0                            AS MAGAM_AMT,
+			                   0                            AS JS_USE_CNT,
+			                   0                            AS JS_USE_AMT,
+			                   0                            AS JH_USE_CNT,
+			                   0                            AS JH_USE_AMT
+			            FROM   DPS.PS_TRHEADER A, DPS.PS_TRETC B
+			            WHERE  A.STR_CD  = B.STR_CD
+			            AND    A.SALE_DT = B.SALE_DT
+			            AND    A.POS_NO  = B.POS_NO
+			            AND    A.TRAN_NO = B.TRAN_NO
+			            AND    A.TRAN_TYPE   = '8'
+			            AND    A.TRAN_MODE   <> '92'
+			            AND    B.SALE_DT = ?
+			            AND    B.STR_CD LIKE ? || '%'
+			            GROUP BY A.POS_NO
+			            UNION ALL
+			            SELECT A.POS_NO,
+			                   '004'                        AS ORDER_SEQ,
+			                   '마감입금'                   AS GIFT_NAME,
+			                   0                            AS JUNBI_AMT,
+			                   0                            AS MIDDLE_AMT,  
+			                   0                            AS PDA_MIDDLE_AMT,
+			                   SUM(CASE 
+			                       WHEN B.DATA_TYPE IN ('20', '21') THEN 
+			                            (CASE WHEN A.TRAN_FLAG = '0' THEN B.AMT ELSE B.AMT * -1 END)
+			                       ELSE 
+			                            0
+			                       END) AS MAGAM_AMT,  -- 마감입금
+			                   0                            AS JS_USE_CNT,
+			                   0                            AS JS_USE_AMT,
+			                   0                            AS JH_USE_CNT,
+			                   0                            AS JH_USE_AMT
+			            FROM   DPS.PS_TRHEADER A, DPS.PS_TRETC B
+			            WHERE  A.STR_CD  = B.STR_CD
+			            AND    A.SALE_DT = B.SALE_DT
+			            AND    A.POS_NO  = B.POS_NO
+			            AND    A.TRAN_NO = B.TRAN_NO
+			            AND    A.TRAN_TYPE   = '8'
+			            AND    A.TRAN_MODE   = '85'
+			            AND    B.SALE_DT = ?
+			            AND    B.STR_CD LIKE ? || '%'
+			            AND    B.TRAN_NO = ( SELECT MAX(X.TRAN_NO) FROM DPS.PS_TRHEADER X WHERE A.SALE_DT = X.SALE_DT
+			                                 AND A.POS_NO = X.POS_NO AND A.TRAN_MODE = X.TRAN_MODE)
+			            GROUP BY A.POS_NO
+			            UNION ALL
+			            SELECT A.POS_NO,
+			                   '020'                        AS ORDER_SEQ,
+			                   '자사상품권회수'             AS GIFT_NAME,
+			                   0                            AS JUNBI_AMT,
+			                   0                            AS MIDDLE_AMT,
+			                   0                            AS PDA_MIDDLE_AMT,
+			                   0                            AS MAGAM_AMT,
+			                   SUM(CASE WHEN A.TRAN_FLAG = '0' THEN B.PAY_VALUE_04 ELSE B.PAY_VALUE_04 * -1 END) AS JS_USE_CNT,
+			                   SUM(CASE WHEN A.TRAN_FLAG = '0' THEN B.PAY_VALUE_01 ELSE B.PAY_VALUE_01 * -1 END) AS JS_USE_AMT,
+			                   0                            AS JH_USE_CNT,
+			                   0                            AS JH_USE_AMT
+			            FROM   DPS.PS_TRHEADER A, DPS.PS_TRPAID B 
+			            WHERE  A.STR_CD  = B.STR_CD
+			            AND    A.SALE_DT = B.SALE_DT
+			            AND    A.POS_NO  = B.POS_NO
+			            AND    A.TRAN_NO = B.TRAN_NO
+			            AND    A.TRAN_MODE <> '92'
+			            AND    A.SALE_DT = ?
+			            AND    B.PAY_TYPE = '20' 
+			            GROUP BY A.POS_NO,
+			                     '자사상품권회수'
+			            UNION ALL
+			            SELECT A.POS_NO,
+			                   '090'                        AS ORDER_SEQ,
+			                   B.PAY_DATA_99||'회수'        AS GIFT_NAME,
+			                   0                            AS JUNBI_AMT,
+			                   0                            AS MIDDLE_AMT,
+			                   0                            AS PDA_MIDDLE_AMT,
+			                   0                            AS MAGAM_AMT,
+			                   0                            AS JS_USE_CNT,
+			                   0                            AS JS_USE_AMT,
+			                   SUM(CASE WHEN A.TRAN_FLAG = '0' THEN B.PAY_VALUE_04 ELSE B.PAY_VALUE_04 * -1 END) AS JH_USE_CNT,
+			                   SUM(CASE WHEN A.TRAN_FLAG = '0' THEN B.PAY_VALUE_01 ELSE B.PAY_VALUE_01 * -1 END) AS JH_USE_AMT
+			            FROM   DPS.PS_TRHEADER A, DPS.PS_TRPAID B 
+			            WHERE  A.STR_CD  = B.STR_CD
+			            AND    A.SALE_DT = B.SALE_DT
+			            AND    A.POS_NO  = B.POS_NO
+			            AND    A.TRAN_NO = B.TRAN_NO
+			            AND    A.TRAN_MODE <> '92'
+			            AND    A.SALE_DT = ?
+			            AND    B.PAY_TYPE = '21' 
+			            GROUP BY A.POS_NO,
+			                     B.PAY_DATA_99
+			) A
+			GROUP BY  A.POS_NO,
+			          A.ORDER_SEQ,
+			          A.GIFT_NAME
+			ORDER BY  A.POS_NO, A.ORDER_SEQ
+        ]]>
+    </query>
+    
+    
+    <query name="SEL_POSNOMM">        
+        <![CDATA[
+            SELECT MAX(A.POSNO_MIN) AS POSNO_MIN
+                 , MAX(A.POSNO_MAX) AS POSNO_MAX
+              FROM (
+                    SELECT MIN(A.POS_NO) AS POSNO_MIN
+                         , ''            AS POSNO_MAX
+                      FROM DPS.PC_POSMST A
+                      
+                    UNION ALL
+                      
+                    SELECT ''            AS POSNO_MIN
+                         , MAX(A.POS_NO) AS POSNO_MAX
+                      FROM DPS.PC_POSMST A
+                   ) A
+        ]]>        
+    </query>
+    
+
+    <query name="SEL_POSFLORMM">        
+        <![CDATA[ 
+            SELECT MAX(A.POSFLOR_MIN) AS POSFLOR_MIN
+                 , MAX(A.POSFLOR_MAX) AS POSFLOR_MAX
+              FROM (
+                    SELECT A.COMM_CODE    AS POSFLOR_MIN
+                         , ''             AS POSFLOR_MAX
+                      FROM COM.TC_COMMCODE A
+                     WHERE A.COMM_PART = 'P061'
+                       AND INQR_ORDER IN  (SELECT MAX(INQR_ORDER)
+                                             FROM COM.TC_COMMCODE
+                                            WHERE COMM_PART = 'P061'
+                                           )
+                      
+                    UNION ALL
+                      
+                    SELECT ''             AS POSFLOR_MIN
+                         , A.COMM_CODE    AS POSFLOR_MAX
+                      FROM COM.TC_COMMCODE A
+                     WHERE A.COMM_PART = 'P061'
+                       AND INQR_ORDER IN  (SELECT MIN(INQR_ORDER)
+                                             FROM COM.TC_COMMCODE
+                                            WHERE COMM_PART = 'P061'
+                                           )
+                   ) A
+        ]]>        
+    </query>
+    
+</service>

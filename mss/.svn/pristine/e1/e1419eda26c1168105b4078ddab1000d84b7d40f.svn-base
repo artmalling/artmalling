@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.20
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  계량기시설구분등록
+ -->
+<service name="/mren112.mr">
+    <gauce name="H_SEL_MR_GAUGMST">
+	    <column colName="GAUG_ID"       colType="TB_STRING"   size="20"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="INST_PLC"      colType="TB_STRING"   size="200" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="STR_CD"        colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="GAUG_TYPE"     colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="GAUG_KIND_CD"  colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="HIGH_GAUG_ID"  colType="TB_STRING"   size="20"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VALID_S_DT"    colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VALID_E_DT"    colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 조회 Query  -->
+    <query name="SEL_MR_GAUGMST"> 
+        <![CDATA[   
+            SELECT GAU.GAUG_ID
+                 , GAU.INST_PLC
+                 , GAU.STR_CD
+                 , GAU.GAUG_TYPE
+                 , GAU.GAUG_KIND_CD
+                 , GAU.HIGH_GAUG_ID
+                 , GAU.VALID_S_DT
+                 , GAU.VALID_E_DT
+              FROM MSS.MR_GAUGMST   GAU
+                 , MSS.MR_FCLMST    FCM
+             WHERE GAU.STR_CD = FCM.STR_CD
+               AND FCM.HUSE_FLAG = '1'
+               AND GAU.INST_PLC     LIKE '%'||?||'%'
+               AND GAU.GAUG_ID      LIKE ?||'%'
+               AND GAU.GAUG_TYPE    LIKE ?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 등록(수정) Query  -->
+    <query name="UPD_MR_GAUGMST"> 
+        <![CDATA[   
+			UPDATE MSS.MR_GAUGMST 
+			   SET STR_CD       = ?
+			     , GAUG_KIND_CD = ?
+			     , MOD_ID       = ?
+			     , MOD_DATE     = SYSDATE
+			 WHERE GAUG_ID      = ?
+        ]]>        
+    </query>
+</service>

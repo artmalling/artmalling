@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.06.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal516.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="POS_NO"           colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SHOP_NAME"        colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NAME"         colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_FLAG"         colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLOR_CD"          colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MAGAM_FLAG"       colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_USER_ID"     colType="TB_STRING"      size="10"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMP_NO"           colType="TB_STRING"      size="10"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <gauce name="H_SEL_DAY_INFO"> 
+        <column colName="BALANCE_FLAG"          colType="TB_STRING"      size="3"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMM_NAME1"            colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_CNT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_AMT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="STR_CD"            colType="TB_STRING"       size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"            colType="TB_STRING"       size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLOR_CD"           colType="TB_STRING"       size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"            colType="TB_STRING"       size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_FLAG"          colType="TB_STRING"       size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_FLAG_NM"       colType="TB_STRING"       size="40"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSCNT"            colType="TB_DECIMAL"      size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFCNT"             colType="TB_DECIMAL"      size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USECNT"            colType="TB_DECIMAL"      size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OPENCNT"           colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MAGAMCNT"          colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MIN_TRAN_NO"       colType="TB_STRING"       size="10"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MAX_TRAN_NO"       colType="TB_STRING"       size="10"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_CNT"          colType="TB_DECIMAL"      size="9"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOST_CNT"          colType="TB_DECIMAL"      size="9"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_CNT"          colType="TB_DECIMAL"      size="9"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ERR_CNT"           colType="TB_DECIMAL"      size="9"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NPROC_CNT"         colType="TB_DECIMAL"      size="9"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->     
+    
+    <query name="SEL_MASTER">        
+        <![CDATA[
+        SELECT
+	        POS_NO,SHOP_NAME,POS_NAME,POS_FLAG,FLOR_CD,MAGAM_FLAG,
+	        MAX(SALE_USER_ID) SALE_USER_ID, EMP_NO
+		FROM
+		    (SELECT POS.POS_NO
+                  , POS.SHOP_NAME
+                  , POS.POS_NAME
+                  , POS.POS_FLAG
+                  , POS.FLOR_CD
+                  , DPM.MAGAM_FLAG
+                  , DPM.SALE_USER_ID
+                  , REPLACE(NVL((SELECT MAX(ITEM_NAME) FROM DPS.PC_POSSHORTKEY Z WHERE STR_CD = POS.STR_CD AND Z.POS_NO = POS.POS_NO  AND ITEM_NAME NOT LIKE '행사%' AND ITEM_NAME NOT LIKE '대표%'),
+                    (SELECT A.EMP_NAME FROM DPS.PC_SALEUSERMST A WHERE A.SALE_USER_ID = DPM.SALE_USER_ID AND A.STR_CD = POS.STR_CD)),'대표품목','') EMP_NO
+               FROM DPS.PC_POSMST POS
+                  , (SELECT POS_NO
+                          , MAGAM_FLAG
+                          , SALE_USER_ID
+                          , SALE_DT
+                          , STR_CD
+                       FROM DPS.PS_DISPOSMAGAM
+                      WHERE STR_CD  = ?
+                        AND SALE_DT = ?
+                    ) DPM
+               WHERE POS.STR_CD = DPM.STR_CD(+)
+                AND POS.POS_NO = DPM.POS_NO(+)
+                AND POS.STR_CD = ? 
+                AND POS.USE_YN = 'Y'
+                AND POS.HALL_CD LIKE ? || '%'
+        ]]>        
+    </query>  
+    
+    <query name="SEL_MASTER_BACK">        
+        <![CDATA[
+        SELECT
+	        POS_NO,SHOP_NAME,POS_NAME,POS_FLAG,FLOR_CD,MAGAM_FLAG,
+	        MAX(SALE_USER_ID) SALE_USER_ID, EMP_NO
+		FROM
+		    (SELECT POS.POS_NO
+                  , POS.SHOP_NAME
+                  , POS.POS_NAME
+                  , POS.POS_FLAG
+                  , POS.FLOR_CD
+                  , DPM.MAGAM_FLAG
+                  , DPM.SALE_USER_ID
+                  , REPLACE(NVL((SELECT MAX(ITEM_NAME) FROM DPS.PC_POSSHORTKEY Z WHERE STR_CD = POS.STR_CD AND Z.POS_NO = POS.POS_NO  AND ITEM_NAME NOT LIKE '행사%' AND ITEM_NAME NOT LIKE '대표%'),
+                    (SELECT A.EMP_NAME FROM DPS.PC_SALEUSERMST A WHERE A.SALE_USER_ID = DPM.SALE_USER_ID AND A.STR_CD = POS.STR_CD)),'대표품목','') EMP_NO
+               FROM DPS.PC_POSMST POS
+                  , (SELECT POS_NO
+                          , MAGAM_FLAG
+                          , SALE_USER_ID
+                          , SALE_DT
+                          , STR_CD
+                       FROM DPS.PS_DISPOSMAGAM
+                      WHERE STR_CD  = ?
+                        AND SALE_DT = ?
+                        
+                     UNION ALL
+                        
+					 SELECT POS_NO, 'N' MAGAM_FLAG, '' SALE_USER_ID, SALE_DT, STR_CD
+					FROM
+					    (SELECT STR_CD,POS_NO,SALE_DT,COUNT(TRAN_NO) AA,TO_NUMBER(MAX(TRAN_NO)) BB FROM DPS.PS_TRHEADER
+					    WHERE STR_CD = ? AND SALE_DT = ?
+					    GROUP BY STR_CD,POS_NO,SALE_DT)
+					WHERE AA <> BB
+					 
+                        
+                    ) DPM
+               WHERE POS.STR_CD = DPM.STR_CD(+)
+                AND POS.POS_NO = DPM.POS_NO(+)
+                AND POS.STR_CD = ? 
+                AND POS.USE_YN = 'Y'
+                AND POS.HALL_CD LIKE ? || '%'
+                /*
+                AND EXISTS ( SELECT 1 FROM DPS.PS_DISPOSMAGAM 
+                              WHERE STR_CD = POS.STR_CD 
+                                AND POS_NO = POS.POS_NO 
+                                AND SALE_DT BETWEEN  TO_CHAR(SYSDATE - 7, 'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD') 
+                                )
+                */
+        ]]>        
+    </query>
+    
+    
+    <query name="SEL_MASTER_WHERE_POS_FLAG">        
+        <![CDATA[
+                AND POS.POS_FLAG = ?   
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_FLOR_CD">        
+        <![CDATA[
+                AND POS.FLOR_CD  = ?   
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_MAGAM_FLAG_BF">        
+        <![CDATA[
+                AND DPM.MAGAM_FLAG IS NULL 
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_MAGAM_FLAG">        
+        <![CDATA[
+                AND DPM.MAGAM_FLAG IN ( ?, ?)
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_LOST_CNT">        
+        <![CDATA[
+                AND EXISTS ( SELECT 1
+                               FROM POS.TR_HEADER
+							  WHERE STR_CD  = DPM.STR_CD
+							    AND SALE_DT = DPM.SALE_DT
+							    AND POS_NO  = DPM.POS_NO
+							   HAVING MAX(TRAN_NO) - MIN(TRAN_NO) + 1 - COUNT(*) <> 0
+							)
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_ERR_CNT">        
+        <![CDATA[
+                AND EXISTS ( SELECT 1
+                               FROM POS.TR_HEADER
+							  WHERE STR_CD  = DPM.STR_CD
+							    AND SALE_DT = DPM.SALE_DT
+							    AND POS_NO  = DPM.POS_NO
+							    AND STAT_FLAG = '&'
+							)
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_ORDER">        
+        <![CDATA[
+			        )
+					GROUP BY POS_NO,SHOP_NAME,POS_NAME,POS_FLAG,FLOR_CD,MAGAM_FLAG,EMP_NO
+              ORDER BY POS_NO
+        ]]>        
+    </query>
+    
+    
+    <query name="SEL_DAY_INFO">
+        <![CDATA[
+            SELECT A.BALANCE_FLAG
+                 , C.COMM_NAME1
+                 , A.NORM_TRAN_CNT
+                 , A.NORM_TRAN_AMT
+              FROM DPS.PS_TRTOTAL A
+                 , DPS.PC_POSMST     B
+                 , (SELECT COMM_CODE
+                         , COMM_NAME1
+                         , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+                      FROM COM.TC_COMMCODE
+                     WHERE COMM_PART = 'P606'
+                       AND SYS_PART  = 'D') C
+             WHERE A.STR_CD       = B.STR_CD
+               AND A.POS_NO       = B.POS_NO
+               AND A.BALANCE_FLAG = C.COMM_CODE
+               AND A.TOTAL_FLAG   = '01'
+               AND A.BALANCE_FLAG IN ('1', '2', '3', '4', '5', '6', '98', '99', '189', '401', '402', '403', '199')
+               AND A.POS_NO       = ?
+               AND A.SALE_DT      = ?
+             ORDER BY 
+                   C.INQR_ORDER
+        ]]>
+    </query>
+
+
+    <query name="SEL_DETAIL_1">        
+        <![CDATA[
+			SELECT
+				  X.STR_CD
+				, DPS.FN_GET_STORE_NAME(X.STR_CD)
+				, X.FLOR_CD
+				, X.POS_NO
+				, X.POS_FLAG
+				, COM.FN_GET_COMM_NAME('D','P082',X.POS_FLAG)
+				, SUM(POSCNT) AS POSCNT
+				, SUM(BFCNT)  AS BFCNT
+				, SUM(OPENCNT) + SUM(MAGAMCNT) AS USECNT
+				, SUM(OPENCNT) AS OPENCNT
+			    , SUM(MAGAMCNT) AS MAGAMCNT
+			    , MIN(MIN_TRAN_NO) AS MIN_TRAN_NO
+			    , MIN(MAX_TRAN_NO) AS MAX_TRAN_NO
+			    , MIN(TRAN_CNT)    AS TRAN_CNT
+			    , MIN(LOST_CNT)    AS LOST_CNT
+			    , MIN(PROC_CNT)    AS PROC_CNT
+			    , MIN(ERR_CNT)     AS ERR_CNT
+			    , MIN(NPROC_CNT)   AS NPROC_CNT
+			FROM
+			(
+				SELECT
+					  STR_CD
+					, SALE_DT
+					, POS_NO					  
+					, FLOR_CD
+					, POS_FLAG
+					, COUNT(*) AS POSCNT
+					, CASE WHEN MAGAM_FLAG IS NULL OR MAGAM_FLAG = '' THEN COUNT(*) ELSE 0 END BFCNT
+					, CASE WHEN MAGAM_FLAG = 'N' THEN COUNT(*) ELSE 0 END OPENCNT
+				    , CASE WHEN MAGAM_FLAG = 'Y' THEN COUNT(*) ELSE 0 END MAGAMCNT
+				FROM
+				(        
+		             SELECT POS.STR_CD
+		                  , DPM.SALE_DT
+		                  , POS.POS_NO
+		                  , POS.SHOP_NAME
+		                  , POS.POS_NAME
+		                  , POS.POS_FLAG
+		                  , POS.FLOR_CD
+		                  , DPM.MAGAM_FLAG
+		                  , DPM.SALE_USER_ID
+		                  , (SELECT A.EMP_NAME FROM DPS.PC_SALEUSERMST A WHERE A.SALE_USER_ID = DPM.SALE_USER_ID AND A.STR_CD = POS.STR_CD) AS EMP_NO
+		               FROM DPS.PC_POSMST POS
+		                  , (SELECT POS_NO
+		                          , MAGAM_FLAG
+		                          , SALE_USER_ID
+		                          , SALE_DT
+		                          , STR_CD
+		                       FROM DPS.PS_DISPOSMAGAM
+		                      WHERE STR_CD = ?
+		                        AND SALE_DT = ?
+		                    ) DPM
+		               WHERE POS.STR_CD = DPM.STR_CD(+)
+                		AND POS.POS_NO = DPM.POS_NO(+)
+		                AND POS.STR_CD = ?
+		                AND POS.USE_YN = 'Y'
+		                AND POS.HALL_CD LIKE ? || '%'
+		                AND EXISTS ( SELECT 1 FROM DPS.PS_DISPOSMAGAM 
+		                              WHERE STR_CD = POS.STR_CD 
+		                                AND POS_NO = POS.POS_NO 
+		                                AND SALE_DT BETWEEN  TO_CHAR(SYSDATE -7, 'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD') 
+		                                )
+        ]]>        
+    </query>
+    <query name="SEL_DETAIL_WHERE_POS_FLAG">        
+        <![CDATA[
+                AND POS.POS_FLAG = ?   
+        ]]>        
+    </query>
+    <query name="SEL_DETAIL_WHERE_FLOR_CD">        
+        <![CDATA[
+                AND POS.FLOR_CD  = ?   
+        ]]>        
+    </query>
+    <query name="SEL_DETAIL_WHERE_MAGAM_FLAG_BF">        
+        <![CDATA[
+                AND DPM.MAGAM_FLAG IS NULL 
+        ]]>        
+    </query>
+    <query name="SEL_DETAIL_WHERE_MAGAM_FLAG">        
+        <![CDATA[
+                AND DPM.MAGAM_FLAG IN ( ?, ?)
+        ]]>        
+    </query>
+    <query name="SEL_DETAIL_2">        
+        <![CDATA[
+							ORDER BY POS.STR_CD, POS.POS_NO
+							)
+						GROUP BY STR_CD, SALE_DT, FLOR_CD, POS_NO, POS_FLAG, MAGAM_FLAG
+						ORDER BY STR_CD, SALE_DT, FLOR_CD, POS_NO, POS_FLAG, MAGAM_FLAG
+					) X,
+					(	SELECT STR_CD
+							, SALE_DT
+							, POS_NO
+							, MIN(TRAN_NO) AS MIN_TRAN_NO
+							, MAX(TRAN_NO) AS MAX_TRAN_NO
+							, COUNT(*)     AS TRAN_CNT
+							, MAX(TRAN_NO) - MIN(TRAN_NO) + 1 - COUNT(*) AS LOST_CNT
+							, SUM(NPROC_CNT) AS NPROC_CNT
+							, SUM(ERR_CNT) AS ERR_CNT
+							, SUM(PROC_CNT) AS PROC_CNT
+						FROM
+						(
+							SELECT STR_CD
+								, SALE_DT
+								, POS_NO
+								, TRAN_NO
+								, CASE WHEN STAT_FLAG = '*' THEN 1 ELSE 0 END AS NPROC_CNT
+								, CASE WHEN STAT_FLAG = '&' THEN 1 ELSE 0 END AS ERR_CNT
+								, CASE WHEN STAT_FLAG = '%' THEN 1 ELSE 0 END AS PROC_CNT
+							FROM POS.TR_HEADER
+							WHERE STR_CD  = ?
+							  AND SALE_DT = ?
+							ORDER BY STR_CD
+								, SALE_DT
+								, POS_NO
+						)
+						GROUP BY STR_CD
+							, SALE_DT
+							, POS_NO
+						ORDER BY STR_CD
+							, SALE_DT
+							, POS_NO
+					) Y	
+        ]]>        
+    </query>    
+
+    <query name="SEL_DETAIL_WHERE">        
+        <![CDATA[
+				WHERE X.STR_CD = Y.STR_CD(+)
+				  AND X.POS_NO = Y.POS_NO(+)
+				  AND X.SALE_DT = Y.SALE_DT(+)
+				GROUP BY X.STR_CD, X.FLOR_CD, X.POS_NO, X.POS_FLAG
+              
+        ]]>        
+    </query>    
+    
+    <query name="SEL_DETAIL_HAVING_LOST_CNT">        
+        <![CDATA[
+				HAVING MIN(LOST_CNT) <> 0
+              
+        ]]>        
+    </query>    
+    
+    <query name="SEL_DETAIL_HAVING_ERR_CNT">        
+        <![CDATA[
+				HAVING MIN(ERR_CNT) <> 0
+              
+        ]]>        
+    </query>    
+        
+    <query name="SEL_DETAIL_ORDER">        
+        <![CDATA[
+				ORDER BY X.STR_CD, X.POS_NO, X.POS_FLAG
+              
+        ]]>        
+    </query>    
+    
+</service>

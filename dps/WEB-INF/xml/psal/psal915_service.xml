@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.31
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  청구대상 데이터를 마감한다.
+ -->
+<service name="/psal915.ps">
+    <!-- 청구대상 데이터MASTER 목록 -->
+    <gauce name="H_MASTER">
+        <column colName="CHECK1"       colType="TB_STRING"    size="2"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="PROC_DT"      colType="TB_STRING"    size="8"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+        <column colName="STR_CD"       colType="TB_STRING"    size="2"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BCOMP_CD"     colType="TB_STRING"    size="2"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+        <column colName="BCOMP_NM"     colType="TB_STRING"    size="40"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="JBRCH_ID"     colType="TB_STRING"    size="15"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="APPR_COUNT"   colType="TB_DECIMAL"   size="9"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="APPR_AMT"     colType="TB_DECIMAL"   size="12"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="HOLD_YN"       colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 청구대상 데이터DETAIL 목록 -->
+    <gauce name="H_DETAIL">
+        <column colName="REC_FLAG"     colType="TB_STRING"    size="1"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+		<column colName="DEVICE_ID"    colType="TB_STRING"    size="10"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="WORK_FLAG"    colType="TB_STRING"    size="2"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="WORK_FLAG_NM" colType="TB_STRING"    size="42"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="COMP_NO"      colType="TB_STRING"    size="10"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="CARD_NO"      colType="TB_STRING"    size="20"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="EXP_DT"       colType="TB_STRING"    size="4"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="DIV_MONTH"    colType="TB_STRING"    size="2"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+        <column colName="APPR_AMT"     colType="TB_DECIMAL"   size="12"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="SVC_AMT"      colType="TB_DECIMAL"   size="12"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="APPR_NO"      colType="TB_STRING"    size="10"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="APPR_DT"      colType="TB_STRING"    size="8"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="APPR_TIME"    colType="TB_STRING"    size="6"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="CAN_DT"       colType="TB_STRING"    size="8"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="CAN_TIME"     colType="TB_STRING"    size="6"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="CCOMP_NM"     colType="TB_STRING"    size="43"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BCOMP_NM"     colType="TB_STRING"    size="43"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="JBRCH_ID"     colType="TB_STRING"    size="15"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="DOLLAR_FLAG"  colType="TB_STRING"    size="4"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="FILLER"       colType="TB_STRING"    size="66"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 청구대상 MASTER 데이터 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT 'F'                                                    AS CHECK1
+                 , AA.PROC_DT
+                 , AA.STR_CD
+                 , AA.BCOMP_CD
+                 , AA.BCOMP_CD || '/' || DPS.FN_GET_CCOMP_NM(AA.BCOMP_CD) AS BCOMP_NM
+                 , AA.JBRCH_ID
+                 , COUNT(AA.APPR_AMT)                                     AS APPR_COUNT
+                 , SUM(AA.APPR_AMT)                                       AS APPR_AMT
+                 , (SELECT DECODE(COUNT(*), 0, 'N', 'Y')
+                      FROM DPS.PD_BUYREQPREPHOLD HL
+                     WHERE HL.PROC_DT  = AA.PROC_DT
+                       AND HL.STR_CD   = AA.STR_CD
+                       AND HL.BCOMP_CD = AA.BCOMP_CD
+                       AND HL.JBRCH_ID = AA.JBRCH_ID )                    AS HOLD_YN
+              FROM (
+                    SELECT TO_CHAR(SYSDATE, 'YYYYMMDD')              AS PROC_DT   /*처리일자(=시스템일자)*/
+                         , A.WORK_FLAG                                                       /*작업구분*/
+                         , DECODE(A.WORK_FLAG, '11', 1, '12', -1) * A.APPR_AMT  AS APPR_AMT  /*승인금액*/
+                         , A.STR_CD                                                          /*점포코드*/
+                         , A.BCOMP_CD                                                        /*매입사코드*/
+                         , A.JBRCH_ID                                                        /*가맹점번호*/
+                      -- , 'R' FLAG
+                      FROM DPS.PD_BUYREQPREP A
+                         , DPS.PD_POSTPONE B
+                     WHERE A.STR_CD      =  B.STR_CD (+)
+                       AND A.SALE_DT     =  B.SALE_DT (+)
+                       AND A.POS_NO      =  B.POS_NO (+)
+                       AND A.TRAN_NO     =  B.TRAN_NO (+)
+                       AND A.POS_SEQ_NO  =  B.POS_SEQ_NO (+)
+                       AND A.PAY_TYPE    =  B.PAY_TYPE (+)
+                       AND A.SALE_DT    <   TO_CHAR(SYSDATE, 'YYYYMMDD')  -- 어제까지의 데이터
+                       AND A.CHRG_DT    IS  NULL       -- 청구가 안된 건
+                       AND B.SALE_DT    IS  NULL       -- 청구보류가 되지 않은 건
+                       AND A.STR_CD   = ?
+                    UNION ALL
+                    SELECT TO_CHAR(SYSDATE, 'YYYYMMDD')                         AS PROC_DT   /*처리일자(=시스템일자)*/
+                         , A.WORK_FLAG                                                       /*작업구분*/
+                         , DECODE(A.WORK_FLAG, '11', 1, '12', -1) * A.APPR_AMT  AS APPR_AMT  /*승인금액*/
+                         , A.STR_CD                                                          /*점포코드*/
+                         , A.BCOMP_CD                                                        /*매입사코드*/
+                         , A.JBRCH_ID                                                        /*가맹점번호*/
+                      -- , 'P' FLAG
+                      FROM DPS.PD_BUYREQPREP A
+                         , DPS.PD_POSTPONE B
+                     WHERE A.STR_CD      =  B.STR_CD
+                       AND A.SALE_DT     =  B.SALE_DT
+                       AND A.POS_NO      =  B.POS_NO
+                       AND A.TRAN_NO     =  B.TRAN_NO
+                       AND A.POS_SEQ_NO  =  B.POS_SEQ_NO
+                       AND A.PAY_TYPE    =  B.PAY_TYPE
+                       AND A.SALE_DT    <   TO_CHAR(SYSDATE, 'YYYYMMDD')  -- 어제까지의 데이터
+                       AND A.CHRG_DT    IS  NULL       -- 청구가 안된 건
+                       AND B.DUE_DT     <=  TO_CHAR(SYSDATE, 'YYYYMMDD')  -- 청구보류건 청구일이 당일이전인 건
+                       AND A.STR_CD   = ?
+                    ) AA
+             WHERE 1=1
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_BCOMP_CD">        
+        <![CDATA[
+               AND AA.BCOMP_CD = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_JBRCH_ID">        
+        <![CDATA[
+               AND AA.JBRCH_ID = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_DUE_DT">        
+        <![CDATA[
+             AND EXISTS (SELECT 'Y'
+                           FROM DPS.PD_BUYREQPREPHOLD HL
+                          WHERE HL.PROC_DT  = AA.PROC_DT   -- 청구보류처리일자(=시스템일자)
+                            AND HL.STR_CD   = AA.STR_CD
+                            AND HL.BCOMP_CD = AA.BCOMP_CD
+                            AND HL.JBRCH_ID = AA.JBRCH_ID
+                         )  -- 청구보류처리일자로 보류건 조회
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_GROUP_BY">        
+        <![CDATA[
+             GROUP BY AA.PROC_DT
+                    , AA.STR_CD
+                    , AA.BCOMP_CD
+                    , AA.JBRCH_ID
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_ORDER_BY">        
+        <![CDATA[
+             ORDER BY AA.BCOMP_CD
+                    , AA.JBRCH_ID
+        ]]>        
+    </query>
+    
+    <!-- 청구대상 DETAIL데이터 조회 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT A.REC_FLAG  /*레코드구분*/
+                 , A.DEVICE_ID /*단말기번호*/
+                 , A.WORK_FLAG /*작업구분*/
+                 , A.WORK_FLAG || ' ' || COM.FN_GET_COMM_NAME('D', 'D035',A.WORK_FLAG) WORK_FLAG_NM /*작업구분명*/
+                 , A.COMP_NO  /*사업자번호*/
+                 , A.CARD_NO /*카드번호*/
+                 , A.EXP_DT  /*유효기간*/
+                 , A.DIV_MONTH /*할부*/
+                 , A.APPR_AMT /*승인금액*/
+                 , A.SVC_AMT  /*봉사료*/
+                 , A.APPR_NO  /*승인번호*/
+                 , A.APPR_DT  /*승인일자*/
+                 , A.APPR_TIME /*승인시간*/
+                 , A.CAN_DT    /*취소일자*/
+                 , A.CAN_TIME  /*취소시간*/
+                 , A.CCOMP_CD || ' ' || DPS.FN_GET_CCOMP_NM(A.CCOMP_CD) CCOMP_NM   /*발급사코드/명*/
+                 , A.BCOMP_CD || ' ' || DPS.FN_GET_CCOMP_NM(A.BCOMP_CD) BCOMP_NM   /*매입사코드/명*/
+                 , A.JBRCH_ID /*가맹점번호*/
+                 , A.DOLLAR_FLAG /*딜러구분*/                 
+                 , A.FILLER
+              -- , 'R' FLAG
+              FROM DPS.PD_BUYREQPREP A
+                 , DPS.PD_POSTPONE B
+             WHERE A.STR_CD      =  B.STR_CD (+)
+               AND A.SALE_DT     =  B.SALE_DT (+)
+               AND A.POS_NO      =  B.POS_NO (+)
+               AND A.TRAN_NO     =  B.TRAN_NO (+)
+               AND A.POS_SEQ_NO  =  B.POS_SEQ_NO (+)
+               AND A.PAY_TYPE    =  B.PAY_TYPE (+)
+               AND A.SALE_DT    <   TO_CHAR(SYSDATE, 'YYYYMMDD')  -- 어제까지의 데이터
+               AND A.CHRG_DT    IS  NULL       -- 청구가 안된 건
+               AND B.SALE_DT    IS  NULL       -- 청구보류가 되지 않은 건
+               AND A.STR_CD   = ?
+               AND A.BCOMP_CD = ?
+               AND A.JBRCH_ID = ?
+            UNION ALL
+            SELECT A.REC_FLAG  /*레코드구분*/
+                 , A.DEVICE_ID /*단말기번호*/
+                 , A.WORK_FLAG /*작업구분*/
+                 , A.WORK_FLAG || ' ' || COM.FN_GET_COMM_NAME('D', 'D035',A.WORK_FLAG) WORK_FLAG_NM /*작업구분명*/
+                 , A.COMP_NO  /*사업자번호*/
+                 , A.CARD_NO /*카드번호*/
+                 , A.EXP_DT  /*유효기간*/
+                 , A.DIV_MONTH /*할부*/
+                 , A.APPR_AMT /*승인금액*/
+                 , A.SVC_AMT  /*봉사료*/
+                 , A.APPR_NO  /*승인번호*/
+                 , A.APPR_DT  /*승인일자*/
+                 , A.APPR_TIME /*승인시간*/
+                 , A.CAN_DT    /*취소일자*/
+                 , A.CAN_TIME  /*취소시간*/
+                 , A.CCOMP_CD || ' ' || DPS.FN_GET_CCOMP_NM(A.CCOMP_CD) CCOMP_NM   /*발급사코드/명*/
+                 , A.BCOMP_CD || ' ' || DPS.FN_GET_CCOMP_NM(A.BCOMP_CD) BCOMP_NM   /*매입사코드/명*/
+                 , A.JBRCH_ID /*가맹점번호*/
+                 , A.DOLLAR_FLAG /*딜러구분*/                 
+                 , A.FILLER
+              -- , 'P' FLAG
+             FROM DPS.PD_BUYREQPREP A
+                , DPS.PD_POSTPONE B
+            WHERE A.STR_CD      =  B.STR_CD
+              AND A.SALE_DT     =  B.SALE_DT
+              AND A.POS_NO      =  B.POS_NO
+              AND A.TRAN_NO     =  B.TRAN_NO
+              AND A.POS_SEQ_NO  =  B.POS_SEQ_NO
+              AND A.PAY_TYPE    =  B.PAY_TYPE
+              AND A.SALE_DT    <   TO_CHAR(SYSDATE, 'YYYYMMDD')  -- 어제까지의 데이터
+              AND A.CHRG_DT    IS  NULL       -- 청구가 안된 건
+              AND B.DUE_DT     <=  TO_CHAR(SYSDATE, 'YYYYMMDD')  -- 청구보류건 청구일이 당일이전인 건
+              AND A.STR_CD      = ?
+              AND A.BCOMP_CD    = ?
+              AND A.JBRCH_ID    = ?
+        ]]>        
+    </query>
+    
+    <!-- 청구예정일자 Update -->
+    <query name="PD_BUYREQPREPHOLD_COUNT">        
+        <![CDATA[
+            SELECT COUNT(*) CNT
+              FROM  DPS.PD_BUYREQPREPHOLD
+             WHERE PROC_DT  = ?
+               AND STR_CD   = ?
+               AND BCOMP_CD = ?
+               AND JBRCH_ID = ?
+        ]]>        
+    </query>
+    
+    <!-- 청구예정일자 INSERT -->
+    <query name="INS_PD_BUYREQPREPHOLD">        
+        <![CDATA[
+            INSERT 
+              INTO DPS.PD_BUYREQPREPHOLD
+                  (PROC_DT
+                 , STR_CD
+                 , BCOMP_CD
+                 , JBRCH_ID
+                 , APPR_CNT
+                 , APPR_AMT
+                 , REG_DATE
+                 , REG_ID
+                 , MOD_DATE
+                 , MOD_ID)
+             VALUES
+                  (TO_CHAR(SYSDATE, 'YYYYMMDD')
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , SYSDATE
+                 , ?
+                 , SYSDATE
+                 , ?)
+        ]]>        
+    </query>
+    
+    <!-- 청구예정일자 Update -->
+    <query name="UPD_PD_BUYREQPREPHOLD">        
+        <![CDATA[
+            UPDATE DPS.PD_BUYREQPREPHOLD
+               SET APPR_CNT = ?
+                 , APPR_AMT = ?
+                 , MOD_DATE = SYSDATE
+                 , MOD_ID   = ?
+             WHERE PROC_DT  = ?
+               AND STR_CD   = ?
+               AND BCOMP_CD = ?
+               AND JBRCH_ID = ?
+        ]]>        
+    </query>
+    
+    <!-- 청구예정일자 Delete -->
+    <query name="DEL_PD_BUYREQPREPHOLD">        
+        <![CDATA[
+            DELETE DPS.PD_BUYREQPREPHOLD
+             WHERE PROC_DT  = ?
+               AND STR_CD   = ?
+               AND BCOMP_CD = ?
+               AND JBRCH_ID = ?
+        ]]>        
+    </query>
+    
+</service>

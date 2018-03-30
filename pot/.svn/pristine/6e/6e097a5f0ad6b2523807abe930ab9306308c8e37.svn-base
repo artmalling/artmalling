@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : 
+ * 작 성 일 : 2010.05.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  사용자/그룹관리
+ -->
+<service name="/tcom103.tc"> 
+    <gauce name="H_SEL_GROUP">   
+        <column colName="GROUP_CD"         colType="TB_STRING" size="3"    dec="0" keyType="TB_KEY"     roundMode="" /> 
+        <column colName="GROUP_NAME"       colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL"  roundMode="" />  
+    </gauce>
+
+    <gauce name="H_SEL_USER">   
+        <column colName="USER_ID"       colType="TB_STRING" size="10"    dec="0" keyType="TB_KEY"    roundMode="" />       
+        <column colName="USER_NAME"     colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="PWD_NO"        colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="PWD_NO_ORG"    colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="SUB_SYS"       colType="TB_STRING" size="3"     dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="GROUP_CD"      colType="TB_STRING" size="3"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="GROUP_NAME"    colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="V_FCL_CD"      colType="TB_STRING" size="6"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="V_EMP_GRADE"   colType="TB_STRING" size="6"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="ORG_FLAG"      colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />          
+        <column colName="STR_CD"        colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="STR_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DEPT_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="TEAM_NAME"     colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="PC_CD"         colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="PC_NAME"       colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />          
+        <column colName="USE_YN"        colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="" />          
+        <column colName="MULTI_LOGIN"   colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" roundMode="" />         
+        <column colName="VIEW_LEVEL"    colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="V_DEPT_CD"  	colType="TB_STRING" size="6"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="V_TEAM_CD"   	colType="TB_STRING" size="6"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="V_CHAR_CD1"   	colType="TB_STRING" size="6"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="V_CHAR_CD2"   	colType="TB_STRING" size="6"     dec="0" keyType="TB_NORMAL" roundMode="" />   
+        <column colName="V_CHAR_CD3"   	colType="TB_STRING" size="6"     dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="INPUT_SYS"   	colType="TB_STRING" size="3"     dec="0" keyType="TB_NORMAL" roundMode="" />
+    	<column colName="CORNER_CD"     colType="TB_STRING" size="2"     dec="0" keyType="TB_NORMAL" roundMode="" />
+    	<column colName="HP1_NO"        colType="TB_STRING" size="4"     dec="0" keyType="TB_NORMAL" roundMode="" />
+    	<column colName="HP2_NO"        colType="TB_STRING" size="4"     dec="0" keyType="TB_NORMAL" roundMode="" />
+    	<column colName="HP3_NO"        colType="TB_STRING" size="4"     dec="0" keyType="TB_NORMAL" roundMode="" />
+    	<column colName="E_MAIL"        colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+      	<column colName="POSITION"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL" roundMode="" />
+    	
+    </gauce> 
+     
+    <gauce name="H_SEL_GRID">   
+        <column colName="CODE"          colType="TB_STRING" size="3"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NAME"          colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+    
+    <!-- 그룹리스트 조회 -->
+    <query name="SEL_GROUP_LIST">        
+        <![CDATA[
+        SELECT GROUP_CD, GROUP_NAME
+          FROM (
+                    SELECT '1' AS GBN, '998' AS GROUP_CD, '전체그룹' AS GROUP_NAME
+                      FROM DUAL
+                     UNION ALL
+			        SELECT '1' AS GBN, '999' AS GROUP_CD, '미그룹'   AS GROUP_NAME
+			          FROM DUAL
+			         UNION ALL
+			        SELECT '2' AS GBN, GROUP_CD, GROUP_NAME
+			          FROM COM.TC_GROUP
+		       )
+         ORDER BY GBN, GROUP_CD
+        ]]>        
+    </query>
+        <!-- 그룹리스트 조회 -->
+    <query name="SEL_GROUP_GRID">        
+        <![CDATA[
+        SELECT GROUP_CD, GROUP_NAME
+          FROM (
+                    SELECT '1' AS GBN, '999' AS GROUP_CD, '' AS GROUP_NAME
+                      FROM DUAL
+                     UNION ALL
+                    SELECT '2' AS GBN, GROUP_CD, GROUP_NAME
+                      FROM COM.TC_GROUP
+               )
+         ORDER BY GBN, GROUP_CD
+        ]]>        
+    </query>
+    
+    <!-- 사용자리스트 조회 -->
+    <query name="SEL_USER_LIST">        
+        <![CDATA[
+			SELECT USER_ID                                                      -- 사용자아이디
+			     , USER_NAME                                                    -- 사용자이름
+			     , DCS.SC_Crypto_FUN('DEC', A.PWD_NO) AS PWD_NO                 -- 비밀번호
+			     , PWD_NO PWD_NO_ORG                                            -- 비밀번호
+			     , SUB_SYS                                                      -- 시스템구분
+			     , GROUP_CD                                                     -- 그룹코드
+			     , COM.FN_GET_GROUP_NAME(GROUP_CD)          AS GROUP_NAME       -- 그룹명
+			     , V_FCL_CD                                                     -- VOC소속
+			     , V_EMP_GRADE                                                  -- VOC등급
+			     , ORG_FLAG                                                     -- 조직구분
+			     , COM.FN_GET_COMM_NAME('D','P047', ORG_FLAG)   AS ORG_NAME     -- 조직명 
+			     , A.STR_CD                                                     -- 점코드 
+			     , DPS.FN_GET_STORE_NAME(A.STR_CD)          AS STR_NAME         -- 점명
+			     , A.DEPT_CD                                                    -- 부문코드    
+			     , DPS.FN_GET_ORG_NAME(A.STR_CD
+			                         , A.DEPT_CD
+			                         , '00','00','00')      AS DEPT_NAME        -- 부문명
+			     , A.TEAM_CD                                                    -- 팀코드
+			     , DPS.FN_GET_ORG_NAME(A.STR_CD
+			                         , A.DEPT_CD
+			                         , A.TEAM_CD
+			                         ,'00','00')            AS TEAM_NAME        -- 팀명 
+			     , A.PC_CD                                                      -- PC코드
+			     , DPS.FN_GET_ORG_NAME(A.STR_CD
+			                         , A.DEPT_CD
+			                         , A.TEAM_CD
+			                         , A.PC_CD
+			                         ,'00')                 AS PC_NAME          -- PC명
+			    , DECODE (A.USE_YN, 'Y', 'T' , 'N', 'F' )   AS USE_YN           -- 사용여부
+                , DECODE (A.MULTI_LOGIN, 'Y', 'T' , 'N', 'F' ) AS MULTI_LOGIN   -- 중복허용
+                , A.VIEW_LEVEL                                                  -- 뷰레벨
+                , A.V_DEPT_CD													-- VOC처리부문
+                , A.V_TEAM_CD													-- VOC처리팀
+                , A.V_CHAR_CD1													-- VOC처리PC1
+                , A.V_CHAR_CD2													-- VOC처리PC2
+                , A.V_CHAR_CD3													-- VOC처리PC3
+		        , A.INPUT_SYS													-- 등록시스템
+		     	, A.CORNER_CD
+		     	, A.HP1_NO
+                , A.HP2_NO
+                , A.HP3_NO
+                , A.E_MAIL
+                , A.POSITION
+		     FROM COM.TC_USRMST A   
+		    WHERE 1=1	       
+        ]]>        
+    </query>
+    
+    <query name="SEL_USER_WHERE_ORG_FLAG">
+        <![CDATA[ 
+               AND ORG_FLAG      = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_USER_WHERE_STR_CD">
+        <![CDATA[ 
+               AND A.STR_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_USE_YN">
+        <![CDATA[
+               AND A.USE_YN      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_DEPT_CD">
+        <![CDATA[
+               AND A.DEPT_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_TEAM_CD">
+        <![CDATA[
+               AND A.TEAM_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_PC_CD">
+        <![CDATA[
+               AND A.PC_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_GROUP_CD">
+        <![CDATA[ 
+               AND NVL(A.GROUP_CD,'999') = ? 
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_USER_CD">
+        <![CDATA[ 
+               AND ( A.USER_ID LIKE ? || '%' OR A.USER_NAME LIKE '%' || ? || '%') 
+        ]]>    
+    </query>
+    
+    <query name="SEL_USER_ORDER">
+        <![CDATA[
+            ORDER BY A.USER_ID           
+        ]]>    
+    </query>
+    
+    <!-- 그룹코드  중복건수 조회  -->            
+    <query name="SEL_GROUP_CNT">
+        <![CDATA[
+        SELECT COUNT(*) AS CNT 
+          FROM COM.TC_GROUP
+         WHERE GROUP_CD = ? 
+        ]]>
+    </query>  
+    
+    <!-- 공통코드 마스터  신규입력  -->      
+    <query name="INS_GROUP">
+        <![CDATA[
+			INSERT INTO COM.TC_GROUP 
+            ( 
+            	 GROUP_CD
+               , GROUP_NAME 
+               , REG_DATE
+               , REG_ID
+               , MOD_DATE
+               , MOD_ID
+			)
+            VALUES 
+            (
+            	 ?
+               , ?  
+			   , SYSDATE
+			   , ?
+			   , SYSDATE
+			   , ?
+			)
+        ]]>
+    </query>       
+    
+    <!-- 공통코드 마스터 수정  -->      
+    <query name="UPT_GROUP">
+        <![CDATA[
+            UPDATE COM.TC_GROUP
+               SET GROUP_NAME  = ?
+                 , MOD_DATE    = SYSDATE
+                 , MOD_ID      = ?
+             WHERE GROUP_CD    = ? 
+        ]]>
+    </query> 
+    
+    <!-- 그룹코드를 사용하는 사용자  건수 -->            
+    <query name="SEL_USER_CNT">
+        <![CDATA[
+        SELECT COUNT(*) AS CNT 
+          FROM COM.TC_USRMST
+         WHERE GROUP_CD = ? 
+           AND USE_YN   = 'Y'
+        ]]>
+    </query>  
+    
+
+    <!-- 그룹코드 삭제 -->   
+    <query name="DEL_GROUP">
+        <![CDATA[ 
+            DELETE COM.TC_GROUP 
+             WHERE GROUP_CD    = ? 
+        ]]>
+    </query> 
+    
+    <!-- 그룹권한 삭제하기  -->
+    <query name="DEL_GRPPGM">
+        <![CDATA[
+            DELETE COM.TC_GRPPGM
+             WHERE GROUP_CD  = ? 
+        ]]>        
+    </query>
+    
+    <!--사용자 그룹코드 초기화  -->   
+    <query name="UPT_USER_GROUP">
+        <![CDATA[
+            UPDATE COM.TC_USRMST
+               SET GROUP_CD     = '' 
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE GROUP_CD     = ? 
+        ]]>
+    </query> 
+    
+    <!--사용자 수정  -->   
+    <query name="UPT_USER">
+        <![CDATA[
+            UPDATE COM.TC_USRMST
+               SET USER_NAME    = ?
+                 , SUB_SYS      = ?
+                 , GROUP_CD     = ?
+                 , ORG_FLAG     = ?
+                 , STR_CD       = ?
+                 , DEPT_CD      = ?
+                 , TEAM_CD      = ?
+                 , PC_CD        = ?  
+                 , V_FCL_CD     = ?
+                 , V_EMP_GRADE  = ?  
+                 , USE_YN       = ?
+                 , MULTI_LOGIN  = ?
+                 , VIEW_LEVEL   = ?
+                 , ORG_CD       = ?
+                 , ORG_LEVEL    = ? 
+                 , V_DEPT_CD    = ?
+                 , V_TEAM_CD    = ? 
+                 , V_CHAR_CD1	= ?												
+                 , V_CHAR_CD2	= ?												
+                 , V_CHAR_CD3	= ?
+                 , HP1_NO		= ?												
+                 , HP2_NO		= ?												
+                 , HP3_NO		= ?
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+                 , E_MAIL       = ?
+                 , POSITION     = ?
+             WHERE USER_ID      = ? 
+        ]]>
+    </query>  
+    
+    <!--사용자 수정  -->   
+    <query name="UPT_USER_PWD">
+        <![CDATA[
+            UPDATE COM.TC_USRMST
+               SET PWD_NO       = DCS.SC_Crypto_FUN('ENC', ?)
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE USER_ID      = ? 
+        ]]>
+    </query> 
+    
+    <!-- 사용자  중복건수 조회  -->            
+    <query name="SEL_USER_CNT">
+        <![CDATA[
+        SELECT COUNT(*) AS CNT 
+          FROM COM.TC_USRMST
+         WHERE USER_ID = ? 
+        ]]>
+    </query> 
+    
+    <!-- 사용자 신규 입력  -->
+    <query name="INS_USER">        
+        <![CDATA[
+    INSERT INTO COM.TC_USRMST (
+                              USER_ID
+                            , USER_NAME
+                            , PWD_NO
+                            , GROUP_CD
+                            , STR_CD
+                            , ORG_FLAG
+                            , DEPT_CD
+                            , TEAM_CD
+                            , PC_CD
+                            , ORG_LEVEL
+                            , SUB_SYS
+                            , REG_DATE
+                            , MOD_DATE
+                            , MOD_ID
+                            , ORG_CD
+                            , CORNER_CD
+                            , REG_ID
+                            , USE_YN
+                            , MULTI_LOGIN
+                            , V_FCL_CD
+                            , V_EMP_GRADE
+                            , VIEW_LEVEL
+                            , V_DEPT_CD
+                            , V_TEAM_CD
+                            , V_CHAR_CD1
+                            , V_CHAR_CD2
+                            , V_CHAR_CD3
+                            , INPUT_SYS
+                            , HP1_NO
+                            , HP2_NO
+                            , HP3_NO
+                            , E_MAIL
+                            ,POSITION
+                         ) VALUES (
+                         		  ?
+                         		, ?
+                         		, DCS.SC_Crypto_FUN('ENC', ?)
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, SYSDATE
+                         		, SYSDATE
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         		, ?
+                         )
+        ]]>        
+    </query>
+     
+    <!-- 사용자 사용여부 변경 : 행삭제 -->   
+    <query name="DEL_USER">
+        <![CDATA[
+            UPDATE COM.TC_USRMST
+               SET USE_YN       = 'N'
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE USER_ID      = ? 
+        ]]>
+    </query>
+      
+</service>

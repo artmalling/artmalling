@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  카드현장할인쿠폰매출현황
+ -->
+<service name="/psal542.ps">
+    <!-- 쿠폰매출현황 MASTER 헤더  -->
+    <gauce name="H_SEL_COU_SAL_MST">
+        <column colName="STR_CD"      colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_DT"     colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COUPON_CD"   colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COUPON_NAME" colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COMM_NAME1"  colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="REFER_CODE"  colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COUPON_AMT"  colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SAL_CNT"     colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SAL_AMT"     colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="RTN_CNT"     colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="RTN_AMT"     colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        
+    </gauce>
+    
+    <!-- 쿠폰매출현황 DETAIL 헤더  -->
+    <gauce name="H_SEL_COU_SAL_DTL">
+        <column colName="SALE_DT"     colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="POS_NO"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TRAN_NO"     colType="TB_STRING"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_FLAG"   colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COUPON_CNT"  colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COUPON_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_AMT"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COUPON_CD"   colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PLU_CD"      colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COUPON_NAME" colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COMM_NAME1"  colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="REFER_CODE"  colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CARD_DATA"   colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CARD_PAY_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="APPR_NO"  	   colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CARD_PUBLISH"  colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CARD_PURCHASE" colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 쿠폰매출현황 MASTER 조회쿼리  TOP-->
+    <query name="SEL_COU_SAL_MST_TOP">
+        <![CDATA[
+        SELECT X.STR_CD
+             , X.SALE_DT
+             --, X.POS_NO
+             --, X.COUPON_FLAG
+             , X.COUPON_CD
+             , X.COUPON_NAME
+             , X.COMM_NAME1
+             , X.REFER_CODE
+             , SUM(X.COUPON_AMT) AS COUPON_AMT
+             , SUM(X.SAL_CNT) AS SAL_CNT
+             , SUM(X.SAL_AMT) AS SAL_AMT
+             , SUM(X.RTN_CNT) AS RTN_CNT
+             , SUM(X.RTN_AMT) AS RTN_AMT
+             --, X.COUPON_TYPE
+          FROM ( SELECT (CASE WHEN COU.COUPON_TYPE = '30' THEN '제휴' WHEN COU.COUPON_TYPE = '31' THEN 'CMS' ELSE '' END) COUPON_FLAG
+                      , COU.STR_CD
+                      , COU.SALE_DT
+                      , COU.POS_NO
+                      , COU.COUPON_CD
+                      , COU.COUPON_NAME
+                      , COMM.COMM_NAME1
+                      , COMM.REFER_CODE
+                      , COU.COUPON_AMT
+                      , COU.COUPON_CNT AS SAL_CNT
+                      , COU.PAY_AMT    AS SAL_AMT
+                      , 0              AS RTN_CNT
+                      , 0              AS RTN_AMT
+                      , COU.COUPON_TYPE
+                   FROM DPS.PS_DISCOUPON COU
+                      , DPS.PS_TRHEADER  TR
+                      , (SELECT *
+                      	   FROM COM.TC_COMMCODE
+						  WHERE SYS_PART = 'D' AND COMM_PART = 'D119'  AND USE_YN = 'Y') COMM
+                  WHERE COU.STR_CD   = TR.STR_CD
+                    AND COU.SALE_DT  = TR.SALE_DT
+                    AND COU.POS_NO   = TR.POS_NO
+                    AND COU.TRAN_NO  = TR.TRAN_NO
+                    AND COU.COUPON_CD = COMM.COMM_CODE
+                    AND COU.COUPON_TYPE IN ('30', '31')
+                    AND COU.COUPON_TYPE LIKE ? || '%'
+                    AND COU.COUPON_CD LIKE ? || '%'
+                    AND COU.STR_CD   = ?
+                    AND COU.SALE_DT BETWEEN ? AND ?
+                    AND TR.TRAN_FLAG = '0'
+        ]]>
+    </query>
+    
+    <!-- 쿠폰매출현황 MASTER 조회쿼리 MIDDLE-->
+    <query name="SEL_COU_SAL_MST_MIDDLE">
+        <![CDATA[
+                  UNION ALL
+                 SELECT (CASE WHEN COU.COUPON_TYPE = '30' THEN '제휴' WHEN COU.COUPON_TYPE = '31' THEN 'CMS' ELSE '' END) COUPON_FLAG
+                      , COU.STR_CD
+                      , COU.SALE_DT
+                      , COU.POS_NO
+                      , COU.COUPON_CD
+                      , COU.COUPON_NAME
+                      , COMM.COMM_NAME1
+                      , COMM.REFER_CODE
+                      , COU.COUPON_AMT
+                      , 0              AS SAL_CNT
+                      , 0              AS SAL_AMT
+                      , COU.COUPON_CNT AS RTN_CNT
+                      , COU.PAY_AMT    AS RTN_AMT
+                      , COU.COUPON_TYPE
+                   FROM DPS.PS_DISCOUPON COU
+                      , DPS.PS_TRHEADER  TR
+                      , (SELECT *
+                      	   FROM COM.TC_COMMCODE
+						  WHERE SYS_PART = 'D' AND COMM_PART = 'D119' AND USE_YN = 'Y') COMM
+                  WHERE COU.STR_CD   = TR.STR_CD
+                    AND COU.SALE_DT  = TR.SALE_DT
+                    AND COU.POS_NO   = TR.POS_NO
+                    AND COU.TRAN_NO  = TR.TRAN_NO
+                    AND COU.COUPON_CD = COMM.COMM_CODE
+                    AND COU.COUPON_TYPE IN ('30', '31')
+                    AND COU.COUPON_TYPE LIKE ? || '%'
+                    AND COU.COUPON_CD LIKE ? || '%'
+                    AND COU.STR_CD   = ?
+                    AND COU.SALE_DT BETWEEN ? AND ?
+                    AND TR.TRAN_FLAG = '1'
+        ]]>
+    </query>
+    
+    <!-- 쿠폰매출현황 MASTER 조회쿼리 BOTTOM-->
+    <query name="SEL_COU_SAL_MST_BOTTOM">
+        <![CDATA[
+               ) X
+         GROUP BY 
+               X.STR_CD
+             , X.SALE_DT
+             --, X.POS_NO
+             --, X.COUPON_FLAG
+             --, X.COUPON_TYPE
+             , X.COUPON_CD
+             , X.COUPON_NAME
+             , X.COMM_NAME1
+             , X.REFER_CODE
+         ORDER BY
+               X.STR_CD
+             , X.SALE_DT
+             --, X.POS_NO
+             --, X.COUPON_FLAG
+             --, X.COUPON_TYPE
+             , X.COUPON_CD
+             , X.COUPON_NAME
+             , X.COMM_NAME1
+             , X.REFER_CODE
+        ]]>
+    </query>
+    
+    <query name="SEL_COU_SAL_MST_WHERE_POS_NO">
+        <![CDATA[
+                    AND COU.POS_NO   LIKE ?||'%'
+        ]]>
+    </query>
+    
+    <query name="SEL_COU_SAL_DTL">
+        <![CDATA[
+        SELECT 
+              COU.SALE_DT
+             , COU.POS_NO
+        	 , COU.TRAN_NO
+             , TC.COMM_NAME1  AS SALE_FLAG
+             , COU.COUPON_CNT
+             , COU.COUPON_AMT
+             , COU.PAY_AMT
+             , COU.COUPON_CD
+             , COU.PLU_CD
+             , COU.COUPON_NAME
+             , COMM.COMM_NAME1
+             , COMM.REFER_CODE
+             , CAR.CARD_DATA
+             , CAR.PAY_AMT
+             , CAR.APPR_NO
+             , CAR.CARD_PUBLISH
+             , CAR.CARD_PURCHASE
+          FROM DPS.PS_DISCOUPON COU
+             , DPS.PS_TRHEADER  TR
+             , COM.TC_COMMCODE  TC
+             , (SELECT *
+             	   FROM COM.TC_COMMCODE
+				WHERE SYS_PART = 'D' AND COMM_PART = 'D119' AND USE_YN = 'Y') COMM
+             , DPS.PS_DISCARD   CAR
+         WHERE COU.STR_CD      = TR.STR_CD
+           AND COU.SALE_DT     = TR.SALE_DT
+           AND COU.POS_NO      = TR.POS_NO
+           AND COU.TRAN_NO     = TR.TRAN_NO
+           AND COU.COUPON_CD = COMM.COMM_CODE
+           AND CAR.STR_CD(+)   = TR.STR_CD
+           AND CAR.SALE_DT(+)  = TR.SALE_DT
+           AND CAR.POS_NO(+)   = TR.POS_NO
+           AND CAR.TRAN_NO(+)  = TR.TRAN_NO
+           --AND CAR.CARD_PUBLISH = COMM.REFER_CODE
+           AND TC.COMM_PART    = 'P610'
+           AND TR.TRAN_FLAG    = TC.COMM_CODE
+           AND COU.STR_CD      = ?
+           AND COU.SALE_DT     = ?
+           AND COU.COUPON_CD LIKE ? || '%'
+         ORDER BY COU.POS_NO
+        	 	, COU.TRAN_NO
+        ]]>
+    </query>
+    
+</service>

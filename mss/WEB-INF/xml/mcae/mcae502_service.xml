@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김정민
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae502.mc">
+<!-- 사은행사 MASTER 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="EVENT_CD"              colType="TB_STRING"      size="11"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_NAME"            colType="TB_STRING"      size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SKU_CD"                colType="TB_STRING"      size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_NAME"              colType="TB_STRING"      size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BUY_COST_PRC"          colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_QTY"                colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RFD_QTY"               colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PRSNT_QTY"             colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EXCP_PRSNT_QTY"        colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ETC_PRSNT"             colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RECOVERY_QTY"          colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="POS_NDRAWL_CAN_QTY"    colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ALLQTY"                colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="LOSSQTY"               colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="QTY"                   colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SRVY_QTY"              colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="LOSS_QTY"              colType="TB_DECIMAL"     size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="LOSS_AMT"              colType="TB_DECIMAL"     size="12"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="FLAG"                  colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+     
+    <query name="SEL_MASTER">
+        <![CDATA[    
+		     SELECT STK.EVENT_CD
+                  , EVT.EVENT_NAME
+                  , STK.SKU_CD
+                  , DPS.SKU_NAME
+                  , MST.BUY_COST_PRC
+                  , SUM(STK.IN_QTY) AS IN_QTY
+                  , SUM(STK.RFD_QTY) AS RFD_QTY
+                  , SUM(STK.PRSNT_QTY) AS PRSNT_QTY
+                  , SUM(STK.EXCP_PRSNT_QTY) AS EXCP_PRSNT_QTY
+                  , SUM(STK.ETC_PRSNT) AS ETC_PRSNT
+                  , SUM(STK.RECOVERY_QTY) AS RECOVERY_QTY
+                  , SUM(STK.POS_NDRAWL_CAN_QTY) AS POS_NDRAWL_CAN_QTY
+                  , (SUM(STK.PRSNT_QTY)+SUM(STK.EXCP_PRSNT_QTY)+SUM(STK.ETC_PRSNT)) - (SUM(STK.RECOVERY_QTY)+SUM(STK.POS_NDRAWL_CAN_QTY)) AS ALLQTY
+                  , SUM(STK.LOSS_QTY) AS LOSSQTY
+                  , SUM(STK.IN_QTY-STK.RFD_QTY)-(SUM(STK.PRSNT_QTY)+SUM(STK.EXCP_PRSNT_QTY)+SUM(STK.ETC_PRSNT)) - (SUM(STK.RECOVERY_QTY)+SUM(STK.POS_NDRAWL_CAN_QTY))-SUM(LOSS_QTY) AS QTY
+                  , SUM(STK.IN_QTY-STK.RFD_QTY)-(SUM(STK.PRSNT_QTY)+SUM(STK.EXCP_PRSNT_QTY)+SUM(STK.ETC_PRSNT)) - (SUM(STK.RECOVERY_QTY)+SUM(STK.POS_NDRAWL_CAN_QTY))-SUM(LOSS_QTY) AS SRVY_QTY
+                  , 0 AS LOSS_QTY
+                  , 0 AS LOSS_AMT
+                  , '' AS FLAG
+               FROM MSS.MC_EVTSKUSTOCK STK, MSS.MC_EVTSKUMST MST, DPS.PC_SKUMST DPS, DPS.PC_EVTMST EVT
+              WHERE STK.EVENT_CD = MST.EVENT_CD
+                AND STK.EVENT_CD = EVT.EVENT_CD
+                AND STK.SKU_CD = MST.SKU_CD
+                AND STK.SKU_CD = DPS.SKU_CD
+                AND STK.STR_CD = ?
+                AND STK.EVENT_CD = ?
+                AND STK.STK_DT <= ?
+           GROUP BY STK.EVENT_CD
+                  , EVT.EVENT_NAME
+                  , STK.SKU_CD
+                  , DPS.SKU_NAME
+                  , MST.BUY_COST_PRC
+           ORDER BY STK.EVENT_CD, STK.SKU_CD
+        ]]>        
+    </query>
+    
+    <query name="INS_EVTSKUSTOCK">
+        <![CDATA[    
+             MERGE INTO MSS.MC_EVTSKUSTOCK STK
+                 USING (SELECT ?              AS STK_DT
+                             , ?              AS STR_CD
+                             , ?              AS EVENT_CD
+                             , ?              AS SKU_CD
+                             , ?              AS SRVY_QTY
+                             , ?              AS LOSS_QTY
+                             , ?              AS USERID
+                          FROM DUAL) DTL
+                    ON (    STK.STK_DT   = DTL.STK_DT
+                        AND STK.STR_CD   = DTL.STR_CD
+                        AND STK.EVENT_CD = DTL.EVENT_CD
+                        AND STK.SKU_CD   = DTL.SKU_CD)
+            WHEN MATCHED THEN
+                 UPDATE SET STK.SRVY_QTY    = DTL.SRVY_QTY
+                          , STK.LOSS_QTY    = STK.LOSS_QTY + DTL.LOSS_QTY 
+                          , STK.MOD_ID      = DTL.USERID
+                          , STK.MOD_DATE    = SYSDATE
+            WHEN NOT MATCHED THEN
+                INSERT ( STK.STK_DT
+                       , STK.STR_CD
+                       , STK.EVENT_CD
+                       , STK.SKU_CD
+                       , STK.IN_QTY
+                       , STK.IN_AMT
+                       , STK.RFD_QTY
+                       , STK.RFD_AMT
+                       , STK.PRSNT_QTY
+                       , STK.EXCP_PRSNT_QTY
+                       , STK.ETC_PRSNT
+                       , STK.RECOVERY_QTY
+                       , STK.POS_NDRAWL_CAN_QTY 
+                       , STK.SRVY_QTY
+                       , STK.LOSS_QTY 
+                       , STK.REG_DATE
+                       , STK.REG_ID 
+                       , STK.MOD_ID
+                       , STK.MOD_DATE )
+                VALUES ( DTL.STK_DT
+                       , DTL.STR_CD
+                       , DTL.EVENT_CD
+                       , DTL.SKU_CD
+                       , 0
+                       , 0
+                       , 0
+                       , 0
+                       , 0
+                       , 0
+                       , 0
+                       , 0
+                       , 0 
+                       , DTL.SRVY_QTY
+                       , DTL.LOSS_QTY 
+                       , SYSDATE
+                       , DTL.USERID
+                       , DTL.USERID
+                       , SYSDATE ) 
+        ]]>        
+    </query>
+    
+    <query name="INS_STKSKU">
+        <![CDATA[    
+             INSERT INTO  MSS.MC_STKSKU ( 
+                                      LOSS_DT
+                                    , STR_CD
+                                    , EVENT_CD
+                                    , SEQ_NO
+                                    , SKU_CD
+                                    , STOCK_QTY
+                                    , SRVY_QTY
+                                    , LOSS_QTY
+                                    , REG_DATE
+                                    , REG_ID
+                                    , MOD_DATE
+                                    , MOD_ID
+                                       )
+                   VALUES  ( 
+                                 ?
+                               , ?
+                               , ?
+                               , (SELECT NVL(MAX(SEQ_NO), 0) + 1 SEQ_NO
+                                             FROM MSS.MC_STKSKU
+                                            WHERE LOSS_DT   = ?
+                                              AND STR_CD    = ?
+                                              AND EVENT_CD  = ?)
+                               , ?
+                               , ?
+                               , ?
+                               , ?
+                               , SYSDATE
+                               , ?
+                               , SYSDATE 
+                               , ?
+                           ) 
+        ]]>        
+    </query>
+    
+    <!-- 사은행사 마감체크  -->
+    <gauce name="H_RETURN">
+        <column colName="CONF_FLAG"       colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+
+    <!-- 사은행사 마감체크  -->
+    <query name="SEL_MAGAM">
+        <![CDATA[  
+           SELECT CONF_FLAG
+             FROM MSS.MC_EVTSKUCAL
+            WHERE EVENT_CD = ?
+        ]]>        
+    </query>
+    
+    
+</service>

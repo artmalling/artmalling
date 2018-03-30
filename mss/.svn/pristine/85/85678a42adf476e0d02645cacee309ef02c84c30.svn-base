@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae418.mc">
+
+<!-- 사은행사 MASTER 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"          colType="TB_STRING"     size="11"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_S_DT"        colType="TB_STRING"     size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_E_DT"        colType="TB_STRING"     size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_DT"          colType="TB_STRING"     size="30"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLU_FLAG"    colType="TB_STRING"     size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="USR_NAME"          colType="TB_STRING"     size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <gauce name="H_DETAIL">  
+        <column colName="PRSNT_DT"              colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PRSNT_NO"              colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="CUST_ID"               colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CUST_NM"               colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="EVENT_GIFT_TYPE"       colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SKU_CD"                colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SKU_NAME"              colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PRSNT_FLAG_NAME"       colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PRSNT_TIME"            colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PRSNT_QTY"             colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PRSNT_AMT"             colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_YN"               colType="TB_STRING"     size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"              colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RECP_NO"               colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_NO"           colType="TB_STRING"     size="100"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_EVTSKUSTOCK">
+        <column colName="PRSNT_DT"              colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_CD"                colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SKU_NAME"              colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SAL_COST_PRC"          colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="IN_QTY"                colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PRSNT_QTY"             colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EXCP_PRSNT_QTY"        colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="RECOVERY_QTY"          colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="POS_NDRAWL_CAN_QTY"    colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="ETC_PRSNT"             colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="SUMQTY"                colType="TB_DECIMAL"    size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+    </gauce>
+     
+    <query name="SEL_MASTER">
+        <![CDATA[   
+                SELECT A.STR_CD
+                     , A.EVENT_CD
+			         , B.EVENT_NAME
+			         , C.EVENT_S_DT
+			         , C.EVENT_E_DT
+			         , (C.EVENT_S_DT||C.EVENT_E_DT) AS EVENT_DT
+			         , COM.FN_GET_COMM_NAME('D','M002',A.EVENT_TYPE) AS EVENT_PLU_FLAG
+			         , COM.FN_GET_USER_NAME(A.CHAR_ID) AS USR_NAME
+			      FROM MSS.MC_EVTMST A, DPS.PC_EVTMST B, DPS.PC_STREVT C
+			     WHERE A.EVENT_CD = B.EVENT_CD
+			       AND A.STR_CD   = C.STR_CD
+                   AND A.EVENT_CD = C.EVENT_CD
+                   AND B.EVENT_TYPE = '4'
+			       AND A.STR_CD = ?
+			       AND ((? >= C.EVENT_S_DT AND ? <= C.EVENT_E_DT) OR
+			                    (? >= C.EVENT_S_DT AND ? <= C.EVENT_E_DT) OR
+			                    (C.EVENT_S_DT >= ? AND C.EVENT_S_DT <= ?) OR
+			                    (C.EVENT_E_DT >= ? AND C.EVENT_E_DT <= ?))
+			       AND A.EVENT_CD LIKE ? || '%'
+			  ORDER BY A.STR_CD
+			         , B.EVENT_NAME
+        ]]>        
+    </query>
+    
+    <!--  <query name="SEL_DETAIL">
+        <![CDATA[
+		SELECT
+			  PRSNT_DT 
+			, PRSNT_NO
+			, CARD_CUST_ID AS CUST_ID
+			, (SELECT  CUST_NAME FROM DCS.DM_CUSTOMER WHERE CUST_ID = A.CARD_CUST_ID) CUST_NM
+		    , COM.FN_GET_COMM_NAME('D','M065',D.SKU_GB) AS EVENT_GIFT_TYPE
+			, A.SKU_CD
+			, B.SKU_NAME
+		    , (SELECT COMM_NAME1 FROM COM.TC_COMMCODE WHERE  SYS_PART = 'D' AND COMM_PART = 'M004' AND COMM_CODE = A.PRSNT_FLAG ) AS PRSNT_FLAG_NAME
+		    , PRSNT_TIME
+		    , CASE WHEN RANK() OVER ( PARTITION BY A.PRSNT_DT, A.PRSNT_NO ORDER BY A.PRSNT_DT, A.PRSNT_NO) = 1
+		           THEN (SELECT REFER_VALUE FROM COM.TC_COMMCODE WHERE  SYS_PART = 'D' AND COMM_PART = 'M004' AND COMM_CODE = A.PRSNT_FLAG )
+		           ELSE 0 END AS PRSNT_QTY
+		    , CASE WHEN RANK() OVER ( PARTITION BY A.PRSNT_DT, A.PRSNT_NO ORDER BY A.PRSNT_DT, A.PRSNT_NO) = 1
+		           THEN (SELECT REFER_VALUE * PRSNT_AMT FROM COM.TC_COMMCODE WHERE  SYS_PART = 'D' AND COMM_PART = 'M004' AND COMM_CODE = A.PRSNT_FLAG )
+		           ELSE 0 END AS PRSNT_AMT
+		FROM MSS.MC_EVTSKUPRSNT A, DPS.PC_SKUMST B, MSS.MC_EVTSKUMST D
+		WHERE A.SKU_CD   = B.SKU_CD(+)
+          AND A.STR_CD   = D.STR_CD(+)
+          AND A.SKU_CD   = D.SKU_CD(+)
+          AND A.EVENT_CD = D.EVENT_CD(+)    
+          AND A.STR_CD   = ?
+          AND A.EVENT_CD = ?
+          AND A.PRSNT_DT BETWEEN ? AND ?
+        ]]>        
+    </query>  20140306_마케팅팀 김동하사원 요청 영수증번호 표시 및 카드유무표시,상품권번호 표시 추가 전_강연식 -->
+    
+     <query name="SEL_DETAIL"><!-- 20141112_마케팅팀 김동하 주임 요청 포스취소분 제외 -->
+        <![CDATA[
+
+		SELECT
+              A.PRSNT_DT 
+            , A.PRSNT_NO
+            --, CARD_CUST_ID AS CUST_ID            
+            , G.CUST_NO AS CUST_ID
+            --, (SELECT  CUST_NAME FROM DCS.DM_CUSTOMER WHERE CUST_ID = A.CARD_CUST_ID) CUST_NM
+            , (SELECT  CUST_NAME FROM DCS.DM_CUSTOMER WHERE CUST_ID = G.CUST_NO) CUST_NM
+            , COM.FN_GET_COMM_NAME('D','M065',D.SKU_GB) AS EVENT_GIFT_TYPE
+            , A.SKU_CD
+            , B.SKU_NAME
+            , (SELECT COMM_NAME1 FROM COM.TC_COMMCODE WHERE  SYS_PART = 'D' AND COMM_PART = 'M004' AND COMM_CODE = REPLACE(A.PRSNT_FLAG,'5','1') ) AS PRSNT_FLAG_NAME
+            , PRSNT_TIME
+            --, (SELECT REFER_VALUE FROM COM.TC_COMMCODE WHERE  SYS_PART = 'D' AND COMM_PART = 'M004' AND COMM_CODE = REPLACE(A.PRSNT_FLAG,'5','1')  ) AS PRSNT_QTY
+            , CASE WHEN RANK() OVER ( PARTITION BY A.PRSNT_DT, A.PRSNT_NO ORDER BY A.PRSNT_DT, A.PRSNT_NO, E.SALE_DT, E.POS_NO, E.TRAN_NO) = 1
+                   THEN (SELECT REFER_VALUE FROM COM.TC_COMMCODE WHERE  SYS_PART = 'D' AND COMM_PART = 'M004' AND COMM_CODE = REPLACE(A.PRSNT_FLAG,'5','1')  )
+                   ELSE 0 END AS PRSNT_QTY
+            , CASE WHEN RANK() OVER ( PARTITION BY A.PRSNT_DT, A.PRSNT_NO ORDER BY A.PRSNT_DT, A.PRSNT_NO, E.SALE_DT, E.POS_NO, E.TRAN_NO) = 1
+                   THEN (SELECT REFER_VALUE * PRSNT_AMT FROM COM.TC_COMMCODE WHERE  SYS_PART = 'D' AND COMM_PART = 'M004' AND COMM_CODE = REPLACE(A.PRSNT_FLAG,'5','1')  )
+                   ELSE 0 END AS PRSNT_AMT
+            , CASE WHEN F.CARD_DATA IS NULL
+                   THEN '미카드거래'
+                   ELSE '카드거래' END AS CARD_YN
+            --, E.SALE_AMT AS SALE_AMT
+            , CASE WHEN RANK() OVER ( PARTITION BY A.PRSNT_DT, A.PRSNT_NO ORDER BY A.PRSNT_DT, A.PRSNT_NO, E.SALE_DT, E.POS_NO, E.TRAN_NO) = 1
+                   THEN E.SALE_AMT 
+                   ELSE 0 END AS SALE_AMT
+            
+            , E.SALE_DT || '-' || E.POS_NO || '-' || E.TRAN_NO AS RECP_NO
+
+--            , CASE WHEN RANK() OVER ( PARTITION BY A.PRSNT_DT, A.PRSNT_NO ORDER BY A.PRSNT_DT, A.PRSNT_NO, E.SALE_DT, E.POS_NO, E.TRAN_NO) = 1
+--                   THEN  MSS.FN_GET_EVTGIFTCARD(E.STR_CD, E.PRSNT_DT, E.PRSNT_NO, 1)  
+--                   ELSE  MSS.FN_GET_EVTGIFTCARD(E.STR_CD, E.PRSNT_DT, E.PRSNT_NO, 0)  END AS GIFTCARD_NO                   
+                   
+            , CASE WHEN RANK() OVER (  PARTITION BY A.PRSNT_DT, A.PRSNT_NO ORDER BY A.PRSNT_DT, A.PRSNT_NO, E.SALE_DT, E.POS_NO, E.TRAN_NO, E.SEQ_NO) <> 0
+                    THEN  MSS.FN_GET_EVTGIFTCARD(E.STR_CD, E.PRSNT_DT, E.PRSNT_NO, 1)  
+                    ELSE  MSS.FN_GET_EVTGIFTCARD(E.STR_CD, E.PRSNT_DT, E.PRSNT_NO, 0)  END AS GIFTCARD_NO  -- -- 20140305 강연식 마케팅 김동하 사원요청 상품권번호 출력 (2개만 가능 2개이상일 시 함수수정필요)
+                    
+        FROM MSS.MC_EVTSKUPRSNT A, DPS.PC_SKUMST B, MSS.MC_EVTSKUMST D, MSS.MC_PRSNTRECP E, DPS.PS_DISCARD F 
+         , DPS.PS_TRHEADER G
+        WHERE A.SKU_CD   = B.SKU_CD(+)
+          AND A.STR_CD   = D.STR_CD(+)
+          AND A.SKU_CD   = D.SKU_CD(+) 
+          AND A.PRSNT_DT = E.PRSNT_DT
+          AND A.STR_CD   = E.STR_CD
+          AND A.PRSNT_NO = E.PRSNT_NO
+          AND A.EVENT_CD = D.EVENT_CD(+)
+          AND E.STR_CD  = F.STR_CD(+)
+          AND E.SALE_DT = F.SALE_DT(+)
+          AND E.POS_NO  = F.POS_NO(+)
+          AND E.TRAN_NO = F.TRAN_NO(+)
+          AND F.SEQ_NO(+) = 1    
+          AND E.STR_CD  = G.STR_CD 
+          AND E.SALE_DT = G.SALE_DT  
+          AND E.POS_NO  = G.POS_NO 
+          AND E.TRAN_NO = G.TRAN_NO 
+          AND A.STR_CD   = ?
+          AND A.EVENT_CD = ?
+          AND A.PRSNT_DT BETWEEN ? AND ?   --20140306_강연식추가 마케팅팀 김동하사원 요청 영수증번호 표시 및 카드유무표시,상품권번호 표시
+          ORDER BY A.PRSNT_DT, A.PRSNT_NO
+        ]]>        
+    </query>
+    
+     <query name="SEL_EVTSKUSTOCK">
+        <![CDATA[
+        SELECT STK_DT AS PRSNT_DT
+             , A.SKU_CD
+             , B.SKU_NAME
+             , D.BUY_COST_PRC AS SAL_COST_PRC
+             , SUM(IN_QTY) AS IN_QTY
+             , SUM(A.PRSNT_QTY) AS PRSNT_QTY-- 정상
+             , SUM(EXCP_PRSNT_QTY)  AS EXCP_PRSNT_QTY -- 예외
+             , SUM(CPRSNT_QTY + CEXCP_PRSNT_QTY)  AS RECOVERY_QTY -- 취소
+             , SUM(POS_NDRAWL_CAN_QTY) AS POS_NDRAWL_CAN_QTY-- 미회수
+             , SUM(ETC_PRSNT)  AS ETC_PRSNT-- 기타
+             , SUM(A.PRSNT_QTY + EXCP_PRSNT_QTY - CPRSNT_QTY - CEXCP_PRSNT_QTY + ETC_PRSNT ) AS SUMQTY  -- 정상지급+예외지급-지급취소+기타지급
+          FROM MSS.MC_EVTSKUSTOCK A, DPS.PC_SKUMST B, DPS.PC_STRSKUMST C, MSS.MC_EVTSKUMST D
+         WHERE A.SKU_CD= B.SKU_CD
+           AND A.SKU_CD= C.SKU_CD
+           AND A.STR_CD = C.STR_CD
+           AND A.STR_CD = D.STR_CD
+           AND A.SKU_CD = D.SKU_CD
+           AND A.EVENT_CD= D.EVENT_CD
+           AND A.STR_CD  = ?
+           AND A.EVENT_CD = ?
+           AND A.SKU_CD = ?
+       GROUP BY STK_DT
+              , D.SKU_GB
+              , A.SKU_CD
+              , B.SKU_NAME
+              , D.BUY_COST_PRC
+       ORDER BY STK_DT
+        ]]>
+    </query> 
+</service>

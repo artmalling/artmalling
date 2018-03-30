@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.08.16
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영실적배부이력조회
+ -->
+<service name="/meis066.me">
+    
+    <!-- 년별항목별경영실적 조직 헤더  -->
+    <gauce name="H_SEL_ORG">
+        <column colName="STR_CD"      colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_RSLT_YM" colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_CD"      colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_NAME"    colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+    
+    <!-- 년별항목별경영실적 항목 헤더  -->
+    <gauce name="H_SEL_BIZ">
+        <column colName="BIZ_RSLT_YM"    colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_CD"         colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_CD"         colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_CD_NM"      colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TOT_AMT"        colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="RSLT_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="RECV_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DIV_AMT"        colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ADJST_RECV_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ADJST_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+    
+    <!-- 배부이력 헤더  -->
+    <gauce name="H_SEL_HIS">
+        <column colName="STR_CD"       colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="STR_NAME"     colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_CD"       colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_NAME"     colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_CD"       colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_CD_NM"    colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DIV_SEQ"      colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DIV_CD"       colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DIV_CD_NM"    colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DIV_RATE"     colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DIV_RECV_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="REMARK"       colType="TB_STRING"  size="4000" dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+    
+    <!-- 년별항목별경영실적 조직조회-->
+    <query name="SEL_ORG">
+        <![CDATA[
+        SELECT BIZ.STR_CD
+             , BIZ_RSLT_YM
+             , BIZ.ORG_CD
+             , CASE BIZ.ORG_CD WHEN '9999999999' THEN '1차배부' 
+                               ELSE ORG.ORG_NAME END AS ORG_NAME
+          FROM MSS.ME_BIZRSLT BIZ
+             , DPS.PC_ORGMST  ORG
+         WHERE BIZ.ORG_CD       = ORG.ORG_CD(+)
+           AND BIZ.BIZ_RSLT_YM  = ?
+           AND BIZ.STR_CD       = ?
+           AND BIZ.DEPT_CD   LIKE ?
+           AND BIZ.TEAM_CD   LIKE ?
+           AND BIZ.PC_CD     LIKE ?
+           AND BIZ.ORG_LEVEL LIKE ?
+         GROUP BY BIZ.STR_CD, BIZ_RSLT_YM, BIZ.ORG_CD, ORG.ORG_NAME
+         ORDER BY BIZ.ORG_CD
+        ]]>
+    </query>
+    
+    <!-- 년별항목별경영실적 항목조회-->
+    <query name="SEL_BIZ">
+        <![CDATA[
+        SELECT BIZ_RSLT_YM
+             , STR_CD
+             , ORG_CD
+             , BIZ.BIZ_CD
+             , MST.BIZ_CD_NM
+             , NVL(RSLT_AMT,0) + NVL(PR_DIV_RECV_AMT,0) + NVL(SD_DIV_RECV_AMT,0) + NVL(ADJST_RECV_AMT,0)
+               - NVL(PR_DIV_AMT, 0) - NVL(SD_DIV_AMT,0) - NVL(ADJST_AMT,0)      AS TOT_AMT  
+             , NVL(RSLT_AMT, 0)                                  AS RSLT_AMT
+             , NVL(PR_DIV_RECV_AMT, 0) + NVL(SD_DIV_RECV_AMT, 0) AS RECV_AMT
+             , NVL(PR_DIV_AMT, 0) + NVL(SD_DIV_AMT, 0)           AS DIV_AMT
+             , NVL(ADJST_RECV_AMT,0)                             AS ADJST_RECV_AMT
+             , NVL(ADJST_AMT,0)                                  AS ADJST_AMT
+          FROM MSS.ME_BIZRSLT  BIZ
+             , MSS.ME_BIZCDMST MST
+         WHERE BIZ.BIZ_CD  = MST.BIZ_CD
+           AND BIZ_RSLT_YM = ?
+           AND STR_CD      = ?
+           AND ORG_CD      = ?
+        ]]>
+    </query>
+    
+    <!-- 배부받은이력 조회쿼리-->
+    <query name="SEL_RECV">
+        <![CDATA[
+        SELECT HIS.DIV_STR_CD                                AS STR_CD
+             , DPS.FN_GET_STORE_NAME(HIS.DIV_STR_CD)         AS STR_NM
+             , HIS.DIV_ORG_CD                                AS ORG_CD
+             , CASE HIS.DIV_ORG_CD WHEN '9999999999' THEN '1차배부' 
+                                   ELSE ORG.ORG_NAME END     AS ORG_NAME
+             , HIS.DIV_BIZ_CD                                AS BIZ_CD
+             , MSS.FN_GET_BIZ_NAME(HIS.DIV_BIZ_CD)           AS BIZ_CD_NM
+             , COM.FN_GET_COMM_NAME('D','M097',DIV_SEQ_FLAG) AS DIV_SEQ
+             , HIS.DIV_CD
+             , MST.DIV_CD_NM
+             , HIS.DIV_RATE
+             , HIS.DIV_RECV_AMT
+             , ''	AS REMARK
+          FROM MSS.ME_BIZDIVHIST HIS
+             , DPS.PC_ORGMST     ORG
+             , MSS.ME_DIVCDMST   MST
+         WHERE HIS.DIV_ORG_CD      = ORG.ORG_CD(+)
+           AND HIS.DIV_CD          = MST.DIV_CD
+           AND HIS.PLAN_RSLT_FLAG  = '2' 
+           AND HIS.DIV_YM          = ?
+           AND HIS.DIV_RECV_STR_CD = ?
+           AND HIS.DIV_RECV_ORG_CD = ?
+           AND HIS.DIV_RECV_BIZ_CD = ?
+         ORDER BY HIS.DIV_RECV_SEQ
+        ]]>
+    </query>
+    
+    <!-- 배부이력 조회쿼리-->
+    <query name="SEL_DIV">
+        <![CDATA[
+        SELECT HIS.DIV_RECV_STR_CD                             AS STR_CD
+             , DPS.FN_GET_STORE_NAME(HIS.DIV_RECV_STR_CD)      AS STR_NM
+             , HIS.DIV_RECV_ORG_CD                             AS ORG_CD
+             , CASE HIS.DIV_RECV_ORG_CD WHEN '9999999999' THEN '1차배부' 
+                                        ELSE ORG.ORG_NAME END  AS ORG_NAME
+             , HIS.DIV_RECV_BIZ_CD                             AS BIZ_CD
+             , MSS.FN_GET_BIZ_NAME(HIS.DIV_RECV_BIZ_CD)        AS BIZ_CD_NM
+             , COM.FN_GET_COMM_NAME('D','M097',DIV_SEQ_FLAG)   AS DIV_SEQ
+             , HIS.DIV_CD
+             , MST.DIV_CD_NM
+             , HIS.DIV_RATE
+             , HIS.DIV_RECV_AMT
+             , ''	AS REMARK
+          FROM MSS.ME_BIZDIVHIST HIS
+             , DPS.PC_ORGMST     ORG
+             , MSS.ME_DIVCDMST   MST
+         WHERE HIS.DIV_RECV_ORG_CD = ORG.ORG_CD(+)
+           AND HIS.DIV_CD          = MST.DIV_CD
+           AND HIS.PLAN_RSLT_FLAG  = '2' 
+           AND HIS.DIV_YM          = ?
+           AND HIS.DIV_STR_CD      = ?
+           AND HIS.DIV_ORG_CD      = ?
+           AND HIS.DIV_BIZ_CD      = ?
+        ]]>
+    </query>
+    
+    <!-- 조정받은이력 조회쿼리-->
+    <query name="SEL_ADJ_RECV">
+        <![CDATA[
+        SELECT ADJ.STR_CD
+             , DPS.FN_GET_STORE_NAME(ADJ.STR_CD)           AS STR_NM
+             , ADJ.ORG_CD
+             , ORG.ORG_NAME
+             , ADJ.BIZ_CD                                  AS BIZ_CD
+             , MSS.FN_GET_BIZ_NAME(ADJ.BIZ_CD)             AS BIZ_CD_NM
+             , ''                                          AS DIV_SEQ
+             , ''                                          AS DIV_CD
+             , ''                                          AS DIV_CD_NM
+             , 0                                           AS DIV_RATE
+             , ADJ.ADJST_AMT                               AS DIV_RECV_AMT
+             , ADJ.REMARK
+          FROM MSS.ME_BIZRSLTADJSTHIST ADJ
+             , DPS.PC_ORGMST     ORG
+         WHERE ADJ.ORG_CD      = ORG.ORG_CD(+)
+           AND ADJ.BIZ_RSLT_YM = ?
+           AND ADJ.TGET_STR_CD = ?
+           AND ADJ.TGET_ORG_CD = ?
+           AND ADJ.TGET_BIZ_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 조정이력 조회쿼리-->
+    <query name="SEL_ADJ">
+        <![CDATA[
+        SELECT ADJ.TGET_STR_CD                             AS STR_CD
+             , DPS.FN_GET_STORE_NAME(ADJ.TGET_STR_CD)      AS STR_NM
+             , ADJ.TGET_ORG_CD                             AS ORG_CD
+             , ORG.ORG_NAME
+             , ADJ.TGET_BIZ_CD                             AS BIZ_CD
+             , MSS.FN_GET_BIZ_NAME(ADJ.TGET_BIZ_CD)        AS BIZ_CD_NM
+             , ''                                          AS DIV_SEQ
+             , ''                                          AS DIV_CD
+             , ''                                          AS DIV_CD_NM
+             , 0                                           AS DIV_RATE
+             , ADJ.ADJST_AMT                               AS DIV_RECV_AMT
+             , ADJ.REMARK
+          FROM MSS.ME_BIZRSLTADJSTHIST ADJ
+             , DPS.PC_ORGMST     ORG
+         WHERE ADJ.TGET_ORG_CD = ORG.ORG_CD(+)
+           AND ADJ.BIZ_RSLT_YM = ?
+           AND ADJ.STR_CD      = ?
+           AND ADJ.ORG_CD      = ?
+           AND ADJ.BIZ_CD      = ?
+        ]]>
+    </query>
+
+    <!-- 경영실적 조정이력 엑셀 헤더  -->
+    <gauce name="H_SEL_ADJST_HIST_EXCEL">
+        <column colName="STR_CD"       		colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="STR_NAME"     		colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_CD"       		colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_NAME"     		colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_CD"       		colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_CD_NM"    		colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TGET_ORG_CD"       colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TGET_ORG_NAME"     colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TGET_BIZ_CD"       colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TGET_BIZ_CD_NM"    colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ADJST_AMT" 		colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="REMARK"       		colType="TB_STRING"  size="4000" dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+    
+    <query name="SEL_ADJST_HIST_EXCEL">
+    <![CDATA[
+		/*******
+		* 경영실적 조정이력 엑셀조회
+		*******/
+		SELECT A.STR_CD
+		       ,F.STR_NAME
+		       ,A.ORG_CD
+		       ,B.ORG_NAME
+		       ,A.BIZ_CD
+		       ,D.BIZ_CD_NM
+		       ,A.TGET_ORG_CD
+		       ,C.ORG_NAME   AS TGET_ORG_NAME
+		       ,A.TGET_BIZ_CD
+		       ,E.BIZ_CD_NM  AS TGET_BIZ_CD_NM
+		       ,A.ADJST_AMT
+		       ,A.REMARK
+		FROM MSS.ME_BIZRSLTADJSTHIST A 
+		     ,DPS.PC_ORGMST B
+		     ,DPS.PC_ORGMST C
+		     ,MSS.ME_BIZCDMST D
+		     ,MSS.ME_BIZCDMST E
+		     ,DPS.PC_STRMST F
+		     
+		WHERE 1 = 1
+		
+		AND A.ORG_CD = B.ORG_CD(+)
+		AND A.TGET_ORG_CD = C.ORG_CD(+)
+		AND A.BIZ_CD = D.BIZ_CD(+)
+		AND A.TGET_BIZ_CD = E.BIZ_CD(+)
+		AND A.STR_CD = F.STR_CD(+)
+		
+		AND A.BIZ_RSLT_YM = ?
+		AND A.STR_CD = ?
+		AND A.DEPT_CD LIKE ?
+		AND A.TEAM_CD LIKE ?
+		AND A.PC_CD LIKE ?
+		AND A.ORG_LEVEL LIKE ?
+		ORDER BY A.STR_CD, A.ORG_CD, A.BIZ_CD        
+    ]]>    
+    </query>
+    
+</service>

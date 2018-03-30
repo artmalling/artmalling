@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  직불카드 매출실적 조회을 조회 한다.
+ -->
+<service name="/psal949.ps">
+    <!-- 직불카드 매출실적 조회 -->
+    <gauce name="H_MASTER">
+        <column colName="STR_CD"    colType="TB_STRING"   size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SALE_DT"   colType="TB_STRING"   size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CNT"       colType="TB_DECIMAL"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="AMT"       colType="TB_DECIMAL"  size="12"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="FEE_AMT"   colType="TB_DECIMAL"  size="12"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+    </gauce>                                                                                       
+                                                                                                   
+    <!-- 직불카드 매출실적  상세 우측 상단-->                                                                    
+    <gauce name="H_DETAIL">                                                                        
+        <column colName="STR_CD"    colType="TB_STRING"   size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SALE_DT"   colType="TB_STRING"   size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POS_NO"    colType="TB_STRING"   size="4"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CNT"       colType="TB_DECIMAL"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="AMT"       colType="TB_DECIMAL"  size="12"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="FEE_AMT"   colType="TB_DECIMAL"  size="12"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+    </gauce>                                                                                       
+                                                                                                   
+    <!-- 직불카드 매출실적  상세 우측 하단-->                                                                    
+    <gauce name="H_DETAIL2">                                                                       
+        <column colName="TRAN_NO"   colType="TB_STRING"   size="5"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SEQ_NO"    colType="TB_DECIMAL"  size="3"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CARD_NO"   colType="TB_STRING"   size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="AMT"       colType="TB_DECIMAL"  size="12"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="FEE_AMT"   colType="TB_DECIMAL"  size="12"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+    </gauce>                                                                                       
+    
+    <!-- 직불카드 매출실적 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , A.SALE_DT
+                 , COUNT(*) CNT
+                 , SUM( DECODE(A.TRAN_FLAG, 0, 1, -1) * PAY_AMT ) AMT
+                 , SUM( DECODE(A.TRAN_FLAG, 0, 1, -1) * (TRUNC(PAY_AMT * TO_NUMBER(COM.FN_GET_COMM_NAME('D', 'D062', '4')/100) ) ) ) FEE_AMT
+              FROM DPS.PS_TRHEADER A
+                 , DPS.PS_TRPAID B
+             WHERE A.STR_CD   = B.STR_CD
+               AND A.SALE_DT  = B.SALE_DT
+               AND A.POS_NO   = B.POS_NO
+               AND A.TRAN_NO  = B.TRAN_NO
+               AND B.PAY_TYPE = '12' -- 직불
+               AND A.STR_CD   = ?
+               AND A.SALE_DT  BETWEEN ? AND ?
+               AND A.POS_NO   BETWEEN ? AND ?
+             GROUP BY A.STR_CD, A.SALE_DT
+             ORDER BY A.SALE_DT             
+        ]]>        
+    </query>
+    
+    <!-- 직불카드 매출실적 상세조회  우측 상단-->
+    <query name="SEL_DETAIL">        
+        <![CDATA[       
+            SELECT A.STR_CD
+                 , A.SALE_DT
+                 , A.POS_NO
+                 , COUNT(*) CNT
+                 , SUM( DECODE(A.TRAN_FLAG, 0, 1, -1) * PAY_AMT ) AMT
+                 , SUM( DECODE(A.TRAN_FLAG, 0, 1, -1) * (TRUNC(PAY_AMT * TO_NUMBER(COM.FN_GET_COMM_NAME('D', 'D062', '4')/100) ) ) ) FEE_AMT
+              FROM DPS.PS_TRHEADER A
+                 , DPS.PS_TRPAID B
+             WHERE A.STR_CD   = B.STR_CD
+               AND A.SALE_DT  = B.SALE_DT
+               AND A.POS_NO   = B.POS_NO
+               AND A.TRAN_NO  = B.TRAN_NO
+               AND B.PAY_TYPE = '12' -- 직불
+               AND A.STR_CD   = ?
+               AND A.SALE_DT  = ?
+               AND A.POS_NO   BETWEEN ? AND ?
+             GROUP BY A.STR_CD, A.SALE_DT, A.POS_NO
+             ORDER BY A.SALE_DT, A.POS_NO 
+        ]]>        
+    </query>
+    
+    <!-- 직불카드 매출실적 상세조회  우측 하단-->
+    <query name="SEL_DETAIL2">        
+        <![CDATA[       
+            SELECT A.TRAN_NO
+                 , B.SEQ_NO
+                 , PAY_DATA_01 CARD_NO
+                 , DECODE(A.TRAN_FLAG, 0, 1, -1) * PAY_AMT  AMT
+                 , DECODE(A.TRAN_FLAG, 0, 1, -1) * (TRUNC(PAY_AMT * TO_NUMBER(COM.FN_GET_COMM_NAME('D', 'D062', '4')/100) ) ) FEE_AMT
+              FROM DPS.PS_TRHEADER A
+                 , DPS.PS_TRPAID B
+             WHERE A.STR_CD   = B.STR_CD
+               AND A.SALE_DT  = B.SALE_DT
+               AND A.POS_NO   = B.POS_NO
+               AND A.TRAN_NO  = B.TRAN_NO
+               AND B.PAY_TYPE = '12' -- 직불
+               AND A.STR_CD   = ?
+               AND A.SALE_DT  = ?
+               AND A.POS_NO   = ?
+             ORDER BY A.POS_NO, B.SEQ_NO  
+        ]]>        
+    </query>
+</service>

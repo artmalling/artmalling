@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.02.15
+ * 변 경 일 : 
+ * 변경내용 :                   
+ * 개    요 :  규격단품입고반품등록
+ -->
+<service name="/eord106.eo">
+    
+    
+    <!-- 규격단품 매입발주  리스트 조회 -->
+    <query name="SEL_LIST">
+        <![CDATA[
+        SELECT A.SLIP_NO                                                                         /* 전표번호 */
+		     , A.STR_CD                                                                          /* 점코드 */
+		     , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM                                         /* 점명 */
+		     , A.SLIP_FLAG                                                                       /* 전표구분 */
+		     , COM.FN_GET_COMM_NAME('D', 'P201', A.SLIP_FLAG) AS  SLIP_FLAG_NM                   /* 전표구분명 */
+		     , A.ORD_DT                                                                          /* 발주일자(점출일, 시행일) */
+		     , A.SLIP_PROC_STAT                                                                  /* 전표진행상태 */
+		     , COM.FN_GET_COMM_NAME('D', 'P207', A.SLIP_PROC_STAT) AS  SLIP_PROC_STAT_NM         /* 전표진행상태명 */
+		     , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NM                                    /* 브랜드명 */
+		     , A.REJ_CAN_FLAG                                                                    /* 반려취소구 분 1:반려, 2:취소 */                                               
+		FROM (    
+		      SELECT SLP.SLIP_NO                                                                        
+		           , SLP.STR_CD                                                                          
+		           , SLP.SLIP_FLAG                                                                      
+		           , SLP.ORD_DT                          
+		           , SLP.DELI_DT                          
+		           , SLP.CHK_DT                         
+		           , SLP.SLIP_PROC_STAT                                                                  
+		           , SLP.ORD_CF_DT
+		           , PBN.SALE_ORG_CD
+		           , PBN.BUY_ORG_CD
+		           , SLP.PUMBUN_CD
+		           , SLP.REJ_CAN_FLAG
+		        FROM DPS.PO_SLPMST SLP
+		           , DPS.PC_STRPBN PBN
+		       WHERE SLP.SLIP_FLAG      IN ('A','B')
+		         AND SLP.ORD_FLAG       = '1'                /* 발주구분:EDI발주 (1)*/
+		         AND SLP.DEL_FLAG       = 'N'
+		         AND SLP.IMPORT_FLAG    = '0'                /* 수입발주구분 : 수입아님(0) */
+		         AND SLP.STR_CD         = PBN.STR_CD
+		         AND SLP.PUMBUN_CD      = PBN.PUMBUN_CD
+                 AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+                 AND SLP.STR_CD         = ?
+                 AND PBN.SKU_FLAG       = ?   
+                 AND PBN.SKU_TYPE       = ?
+                 AND SLP.VEN_CD         = ? 
+                 AND SLP.SLIP_PROC_STAT LIKE  ? || '%'
+                 AND SLP.PUMBUN_CD      LIKE  ? || '%'
+                 AND SLP.SLIP_FLAG      LIKE  ? || '%'
+               ) A
+        ]]>
+    </query> 
+     
+    <query name="SEL_ORD_DT">
+        <![CDATA[
+               WHERE A.ORD_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+    <query name="SEL_ORD_CONF">
+        <![CDATA[
+               WHERE A.ORD_CF_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+    <query name="SEL_DELI_DT">
+        <![CDATA[
+               WHERE A.DELI_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+    <query name="SEL_CHK_DT">
+        <![CDATA[
+               WHERE A.CHK_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+     <query name="WHERE_SLIP_NO">
+        <![CDATA[
+            WHERE A.SLIP_NO = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_ORDERBY">
+        <![CDATA[
+             ORDER BY A.STR_CD, A.SLIP_NO DESC
+        ]]>
+    </query>
+    
+    
+    <!-- 규격단품 매입발주  마스터 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+            SELECT SLIP_NO                                                                         /* 전표번호 */
+                 , STR_CD                                                                          /* 점코드 */
+                 , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM                                         /* 점명 */
+                 , PUMBUN_CD                                                                       /* 브랜드코드 */
+                 , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NM                                  /* 브랜드명 */
+                 , VEN_CD                                                                          /* 협력사코드 */
+                 , DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VEN_NM                                        /* 협력사명 */
+                 , NEW_PRC_APP_DT                                                                  /* 신가격적용일 */
+                 , NEW_EVENT_CD                                                                    /* 신행사코드 */
+                 , SLIP_FLAG                                                                       /* 전표구분 */
+                 , COM.FN_GET_COMM_NAME('D', 'P201', SLIP_FLAG) AS  SLIP_FLAG_NM                   /* 전표구분명 */
+                 , ORD_OWN_FLAG                                                                    /* 발주주체구분 */
+                 , COM.FN_GET_COMM_NAME('D', 'P202', ORD_OWN_FLAG) AS ORD_OWN_FLAG_NM              /* 발주주체구분명 */
+                 , ORD_FLAG                                                                        /* 발주구분 */
+                 , COM.FN_GET_COMM_NAME('D', 'P203', ORD_FLAG) AS ORD_FLAG_NM                      /* 발주구분명 */
+                 , AUTO_SLIP_FLAG                                                                  /* 자동전표구분 */
+                 , INC_FLAG                                                                        /* 인상하구분 */
+                 , AFT_ORD_FLAG                                                                    /* 사전사후구분 */
+                 , INOUT_FLAG                                                                      /* 출입구분 */
+                 , ORD_DT                                                                          /* 발주일자(점출일, 시행일) */
+                 , DELI_DT                                                                         /* 납품(반품)예정일(점입일, 시행일) */
+                 , SM_CONF_DT                                                                      /* SM확정일자 */
+                 , SM_ID                                                                           /* SM ID */   
+                 , BUYER_CONF_ID                                                                   /* 바이어ID */
+                 , ORD_CF_DT AS ORD_CONF_DT                                                        /* 바이어확정일자(발주확정일자) */ 
+                 , BUYER_CD                                                                        /* 바이어코드 */
+                 , DPS.FN_GET_BUYER_NAME(BUYER_CD) AS BUYER_NM                                     /* 바이어코드명 */
+                 , SLIP_PROC_STAT                                                                  /* 전표진행상태 */
+                 , COM.FN_GET_COMM_NAME('D', 'P207', SLIP_PROC_STAT) AS  SLIP_PROC_STAT_NM         /* 전표진행상태명 */
+                 , DTL_CNT                                                                         /* 명세건수 */
+                 , DECODE(SLIP_PROC_STAT, '09', CHK_TOT_QTY, ORD_TOT_QTY) AS ORD_TOT_QTY           /* 발주수량합(검품확정'09'일경우 검품수량합) */
+                 , DECODE(SLIP_PROC_STAT, '09', CHK_COST_TAMT, NEW_COST_TAMT) AS NEW_COST_TAMT     /* 신원가금액합(검품확정'09'일경우 검품원가금액합) */
+                 , DECODE(SLIP_PROC_STAT, '09', CHK_SALE_TAMT, NEW_SALE_TAMT) AS NEW_SALE_TAMT     /* 신매가금액합(검품확정'09'일경우 검품매가금액합) */
+                 , DECODE(SLIP_PROC_STAT, '09', CHK_GAP_AMT, GAP_TOT_AMT) AS GAP_TOT_AMT           /* 차익액합(검품확정'09'일경우 검품차익액합) */
+                 , DECODE(SLIP_PROC_STAT, '09', CHK_GAP_RATE, NEW_GAP_RATE) AS NEW_GAP_RATE        /* 신차익율(검품확정'09'일경우 검품차익율) */
+                 , PAY_COND                                                                        /* 지불조건 */
+                 , REMARK                                                                          /* 비고 */
+                 , BIZ_TYPE                                                                        /* 거래형태 */
+                 , COM.FN_GET_COMM_NAME('D', 'P002', BIZ_TYPE) AS BIZ_TYPE_NM                      /* 거래형태명 */
+                 , TAX_FLAG                                                                        /* 과세구분 */
+                 , COM.FN_GET_COMM_NAME('D', 'P004', TAX_FLAG) AS TAX_FLAG_NM                      /* 과세구분명 */
+                 , DEL_FLAG                                                                        /* 삭제구분 */
+                 , CHK_DT                                                                          /* 검품확정일 */
+                 , VAT_TAMT                                                                        /* 부가세  */
+                 , BOTTLE_SLIP_YN                                                                  /* 공병전표여부 */
+                 , TO_CHAR(REG_DATE, 'YYYYMMDD') AS REG_DATE                                       /* 등록일자 */
+                 , COM.FN_GET_COMM_NAME('D', 'P209', AFT_ORD_FLAG) AS AFT_ORD_FLAG_NM              /* 사전사후구분명 */                                                             /* 사전사후구분 */
+               FROM DPS.PO_SLPMST
+              WHERE STR_CD = ?
+                AND SLIP_NO = ?
+        ]]>
+    </query> 
+    
+    <!-- 규격단품 매입발주  상세 조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+            SELECT DTL.STR_CD                                                                                  /* 점 */
+                 , DTL.SLIP_NO                                                                                 /* 전표번호 */
+                 , DTL.ORD_SEQ_NO                                                                              /* 전표상세번호 */
+                 , DTL.PUMMOK_CD                                                                               /* 품목코드 */
+                 , DTL.SKU_CD                                                                                  /* 단품코드 */
+                 , DPS.FN_GET_SKU_NAME(DTL.SKU_CD) AS SKU_NM                                                   /* 단품명 */
+                 , DTL.ORD_UNIT_CD                                                                             /* 발주단위 */
+                 , COM.FN_GET_COMM_NAME('D', 'P013', DTL.ORD_UNIT_CD) AS ORD_UNIT_NM                           /* 발주단위명 */
+                 , DECODE(MST.SLIP_PROC_STAT, '09', DTL.CHK_GAP_AMT, DTL.NEW_GAP_AMT) AS NEW_GAP_AMT           /* 신차익액 */
+                 , DECODE(MST.SLIP_PROC_STAT, '09', DTL.CHK_GAP_RATE, DTL.NEW_GAP_RATE) AS NEW_GAP_RATE        /* 신차익율 */
+                 , DTL.ORD_STK_QTY                                                                             /* 발주시점재고 */
+                 , DTL.AVG_SALE_QTY                                                                            /* 일평균판매량 */
+                 , DTL.AVG_SALE_AMT                                                                            /* 일평균판매금액 */
+                 , DECODE(MST.SLIP_PROC_STAT, '09', DTL.CHK_QTY, DTL.ORD_QTY) AS ORD_QTY                       /* 발주수량 */
+                 , DTL.NEW_COST_PRC                                                                            /* 신원가단가 */
+                 , DECODE(MST.SLIP_PROC_STAT, '09', DTL.CHK_COST_AMT, DTL.NEW_COST_AMT) AS NEW_COST_AMT        /* 신원가금액 */
+                 , DTL.NEW_SALE_PRC                                                                            /* 신매가단가 */
+                 , DECODE(MST.SLIP_PROC_STAT, '09', DTL.CHK_SALE_AMT, DTL.NEW_SALE_AMT) AS NEW_SALE_AMT        /* 신매가금액 */
+                 , DTL.PUMBUN_CD                                                                               /* 브랜드코드 */
+                 , DTL.VEN_CD                                                                                  /* 협력사코드 */
+                 , DTL.SLIP_FLAG                                                                               /* 전표구분 */
+                 , DTL.MG_RATE                                                                                 /* 마진율 */
+                 , DTL.SKU_CD AS ORG_SKU_CD                                                                    /* 이전단품코드  */
+                 , VAT_AMT                                                                                     /* 부가세  */
+                 , '' AS BOTTLE_CD                                                                             /* 공병단브랜드호 */
+                 , MST.BIZ_TYPE                                                                                /* 거래형태 */
+                 , DECODE(NVL(DTL.NEW_COST_PRC, 0), 0, 'Y', 'N')      AS COST_ZERO                             /* 원가 0여부 */
+                 , DECODE(NVL(DTL.NEW_SALE_PRC, 0), 0, 'Y', 'N')      AS SALE_ZERO                             /* 매가 0여부 */
+              FROM DPS.PO_SLPDTL DTL
+                 , DPS.PO_SLPMST MST
+             WHERE DTL.STR_CD  = MST.STR_CD
+               AND DTL.SLIP_NO = MST.SLIP_NO
+               AND DTL.STR_CD  = ?
+               AND DTL.SLIP_NO = ?
+        ]]>
+    </query> 
+    
+    <!-- 브랜드 상세정보 조회 -->
+    <query name="SEL_PUMBUN_INFO">
+        <![CDATA[
+            SELECT PBN.PUMBUN_CD                                                   /* 브랜드코드 */      
+			     , PBN.PUMBUN_NAME                                                 /* 브랜드명 */        
+			     , PBN.RECP_NAME                                                   /* 영수증명 */      
+			     , PBN.SKU_FLAG                                                    /* 단품구분 */       
+			     , PBN.REP_PUMBUN_CD                                               /* 대표브랜드코드 */      
+			     , PBN.SKU_TYPE                                                    /* 단품종류 */        
+			     , PBN.BIZ_TYPE                                                    /* 거래형태 */        
+			     , PBN.TAX_FLAG                                                    /* 과세구분 */        
+			     , SPN.CHAR_BUYER_CD                                               /* 바이어코드 */      
+			     , BUY.BUYER_NAME     AS CHAR_BUYER_NAME                           /* 바이어명 */        
+			     , SPN.CHAR_SM_CD                                                  /* SM코드 */
+			     , SM.BUYER_NAME      AS CHAR_SM_NAME                              /* SM명 */
+			     , PBN.VEN_CD                                                      /* 협력사코드 */       
+			     , VEN.VEN_NAME                                                    /* 협력사*/
+			     , PBN.STYLE_TYPE                                                  /* 의류단품코드구분 */    
+			     , DPS.FN_GET_BUYER_NAME(CHAR_BUYER_CD) AS BUYER_EMP_NAME          /* 바이어사원명 */
+			     , SPN.BUY_ORG_CD                                                  /* 매입조직 */
+			     , SPN.SALE_ORG_CD                                                 /* 판매조직 */
+			     , PBN.PUMBUN_TYPE                                                 /* 브랜드유형 */
+			     , COM.FN_GET_COMM_NAME('D', 'P002', PBN.BIZ_TYPE) AS BIZ_TYPE_NM  /* 거래형태명 */
+			     , COM.FN_GET_COMM_NAME('D', 'P004', PBN.TAX_FLAG) AS TAX_FLAG_NM  /* 과세구분명 */
+			  FROM DPS.PC_PBNMST   PBN
+			     , DPS.PC_STRPBN   SPN
+			     , DPS.PC_BUYERMST BUY
+			     , DPS.PC_BUYERMST SM
+			     , DPS.PC_VENMST   VEN
+			 WHERE PBN.VEN_CD         = VEN.VEN_CD
+			   AND SPN.PUMBUN_CD      = PBN.PUMBUN_CD
+			   AND SPN.CHAR_BUYER_CD  = BUY.BUYER_CD(+)
+			   AND SPN.CHAR_SM_CD     = SM.BUYER_CD(+)  
+			   AND SPN.STR_CD         = ?
+			   AND PBN.VEN_CD         = ?
+			   AND PBN.PUMBUN_CD      = ?
+			   AND PBN.USE_YN         = 'Y'
+			   AND PBN.SKU_FLAG       = '1'             /* 단품구분 (1:단품) */           
+			   AND PBN.SKU_TYPE       = '1'             /* 단품종류 (1:규격단품)  */  
+			   AND SPN.SALE_BUY_FLAG  = '1'             /* 판매분매입구분 (1:사전매입) */ 
+			 ORDER BY SPN.STR_CD, PBN.PUMBUN_CD
+        ]]>
+    </query> 
+    
+    <!-- 규격단품 상세정보 조회 -->
+    <query name="SEL_SKU_INFO">
+        <![CDATA[
+            SELECT A.STR_CD                                                                     /* 점 */           
+                 , A.SKU_CD                                                                     /* 단품코드 */        
+                 , A.SKU_NAME                                                                   /* 단품명 */         
+                 , B.PUMMOK_CD                                                                  /* 품목코드 */        
+                 , A.PUMBUN_CD                                                                  /* 브랜드코드 */        
+                 , A.BUY_S_DT                                                                   /* 브랜드적용시작일 */     
+                 , A.BUY_E_DT                                                                   /* 브랜드적용종료일 */     
+                 , B.SALE_UNIT_CD                                                               /* 기본규격단위 */      
+                 , COM.FN_GET_COMM_NAME('D', 'P013', B.SALE_UNIT_CD) AS SALE_UNIT_NM            /* 기본규격단위 */      
+                 , NVL(C.AVG_SALE_QTY, 0)                            AS AVG_SALE_QTY            /* 평균판매량 */       
+                 , NVL(C.AVG_SALE_QTY, 0) * NVL(C.AVG_SALE_PRC, 0)   AS AVG_SALE_PRC            /* 평균판매액 */       
+                 , NVL(PRC.SAL_COST_PRC, 0)                          AS SAL_COST_PRC            /* 판매원가 */        
+                 , NVL(PRC.SALE_PRC, 0)                              AS SALE_PRC                /* 판매매가 */        
+                 , NVL(PRC.SALE_MG_RATE, 0)                          AS SALE_MG_RATE            /* 판매마진율 */             
+                 , DPS.FN_GETSKU_SRVY_QTY(A.STR_CD,?,?,A.SKU_CD )    AS STOCK_QTY               /* 재고 */
+                 , A.BOTTLE_CD                                       AS BOTTLE_CD               /* 공병단품코드 */
+                 , PRC.BIZ_TYPE
+                 , DECODE(NVL(PRC.SAL_COST_PRC, 0), 0, 'Y', 'N')     AS COST_ZERO
+                 , DECODE(NVL(PRC.SALE_PRC, 0), 0, 'Y', 'N')         AS SALE_ZERO      
+              FROM DPS.PC_STRSKUMST   A,
+                   DPS.PC_SKUMST      B,
+                   DPS.PC_STRSKUDDAVG C,
+                   (
+                    SELECT A.STR_CD                                          AS STR_CD
+                         , A.SKU_CD                                          AS SKU_CD
+                         , MIN(DECODE(C.BIZ_TYPE, '1', B.SAL_COST_PRC
+                                                , DECODE(B.EVENT_CD, '00000000000', B.SAL_COST_PRC
+                                                                   , 9999999999999
+                                                        )
+                                     )
+                               )                                     AS SAL_COST_PRC
+                         , MAX(DECODE(B.EVENT_CD, '00000000000', B.SALE_PRC
+                                                , 0
+                                     )
+                              )                        AS SALE_PRC
+                         , MAX(DECODE(B.EVENT_CD, '00000000000' , B.SALE_MG_RATE
+                                                , 0
+                                     )
+                              )                        AS SALE_MG_RATE
+                         , C.BIZ_TYPE
+                      FROM DPS.PC_STRSKUMST A
+                         , DPS.PC_STRSKUPRCMST B
+                         , DPS.PC_STRPBN C
+                     WHERE A.STR_CD = ?
+                       AND A.SKU_CD = ? 
+                       AND B.STR_CD = A.STR_CD
+                       AND B.SKU_CD = A.SKU_CD
+                       AND ? BETWEEN B.APP_S_DT AND B.APP_E_DT
+                       AND C.STR_CD = A.STR_CD
+                       AND C.PUMBUN_CD = A.PUMBUN_CD
+                     GROUP BY A.STR_CD
+                            , A.SKU_CD
+                            , C.BIZ_TYPE
+                   ) PRC
+             WHERE A.STR_CD      = ?
+               AND A.SKU_CD      = ? 
+               AND B.SKU_CD      = A.SKU_CD
+               AND C.STR_CD   (+)= A.STR_CD
+               AND C.SKU_CD   (+)= A.SKU_CD
+               AND PRC.STR_CD (+)= A.STR_CD
+               AND PRC.SKU_CD (+)= A.SKU_CD
+               AND A.USE_YN      = 'Y' 
+        ]]>
+    </query> 
+    
+    <!-- 전표번호 생성 -->
+    <query name="SEL_SLIP_NO">
+        <![CDATA[
+            SELECT DPS.FN_GET_SLIPNO(?, ?, ?) AS SLIP_NO
+              FROM DUAL           
+          
+        ]]>
+    </query> 
+    
+    <!-- 전표번호상세번호 생성 -->
+    <query name="SEL_ORD_SEQ_NO">
+        <![CDATA[
+           SELECT LPAD(NVL(MAX(ORD_SEQ_NO),0)+1,3,'0') ORD_SEQ_NO
+              FROM DPS.PO_SLPDTL
+             WHERE STR_CD = ?
+               AND SLIP_NO = ?
+        ]]>
+    </query>
+    
+    <!-- 규격단품 매입발주 MASTER 등록 -->
+    <query name="INS_MASTER">
+        <![CDATA[
+            INSERT INTO DPS.PO_SLPMST ( 
+                                     SLIP_NO                                     /* 전표번호 */
+                                   , STR_CD                                      /* 점코드 */                                                   
+                                   , PUMBUN_CD                                   /* 브랜드코드 */                          
+                                   , VEN_CD                                      /* 협력사코드 */                         
+                                   , NEW_PRC_APP_DT                              /* 신가격적용일 */                        
+                                   , SLIP_FLAG                                   /* 전표구분 */                          
+                                   , ORD_OWN_FLAG                                /* 발주주체구분 */                        
+                                   , ORD_FLAG                                    /* 발주구분 */                          
+                                   , AUTO_SLIP_FLAG                              /* 자동전표구분 */                        
+                                   , INC_FLAG                                    /* 인상하구분 */                         
+                                   , AFT_ORD_FLAG                                /* 사전사후구분 */                        
+                                   , INOUT_FLAG                                  /* 출입구분 */                          
+                                   , ORD_DT                                      /* 발주일자(점출일, 시행일) */                
+                                   , DELI_DT                                     /* 납품(반품)예정일(점입일, 시행일) */
+                                   , BUYER_CD                                    /* 바이어코드 */                                                 
+                                   , SLIP_PROC_STAT                              /* 전표진행상태 */                        
+                                   , DTL_CNT                                     /* 명세건수 */                          
+                                   , ORD_TOT_QTY                                 /* 발주수량합 */                         
+                                   , NEW_COST_TAMT                               /* 신원가금액합 */                        
+                                   , NEW_SALE_TAMT                               /* 신매가금액합 */                        
+                                   , GAP_TOT_AMT                                 /* 차익액합 */                          
+                                   , NEW_GAP_RATE                                /* 신차익율 */  
+                                   , VAT_TAMT                                    /* 부가세 */    
+                                   , BOTTLE_SLIP_YN                              /* 공병전표여부 */                     
+                                   , PAY_COND                                    /* 지불조건 */                          
+                                   , REMARK                                      /* 비고 */                            
+                                   , BIZ_TYPE                                    /* 거래형태 */                          
+                                   , TAX_FLAG                                    /* 과세구분 */
+                                   , IMPORT_FLAG                                 /* 수입발주구분 */
+                                   , DEL_FLAG                                    /* 삭제구분 */  
+                                   , ORD_CF_DT                                   /* 발주확정일 */  
+                                   , REG_DATE                                    /* 등록일시 */
+                                   , REG_ID                                      /* 등록자 */
+                                   , MOD_DATE                                    /* 수정일시 */
+                                   , MOD_ID                                      /* 수정자 */                
+                                    )
+                             VALUES (
+                                       ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , DECODE('00', DPS.FN_GET_ORDCONF_CHK(?,?), TO_CHAR(SYSDATE, 'YYYYMMDD'), '        ')
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                     )
+
+        ]]>
+    </query>  
+    
+    <!-- 발주매입 MASTER LOG 등록 -->
+    <query name="INS_MASTER_LOG">
+        <![CDATA[
+            MERGE INTO DPS.PO_SLPMSTLG
+               USING DUAL
+               ON (STR_CD = ? AND SLIP_NO = ?)
+               WHEN MATCHED THEN 
+                UPDATE SET SLIP_FLAG         = ?                          /* 전표구분 */                          
+                         , SLIP_PROC_STAT    = ?                          /* 전표진행상태 */  
+               WHEN NOT MATCHED THEN 
+                INSERT ( 
+                       STR_CD                                      /* 점코드 */ 
+                     , SLIP_NO                                     /* 전표번호 */                                                  
+                     , SLIP_FLAG                                   /* 전표구분 */                          
+                     , SLIP_PROC_STAT                              /* 전표진행상태 */                                     
+                      )
+               VALUES (
+                        ?
+                      , ? 
+                      , ?
+                      , ?
+                      )
+
+        ]]>
+    </query>
+    
+    <!-- 규격단품 매입발주 MASTER 수정 -->
+    <query name="UPD_MASTER">
+        <![CDATA[
+            UPDATE DPS.PO_SLPMST
+              SET PUMBUN_CD = ?                                   /* 브랜드코드 */                          
+                , VEN_CD = ?                                      /* 협력사코드 */                         
+                , NEW_PRC_APP_DT = ?                              /* 신가격적용일 */                        
+                , SLIP_FLAG = ?                                   /* 전표구분 */                          
+                , AFT_ORD_FLAG = ?                                /* 사전사후구분 */                                             
+                , ORD_DT = ?                                      /* 발주일자(점출일, 시행일) */                
+                , DELI_DT = ?                                     /* 납품(반품)예정일(점입일, 시행일) */
+                , BUYER_CD = ?                                    /* 바이어코드 */                                                 
+                , DTL_CNT = ?                                     /* 명세건수 */                          
+                , ORD_TOT_QTY = ?                                 /* 발주수량합 */                         
+                , NEW_COST_TAMT = ?                               /* 신원가금액합 */                        
+                , NEW_SALE_TAMT = ?                               /* 신매가금액합 */                        
+                , GAP_TOT_AMT = ?                                 /* 차익액합 */                          
+                , NEW_GAP_RATE = ?                                /* 신차익율 */    
+                , VAT_TAMT = ?                                    /* 부가세 */      
+                , BOTTLE_SLIP_YN = ?                              /* 공병전표여부 */                  
+                , PAY_COND = ?                                    /* 지불조건 */                          
+                , REMARK = ?                                      /* 비고 */                            
+                , BIZ_TYPE = ?                                    /* 거래형태 */                          
+                , TAX_FLAG = ?                                    /* 과세구분 */  
+                , ORD_CF_DT = DECODE('00', DPS.FN_GET_ORDCONF_CHK(?,?), TO_CHAR(SYSDATE, 'YYYYMMDD'), '        ') /* 발주확정일 */
+                , MOD_DATE = SYSDATE                              /* 수정일시 */
+                , MOD_ID = ?                                      /* 수정자 */ 
+            WHERE STR_CD = ?
+              AND SLIP_NO = ?
+        ]]>
+    </query>
+    
+    <!-- 규격단품 매입발주 MASTER 삭제 -->
+    <query name="DEL_MASTER">
+        <![CDATA[
+         DELETE FROM DPS.PO_SLPMST
+           WHERE STR_CD = ?
+             AND SLIP_NO = ?
+        ]]>
+    </query>  
+    
+    <!-- 규격단품 매입발주 DETAIL 전체삭제 -->
+    <query name="DEL_DETAIL_ALL">
+        <![CDATA[
+         DELETE FROM DPS.PO_SLPDTL
+           WHERE STR_CD = ?
+             AND SLIP_NO = ?
+        ]]>
+    </query> 
+    
+     <!-- 규격단품 매입발주 LOG 삭제 -->
+    <query name="DEL_DETAIL_LOG">
+        <![CDATA[
+         DELETE FROM DPS.PO_SLPMSTLG
+           WHERE STR_CD = ?
+             AND SLIP_NO = ?
+        ]]>
+    </query> 
+    
+    <!-- 규격단품 매입발주 DETAIL 등록 -->
+    <query name="INS_DETAIL">
+        <![CDATA[
+            INSERT INTO DPS.PO_SLPDTL ( 
+                                     STR_CD                  /* 점 */                
+                                   , SLIP_NO                 /* 전표번호  */                        
+                                   , ORD_SEQ_NO              /* 전표상세번호 */  
+                                   , PUMMOK_CD               /* 품목코드  */  
+                                   , SKU_CD                  /* 단품코드  */        
+                                   , ORD_UNIT_CD             /* 발주단위  */ 
+                                   , MG_RATE                 /* 마진율 */   
+                                   , NEW_GAP_AMT             /* 신차익액  */    
+                                   , NEW_GAP_RATE            /* 신차익율  */   
+                                   , ORD_STK_QTY             /* 발주시점재고 */      
+                                   , AVG_SALE_QTY            /* 일평균판매량 */      
+                                   , AVG_SALE_AMT            /* 일평균판매금액 */       
+                                   , ORD_QTY                 /* 발주수량 */    
+                                   , NEW_COST_PRC            /* 신원가단가 */     
+                                   , NEW_COST_AMT            /* 신원가금액 */     
+                                   , NEW_SALE_PRC            /* 신매가단가 */     
+                                   , NEW_SALE_AMT            /* 신매가금액 */   
+                                   , VAT_AMT                 /* 부가세 */ 
+                                   , PUMBUN_CD               /* 브랜드코드 */    
+                                   , VEN_CD                  /* 협력사코드 */     
+                                   , SLIP_FLAG               /* 전표구분 */     
+                                   , REG_DATE                /* 등록일시 */                     
+                                   , REG_ID                  /* 등록자 */   
+                                   , MOD_DATE                /* 수정일시 */  
+                                   , MOD_ID                  /* 수정자 */   
+                                    )
+                             VALUES (
+                                       ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                     )
+
+        ]]>
+    </query>  
+    
+    <!-- 규격단품 매입발주 DETAIL 수정 -->
+    <query name="UPD_DETAIL">
+        <![CDATA[
+            UPDATE DPS.PO_SLPDTL
+              SET PUMMOK_CD = ?                                   /* 품목코드  */  
+                , SKU_CD = ?                                      /* 단품코드  */        
+                , ORD_UNIT_CD = ?                                 /* 발주단위  */   
+                , MG_RATE = ?                                     /* 마진율 */ 
+                , NEW_GAP_AMT = ?                                 /* 신차익액  */    
+                , NEW_GAP_RATE = ?                                /* 신차익율  */   
+                , ORD_STK_QTY = ?                                 /* 발주시점재고 */      
+                , AVG_SALE_QTY = ?                                /* 일평균판매량 */      
+                , AVG_SALE_AMT = ?                                /* 일평균판매금액 */       
+                , ORD_QTY = ?                                     /* 발주수량 */    
+                , NEW_COST_PRC = ?                                /* 신원가단가 */     
+                , NEW_COST_AMT = ?                                /* 신원가금액 */     
+                , NEW_SALE_PRC = ?                                /* 신매가단가 */     
+                , NEW_SALE_AMT = ?                                /* 신매가금액 */  
+                , VAT_AMT = ?                                     /* 부가세 */   
+                , PUMBUN_CD = ?                                   /* 브랜드코드 */    
+                , VEN_CD = ?                                      /* 협력사코드 */     
+                , SLIP_FLAG = ?                                   /* 전표구분 */       
+                , MOD_DATE = SYSDATE                              /* 수정일시 */
+                , MOD_ID = ?                                      /* 수정자 */ 
+            WHERE STR_CD = ?
+              AND SLIP_NO = ?
+              AND ORD_SEQ_NO = ?
+        ]]>
+    </query>
+    
+    <!-- 규격단품 매입발주 DETAIL 삭제 -->
+    <query name="DEL_DETAIL">
+        <![CDATA[
+         DELETE FROM DPS.PO_SLPDTL
+           WHERE STR_CD = ?
+             AND SLIP_NO = ?
+             AND ORD_SEQ_NO = ?
+        ]]>
+    </query> 
+   
+</service>

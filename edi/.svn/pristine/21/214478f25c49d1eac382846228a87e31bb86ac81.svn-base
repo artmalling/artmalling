@@ -1,0 +1,110 @@
+/*
+ * Copyright (c) 2010 한국후지쯔. All rights reserved.
+ *
+ * This software is the confidential and proprietary information of 한국후지쯔.
+ * You shall not disclose such Confidential Information and shall use it
+ * only in accordance with the terms of the license agreement you entered into
+ * with 한국후지쯔
+ */
+
+package ecmn.dao;
+
+import java.util.List;
+
+import kr.fujitsu.ffw.control.ActionForm;
+import kr.fujitsu.ffw.control.cfg.svc.Service;
+import kr.fujitsu.ffw.model.AbstractDAO;
+import kr.fujitsu.ffw.model.SqlWrapper;
+import kr.fujitsu.ffw.util.String2;
+import ecom.util.Util;
+/**
+ * <p>화원정보조회</p>
+ * 
+ * @created  on 1.0, 2011.09.29
+ * @created  by 김유완(FUJITSU KOREA LTD.)
+ * 
+ * @modified on 
+ * @modified by 
+ * @caused   by 
+ */
+
+public class ECmn105DAO extends AbstractDAO {
+
+    /**
+     * <p>마스터 내역을 조회힌다.</p>
+     * 
+     */
+    @SuppressWarnings("rawtypes")
+    public String getMaster(ActionForm form) throws Exception {
+
+        List list 		= null;
+        SqlWrapper sql 	= null;
+        Service svc 	= null;
+        Util util 		= new Util();
+        String rtJson 	= null;
+        try {
+            connect("pot");
+            svc  = (Service)form.getService();
+            sql  = new SqlWrapper();
+            String strSSNO		= util.encryptedStr(String2.nvl(form.getParam("strSSNO")));	// 조회 주민등록번호
+            
+            sql.put(svc.getQuery("SEL_CUST_INFO"));
+            sql.setString(1, strSSNO);              
+            sql.setString(2, strSSNO);              
+            list = select2List(sql);  
+
+            if (list.size() > 0 ) {
+    			String cols= ""+
+				"CUST_NAME,ENTR_DATE,ENTR_PATH_CD,BRCH_NAME,NOTIC_ETC"; 
+    			rtJson = util.listToJsonOBJ(list, cols);
+            } else {
+            	
+            }
+            System.out.println("################### rtJson : " + rtJson);
+        } catch (Exception e) {
+            throw e;
+        }
+        return rtJson;
+    }
+    
+    /**
+     * <p>회원정보를 임시저장한다.</p>
+     * 
+     */
+    public String saveSSNO(ActionForm form, String userId) throws Exception {
+    	
+    	int ret 		= 0;
+    	SqlWrapper sql 	= null;
+    	Service svc 	= null;
+    	Util util 		= new Util();
+    	String rtString 	= null;
+    	try {
+    		
+    		connect("pot");
+    		begin();
+    		svc  = (Service)form.getService();
+    		sql  = new SqlWrapper();
+    		String strSSNO		= util.encryptedStr(String2.nvl(form.getParam("strSSNO")));	// 조회 주민등록번호
+    		
+    		sql.put(svc.getQuery("INS_CUST_INFO"));
+    		sql.setString(1, strSSNO);              
+    		sql.setString(2, userId);              
+    		sql.setString(3, userId);              
+    		ret = update(sql);  
+    		if (ret == 1) {
+    			rtString = "[{'CD':'T','MSG':'정상처리 되었습니다.'}]";
+    		} else {
+    			rollback();
+    			rtString = "[{'CD':'F','MSG':'저장에 실패 했습니다!'}]";
+    		}
+    	
+		}catch(Exception e){
+			System.out.println("######################## DAO e : " + e);
+			rollback();
+			throw e;
+		} finally {
+			end();
+		}
+    	return rtString;
+    }
+}

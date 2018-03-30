@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal449.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"                  colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"                  colType="TB_STRING"      size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <query name="SEL_SKU_SALE_DT">        
+        <![CDATA[
+             SELECT A.STR_CD
+                  , A.SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , A.SKU_CD
+                  , D.SKU_NAME
+                  , SUM(NVL(A.SALE_QTY,0))                                            AS SALE_QTY
+                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+               FROM DPS.PS_DAYSKU    A
+                  , DPS.PC_ORGMST      B
+                  , DPS.PC_PMKMST    C
+                  , DPS.PC_STRSKUMST D
+                  , DPS.PC_STRPBN      F
+              WHERE B.ORG_CD     = F.SALE_ORG_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND A.PUMMOK_CD  = C.PUMMOK_CD
+                AND A.STR_CD     = D.STR_CD
+                AND A.SKU_CD     = D.SKU_CD
+                AND B.STR_CD     = ?
+                AND B.DEPT_CD    LIKE ? || '%'
+                AND B.TEAM_CD    LIKE ? || '%'
+                AND B.PC_CD      LIKE ? || '%'
+                AND A.PUMBUN_CD  LIKE ? || '%'
+                AND A.SKU_CD     LIKE ? || '%'
+                AND A.SALE_DT    >= ?
+                AND A.SALE_DT    <= ?
+                AND A.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.USER_ID     = ?
+                           )
+              GROUP BY
+                    A.STR_CD
+                  , A.SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , A.SKU_CD
+                  , D.SKU_NAME
+              ORDER BY
+                    A.SALE_DT
+                  , A.PUMBUN_CD
+                  , A.SKU_CD
+        ]]>        
+    </query>
+    <query name="SEL_SKU_SALE_DT2">        
+        <![CDATA[
+             SELECT A.STR_CD
+                  , A.SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , A.SKU_CD
+                  , D.SKU_NAME
+                  , SUM(NVL(A.SALE_QTY,0))                                            AS SALE_QTY
+                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+               FROM DPS.PS_DAYSKU    A
+                  , DPS.PC_ORGMST      B
+                  , DPS.PC_PMKMST    C
+                  , DPS.PC_STRSKUMST D
+                  , DPS.PC_STRPBN      F
+              WHERE B.ORG_CD     = F.BUY_ORG_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND A.PUMMOK_CD  = C.PUMMOK_CD
+                AND A.STR_CD     = D.STR_CD
+                AND A.SKU_CD     = D.SKU_CD
+                AND B.STR_CD     = ?
+                AND B.DEPT_CD    LIKE ? || '%'
+                AND B.TEAM_CD    LIKE ? || '%'
+                AND B.PC_CD      LIKE ? || '%'
+                AND A.PUMBUN_CD  LIKE ? || '%'
+                AND A.SKU_CD     LIKE ? || '%'
+                AND A.SALE_DT    >= ?
+                AND A.SALE_DT    <= ?
+                AND A.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.USER_ID     = ?
+                           )
+              GROUP BY
+                    A.STR_CD
+                  , A.SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , A.SKU_CD
+                  , D.SKU_NAME
+              ORDER BY
+                    A.SALE_DT
+                  , A.PUMBUN_CD
+                  , A.SKU_CD
+        ]]>        
+    </query>
+    
+    <query name="SEL_SKU">        
+        <![CDATA[
+             SELECT A.STR_CD
+                  , '' SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , A.SKU_CD
+                  , D.SKU_NAME
+                  , SUM(NVL(A.SALE_QTY,0))                                            AS SALE_QTY
+                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+               FROM DPS.PS_DAYSKU    A
+                  , DPS.PC_ORGMST      B
+                  , DPS.PC_PMKMST    C
+                  , DPS.PC_STRSKUMST D
+                  , DPS.PC_STRPBN      F
+              WHERE B.ORG_CD     = F.SALE_ORG_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND A.PUMMOK_CD  = C.PUMMOK_CD
+                AND A.STR_CD     = D.STR_CD
+                AND A.SKU_CD     = D.SKU_CD
+                AND B.STR_CD     = ?
+                AND B.DEPT_CD    LIKE ? || '%'
+                AND B.TEAM_CD    LIKE ? || '%'
+                AND B.PC_CD      LIKE ? || '%'
+                AND A.PUMBUN_CD  LIKE ? || '%'
+                AND A.SKU_CD     LIKE ? || '%'
+                AND A.SALE_DT    >= ?
+                AND A.SALE_DT    <= ?
+                AND A.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.USER_ID     = ?
+                           )
+              GROUP BY
+                    A.STR_CD
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , A.SKU_CD
+                  , D.SKU_NAME
+              ORDER BY
+                    A.PUMBUN_CD
+                  , A.SKU_CD         
+        ]]>        
+    </query>
+    
+    <query name="SEL_SKU2">        
+        <![CDATA[
+             SELECT A.STR_CD
+                  , '' SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , A.SKU_CD
+                  , D.SKU_NAME
+                  , SUM(NVL(A.SALE_QTY,0))                                            AS SALE_QTY
+                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+               FROM DPS.PS_DAYSKU    A
+                  , DPS.PC_ORGMST      B
+                  , DPS.PC_PMKMST    C
+                  , DPS.PC_STRSKUMST D
+                  , DPS.PC_STRPBN      F
+              WHERE B.ORG_CD     = F.BUY_ORG_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND A.PUMMOK_CD  = C.PUMMOK_CD
+                AND A.STR_CD     = D.STR_CD
+                AND A.SKU_CD     = D.SKU_CD
+                AND B.STR_CD     = ?
+                AND B.DEPT_CD    LIKE ? || '%'
+                AND B.TEAM_CD    LIKE ? || '%'
+                AND B.PC_CD      LIKE ? || '%'
+                AND A.PUMBUN_CD  LIKE ? || '%'
+                AND A.SKU_CD     LIKE ? || '%'
+                AND A.SALE_DT    >= ?
+                AND A.SALE_DT    <= ?
+                AND A.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.USER_ID     = ?
+                           )
+              GROUP BY
+                    A.STR_CD
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , A.SKU_CD
+                  , D.SKU_NAME
+              ORDER BY
+                    A.PUMBUN_CD
+                  , A.SKU_CD         
+        ]]>        
+    </query>
+    <query name="SEL_PUMBUN">        
+        <![CDATA[
+             SELECT A.STR_CD
+                  , '' SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , '' SKU_CD
+                  , '' SKU_NAME
+                  , SUM(NVL(A.SALE_QTY,0))                                            AS SALE_QTY
+                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+               FROM DPS.PS_DAYSKU    A
+                  , DPS.PC_ORGMST      B
+                  , DPS.PC_PMKMST    C
+                  , DPS.PC_STRPBN      F
+              WHERE B.ORG_CD     = F.SALE_ORG_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND A.PUMMOK_CD  = C.PUMMOK_CD
+                AND B.STR_CD     = ?
+                AND B.DEPT_CD    LIKE ? || '%'
+                AND B.TEAM_CD    LIKE ? || '%'
+                AND B.PC_CD      LIKE ? || '%'
+                AND A.PUMBUN_CD  LIKE ? || '%'
+                AND A.SKU_CD     LIKE ? || '%'
+                AND A.SALE_DT    >= ?
+                AND A.SALE_DT    <= ?
+                AND A.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.USER_ID     = ?
+                           )
+              GROUP BY
+                    A.STR_CD
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+              ORDER BY
+                    A.PUMBUN_CD   
+        ]]>        
+    </query>
+    <query name="SEL_PUMBUN2">        
+        <![CDATA[
+             SELECT A.STR_CD
+                  , '' SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , '' SKU_CD
+                  , '' SKU_NAME
+                  , SUM(NVL(A.SALE_QTY,0))                                            AS SALE_QTY
+                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+               FROM DPS.PS_DAYSKU    A
+                  , DPS.PC_ORGMST      B
+                  , DPS.PC_PMKMST    C
+                  , DPS.PC_STRPBN      F
+              WHERE B.ORG_CD     = F.BUY_ORG_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND A.PUMMOK_CD  = C.PUMMOK_CD
+                AND B.STR_CD     = ?
+                AND B.DEPT_CD    LIKE ? || '%'
+                AND B.TEAM_CD    LIKE ? || '%'
+                AND B.PC_CD      LIKE ? || '%'
+                AND A.PUMBUN_CD  LIKE ? || '%'
+                AND A.SKU_CD     LIKE ? || '%'
+                AND A.SALE_DT    >= ?
+                AND A.SALE_DT    <= ?
+                AND A.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.USER_ID     = ?
+                           )
+              GROUP BY
+                    A.STR_CD
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+              ORDER BY
+                    A.PUMBUN_CD   
+        ]]>        
+    </query>
+    <query name="SEL_PUMBUN_SALE_DT">        
+        <![CDATA[
+             SELECT A.STR_CD
+                  , A.SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , '' SKU_CD
+                  , '' SKU_NAME
+                  , SUM(NVL(A.SALE_QTY,0))                                            AS SALE_QTY
+                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+               FROM DPS.PS_DAYSKU    A
+                  , DPS.PC_ORGMST      B
+                  , DPS.PC_PMKMST    C
+                  , DPS.PC_STRPBN      F
+              WHERE B.ORG_CD     = F.SALE_ORG_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND A.PUMMOK_CD  = C.PUMMOK_CD
+                AND B.STR_CD     = ?
+                AND B.DEPT_CD    LIKE ? || '%'
+                AND B.TEAM_CD    LIKE ? || '%'
+                AND B.PC_CD      LIKE ? || '%'
+                AND A.PUMBUN_CD  LIKE ? || '%'
+                AND A.SKU_CD     LIKE ? || '%'
+                AND A.SALE_DT    >= ?
+                AND A.SALE_DT    <= ?
+                AND A.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.USER_ID     = ?
+                           )
+              GROUP BY
+                    A.STR_CD
+                  , A.SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+              ORDER BY
+                    A.SALE_DT
+                 ,  A.PUMBUN_CD    
+        ]]>        
+    </query>
+    
+    <query name="SEL_PUMBUN_SALE_DT2">        
+        <![CDATA[
+             SELECT A.STR_CD
+                  , A.SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+                  , '' SKU_CD
+                  , '' SKU_NAME
+                  , SUM(NVL(A.SALE_QTY,0))                                            AS SALE_QTY
+                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+               FROM DPS.PS_DAYSKU    A
+                  , DPS.PC_ORGMST      B
+                  , DPS.PC_PMKMST    C
+                  , DPS.PC_STRPBN      F
+              WHERE B.ORG_CD     = F.BUY_ORG_CD
+                AND A.STR_CD     = F.STR_CD
+                AND A.PUMBUN_CD  = F.PUMBUN_CD
+                AND A.PUMMOK_CD  = C.PUMMOK_CD
+                AND B.STR_CD     = ?
+                AND B.DEPT_CD    LIKE ? || '%'
+                AND B.TEAM_CD    LIKE ? || '%'
+                AND B.PC_CD      LIKE ? || '%'
+                AND A.PUMBUN_CD  LIKE ? || '%'
+                AND A.SKU_CD     LIKE ? || '%'
+                AND A.SALE_DT    >= ?
+                AND A.SALE_DT    <= ?
+                AND A.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.USER_ID     = ?
+                           )
+              GROUP BY
+                    A.STR_CD
+                  , A.SALE_DT
+                  , A.PUMBUN_CD
+                  , F.PUMBUN_NAME
+              ORDER BY
+                    A.SALE_DT
+                 ,  A.PUMBUN_CD    
+        ]]>        
+    </query>
+</service>

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 조형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.24
+ * 개    요 :  회원별 에누리 한도 관리.
+ -->
+<service name="/dmbo102.do">
+    <!-- 마스터 -->
+    <gauce name="H_MASTER"> 
+        <column colName="APP_YEAR"           colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HANDO_MOD_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PREV_DC_HANDO_AMT"  colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_DC_HANDO_AMT"   colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_REASON"         colType="TB_STRING"  size="200" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_ID"             colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DATE"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"            colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"            colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 디테일 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="CUST_ID"            colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_YEAR"           colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HANDO_MOD_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PREV_DC_HANDO_AMT"  colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_HANDO_AMT"       colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HANDO_USED_AMT"     colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HANDO_MOD_ID"       colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_REASON"         colType="TB_STRING"  size="200" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_DC_HANDO_AMT"   colType="TB_DECIMAL" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POCARD_PREFIX"      colType="TB_STRING"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG"               colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 마스터 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT APP_YEAR
+                 , HANDO_MOD_DT 
+                 , PREV_DC_HANDO_AMT
+                 , MOD_DC_HANDO_AMT
+                 , MOD_REASON
+                 , REG_ID
+                 , TO_CHAR(REG_DATE, 'YYYYMMDD') REG_DATE
+                 , CUST_ID
+              FROM DCS.DO_DC_HANDO_HIST
+             WHERE CUST_ID  = ?
+               AND APP_YEAR = ?
+        ]]>        
+    </query>
+    
+    
+    <!-- 디테일조회 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+        	SELECT CUST_ID
+                 , APP_YEAR
+                 , HANDO_MOD_DT
+                 , PREV_DC_HANDO_AMT
+                 , DC_HANDO_AMT
+                 , HANDO_USED_AMT
+                 , HANDO_MOD_ID
+                 , MOD_REASON
+                 , MOD_DC_HANDO_AMT
+                 , POCARD_PREFIX
+                 , FLAG 
+             FROM (SELECT A.CUST_ID
+                 		, A.APP_YEAR
+                 		, B.HANDO_MOD_DT
+                 		, B.PREV_DC_HANDO_AMT
+                 		, A.DC_HANDO_AMT
+                 		, A.HANDO_USED_AMT
+                 		, A.HANDO_MOD_ID
+                 		, B.MOD_REASON
+                 		, B.MOD_DC_HANDO_AMT
+                 		, DCS.F_GET_POCARD_PREFIX(DCS.F_GET_SS_POCARD_NO(C.SS_NO, ?))AS POCARD_PREFIX
+                 		, 'S' AS FLAG 
+              		 FROM DCS.DO_DC_HANDO A
+                 		, DCS.DO_DC_HANDO_HIST B
+                 		, DCS.DM_CUSTOMER C
+             		WHERE A.CUST_ID  = B.CUST_ID
+               		  AND A.APP_YEAR = B.APP_YEAR
+               		  AND A.CUST_ID  = C.CUST_ID
+               		  AND A.CUST_ID  = ?
+               		  AND A.APP_YEAR = ?
+             	    ORDER BY B.HANDO_MOD_DT DESC)
+             WHERE ROWNUM = 1                         
+        ]]>        
+    </query>
+    
+    <!-- 신규시 조회 -->
+    <query name="SEL_DETAIL_NEW">        
+        <![CDATA[
+            SELECT NVL(MAX(A.CUST_ID),  ?)                                         AS CUST_ID
+                 , NVL(MAX(A.APP_YEAR), ?)                                         AS APP_YEAR
+                 , TO_CHAR(SYSDATE, 'YYYYMMDD')          						   AS HANDO_MOD_DT
+                 , NVL(MAX(B.PREV_DC_HANDO_AMT), 0)                                AS PREV_DC_HANDO_AMT
+                 , NVL(MAX(A.DC_HANDO_AMT), 0)                                     AS DC_HANDO_AMT
+                 , NVL(MAX(A.HANDO_USED_AMT), 0)                                   AS HANDO_USED_AMT
+                 , NVL(MAX(A.HANDO_MOD_ID), ?)                                     AS HANDO_MOD_ID
+                 , NVL(MAX(B.MOD_REASON), '')                                      AS MOD_REASON    
+                 , NVL(MAX(B.MOD_DC_HANDO_AMT), 0)                                 AS MOD_DC_HANDO_AMT           
+                 , DCS.F_GET_POCARD_PREFIX(DCS.F_GET_SS_POCARD_NO(MAX(C.SS_NO), ?))AS POCARD_PREFIX
+                 , DECODE(MAX(A.CUST_ID), null, 'N', 'S')                          AS FLAG 
+              FROM DCS.DO_DC_HANDO A
+                 , DCS.DO_DC_HANDO_HIST B
+                 , DCS.DM_CUSTOMER C
+             WHERE A.CUST_ID  = B.CUST_ID
+               AND A.APP_YEAR = B.APP_YEAR
+               AND A.CUST_ID  = C.CUST_ID
+               AND A.CUST_ID  = ?
+               AND A.APP_YEAR = ?
+        ]]>        
+    </query>
+    
+    <!-- 저장시 중복체크 -->
+    <query name="SEL_HIST_COUNT">        
+        <![CDATA[
+    		SELECT COUNT(HANDO_MOD_DT) AS CNT 
+    		  FROM DCS.DO_DC_HANDO_HIST 
+			 WHERE CUST_ID      = ?
+  			   AND APP_YEAR     = ?
+  			   AND HANDO_MOD_DT = ?
+    	]]>        
+    </query>
+    
+    <!-- 한도테이블 insert -->
+    <query name="INS_DC_HANDO">        
+        <![CDATA[
+    		INSERT INTO DCS.DO_DC_HANDO (
+                             			  CUST_ID
+                           			    , APP_YEAR
+                           				, DC_HANDO_AMT
+                           				, HANDO_USED_AMT
+                           				, HANDO_MOD_ID
+                           				, REG_DATE                           
+                           				, REG_ID
+                           				, MOD_DATE
+                           				, MOD_ID
+                            			)
+                     			 VALUES(
+                             			  ?
+                           				, ?
+                           				, ?
+                           				, ?
+                           				, ?
+                           				, SYSDATE
+                           				, ?
+                           				, SYSDATE
+                           				, ?
+                            			)
+    	]]>        
+    </query>
+    <!-- 한도 히스토리 테이블 insert -->
+    <query name="INS_DC_HANDO_HIST">        
+        <![CDATA[
+    		INSERT INTO DCS.DO_DC_HANDO_HIST (
+                             				  CUST_ID
+                           					, APP_YEAR
+                           					, HANDO_MOD_DT
+                           					, PREV_DC_HANDO_AMT
+                           					, MOD_DC_HANDO_AMT
+                           					, MOD_REASON
+                           					, REG_DATE                           
+                           					, REG_ID
+                            				)
+                      				 VALUES(
+                             				  ?
+                           					, ?
+                           					, TO_CHAR(SYSDATE, 'YYYYMMDD')
+                           					, ?
+                           					, ?
+                           					, ?
+                           					, SYSDATE
+                           					, ?
+                            				)
+    	]]>        
+    </query>
+    <!-- update -->
+    <query name="UPD_DC_HANDO">        
+        <![CDATA[
+    		UPDATE DCS.DO_DC_HANDO
+               SET DC_HANDO_AMT             = ?
+                 , HANDO_MOD_ID             = ?
+                 , MOD_DATE                 = SYSDATE
+                 , MOD_ID                   = ?
+             WHERE CUST_ID                  = ?
+               AND APP_YEAR                 = ? 
+    	]]>        
+    </query>    
+    
+    <query name="DEL_DMLINKCARD">        
+        <![CDATA[
+    		DELETE FROM DCS.DM_LINK_CARD
+            WHERE LINK_CARD_NO                   = ? 
+    	]]>        
+    </query>
+    
+</service>

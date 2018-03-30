@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  월 직접 사용량 조회
+ -->
+<service name="/mren301.mr">
+    <!-- 월 직접 사용량 조회 -->
+    <gauce name="H_SEL_MR_GAUGMST">
+        <column colName="CNTR_ID"   colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"    colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"    colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_10"   colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_20"   colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_30"   colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_40"   colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_50"   colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAUG_60"   colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SOLTFLAG"  colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+ 
+    <!-- 조회 Query  -->
+    <query name="SEL_MR_GAUGMST"> 
+        <![CDATA[   
+			WITH 
+			T_CNTR_CAL  AS (SELECT CAI.CNTR_ID
+			                     , CNT.VEN_CD
+			                     , DPS.FN_GET_VENDOR_NAME(CNT.VEN_CD) VEN_NM
+			                     , SUM(CASE WHEN MNT.CAL_CD = '10'  THEN CAI.USE_QTY ELSE 0 END) AS GAUG_10 /*전기*/ 
+			                     , SUM(CASE WHEN MNT.CAL_CD = '22'  THEN CAI.USE_QTY ELSE 0 END) AS GAUG_20 /*급탕*/ 
+			                     , SUM(CASE WHEN MNT.CAL_CD = '32'  THEN CAI.USE_QTY ELSE 0 END) AS GAUG_30 /*취사*/ 
+			                     , SUM(CASE WHEN MNT.CAL_CD = '40'  THEN CAI.USE_QTY ELSE 0 END) AS GAUG_40 /*냉수*/ 
+			                     , SUM(CASE WHEN MNT.CAL_CD = '50'  THEN CAI.USE_QTY ELSE 0 END) AS GAUG_50 /*가스*/ 
+			                     , SUM(CASE WHEN MNT.CAL_CD = '60'  THEN CAI.USE_QTY ELSE 0 END) AS GAUG_60 /*수도*/ 
+			                  FROM MSS.MR_MNTNITEM  MNT
+			                     , MSS.MR_CALITEM   CAI /*MSS.MR_USEDSUM   USS -> 원본데이타 사용안함.공동안분처리된 정산결과사용해야함*/
+			                     , MSS.MR_CNTRMST   CNT
+			                 WHERE MNT.STR_CD = CAI.STR_CD
+			                   AND MNT.MNTN_ITEM_CD = CAI.MNTN_ITEM_CD
+			                   AND CAI.STR_CD = CNT.STR_CD
+			                   AND CAI.CNTR_ID = CNT.CNTR_ID 
+			                   AND CAI.CAL_YM = ?
+			                   AND MNT.STR_CD = ?
+			                 GROUP BY CAI.CNTR_ID, CNT.VEN_CD, MNT.CAL_CD),
+			T_TOTAL_CAL AS (SELECT NULL         AS CNTR_ID
+			                     , NULL         AS VEN_CD
+			                     , '총사용량'   AS VEN_NM
+			                     , SUM(CASE WHEN GMS.GAUG_TYPE = '10' THEN GUS.USE_QTY ELSE 0 END) AS GAUG_10 /*전체전기*/
+			                     , SUM(CASE WHEN GMS.GAUG_TYPE = '20' THEN GUS.USE_QTY ELSE 0 END) AS GAUG_20 /*전체온수*/
+			                     , SUM(CASE WHEN GMS.GAUG_TYPE = '30' THEN GUS.USE_QTY ELSE 0 END) AS GAUG_30 /*전체증기*/
+			                     , SUM(CASE WHEN GMS.GAUG_TYPE = '40' THEN GUS.USE_QTY ELSE 0 END) AS GAUG_40 /*전체냉수*/
+			                     , SUM(CASE WHEN GMS.GAUG_TYPE = '50' THEN GUS.USE_QTY ELSE 0 END) AS GAUG_50 /*전체가스*/
+			                     , SUM(CASE WHEN GMS.GAUG_TYPE = '60' THEN GUS.USE_QTY ELSE 0 END) AS GAUG_60 /*전체수도*/
+			                  FROM MSS.MR_GAUGUSED GUS
+			                     , MSS.MR_GAUGMST  GMS
+			                 WHERE GUS.GAUG_ID = GMS.GAUG_ID
+			                   AND GUS.STR_CD  = GMS.INST_STR_CD
+			                   /* [2010.07.07 : CES관리는 임대계약마스터에서]
+			                   AND GMS.STR_CD IN (SELECT STR_CD 
+			                                       FROM DPS.PC_STRMST 
+			                                      WHERE FCL_FLAG = '5' )*/
+			                   AND GMS.GAUG_LVL = '1'
+			                   AND GMS.INST_STR_CD = ?
+			                   AND GUS.USE_DT LIKE ?||'%'),
+			T_PUB_CAL   AS (SELECT NULL         AS CNTR_ID
+			                     , NULL         AS VEN_CD
+			                     , '공용사용량' AS VEN_NM
+			                     , SUM(GAUG_10) GAUG_10
+			                     , SUM(GAUG_20) GAUG_20
+			                     , SUM(GAUG_30) GAUG_30
+			                     , SUM(GAUG_40) GAUG_40
+			                     , SUM(GAUG_50) GAUG_50
+			                     , SUM(GAUG_60) GAUG_60
+			                  FROM (
+			                        SELECT -GAUG_10 GAUG_10
+			                             , -GAUG_20 GAUG_20
+			                             , -GAUG_30 GAUG_30
+			                             , -GAUG_40 GAUG_40
+			                             , -GAUG_50 GAUG_50
+			                             , -GAUG_60 GAUG_60
+			                          FROM T_CNTR_CAL
+			                        UNION ALL
+			                        SELECT GAUG_10
+			                             , GAUG_20
+			                             , GAUG_30
+			                             , GAUG_40
+			                             , GAUG_50
+			                             , GAUG_60
+			                         FROM T_TOTAL_CAL))
+			
+			SELECT CNTR_ID, VEN_CD, VEN_NM, GAUG_10, GAUG_20, GAUG_30, GAUG_40, GAUG_50, GAUG_60
+			  FROM T_TOTAL_CAL 
+			 UNION  ALL
+			SELECT CNTR_ID, VEN_CD, VEN_NM, GAUG_10, GAUG_20, GAUG_30, GAUG_40, GAUG_50, GAUG_60
+			  FROM T_PUB_CAL
+			 UNION  ALL
+			SELECT CNTR_ID, VEN_CD, VEN_NM, GAUG_10, GAUG_20, GAUG_30, GAUG_40, GAUG_50, GAUG_60
+			  FROM T_CNTR_CAL
+             WHERE VEN_CD LIKE ? ||'%'
+
+        ]]>        
+    </query>
+   
+</service>

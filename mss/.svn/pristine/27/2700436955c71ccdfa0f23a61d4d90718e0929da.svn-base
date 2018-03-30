@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  지점입고확정
+ -->
+<service name="/mgif205.mg">
+    <!-- 지점출고입정 마스터  -->
+    <gauce name="H_MASTER"> 
+        <column colName="REQ_STR"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_STR_NAME"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_STR"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_STR_NAME"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_DT"            colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_SLIP_NO"       colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_QTY"           colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 지점출고 입정 디테일  -->
+    <gauce name="H_DETAIL"> 
+        <column colName="REQ_STR"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_STR"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_DT"            colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_SLIP_NO"       colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_SEQ_NO"        colType="TB_STRING" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISSUE_TYPE"        colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_S_NO"         colType="TB_STRING" size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_E_NO"         colType="TB_STRING" size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_QTY"           colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 지점출고입정 마스터  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+		SELECT REQ_STR
+		     , DPS.FN_GET_STORE_NAME(REQ_STR) AS REQ_STR_NAME
+		     , OUT_STR
+		     , DPS.FN_GET_STORE_NAME(OUT_STR) AS OUT_STR_NAME
+		     , OUT_DT
+		     , OUT_SLIP_NO
+		     , SUM(OUT_QTY) AS OUT_QTY
+		     , SUM(OUT_AMT) AS OUT_AMT
+		FROM  (SELECT REQ_STR
+		            , OUT_STR
+		            , OUT_DT
+		            , OUT_SLIP_NO
+		            , A.GIFT_TYPE_CD
+		            , A.ISSUE_TYPE
+		            , A.GIFT_AMT_TYPE
+		            , SUM(OUT_QTY) AS OUT_QTY
+		            , SUM(OUT_QTY) * GIFTCERT_AMT AS OUT_AMT 
+		       FROM MSS.MG_OUTREQCONF A
+		          , MSS.MG_GIFTAMTMST B
+		       WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+		         AND A.ISSUE_TYPE = B.ISSUE_TYPE
+		         AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+		         AND STAT_FLAG = '01'
+		         AND OUT_CONF = 'Y'
+		         AND REQ_STR = ?
+		         AND REQ_DT BETWEEN ? AND ?
+		         AND OUT_STR LIKE ? || '%'
+		    GROUP BY REQ_STR, OUT_STR, OUT_DT, OUT_SLIP_NO, A.GIFT_TYPE_CD, A.ISSUE_TYPE, A.GIFT_AMT_TYPE, GIFTCERT_AMT) A
+		GROUP BY REQ_STR, OUT_STR, OUT_DT, OUT_SLIP_NO   
+		ORDER BY REQ_STR, OUT_STR, OUT_DT, OUT_SLIP_NO  
+        ]]>
+    </query>  
+    
+    <!-- 지점출고입정 상세  -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+       SELECT REQ_STR
+            , OUT_STR
+            , OUT_DT
+            , OUT_SLIP_NO
+            , OUT_SEQ_NO
+            , A.GIFT_TYPE_CD
+            , A.ISSUE_TYPE
+            , A.GIFT_AMT_TYPE
+            , GIFT_AMT_NAME
+            , GIFT_S_NO
+            , GIFT_E_NO
+            , GIFTCERT_AMT
+            , SUM(OUT_QTY) AS OUT_QTY
+            , SUM(OUT_QTY) * GIFTCERT_AMT AS OUT_AMT 
+       FROM MSS.MG_OUTREQCONF A
+          , MSS.MG_GIFTAMTMST B
+       WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+         AND A.ISSUE_TYPE = B.ISSUE_TYPE
+         AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+         AND OUT_STR = ?
+         AND OUT_DT = ?
+         AND OUT_SLIP_NO = ?
+    GROUP BY REQ_STR, OUT_STR, OUT_DT, OUT_SLIP_NO, OUT_SEQ_NO, A.GIFT_TYPE_CD, A.ISSUE_TYPE, A.GIFT_AMT_TYPE, GIFT_AMT_NAME, GIFTCERT_AMT, GIFT_S_NO, GIFT_E_NO
+    ORDER BY OUT_STR, OUT_DT, OUT_SLIP_NO, OUT_SEQ_NO
+        ]]>
+    </query>  
+    
+     <!-- 지점 출고 입점 내역 수정  01:출고, 02:입고 -->
+    <query name="UPD_OUTREQCONF">
+        <![CDATA[
+		UPDATE MSS.MG_OUTREQCONF
+		   SET IN_CONF_DT = ?
+		     , IN_CONF = 'Y'
+		     , STAT_FLAG = '02' 
+		     , MOD_ID = ?
+		     , MOD_DATE = SYSDATE
+		 WHERE OUT_STR = ?
+		   AND OUT_DT = ?
+		   AND OUT_SLIP_NO = ?		
+        ]]>
+    </query> 
+    
+    <!-- 상품권마스터 상태값 수정  03: 지점입고 -->
+    <query name="UPD_GIFTMST">
+        <![CDATA[
+         UPDATE MSS.MG_GIFTMST
+           SET STAT_FLAG = '03'    --(M074: 상품권상태 ) 03:지점입고
+             , IN_DT = ?
+             , IN_STR = ?
+             , IN_EMP_ID = ? 
+             , MOD_ID = ? 
+             , MOD_DATE = SYSDATE
+        WHERE GIFTCARD_NO BETWEEN ? AND ?
+          AND STAT_FLAG = '02'
+          AND ACDT_FLAG = 'N'
+        ]]>
+    </query> 
+    
+</service>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.06.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  화원정보조회
+ -->
+<service name="/ecmn105.em">
+    <!-- 화원정보조회 쿼리  -->
+    <query name="SEL_CUST_INFO">        
+        <![CDATA[
+			SELECT CUST_ID 
+			  FROM DCS.DM_CARD
+			 WHERE CARD_NO = DCS.SC_CRYPTO_FUN('ENC',?)
+
+        ]]>        
+    </query>
+    
+    <!-- 화원정보임시 저장  -->
+    <query name="INS_CUST_INFO">        
+        <![CDATA[
+			INSERT 
+			  INTO DCS.DM_CUST_SSNO
+			     ( SS_NO, GRP_DATA01, GRP_DATA02, GRP_DATA03, REMARK, REG_DATE, REG_ID, MOD_DATE, MOD_ID)
+			VALUES
+			     ( ?,       '', '',      '', ''
+			     , SYSDATE, ? , SYSDATE, ?
+			     )
+        ]]>        
+    </query>
+    
+    
+    <!-- 번호 중복 가입 확인 -->
+    <query name="SEL_DUP_CHK">
+        <![CDATA[       
+		    
+		    SELECT CUST_NAME
+		    	 , ENTR_DT
+		      FROM DCS.DM_CUSTOMER
+			 WHERE 1=1
+		  	   AND MOBILE_PH1 = DCS.SC_CRYPTO_FUN('ENC',?)
+		  	   AND MOBILE_PH2 = DCS.SC_CRYPTO_FUN('ENC',?)
+		  	   AND MOBILE_PH3 = DCS.SC_CRYPTO_FUN('ENC',?)
+		  	   AND CUST_STAT_FLAG <> '1'
+  	      ]]>
+    </query>
+    
+    <!-- 번호 중복 가입 확인 -->
+    <query name="SEL_SCED_CHK">
+        <![CDATA[       
+		    
+		    SELECT DCS.F_CHK_CUST_SCED(?||?||?) CUST_NAME
+		    	 , ' ' ENTR_DT
+		      FROM DUAL
+		      
+  	      ]]>
+    </query>    
+    
+         <!-- SMS 인증번호 생성 -->
+    <query name="SEL_SMS_CD">
+        <![CDATA[       
+		    
+		SELECT ROUND(DBMS_RANDOM.VALUE(10, 99),0)||
+		       LPAD(ROUND(DBMS_RANDOM.VALUE(1, 99),0),2,0)||
+		       LPAD(ROUND(DBMS_RANDOM.VALUE(1, 99),0),2,0) AS SMS_CD
+		  FROM DUAL
+		
+  	      ]]>
+    </query>  
+    
+    
+            <!-- SMS 인증번호 생성 -->
+    <query name="INS_SMS_SMST">
+        <![CDATA[       
+		    
+		INSERT INTO SMST_T@SMS_ART
+		(
+		    S_SQL,         -- 발송번호
+		    S_ID,          -- 발송자 ID
+		    S_DATE,        -- 발송일자
+		    S_TITLE,       -- 발송 제목
+		    S_BALGU,       -- 발송구분(바로 발송이므로 1 고정)
+		    S_NAME,        -- 수신자명
+		    S_HP,          -- 수신자번호
+		    S_EXCGU,       -- 엑셀입력구분(바로 발송이므로 0 고정)
+		    S_MEMO,        -- 발송내용
+		    S_SNAME,       -- 발송명(공지용 문자 "ARTM"으로 고정)
+		    S_SSQL,        -- 발송그룹번호
+		    S_GU,          -- 0 고정
+		    S_SDATE,       -- 예약일자(발송일자와 동일)
+		    S_STIME        -- 예약시간(바로 발송이나, 발송시간확인을 위해 입력)
+		)
+		VALUES 
+		(	
+			EM_TRAN_MMS_SEQ.NEXTVAL@SMS_ART,
+			'DCS',
+			TO_CHAR(SYSDATE,'YYYYMMDD'),
+			'멤버쉽인증문자',
+			'1',
+			?,
+			?,
+			'0',
+			'[아트몰링] 맴버쉽가입 인증번호는 '||?||' 입니다.',
+			'ART_DCS',
+			EM_TRAN_PR.NEXTVAL@SMS_ART,
+			'0',
+			TO_CHAR(SYSDATE,'YYYYMMDD'),
+			TO_CHAR(SYSDATE,'HH24MI')
+		)
+		
+  	      ]]>
+    </query> 
+    
+    <query name="INS_SMS_EMTRAN">
+        <![CDATA[       
+		    
+		 INSERT INTO EM_TRAN_T@SMS_ART
+ 		 SELECT S_SQL, '', '', S_HP, '1800-5550' TRAN_CALLBACK, '1' TRAN_STATUS, SYSDATE TRAN_DATE, '','','','','',
+        		'','','', S_SQL TRAN_ETC4,'4' TRAN_TYPE
+   		   FROM SMST_T@SMS_ART
+  		  WHERE S_DATE = TO_CHAR(SYSDATE,'YYYYMMDD')
+  		    AND S_HP = ?
+  		    AND S_NAME = ?
+  		    AND S_MEMO LIKE '%'||?||'%'
+		
+  	      ]]>
+    </query> 
+</service>

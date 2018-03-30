@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 
+ * 작 성 일    : 2010.03.02
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개      요     : 상품권교환
+ -->
+<service name="/dmbo619.do">
+
+    <!-- 상품권교환 List -->
+    <gauce name="H_MASTER"> 
+        <column colName="GIFTCARD_NO"   colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_AMT"  colType="TB_DECIMAL" size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_ID"       colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_SYS_YN"   colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <!-- 상품권교환포인트금액 -->
+    <gauce name="H_POINT"> 
+        <column colName="CARD_NO"       colType="TB_STRING"   size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PWD_NO"        colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_SLIP_NO"  colType="TB_STRING"   size="30" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"        colType="TB_DECIMAL"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONV_POINT"    colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONV_GIFT_AMT"	colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 당일 상품권교환 List -->
+    <gauce name="H_TODAY"> 
+        <column colName="PROC_DT"    colType="TB_STRING"   size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"     colType="TB_DECIMAL"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_POINT"  colType="TB_DECIMAL"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_AMT"  	 colType="TB_DECIMAL"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권교환기준 List -->
+    <gauce name="H_RULE"> 
+        <column colName="CONV_POINT"    colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONV_GIFT_AMT" colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONV_QTY"  	colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="START_DT"  	colType="TB_STRING"   size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="END_DT"  		colType="TB_STRING"   size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권지정금액 -->
+    <gauce name="H_AMT"> 
+        <column colName="GIFTCARD_NO"  	colType="TB_STRING"   size="18"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"  colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>    
+    
+    <!-- 상품권금액 조회 -->
+    <query name="SEL_AMT">        
+        <![CDATA[
+            SELECT A.GIFTCARD_NO
+                 , A.GIFTCERT_AMT 
+              FROM MSS.MG_GIFTMST A
+             WHERE A.GIFTCARD_NO = ?
+        ]]>        
+    </query>     
+    
+    <!-- 상품권교환기준 조회 -->
+    <query name="SEL_RULE">        
+        <![CDATA[
+            SELECT A.CONV_POINT
+                 , A.CONV_GIFT_AMT
+                 , 0 CONV_QTY
+                 , A.START_DT
+                 , A.END_DT
+              FROM DCS.DO_GIFTCONV_RULE A
+             WHERE TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A.START_DT AND A.END_DT
+             ORDER BY A.CONV_POINT
+        ]]>        
+    </query>         
+    
+    <!-- 상품권교환 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.PROC_DT
+                 , A.SEQ_NO
+                 , SUM(A.CONV_POINT)  SUM_POINT
+                 , SUM(A.CONV_GIFT_AMT)  SUM_AMT
+              FROM DCS.DO_GIFTCD A
+             WHERE A.CARD_NO  = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+               AND A.PROC_DT = TO_CHAR(SYSDATE,'YYYYMMDD')
+               AND A.PROC_GBN = '01'  -- 반품교환구분 =01 :교환인것만 02:반품
+             GROUP BY A.PROC_DT, A.CARD_NO, A.SEQ_NO
+        ]]>        
+    </query>  
+    
+    <!-- 전표번호 생성 -->
+    <query name="GET_SALE_SLIP_NO">        
+        <![CDATA[
+            SELECT MSS.SQ_MG_SALEMST.nextval SALE_SLIP_NO
+               FROM DUAL
+        ]]>        
+    </query> 
+    
+     <!-- 상품권 교환 SEQ -->
+    <query name="GET_SQ_GIFTCD">        
+        <![CDATA[
+            SELECT DCS.F_GET_SQ_GIFTCD SQ_GIFTCD
+               FROM DUAL
+        ]]>        
+    </query> 
+    
+    <!-- 상품권 교환 SEQ -->
+    <query name="GET_GIFTCARD_PRC">        
+        <![CDATA[
+             SELECT NVL(MSS.FN_GET_GIFTCARD_PRC(?),0) GIFTCERT_AMT
+               FROM DUAL
+        ]]>        
+    </query> 
+        
+    <!-- 상품권 교환 SEQ -->
+    <query name="GET_GIFTCARD_SALECHECK">        
+        <![CDATA[
+             SELECT MSS.FN_GET_GIFTCARD_SALECHECK(?,?) USE_YN
+               FROM DUAL
+        ]]>        
+    </query> 
+    
+    <!-- 상품권 교환   -->
+    <query name="INS_GIFTCD">        
+        <![CDATA[
+            INSERT INTO DCS.DO_GIFTCD (
+                                       PROC_DT   
+                                     , CARD_NO   
+                                     , SEQ_NO    
+                                     , CONV_POINT
+                                     , CONV_GIFT_AMT 
+                                     , BRCH_ID   
+                                     , REG_DATE  
+                                     , REG_ID    
+                                     , PROC_GBN         
+                                      )
+                               VALUES ( 
+                                       TO_CHAR(SYSDATE,'YYYYMMDD')  
+                                     , DCS.SC_Crypto_FUN('ENC', ?)
+                                     , ?   
+                                     , ?
+                                     , ?  
+                                     , ?
+                                     , SYSDATE  
+                                     , ?       
+                                     , ?         
+                                     )   
+         ]]>   
+    </query>  
+    
+    <!-- 상품권 교환 상세  -->
+    <query name="INS_GIFTCD_DTL">        
+        <![CDATA[
+            INSERT INTO DCS.DO_GIFTCD_DTL (
+                                           PROC_DT
+                                         , CARD_NO
+                                         , SEQ_NO
+                                         , GIFTCARD_NO
+                                         , GIFT_SYS_YN
+                                          )
+                                   VALUES (
+                                           TO_CHAR(SYSDATE,'YYYYMMDD')  
+                                         , DCS.SC_Crypto_FUN('ENC', ?)
+                                         , ?
+                                         , ?
+                                         , ?                  
+                                         )
+         ]]>   
+    </query> 
+    
+    <!-- 상품권 교환 상세  -->
+    <query name="INS_GIFTCD_CONV">        
+        <![CDATA[
+            INSERT INTO DCS.DO_GIFTCD_CONV (
+                                           PROC_DT
+                                         , CARD_NO
+                                         , SEQ_NO
+                                         , CONV_POINT
+                                         , CONV_QTY
+                                         , CONV_GIFT_AMT
+                                         , REG_DATE
+                                         , REG_ID
+                                          )
+                                   VALUES (
+                                           TO_CHAR(SYSDATE,'YYYYMMDD')  
+                                         , DCS.SC_Crypto_FUN('ENC', ?)
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , SYSDATE
+                                         , ?             
+                                         )
+         ]]>   
+    </query>     
+</service>

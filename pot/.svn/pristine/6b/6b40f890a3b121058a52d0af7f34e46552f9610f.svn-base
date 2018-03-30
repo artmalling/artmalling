@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : 
+ * 작 성 일 : 2010.07.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  배치실행로그
+ -->
+<service name="/tcom303.tc"> 
+    <gauce name="H_SEL_BATCH">   
+        <column colName="COMM_CODE"     colType="TB_STRING" size="4"     dec="0" keyType="TB_NORMAL" Mode="" />       
+        <column colName="CODE"			colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" Mode="" />      
+        <column colName="NAME"			colType="TB_STRING" size="60"    dec="0" keyType="TB_NORMAL" Mode="" />
+    </gauce> 
+     
+    <query name="SEL_BATCH">
+        <![CDATA[ 
+			SELECT COMM_CODE
+			     , COMM_NAME1 AS CODE
+			     , COMM_NAME2 AS NAME
+			  FROM COM.TC_COMMCODE 
+			 WHERE COMM_PART = 'TC06' 
+			   AND USE_YN    = 'Y'
+			   AND COMM_CODE LIKE ? || '%'
+			 ORDER BY COMM_CODE, COMM_NAME2	
+        ]]>    
+    </query> 
+    
+    <gauce name="H_SEL_LIST">   
+        <column colName="RUN_DATE"		colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" />       
+        <column colName="SYS_GBN"     	colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="SUB_SYS"     	colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="COMM_NAME1"    colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="COMM_NAME2"    colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="SUCC_YN"    	colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="TOT_CNT"    	colType="TB_STRING" size="5"   	 dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="SUC_CNT"    	colType="TB_STRING" size="5"     dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="ERR_CNT"    	colType="TB_STRING" size="5"     dec="0" keyType="TB_NORMAL" Mode="" /> 
+    </gauce> 
+    
+	<!-- 로그리스트조회 -->
+    <query name="SEL_LOG_LIST">        
+        <![CDATA[
+			SELECT TO_CHAR(TO_TIMESTAMP(RUN_DATE,'YYYYMMDDHH24MISSFF6'), 'YYYY/MM/DD HH24:MI:SS')   AS RUN_DATE
+			      , COM.FN_GET_COMM_NAME('D', 'TC07', SUB_SYS)         							    AS SYS_GBN
+			      , SUB_SYS
+			      , B.COMM_NAME1
+			      , B.COMM_NAME2
+			      , DECODE(A.SUCCESS_YN,'N','실패','성공') AS SUCC_YN
+			      , TOT_CNT
+			      , SUC_CNT
+			      , ERR_CNT
+			  FROM COM.TC_BATCHLOG A
+			     , COM.TC_COMMCODE B
+			 WHERE A.PROCESSOR_ID       = B.COMM_NAME1
+			   AND B.COMM_PART          = 'TC06'
+			   AND A.PROCESSOR_STATUS   = '3'
+        ]]>        
+    </query> 
+     
+    <query name="SEL_LOG_WHERE_RUN_DATE">
+        <![CDATA[
+               AND A.RUN_DATE BETWEEN ? ||'0' AND ? ||'9'
+        ]]>    
+    </query>
+    
+    <query name="SEL_LOG_WHERE_SUBSYS">
+        <![CDATA[ 
+               AND SUB_SYS = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_LOG_WHERE_SUCSS_YN">
+        <![CDATA[ 
+               AND A.SUCCESS_YN = ?
+        ]]>    
+    </query> 
+    
+    <query name="SEL_LOG_WHERE_BATCH">
+        <![CDATA[ 
+               AND A.PROCESSOR_ID = ?
+        ]]>    
+    </query> 
+    
+    <query name="SEL_LOG_ORDER">
+        <![CDATA[
+			 ORDER BY A.RUN_DATE DESC
+        ]]>    
+    </query> 
+    
+</service>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.17
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 행사코드 공통 XML
+ -->
+<service name="/ccom013.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_EVTMST">
+      <column colName="SEL"              colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="EVENT_CD"         colType="TB_STRING" size="11"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="EVENT_NAME"       colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="EVENT_THME_CD"    colType="TB_STRING" size="4"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="EVENT_THME_NAME"  colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="EVENT_PLU_FLAG"   colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 행사코드조회 SQL -->
+    <query name="SEL_EVTMST">
+        <![CDATA[                                        
+            SELECT 'F'        AS SEL
+                 , EVT.EVENT_CD
+                 , EVT.EVENT_NAME
+                 , EVT.EVENT_THME_CD
+                 , EVTTHME.EVENT_THME_NAME
+                 , EVT.EVENT_PLU_FLAG
+              FROM DPS.PC_EVTMST     EVT
+                 , DPS.PC_EVTTHMEMST EVTTHME
+             WHERE EVT.EVENT_THME_CD = EVTTHME.EVENT_THME_CD
+               AND EVT.EVENT_CD     != '00000000000'
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_CD">
+        <![CDATA[
+               AND EVT.EVENT_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_LIKE_EVENT_CD">
+        <![CDATA[
+               AND EVT.EVENT_CD   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_NAME">
+        <![CDATA[
+               AND EVT.EVENT_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_THME_CD">
+        <![CDATA[
+               AND EVT.EVENT_THME_CD LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_TYPE">
+        <![CDATA[
+               AND EVT.EVENT_TYPE    = ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_PLU_FLAG">
+        <![CDATA[
+               AND EVT.EVENT_PLU_FLAG IN (?,'0')
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_STR_CD_S">
+        <![CDATA[
+               AND EXISTS ( SELECT STR.EVENT_CD
+                              FROM DPS.PC_STREVT STR
+                             WHERE EVT.EVENT_CD  = STR.EVENT_CD
+                               AND STR.STR_CD    = ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_STR_APP_S_DT">
+        <![CDATA[
+                               AND STR.EVENT_E_DT >= ? 
+
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_STR_APP_E_DT">
+        <![CDATA[
+                               AND STR.EVENT_S_DT <= ? 
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_STR_APP_DT">
+        <![CDATA[
+                               AND ? BETWEEN STR.EVENT_S_DT  AND STR.EVENT_E_DT 
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_STR_CD_E">
+        <![CDATA[               
+                               AND ROWNUM        = 1
+                          )
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_APP_S_DT">
+        <![CDATA[
+               AND EVT.EVENT_E_DT >= ? 
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_APP_E_DT">
+        <![CDATA[
+               AND EVT.EVENT_S_DT <= ? 
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_THME_NAME">
+        <![CDATA[
+               AND EVTTHME.EVENT_THME_NAME = ?
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_EVENT_DT">
+        <![CDATA[
+               AND ? BETWEEN EVT.EVENT_S_DT  AND EVT.EVENT_E_DT
+        ]]>
+    </query>
+    <query name="SEL_EVTMST_WHERE_NOT_NORM_EVENT">
+        <![CDATA[
+               AND EVT.EVENT_CD   <> '00000000000'
+        ]]>
+    </query>
+    
+    <query name="SEL_EVTMST_ORDER">
+        <![CDATA[
+             ORDER BY EVT.EVENT_CD
+        ]]>
+    </query>
+</service>

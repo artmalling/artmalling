@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif613.mg">
+ <!-- 브랜드상품권결제내역 조회 -->
+ <gauce name="H_MASTER"> 
+     <column colName="STR_CD"			colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="STR_NAME"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="SALE_DT"          colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="VEN_CD"           colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="VEN_NAME"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="GIFT_TYPE_CD"     colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="GIFT_TYPE_NAME"   colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="PAY_AMT_SUM"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+ </gauce>
+    
+    <!-- 브랜드상품권결제내역 조회 -->
+ <query name="SEL_DISGIFT_MST">
+     <![CDATA[
+        SELECT TA.STR_CD,
+		       TD.STR_NAME,
+		       TA.SALE_DT,
+		       TB.VEN_CD,
+		       TC.VEN_NAME,
+		       TB.GIFT_TYPE_CD,
+		       TB.GIFT_TYPE_NAME,
+		       SUM(NVL(PAY_AMT, 0)) AS PAY_AMT_SUM
+		  FROM DPS.PS_DISGIFT TA,
+		       MSS.MG_GIFTTPMST TB,
+		       DPS.PC_VENMST TC,
+		       DPS.PC_STRMST TD
+		 WHERE TA.TYPE_CD = TB.GIFT_TYPE_CD
+		   AND TB.VEN_CD = TC.VEN_CD
+		   AND TA.STR_CD = TD.STR_CD
+		   AND TA.SP_FLAG = '22' --브랜드
+		   AND TA.STR_CD IN (SELECT A.STR_CD
+		                       FROM COM.V_MYORG A
+		                      WHERE A.USE_YN = 'Y'
+		                        AND USER_ID = ?
+		                        AND ORG_FLAG = '1'
+		                        AND A.STR_CD LIKE ? || '%'
+		                      GROUP BY A.STR_CD)
+		   AND TA.SALE_DT BETWEEN ? AND ?
+		   AND TB.VEN_CD LIKE ? || '%'
+	  GROUP BY TA.STR_CD,
+	           TD.STR_NAME,
+	           TA.SALE_DT,
+	           TB.VEN_CD,
+	           TC.VEN_NAME,
+	           TB.GIFT_TYPE_CD,
+	           TB.GIFT_TYPE_NAME
+     ]]>
+ </query>   
+</service>

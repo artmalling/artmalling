@@ -1,0 +1,1931 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal405.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="ORG_CD"                  colType="TB_STRING"      size="10"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GUBUN"                   colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CRATE"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CMPRAMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CMPRCRATE"          colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_IRATE"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_INCREASE"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_CRATE"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_CMPRAMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_CMPRCRATE"          colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_IRATE"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_INCREASE"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_IRATE_TAX"          colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_CMPRIRATE_TAX"      colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IRATE_INCREASE"          colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+        <column colName="GUBUNEVT"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTSALE_AMT"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTSALE_CRATE"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTSALE_CMPRAMT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTSALE_CMPRCRATE"       colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTSALE_IRATE"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTSALE_INCREASE"        colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTPROF_AMT"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTPROF_CRATE"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTPROF_CMPRAMT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTPROF_CMPRCRATE"       colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTPROF_IRATE"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTPROF_INCREASE"        colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTPROF_IRATE_TAX"       colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTPROF_CMPRIRATE_TAX"   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVTIRATE_INCREASE"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <query name="SEL_DAYNOREVT_PUMBUN">        
+        <![CDATA[
+            SELECT A.PUMBUN_CD      AS   ORG_CD
+                 , B.PUMBUN_NAME                                                                                                                       AS ORG_NAME
+                 , '정상'                                                                                                                               AS GUBUN
+                 , A.TOT_SALE_AMT                                                                                                                      AS SALE_AMT
+                 , 0.00                                                                                                                                AS SALE_CRATE
+                 , A.CMPRTOT_SALE_AMT                                                                                                                  AS SALE_CMPRAMT
+                 , 0.00                                                                                                                                AS SALE_CMPR_CRATE
+                 , ( CASE WHEN A.TOT_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT)/A.TOT_SALE_AMT*100 END)                                                                AS SALE_IRATE
+                 , A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT                                                                                                 AS SALE_INCREASE
+                 , A.SALE_PROF_AMT                                                                                                                     
+                 , 0.00                                                                                                                                AS PROF_CRATE
+                 , A.CMPRSALE_PROF_AMT                                                                                                                 
+                 , 0.00                                                                                                                                AS PROF_CMPR_CRATE
+                 , ( CASE WHEN A.SALE_PROF_AMT = 0 THEN 0                                                                                              
+                     ELSE (A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT)/A.SALE_PROF_AMT*100 END)                                                             AS PROF_IRATE
+                 , A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT       AS PROF_INCREASE                                                                        
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)                                                                                   AS PROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS PROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)  -                           
+                   ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS IRATE_INCREASE
+            
+                 , '행사'                                                                                                                               AS GUBUNEVT
+                 , A.EVTTOT_SALE_AMT                                                                                                                   AS EVTSALE_AMT
+                 , 0.00                                                                                                                                AS EVTSALE_CRATE
+                 , A.CMPREVTTOT_SALE_AMT                                                                                                               AS EVTSALE_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTSALE_CMPR_CRATE
+                 , ( CASE WHEN A.EVTTOT_SALE_AMT = 0 THEN 0                                                                                            
+                     ELSE (A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT)/A.EVTTOT_SALE_AMT*100 END)                                                       AS EVTSALE_IRATE
+                 , A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT                                                                                           AS EVTSALE_INCREASE
+                 , A.EVTSALE_PROF_AMT                                                                                                                  AS EVTPROF_AMT
+                 , 0.00                                                                                                                                AS EVTPROF_CRATE
+                 , A.CMPREVTSALE_PROF_AMT                                                                                                              AS EVTPROF_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTPROF_CMPR_CRATE
+                 , ( CASE WHEN A.EVTSALE_PROF_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.EVTSALE_PROF_AMT-A.CMPREVTSALE_PROF_AMT)/A.EVTSALE_PROF_AMT*100 END)                                                      AS EVTPROF_IRATE
+                 , A.EVTSALE_PROF_AMT - A.CMPREVTSALE_PROF_AMT                                                                                         AS EVTPROF_INCREASE
+                 
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END)                                                                             AS EVTPROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTPROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END) -
+                   ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTIRATE_INCREASE
+              FROM (
+                     SELECT  A.PUMBUN_CD
+                           , A.STR_CD
+                           , SUM(TOT_SALE_AMT           )      AS TOT_SALE_AMT         
+                           , SUM(SALE_PROF_AMT          )      AS SALE_PROF_AMT            
+                           , SUM(NORM_SALE_AMT           )      AS NORM_SALE_AMT   
+                                                               
+                           , SUM(EVTTOT_SALE_AMT       )       AS EVTTOT_SALE_AMT      
+                           , SUM(EVTSALE_PROF_AMT       )      AS EVTSALE_PROF_AMT         
+                           , SUM(EVTNORM_SALE_AMT        )      AS EVTNORM_SALE_AMT
+                                                               
+                           , SUM(CMPRTOT_SALE_AMT       )      AS CMPRTOT_SALE_AMT  
+                           , SUM(CMPRSALE_PROF_AMT      )      AS CMPRSALE_PROF_AMT        
+                           , SUM(CMPRNORM_SALE_AMT       )      AS CMPRNORM_SALE_AMT
+                                                               
+                           , SUM(CMPREVTTOT_SALE_AMT   )       AS CMPREVTTOT_SALE_AMT 
+                           , SUM(CMPREVTSALE_PROF_AMT   )      AS CMPREVTSALE_PROF_AMT     
+                           , SUM(CMPREVTNORM_SALE_AMT    )      AS CMPREVTNORM_SALE_AMT
+                        FROM (
+                              SELECT D.SALE_ORG_CD
+                                   , A.STR_CD
+                                   , A.PUMBUN_CD
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'  THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                 AS TOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS SALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)                                                                                AS NORM_SALE_AMT     
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END)
+                                      ELSE 0 END)                                                                                 AS EVTTOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS EVTSALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS EVTNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPRTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPRSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPRNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPREVTTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPREVTSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPREVTNORM_SALE_AMT  
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.SALE_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                                   , A.STR_CD
+
+                                     
+                               UNION ALL
+                               
+                              SELECT D.SALE_ORG_CD
+                                   , A.STR_CD
+                                   , A.PUMBUN_CD
+                                   , 0                                                                                             AS TOT_SALE_AMT
+                                   , 0                                                                                             AS SALE_PROF_AMT
+                                   , 0                                                                                             AS NORM_SALE_AMT     
+                                   , 0                                                                                             AS EVTTOT_SALE_AMT
+                                   , 0                                                                                             AS EVTSALE_PROF_AMT
+                                   , 0                                                                                             AS EVTNORM_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPRTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPRSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPRNORM_SALE_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPREVTTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPREVTSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPREVTNORM_SALE_AMT
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.SALE_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                                   , A.STR_CD
+                                  ) A
+                       GROUP BY
+                             A.PUMBUN_CD
+                           , A.STR_CD
+                   ) A
+                 , DPS.PC_STRPBN B
+             WHERE A.PUMBUN_CD = B.PUMBUN_CD
+               AND A.STR_CD    = B.STR_CD
+             ORDER BY 
+                   A.PUMBUN_CD  
+           
+        ]]>        
+    </query>
+    <query name="SEL_DAYNOREVT_PUMBUN2">        
+        <![CDATA[
+            SELECT A.PUMBUN_CD      AS   ORG_CD
+                 , B.PUMBUN_NAME                                                                                                                       AS ORG_NAME
+                 , '정상'                                                                                                                               AS GUBUN
+                 , A.TOT_SALE_AMT                                                                                                                      AS SALE_AMT
+                 , 0.00                                                                                                                                AS SALE_CRATE
+                 , A.CMPRTOT_SALE_AMT                                                                                                                  AS SALE_CMPRAMT
+                 , 0.00                                                                                                                                AS SALE_CMPR_CRATE
+                 , ( CASE WHEN A.TOT_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT)/A.TOT_SALE_AMT*100 END)                                                                AS SALE_IRATE
+                 , A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT                                                                                                 AS SALE_INCREASE
+                 , A.SALE_PROF_AMT                                                                                                                     
+                 , 0.00                                                                                                                                AS PROF_CRATE
+                 , A.CMPRSALE_PROF_AMT                                                                                                                 
+                 , 0.00                                                                                                                                AS PROF_CMPR_CRATE
+                 , ( CASE WHEN A.SALE_PROF_AMT = 0 THEN 0                                                                                              
+                     ELSE (A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT)/A.SALE_PROF_AMT*100 END)                                                             AS PROF_IRATE
+                 , A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT       AS PROF_INCREASE                                                                        
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)                                                                                   AS PROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS PROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)  -                           
+                   ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS IRATE_INCREASE
+            
+                 , '행사'                                                                                                                               AS GUBUNEVT
+                 , A.EVTTOT_SALE_AMT                                                                                                                   AS EVTSALE_AMT
+                 , 0.00                                                                                                                                AS EVTSALE_CRATE
+                 , A.CMPREVTTOT_SALE_AMT                                                                                                               AS EVTSALE_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTSALE_CMPR_CRATE
+                 , ( CASE WHEN A.EVTTOT_SALE_AMT = 0 THEN 0                                                                                            
+                     ELSE (A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT)/A.EVTTOT_SALE_AMT*100 END)                                                       AS EVTSALE_IRATE
+                 , A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT                                                                                           AS EVTSALE_INCREASE
+                 , A.EVTSALE_PROF_AMT                                                                                                                  AS EVTPROF_AMT
+                 , 0.00                                                                                                                                AS EVTPROF_CRATE
+                 , A.CMPREVTSALE_PROF_AMT                                                                                                              AS EVTPROF_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTPROF_CMPR_CRATE
+                 , ( CASE WHEN A.EVTSALE_PROF_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.EVTSALE_PROF_AMT-A.CMPREVTSALE_PROF_AMT)/A.EVTSALE_PROF_AMT*100 END)                                                      AS EVTPROF_IRATE
+                 , A.EVTSALE_PROF_AMT - A.CMPREVTSALE_PROF_AMT                                                                                         AS EVTPROF_INCREASE
+                 
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END)                                                                             AS EVTPROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTPROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END) -
+                   ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTIRATE_INCREASE
+              FROM (
+                     SELECT  A.PUMBUN_CD
+                           , A.STR_CD
+                           , SUM(TOT_SALE_AMT           )      AS TOT_SALE_AMT         
+                           , SUM(SALE_PROF_AMT          )      AS SALE_PROF_AMT            
+                           , SUM(NORM_SALE_AMT           )      AS NORM_SALE_AMT   
+                                                               
+                           , SUM(EVTTOT_SALE_AMT       )       AS EVTTOT_SALE_AMT      
+                           , SUM(EVTSALE_PROF_AMT       )      AS EVTSALE_PROF_AMT         
+                           , SUM(EVTNORM_SALE_AMT        )      AS EVTNORM_SALE_AMT
+                                                               
+                           , SUM(CMPRTOT_SALE_AMT       )      AS CMPRTOT_SALE_AMT  
+                           , SUM(CMPRSALE_PROF_AMT      )      AS CMPRSALE_PROF_AMT        
+                           , SUM(CMPRNORM_SALE_AMT       )      AS CMPRNORM_SALE_AMT
+                                                               
+                           , SUM(CMPREVTTOT_SALE_AMT   )       AS CMPREVTTOT_SALE_AMT 
+                           , SUM(CMPREVTSALE_PROF_AMT   )      AS CMPREVTSALE_PROF_AMT     
+                           , SUM(CMPREVTNORM_SALE_AMT    )      AS CMPREVTNORM_SALE_AMT
+                        FROM (
+                              SELECT D.BUY_ORG_CD
+                                   , A.STR_CD
+                                   , A.PUMBUN_CD
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'  THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                 AS TOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS SALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)                                                                                AS NORM_SALE_AMT     
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END)
+                                      ELSE 0 END)                                                                                 AS EVTTOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS EVTSALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS EVTNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPRTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPRSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPRNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPREVTTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPREVTSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPREVTNORM_SALE_AMT  
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.BUY_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                                   , A.STR_CD
+
+                                     
+                               UNION ALL
+                               
+                              SELECT D.BUY_ORG_CD
+                                   , A.STR_CD
+                                   , A.PUMBUN_CD
+                                   , 0                                                                                             AS TOT_SALE_AMT
+                                   , 0                                                                                             AS SALE_PROF_AMT
+                                   , 0                                                                                             AS NORM_SALE_AMT     
+                                   , 0                                                                                             AS EVTTOT_SALE_AMT
+                                   , 0                                                                                             AS EVTSALE_PROF_AMT
+                                   , 0                                                                                             AS EVTNORM_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPRTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPRSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPRNORM_SALE_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPREVTTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPREVTSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPREVTNORM_SALE_AMT
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.BUY_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                                   , A.STR_CD
+                                  ) A
+                       GROUP BY
+                             A.PUMBUN_CD
+                           , A.STR_CD
+                   ) A
+                 , DPS.PC_STRPBN B
+             WHERE A.PUMBUN_CD = B.PUMBUN_CD
+               AND A.STR_CD    = B.STR_CD
+             ORDER BY 
+                   A.PUMBUN_CD  
+           
+        ]]>        
+    </query>
+    <query name="SEL_DAYNOREVT_PC">        
+        <![CDATA[
+           SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                                                                                                    AS ORG_NAME
+                 , '정상'                                                                                                                               AS GUBUN
+                 , A.TOT_SALE_AMT                                                                                                                      AS SALE_AMT
+                 , 0.00                                                                                                                                AS SALE_CRATE
+                 , A.CMPRTOT_SALE_AMT                                                                                                                  AS SALE_CMPRAMT
+                 , 0.00                                                                                                                                AS SALE_CMPR_CRATE
+                 , ( CASE WHEN A.TOT_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT)/A.TOT_SALE_AMT*100 END)                                                                AS SALE_IRATE
+                 , A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT                                                                                                 AS SALE_INCREASE
+                 , A.SALE_PROF_AMT                                                                                                                     
+                 , 0.00                                                                                                                                AS PROF_CRATE
+                 , A.CMPRSALE_PROF_AMT                                                                                                                 
+                 , 0.00                                                                                                                                AS PROF_CMPR_CRATE
+                 , ( CASE WHEN A.SALE_PROF_AMT = 0 THEN 0                                                                                              
+                     ELSE (A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT)/A.SALE_PROF_AMT*100 END)                                                             AS PROF_IRATE
+                 , A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT       AS PROF_INCREASE                                                                        
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)                                                                                   AS PROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS PROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)  -                           
+                   ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS IRATE_INCREASE
+            
+                 , '행사'                                                                                                                               AS GUBUNEVT
+                 , A.EVTTOT_SALE_AMT                                                                                                                   AS EVTSALE_AMT
+                 , 0.00                                                                                                                                AS EVTSALE_CRATE
+                 , A.CMPREVTTOT_SALE_AMT                                                                                                               AS EVTSALE_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTSALE_CMPR_CRATE
+                 , ( CASE WHEN A.EVTTOT_SALE_AMT = 0 THEN 0                                                                                            
+                     ELSE (A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT)/A.EVTTOT_SALE_AMT*100 END)                                                       AS EVTSALE_IRATE
+                 , A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT                                                                                           AS EVTSALE_INCREASE
+                 , A.EVTSALE_PROF_AMT                                                                                                                  AS EVTPROF_AMT
+                 , 0.00                                                                                                                                AS EVTPROF_CRATE
+                 , A.CMPREVTSALE_PROF_AMT                                                                                                              AS EVTPROF_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTPROF_CMPR_CRATE
+                 , ( CASE WHEN A.EVTSALE_PROF_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.EVTSALE_PROF_AMT-A.CMPREVTSALE_PROF_AMT)/A.EVTSALE_PROF_AMT*100 END)                                                      AS EVTPROF_IRATE
+                 , A.EVTSALE_PROF_AMT - A.CMPREVTSALE_PROF_AMT                                                                                         AS EVTPROF_INCREASE
+                 
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END)                                                                             AS EVTPROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTPROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END) -
+                   ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTIRATE_INCREASE
+              FROM (
+                     SELECT SUBSTR(A.ORG_CD, 0, 8) || '00'     AS ORG_CD
+                           , SUM(TOT_SALE_AMT           )      AS TOT_SALE_AMT         
+                           , SUM(SALE_PROF_AMT          )      AS SALE_PROF_AMT            
+                           , SUM(NORM_SALE_AMT           )      AS NORM_SALE_AMT   
+                                                               
+                           , SUM(EVTTOT_SALE_AMT       )       AS EVTTOT_SALE_AMT      
+                           , SUM(EVTSALE_PROF_AMT       )      AS EVTSALE_PROF_AMT         
+                           , SUM(EVTNORM_SALE_AMT        )      AS EVTNORM_SALE_AMT
+                                                               
+                           , SUM(CMPRTOT_SALE_AMT       )      AS CMPRTOT_SALE_AMT  
+                           , SUM(CMPRSALE_PROF_AMT      )      AS CMPRSALE_PROF_AMT        
+                           , SUM(CMPRNORM_SALE_AMT       )      AS CMPRNORM_SALE_AMT
+                                                               
+                           , SUM(CMPREVTTOT_SALE_AMT   )       AS CMPREVTTOT_SALE_AMT 
+                           , SUM(CMPREVTSALE_PROF_AMT   )      AS CMPREVTSALE_PROF_AMT     
+                           , SUM(CMPREVTNORM_SALE_AMT    )      AS CMPREVTNORM_SALE_AMT
+                        FROM (
+                              SELECT D.SALE_ORG_CD  AS ORG_CD
+                                   , A.PUMBUN_CD
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'  THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                 AS TOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS SALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)                                                                                AS NORM_SALE_AMT     
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END)
+                                      ELSE 0 END)                                                                                 AS EVTTOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS EVTSALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS EVTNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPRTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPRSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPRNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPREVTTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPREVTSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPREVTNORM_SALE_AMT  
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.SALE_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+
+                                     
+                               UNION ALL
+                               
+                              SELECT D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , 0                                                                                             AS TOT_SALE_AMT
+                                   , 0                                                                                             AS SALE_PROF_AMT
+                                   , 0                                                                                             AS NORM_SALE_AMT     
+                                   , 0                                                                                             AS EVTTOT_SALE_AMT
+                                   , 0                                                                                             AS EVTSALE_PROF_AMT
+                                   , 0                                                                                             AS EVTNORM_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPRTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPRSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPRNORM_SALE_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPREVTTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPREVTSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPREVTNORM_SALE_AMT
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.SALE_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                                  ) A
+                       GROUP BY
+                             SUBSTR(A.ORG_CD, 0, 8)
+                   ) A
+                 , DPS.PC_ORGMST B
+             WHERE A.ORG_CD = B.ORG_CD
+             ORDER BY 
+                   A.ORG_CD
+        ]]>        
+    </query>
+    <query name="SEL_DAYNOREVT_PC2">        
+        <![CDATA[
+           SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                                                                                                    AS ORG_NAME
+                 , '정상'                                                                                                                               AS GUBUN
+                 , A.TOT_SALE_AMT                                                                                                                      AS SALE_AMT
+                 , 0.00                                                                                                                                AS SALE_CRATE
+                 , A.CMPRTOT_SALE_AMT                                                                                                                  AS SALE_CMPRAMT
+                 , 0.00                                                                                                                                AS SALE_CMPR_CRATE
+                 , ( CASE WHEN A.TOT_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT)/A.TOT_SALE_AMT*100 END)                                                                AS SALE_IRATE
+                 , A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT                                                                                                 AS SALE_INCREASE
+                 , A.SALE_PROF_AMT                                                                                                                     
+                 , 0.00                                                                                                                                AS PROF_CRATE
+                 , A.CMPRSALE_PROF_AMT                                                                                                                 
+                 , 0.00                                                                                                                                AS PROF_CMPR_CRATE
+                 , ( CASE WHEN A.SALE_PROF_AMT = 0 THEN 0                                                                                              
+                     ELSE (A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT)/A.SALE_PROF_AMT*100 END)                                                             AS PROF_IRATE
+                 , A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT       AS PROF_INCREASE                                                                        
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)                                                                                   AS PROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS PROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)  -                           
+                   ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS IRATE_INCREASE
+            
+                 , '행사'                                                                                                                               AS GUBUNEVT
+                 , A.EVTTOT_SALE_AMT                                                                                                                   AS EVTSALE_AMT
+                 , 0.00                                                                                                                                AS EVTSALE_CRATE
+                 , A.CMPREVTTOT_SALE_AMT                                                                                                               AS EVTSALE_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTSALE_CMPR_CRATE
+                 , ( CASE WHEN A.EVTTOT_SALE_AMT = 0 THEN 0                                                                                            
+                     ELSE (A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT)/A.EVTTOT_SALE_AMT*100 END)                                                       AS EVTSALE_IRATE
+                 , A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT                                                                                           AS EVTSALE_INCREASE
+                 , A.EVTSALE_PROF_AMT                                                                                                                  AS EVTPROF_AMT
+                 , 0.00                                                                                                                                AS EVTPROF_CRATE
+                 , A.CMPREVTSALE_PROF_AMT                                                                                                              AS EVTPROF_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTPROF_CMPR_CRATE
+                 , ( CASE WHEN A.EVTSALE_PROF_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.EVTSALE_PROF_AMT-A.CMPREVTSALE_PROF_AMT)/A.EVTSALE_PROF_AMT*100 END)                                                      AS EVTPROF_IRATE
+                 , A.EVTSALE_PROF_AMT - A.CMPREVTSALE_PROF_AMT                                                                                         AS EVTPROF_INCREASE
+                 
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END)                                                                             AS EVTPROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTPROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END) -
+                   ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTIRATE_INCREASE
+              FROM (
+                     SELECT SUBSTR(A.ORG_CD, 0, 8) || '00'     AS ORG_CD
+                           , SUM(TOT_SALE_AMT           )      AS TOT_SALE_AMT         
+                           , SUM(SALE_PROF_AMT          )      AS SALE_PROF_AMT            
+                           , SUM(NORM_SALE_AMT           )      AS NORM_SALE_AMT   
+                                                               
+                           , SUM(EVTTOT_SALE_AMT       )       AS EVTTOT_SALE_AMT      
+                           , SUM(EVTSALE_PROF_AMT       )      AS EVTSALE_PROF_AMT         
+                           , SUM(EVTNORM_SALE_AMT        )      AS EVTNORM_SALE_AMT
+                                                               
+                           , SUM(CMPRTOT_SALE_AMT       )      AS CMPRTOT_SALE_AMT  
+                           , SUM(CMPRSALE_PROF_AMT      )      AS CMPRSALE_PROF_AMT        
+                           , SUM(CMPRNORM_SALE_AMT       )      AS CMPRNORM_SALE_AMT
+                                                               
+                           , SUM(CMPREVTTOT_SALE_AMT   )       AS CMPREVTTOT_SALE_AMT 
+                           , SUM(CMPREVTSALE_PROF_AMT   )      AS CMPREVTSALE_PROF_AMT     
+                           , SUM(CMPREVTNORM_SALE_AMT    )      AS CMPREVTNORM_SALE_AMT
+                        FROM (
+                              SELECT D.BUY_ORG_CD  AS ORG_CD
+                                   , A.PUMBUN_CD
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'  THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                 AS TOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS SALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)                                                                                AS NORM_SALE_AMT     
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END)
+                                      ELSE 0 END)                                                                                 AS EVTTOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS EVTSALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS EVTNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPRTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPRSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPRNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPREVTTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPREVTSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPREVTNORM_SALE_AMT  
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.BUY_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+
+                                     
+                               UNION ALL
+                               
+                              SELECT D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , 0                                                                                             AS TOT_SALE_AMT
+                                   , 0                                                                                             AS SALE_PROF_AMT
+                                   , 0                                                                                             AS NORM_SALE_AMT     
+                                   , 0                                                                                             AS EVTTOT_SALE_AMT
+                                   , 0                                                                                             AS EVTSALE_PROF_AMT
+                                   , 0                                                                                             AS EVTNORM_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPRTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPRSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPRNORM_SALE_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPREVTTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPREVTSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPREVTNORM_SALE_AMT
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.BUY_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                                  ) A
+                       GROUP BY
+                             SUBSTR(A.ORG_CD, 0, 8)
+                   ) A
+                 , DPS.PC_ORGMST B
+             WHERE A.ORG_CD = B.ORG_CD
+             ORDER BY 
+                   A.ORG_CD
+        ]]>        
+    </query>
+    <query name="SEL_DAYNOREVT_TEAM">        
+        <![CDATA[
+           
+            SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                                                                                                    AS ORG_NAME
+                 , '정상'                                                                                                                               AS GUBUN
+                 , A.TOT_SALE_AMT                                                                                                                      AS SALE_AMT
+                 , 0.00                                                                                                                                AS SALE_CRATE
+                 , A.CMPRTOT_SALE_AMT                                                                                                                  AS SALE_CMPRAMT
+                 , 0.00                                                                                                                                AS SALE_CMPR_CRATE
+                 , ( CASE WHEN A.TOT_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT)/A.TOT_SALE_AMT*100 END)                                                                AS SALE_IRATE
+                 , A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT                                                                                                 AS SALE_INCREASE
+                 , A.SALE_PROF_AMT                                                                                                                     
+                 , 0.00                                                                                                                                AS PROF_CRATE
+                 , A.CMPRSALE_PROF_AMT                                                                                                                 
+                 , 0.00                                                                                                                                AS PROF_CMPR_CRATE
+                 , ( CASE WHEN A.SALE_PROF_AMT = 0 THEN 0                                                                                              
+                     ELSE (A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT)/A.SALE_PROF_AMT*100 END)                                                             AS PROF_IRATE
+                 , A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT       AS PROF_INCREASE                                                                        
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)                                                                                   AS PROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS PROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)  -                           
+                   ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS IRATE_INCREASE
+            
+                 , '행사'                                                                                                                               AS GUBUNEVT
+                 , A.EVTTOT_SALE_AMT                                                                                                                   AS EVTSALE_AMT
+                 , 0.00                                                                                                                                AS EVTSALE_CRATE
+                 , A.CMPREVTTOT_SALE_AMT                                                                                                               AS EVTSALE_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTSALE_CMPR_CRATE
+                 , ( CASE WHEN A.EVTTOT_SALE_AMT = 0 THEN 0                                                                                            
+                     ELSE (A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT)/A.EVTTOT_SALE_AMT*100 END)                                                       AS EVTSALE_IRATE
+                 , A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT                                                                                           AS EVTSALE_INCREASE
+                 , A.EVTSALE_PROF_AMT                                                                                                                  AS EVTPROF_AMT
+                 , 0.00                                                                                                                                AS EVTPROF_CRATE
+                 , A.CMPREVTSALE_PROF_AMT                                                                                                              AS EVTPROF_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTPROF_CMPR_CRATE
+                 , ( CASE WHEN A.EVTSALE_PROF_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.EVTSALE_PROF_AMT-A.CMPREVTSALE_PROF_AMT)/A.EVTSALE_PROF_AMT*100 END)                                                      AS EVTPROF_IRATE
+                 , A.EVTSALE_PROF_AMT - A.CMPREVTSALE_PROF_AMT                                                                                         AS EVTPROF_INCREASE
+                 
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END)                                                                             AS EVTPROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTPROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END) -
+                   ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTIRATE_INCREASE
+              FROM (
+                     SELECT SUBSTR(A.ORG_CD, 0, 6) || '0000'     AS ORG_CD
+                           , SUM(TOT_SALE_AMT           )      AS TOT_SALE_AMT         
+                           , SUM(SALE_PROF_AMT          )      AS SALE_PROF_AMT            
+                           , SUM(NORM_SALE_AMT           )      AS NORM_SALE_AMT   
+                                                               
+                           , SUM(EVTTOT_SALE_AMT       )       AS EVTTOT_SALE_AMT      
+                           , SUM(EVTSALE_PROF_AMT       )      AS EVTSALE_PROF_AMT         
+                           , SUM(EVTNORM_SALE_AMT        )      AS EVTNORM_SALE_AMT
+                                                               
+                           , SUM(CMPRTOT_SALE_AMT       )      AS CMPRTOT_SALE_AMT  
+                           , SUM(CMPRSALE_PROF_AMT      )      AS CMPRSALE_PROF_AMT        
+                           , SUM(CMPRNORM_SALE_AMT       )      AS CMPRNORM_SALE_AMT
+                                                               
+                           , SUM(CMPREVTTOT_SALE_AMT   )       AS CMPREVTTOT_SALE_AMT 
+                           , SUM(CMPREVTSALE_PROF_AMT   )      AS CMPREVTSALE_PROF_AMT     
+                           , SUM(CMPREVTNORM_SALE_AMT    )      AS CMPREVTNORM_SALE_AMT
+                        FROM (
+                              SELECT D.SALE_ORG_CD  AS ORG_CD
+                                   , A.PUMBUN_CD
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'  THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                 AS TOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS SALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)                                                                                AS NORM_SALE_AMT     
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END)
+                                      ELSE 0 END)                                                                                 AS EVTTOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS EVTSALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS EVTNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPRTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPRSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPRNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPREVTTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPREVTSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPREVTNORM_SALE_AMT  
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.SALE_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+
+                                     
+                               UNION ALL
+                               
+                              SELECT D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , 0                                                                                             AS TOT_SALE_AMT
+                                   , 0                                                                                             AS SALE_PROF_AMT
+                                   , 0                                                                                             AS NORM_SALE_AMT     
+                                   , 0                                                                                             AS EVTTOT_SALE_AMT
+                                   , 0                                                                                             AS EVTSALE_PROF_AMT
+                                   , 0                                                                                             AS EVTNORM_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPRTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPRSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPRNORM_SALE_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPREVTTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPREVTSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPREVTNORM_SALE_AMT
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.SALE_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                                  ) A
+                       GROUP BY
+                             SUBSTR(A.ORG_CD, 0, 6)
+                   ) A
+                 , DPS.PC_ORGMST B
+             WHERE A.ORG_CD = B.ORG_CD
+             ORDER BY 
+                   A.ORG_CD
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_DAYNOREVT_TEAM2">        
+        <![CDATA[
+           
+            SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                                                                                                    AS ORG_NAME
+                 , '정상'                                                                                                                               AS GUBUN
+                 , A.TOT_SALE_AMT                                                                                                                      AS SALE_AMT
+                 , 0.00                                                                                                                                AS SALE_CRATE
+                 , A.CMPRTOT_SALE_AMT                                                                                                                  AS SALE_CMPRAMT
+                 , 0.00                                                                                                                                AS SALE_CMPR_CRATE
+                 , ( CASE WHEN A.TOT_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT)/A.TOT_SALE_AMT*100 END)                                                                AS SALE_IRATE
+                 , A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT                                                                                                 AS SALE_INCREASE
+                 , A.SALE_PROF_AMT                                                                                                                     
+                 , 0.00                                                                                                                                AS PROF_CRATE
+                 , A.CMPRSALE_PROF_AMT                                                                                                                 
+                 , 0.00                                                                                                                                AS PROF_CMPR_CRATE
+                 , ( CASE WHEN A.SALE_PROF_AMT = 0 THEN 0                                                                                              
+                     ELSE (A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT)/A.SALE_PROF_AMT*100 END)                                                             AS PROF_IRATE
+                 , A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT       AS PROF_INCREASE                                                                        
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)                                                                                   AS PROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS PROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)  -                           
+                   ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS IRATE_INCREASE
+            
+                 , '행사'                                                                                                                               AS GUBUNEVT
+                 , A.EVTTOT_SALE_AMT                                                                                                                   AS EVTSALE_AMT
+                 , 0.00                                                                                                                                AS EVTSALE_CRATE
+                 , A.CMPREVTTOT_SALE_AMT                                                                                                               AS EVTSALE_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTSALE_CMPR_CRATE
+                 , ( CASE WHEN A.EVTTOT_SALE_AMT = 0 THEN 0                                                                                            
+                     ELSE (A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT)/A.EVTTOT_SALE_AMT*100 END)                                                       AS EVTSALE_IRATE
+                 , A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT                                                                                           AS EVTSALE_INCREASE
+                 , A.EVTSALE_PROF_AMT                                                                                                                  AS EVTPROF_AMT
+                 , 0.00                                                                                                                                AS EVTPROF_CRATE
+                 , A.CMPREVTSALE_PROF_AMT                                                                                                              AS EVTPROF_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTPROF_CMPR_CRATE
+                 , ( CASE WHEN A.EVTSALE_PROF_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.EVTSALE_PROF_AMT-A.CMPREVTSALE_PROF_AMT)/A.EVTSALE_PROF_AMT*100 END)                                                      AS EVTPROF_IRATE
+                 , A.EVTSALE_PROF_AMT - A.CMPREVTSALE_PROF_AMT                                                                                         AS EVTPROF_INCREASE
+                 
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END)                                                                             AS EVTPROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTPROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END) -
+                   ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTIRATE_INCREASE
+              FROM (
+                     SELECT SUBSTR(A.ORG_CD, 0, 6) || '0000'     AS ORG_CD
+                           , SUM(TOT_SALE_AMT           )      AS TOT_SALE_AMT         
+                           , SUM(SALE_PROF_AMT          )      AS SALE_PROF_AMT            
+                           , SUM(NORM_SALE_AMT           )      AS NORM_SALE_AMT   
+                                                               
+                           , SUM(EVTTOT_SALE_AMT       )       AS EVTTOT_SALE_AMT      
+                           , SUM(EVTSALE_PROF_AMT       )      AS EVTSALE_PROF_AMT         
+                           , SUM(EVTNORM_SALE_AMT        )      AS EVTNORM_SALE_AMT
+                                                               
+                           , SUM(CMPRTOT_SALE_AMT       )      AS CMPRTOT_SALE_AMT  
+                           , SUM(CMPRSALE_PROF_AMT      )      AS CMPRSALE_PROF_AMT        
+                           , SUM(CMPRNORM_SALE_AMT       )      AS CMPRNORM_SALE_AMT
+                                                               
+                           , SUM(CMPREVTTOT_SALE_AMT   )       AS CMPREVTTOT_SALE_AMT 
+                           , SUM(CMPREVTSALE_PROF_AMT   )      AS CMPREVTSALE_PROF_AMT     
+                           , SUM(CMPREVTNORM_SALE_AMT    )      AS CMPREVTNORM_SALE_AMT
+                        FROM (
+                              SELECT D.BUY_ORG_CD  AS ORG_CD
+                                   , A.PUMBUN_CD
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'  THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                 AS TOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS SALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)                                                                                AS NORM_SALE_AMT     
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END)
+                                      ELSE 0 END)                                                                                 AS EVTTOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS EVTSALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS EVTNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPRTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPRSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPRNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPREVTTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPREVTSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPREVTNORM_SALE_AMT  
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.BUY_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+
+                                     
+                               UNION ALL
+                               
+                              SELECT D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , 0                                                                                             AS TOT_SALE_AMT
+                                   , 0                                                                                             AS SALE_PROF_AMT
+                                   , 0                                                                                             AS NORM_SALE_AMT     
+                                   , 0                                                                                             AS EVTTOT_SALE_AMT
+                                   , 0                                                                                             AS EVTSALE_PROF_AMT
+                                   , 0                                                                                             AS EVTNORM_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPRTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPRSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPRNORM_SALE_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPREVTTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPREVTSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPREVTNORM_SALE_AMT
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.BUY_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                                  ) A
+                       GROUP BY
+                             SUBSTR(A.ORG_CD, 0, 6)
+                   ) A
+                 , DPS.PC_ORGMST B
+             WHERE A.ORG_CD = B.ORG_CD
+             ORDER BY 
+                   A.ORG_CD
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_DAYNOREVT_DEPT">        
+        <![CDATA[
+             SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                                                                                                    AS ORG_NAME
+                 , '정상'                                                                                                                               AS GUBUN
+                 , A.TOT_SALE_AMT                                                                                                                      AS SALE_AMT
+                 , 0.00                                                                                                                                AS SALE_CRATE
+                 , A.CMPRTOT_SALE_AMT                                                                                                                  AS SALE_CMPRAMT
+                 , 0.00                                                                                                                                AS SALE_CMPR_CRATE
+                 , ( CASE WHEN A.TOT_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT)/A.TOT_SALE_AMT*100 END)                                                                AS SALE_IRATE
+                 , A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT                                                                                                 AS SALE_INCREASE
+                 , A.SALE_PROF_AMT                                                                                                                     
+                 , 0.00                                                                                                                                AS PROF_CRATE
+                 , A.CMPRSALE_PROF_AMT                                                                                                                 
+                 , 0.00                                                                                                                                AS PROF_CMPR_CRATE
+                 , ( CASE WHEN A.SALE_PROF_AMT = 0 THEN 0                                                                                              
+                     ELSE (A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT)/A.SALE_PROF_AMT*100 END)                                                             AS PROF_IRATE
+                 , A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT       AS PROF_INCREASE                                                                        
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)                                                                                   AS PROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS PROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)  -                           
+                   ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS IRATE_INCREASE
+            
+                 , '행사'                                                                                                                               AS GUBUNEVT
+                 , A.EVTTOT_SALE_AMT                                                                                                                   AS EVTSALE_AMT
+                 , 0.00                                                                                                                                AS EVTSALE_CRATE
+                 , A.CMPREVTTOT_SALE_AMT                                                                                                               AS EVTSALE_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTSALE_CMPR_CRATE
+                 , ( CASE WHEN A.EVTTOT_SALE_AMT = 0 THEN 0                                                                                            
+                     ELSE (A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT)/A.EVTTOT_SALE_AMT*100 END)                                                       AS EVTSALE_IRATE
+                 , A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT                                                                                           AS EVTSALE_INCREASE
+                 , A.EVTSALE_PROF_AMT                                                                                                                  AS EVTPROF_AMT
+                 , 0.00                                                                                                                                AS EVTPROF_CRATE
+                 , A.CMPREVTSALE_PROF_AMT                                                                                                              AS EVTPROF_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTPROF_CMPR_CRATE
+                 , ( CASE WHEN A.EVTSALE_PROF_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.EVTSALE_PROF_AMT-A.CMPREVTSALE_PROF_AMT)/A.EVTSALE_PROF_AMT*100 END)                                                      AS EVTPROF_IRATE
+                 , A.EVTSALE_PROF_AMT - A.CMPREVTSALE_PROF_AMT                                                                                         AS EVTPROF_INCREASE
+                 
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END)                                                                             AS EVTPROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTPROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END) -
+                   ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTIRATE_INCREASE
+              FROM (
+                     SELECT SUBSTR(A.ORG_CD, 0, 4) || '000000'     AS ORG_CD
+                           , SUM(TOT_SALE_AMT           )      AS TOT_SALE_AMT         
+                           , SUM(SALE_PROF_AMT          )      AS SALE_PROF_AMT            
+                           , SUM(NORM_SALE_AMT           )      AS NORM_SALE_AMT   
+                                                               
+                           , SUM(EVTTOT_SALE_AMT       )       AS EVTTOT_SALE_AMT      
+                           , SUM(EVTSALE_PROF_AMT       )      AS EVTSALE_PROF_AMT         
+                           , SUM(EVTNORM_SALE_AMT        )      AS EVTNORM_SALE_AMT
+                                                               
+                           , SUM(CMPRTOT_SALE_AMT       )      AS CMPRTOT_SALE_AMT  
+                           , SUM(CMPRSALE_PROF_AMT      )      AS CMPRSALE_PROF_AMT        
+                           , SUM(CMPRNORM_SALE_AMT       )      AS CMPRNORM_SALE_AMT
+                                                               
+                           , SUM(CMPREVTTOT_SALE_AMT   )       AS CMPREVTTOT_SALE_AMT 
+                           , SUM(CMPREVTSALE_PROF_AMT   )      AS CMPREVTSALE_PROF_AMT     
+                           , SUM(CMPREVTNORM_SALE_AMT    )      AS CMPREVTNORM_SALE_AMT
+                        FROM (
+                              SELECT D.SALE_ORG_CD  AS ORG_CD
+                                   , A.PUMBUN_CD
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'  THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                 AS TOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS SALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)                                                                                AS NORM_SALE_AMT     
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END)
+                                      ELSE 0 END)                                                                                 AS EVTTOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS EVTSALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS EVTNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPRTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPRSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPRNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPREVTTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPREVTSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPREVTNORM_SALE_AMT  
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.SALE_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                               UNION ALL
+                              SELECT D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , 0                                                                                             AS TOT_SALE_AMT
+                                   , 0                                                                                             AS SALE_PROF_AMT
+                                   , 0                                                                                             AS NORM_SALE_AMT     
+                                   , 0                                                                                             AS EVTTOT_SALE_AMT
+                                   , 0                                                                                             AS EVTSALE_PROF_AMT
+                                   , 0                                                                                             AS EVTNORM_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPRTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPRSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPRNORM_SALE_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPREVTTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPREVTSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPREVTNORM_SALE_AMT
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.SALE_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.SALE_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                                  ) A
+                       GROUP BY
+                             SUBSTR(A.ORG_CD, 0, 4)
+                   ) A
+                 , DPS.PC_ORGMST B
+             WHERE A.ORG_CD = B.ORG_CD
+             ORDER BY 
+                   A.ORG_CD
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_DAYNOREVT_DEPT2">        
+        <![CDATA[
+             SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME                                                                                                                    AS ORG_NAME
+                 , '정상'                                                                                                                               AS GUBUN
+                 , A.TOT_SALE_AMT                                                                                                                      AS SALE_AMT
+                 , 0.00                                                                                                                                AS SALE_CRATE
+                 , A.CMPRTOT_SALE_AMT                                                                                                                  AS SALE_CMPRAMT
+                 , 0.00                                                                                                                                AS SALE_CMPR_CRATE
+                 , ( CASE WHEN A.TOT_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT)/A.TOT_SALE_AMT*100 END)                                                                AS SALE_IRATE
+                 , A.TOT_SALE_AMT - A.CMPRTOT_SALE_AMT                                                                                                 AS SALE_INCREASE
+                 , A.SALE_PROF_AMT                                                                                                                     
+                 , 0.00                                                                                                                                AS PROF_CRATE
+                 , A.CMPRSALE_PROF_AMT                                                                                                                 
+                 , 0.00                                                                                                                                AS PROF_CMPR_CRATE
+                 , ( CASE WHEN A.SALE_PROF_AMT = 0 THEN 0                                                                                              
+                     ELSE (A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT)/A.SALE_PROF_AMT*100 END)                                                             AS PROF_IRATE
+                 , A.SALE_PROF_AMT - A.CMPRSALE_PROF_AMT       AS PROF_INCREASE                                                                        
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)                                                                                   AS PROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS PROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.NORM_SALE_AMT = 0 THEN 0                                                                                               
+                     ELSE (A.SALE_PROF_AMT/A.NORM_SALE_AMT)*100 END)  -                           
+                   ( CASE WHEN A.CMPRNORM_SALE_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.CMPRSALE_PROF_AMT/A.CMPRNORM_SALE_AMT)*100 END)                                                                           AS IRATE_INCREASE
+            
+                 , '행사'                                                                                                                               AS GUBUNEVT
+                 , A.EVTTOT_SALE_AMT                                                                                                                   AS EVTSALE_AMT
+                 , 0.00                                                                                                                                AS EVTSALE_CRATE
+                 , A.CMPREVTTOT_SALE_AMT                                                                                                               AS EVTSALE_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTSALE_CMPR_CRATE
+                 , ( CASE WHEN A.EVTTOT_SALE_AMT = 0 THEN 0                                                                                            
+                     ELSE (A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT)/A.EVTTOT_SALE_AMT*100 END)                                                       AS EVTSALE_IRATE
+                 , A.EVTTOT_SALE_AMT - A.CMPREVTTOT_SALE_AMT                                                                                           AS EVTSALE_INCREASE
+                 , A.EVTSALE_PROF_AMT                                                                                                                  AS EVTPROF_AMT
+                 , 0.00                                                                                                                                AS EVTPROF_CRATE
+                 , A.CMPREVTSALE_PROF_AMT                                                                                                              AS EVTPROF_CMPRAMT
+                 , 0.00                                                                                                                                AS EVTPROF_CMPR_CRATE
+                 , ( CASE WHEN A.EVTSALE_PROF_AMT = 0 THEN 0                                                                                           
+                     ELSE (A.EVTSALE_PROF_AMT-A.CMPREVTSALE_PROF_AMT)/A.EVTSALE_PROF_AMT*100 END)                                                      AS EVTPROF_IRATE
+                 , A.EVTSALE_PROF_AMT - A.CMPREVTSALE_PROF_AMT                                                                                         AS EVTPROF_INCREASE
+                 
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END)                                                                             AS EVTPROF_IRATE_TAX
+                 , ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTPROF_CMPRIRATE_TAX
+                 , ( CASE WHEN A.EVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.EVTSALE_PROF_AMT/A.EVTNORM_SALE_AMT)*100 END) -
+                   ( CASE WHEN A.CMPREVTNORM_SALE_AMT = 0 THEN 0 
+                     ELSE (A.CMPREVTSALE_PROF_AMT/A.CMPREVTNORM_SALE_AMT)*100 END)                                                                     AS EVTIRATE_INCREASE
+              FROM (
+                     SELECT SUBSTR(A.ORG_CD, 0, 4) || '000000'     AS ORG_CD
+                           , SUM(TOT_SALE_AMT           )      AS TOT_SALE_AMT         
+                           , SUM(SALE_PROF_AMT          )      AS SALE_PROF_AMT            
+                           , SUM(NORM_SALE_AMT           )      AS NORM_SALE_AMT   
+                                                               
+                           , SUM(EVTTOT_SALE_AMT       )       AS EVTTOT_SALE_AMT      
+                           , SUM(EVTSALE_PROF_AMT       )      AS EVTSALE_PROF_AMT         
+                           , SUM(EVTNORM_SALE_AMT        )      AS EVTNORM_SALE_AMT
+                                                               
+                           , SUM(CMPRTOT_SALE_AMT       )      AS CMPRTOT_SALE_AMT  
+                           , SUM(CMPRSALE_PROF_AMT      )      AS CMPRSALE_PROF_AMT        
+                           , SUM(CMPRNORM_SALE_AMT       )      AS CMPRNORM_SALE_AMT
+                                                               
+                           , SUM(CMPREVTTOT_SALE_AMT   )       AS CMPREVTTOT_SALE_AMT 
+                           , SUM(CMPREVTSALE_PROF_AMT   )      AS CMPREVTSALE_PROF_AMT     
+                           , SUM(CMPREVTNORM_SALE_AMT    )      AS CMPREVTNORM_SALE_AMT
+                        FROM (
+                              SELECT D.BUY_ORG_CD  AS ORG_CD
+                                   , A.PUMBUN_CD
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'  THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                 AS TOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS SALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)                                                                                AS NORM_SALE_AMT     
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END)
+                                      ELSE 0 END)                                                                                 AS EVTTOT_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS EVTSALE_PROF_AMT
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'  
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS EVTNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPRTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPRSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPRNORM_SALE_AMT
+                                   , 0                                                                                            AS CMPREVTTOT_SALE_AMT       
+                                   , 0                                                                                            AS CMPREVTSALE_PROF_AMT      
+                                   , 0                                                                                            AS CMPREVTNORM_SALE_AMT  
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.BUY_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                               UNION ALL
+                              SELECT D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , 0                                                                                             AS TOT_SALE_AMT
+                                   , 0                                                                                             AS SALE_PROF_AMT
+                                   , 0                                                                                             AS NORM_SALE_AMT     
+                                   , 0                                                                                             AS EVTTOT_SALE_AMT
+                                   , 0                                                                                             AS EVTSALE_PROF_AMT
+                                   , 0                                                                                             AS EVTNORM_SALE_AMT
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPRTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPRSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD = '00000000000'    
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPRNORM_SALE_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN ? = '1' 
+                                            THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT_TAX) ELSE SUM(A.TOT_SALE_AMT_TAX)*-1 END)
+                                            ELSE (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.TOT_SALE_AMT) ELSE SUM(A.TOT_SALE_AMT)*-1 END) END) 
+                                      ELSE 0 END)                                                                                  AS CMPREVTTOT_SALE_AMT 
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   THEN SUM(A.SALE_PROF_AMT) ELSE SUM(A.SALE_PROF_AMT)*-1 END)
+                                      ELSE 0 END)                AS CMPREVTSALE_PROF_AMT      
+                                   , (CASE WHEN A.EVENT_CD <> '00000000000'   
+                                      THEN (CASE WHEN C.TRAN_FLAG = '0'   
+                                            THEN (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0)) ELSE SUM(A.SALE_AMT) END)  
+                                            ELSE (CASE WHEN E.TAX_FLAG = '1' THEN SUM(ROUND(A.SALE_AMT/1.1,0))*-1 ELSE SUM(A.SALE_AMT)*-1 END)  
+                                            END)
+                                      ELSE 0 END)    AS CMPREVTNORM_SALE_AMT
+                                FROM DPS.PS_DISITEM A
+                                   , DPS.PC_ORGMST  B
+                                   , DPS.PS_TRHEADER C
+                                   , DPS.PC_STRPBN   D
+                                   , DPS.PC_PBNMST   E
+                               WHERE D.BUY_ORG_CD    = B.ORG_CD
+                                 AND A.STR_CD    = C.STR_CD
+                                 AND A.SALE_DT   = C.SALE_DT
+                                 AND A.POS_NO    = C.POS_NO
+                                 AND A.TRAN_NO   = C.TRAN_NO
+                                 AND A.STR_CD    = D.STR_CD
+                                 AND A.PUMBUN_CD = D.PUMBUN_CD
+                                 AND C.TRAN_MODE NOT IN ('92')
+                                 AND NVL(A.REJCT_FLAG,'0') = '0'
+                                 AND C.TRAN_TYPE IN ( '0', '1', '2', '3') 
+                                 AND D.PUMBUN_TYPE NOT IN ('2', '3', '7', '8', '9', 'A') 
+                                 AND A.PUMBUN_CD = E.PUMBUN_CD
+                                 AND B.STR_CD    = ?
+                                 AND B.DEPT_CD   LIKE ? || '%'
+                                 AND B.TEAM_CD   LIKE ? || '%'
+                                 AND B.PC_CD     LIKE ? || '%'
+                                 AND A.SALE_DT   >= ?
+                                 AND A.SALE_DT   <= ?
+                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = B.STR_CD
+                                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                 AND MYORG.PC_CD       = B.PC_CD
+                                                 AND MYORG.USER_ID     = ?
+                                            )
+                               GROUP BY
+                                     D.BUY_ORG_CD
+                                   , A.PUMBUN_CD
+                                   , A.EVENT_CD
+                                   , C.TRAN_FLAG
+                                   , C.TRAN_MODE
+                                   , E.TAX_FLAG
+                                  ) A
+                       GROUP BY
+                             SUBSTR(A.ORG_CD, 0, 4)
+                   ) A
+                 , DPS.PC_ORGMST B
+             WHERE A.ORG_CD = B.ORG_CD
+             ORDER BY 
+                   A.ORG_CD
+            
+        ]]>        
+    </query>
+    
+    
+</service>

@@ -1,0 +1,953 @@
+<!-- 
+/*******************************************************************************
+ * 시스템명 : 협력사EDI > 약속관리> SMS발송관리
+ * 작 성 일 : 2011.06.27
+ * 작 성 자 : 
+ * 수 정 자 : 
+ * 파 일 명 : epro103.jsp
+ * 버    전 : 1.0 (버전은 1.0부터 시작하며 0.1씩 증가)
+ * 개    요 : SMS발송관리
+ * 이    력 : 2011.06.27 (김유완) 신규작성 
+ ******************************************************************************/
+-->
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"  pageEncoding="UTF-8"
+ import="kr.fujitsu.ffw.base.BaseProperty,kr.fujitsu.ffw.util.String2,kr.fujitsu.ffw.control.ActionForm" %>
+<%@ page import="ecom.util.Util" %>
+<%@ page import="java.util.*" %>
+<%@ page import="sun.misc.FormattedFloatingDecimal.Form"%>
+<%@ page import="ecom.vo.SessionInfo2"%>
+<%@ taglib uri="/WEB-INF/tld/c.tld" prefix="c"%>
+<%@ taglib uri="/WEB-INF/tld/ajax-lib.tld" prefix="ajax"%>
+
+<%
+	String dir = request.getContextPath();
+	SessionInfo2 sessionInfo = (SessionInfo2) session
+			.getAttribute("sessionInfo2");
+	String userid = sessionInfo.getUSER_ID(); // 사용자아이디
+	String strcd = sessionInfo.getSTR_CD(); // 점코드
+	String strNm = sessionInfo.getSTR_NM(); // 점명
+	String vencd = sessionInfo.getVEN_CD(); // 협력사코드
+	String venNm = sessionInfo.getVEN_NAME(); // 협력사명
+	String gb = sessionInfo.getGB(); // 1.협력사     2.브랜드
+%>
+
+<html>
+<ajax:library />
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>아트몰링</title>
+<link href="<%=dir%>/css/ds.css" rel="stylesheet" type="text/css" />
+<script language="javascript" src="<%=dir%>/js/common.js"
+	type="text/javascript"></script>
+<script language="javascript" src="<%=dir%>/js/popup.js"
+	type="text/javascript"></script>
+<script language="javascript" src="<%=dir%>/js/message.js"
+	type="text/javascript"></script>
+<script language="javascript" src="<%=dir%>/js/gauce.js"
+	type="text/javascript"></script>
+<script language="javascript" src="<%=dir%>/js/global.js"
+	type="text/javascript"></script>
+<!--*************************************************************************-->
+<!--* B. 스크립트 시작
+<!--*************************************************************************-->
+<script language="javascript">
+ /*************************************************************************
+  * 0. 전역변수
+  *************************************************************************/
+ var userid = '<%=userid%>';
+ var gb     = '<%=gb%>';
+ var vencd  = '<%=vencd%>';
+ var venNm  = '<%=venNm%>';
+ var strcd  = '<%=strcd%>';
+ var xhr    = null; //XMLHttpRequest 객체(전역)
+ var xhrDtl = null; //XMLHttpRequest 객체(전역)
+ var xhrSave= null; //XMLHttpRequest 객체(전역)
+ var strXhr = null;     //Main Json
+ var strXhrDtl = null;  //Detail Json
+ 
+ var g_pre_row = -1;
+ var g_last_row = -1;
+ var g_pre_rowDtl = -1;
+ var g_last_rowDtl = -1;
+ 
+ var g_rowStatus = 0; //0:일반, 1:신규
+ /*************************************************************************
+  * 1. 초기설정
+  *************************************************************************/
+ /**
+  * doInit()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-06-27
+  * 개    요 : 해당 페이지 LOAD 시  
+  * return값 : void
+  */
+ function doinit(){
+     //버튼비활성화
+     enableControl(BTN_NEWROW,  true);  // 신규    
+     enableControl(BTN_DEL,     false); // 삭제
+     enableControl(BTN_SAVE,    true);  // 저장
+     enableControl(BTN_EXCEL,   false); // 엑셀
+     enableControl(BTN_PRINTS,  false); // 프린터
+     enableControl(BTN_CONF,    false); // 확정
+     
+     //조회 항목 
+     initDateText("SYYYYMMDD",      "IN_S_DATE");           //시작일
+     initDateText("TODAY",          "IN_E_DATE");           //종료일
+     getPumbunCombo(strcd, vencd,   "CO_PB_CD",     "Y");   //점별 브랜드
+     //조회부
+     getSelectCombo("D", "M061",    "IN_SCH_FLAG",  "");    //조회구분
+     getSelectCombo("D", "M021",    "IN_PROM_TYPE", "1");   //약속유형
+     //입력부
+     getSelectCombo("D", "M025",    "CO_SEND_TYPE", "");    //발신유형
+     document.getElementById("IN_STR_CD").value = strcd;
+     //상세 입력부 활성화 비활성화
+     setObjec("onLoad");
+ }
+ 
+ /*************************************************************************
+  * 2. 버튼
+  *************************************************************************/
+
+ /**
+  * btn_Sch()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  조회  
+  * return값 : void
+  */
+ function btn_Sch(){
+	// 초기화
+	defaultInputSet();
+	
+	var strStrcd = document.getElementById("IN_STR_CD").value;                 //점코드
+	var strVencd = document.getElementById("IN_VEN_CD").value;                 //협력사코드
+	var strPumbuncd = document.getElementById("CO_PB_CD").value;               //브랜드코드
+	var strSchFlag = document.getElementById("IN_SCH_FLAG").value;             //조회구분
+	var sDate = getRawData(trim(document.getElementById("IN_S_DATE").value));  //기간 시작일
+	var eDate = getRawData(trim(document.getElementById("IN_E_DATE").value));  //기간 종료일
+	var strCustNm = document.getElementById("IN_CUST_NM").value;               //고객명
+	var strPromTy = document.getElementById("IN_PROM_TYPE").value;             //약속유형
+	 
+	 if (sDate > eDate) { //시작일은 종료일보다 커야 합니다.
+	        showMessage(StopSign, OK, "USER-1008", "종료일", "시작일");
+	        sDate.focus();
+	        return;
+	    }
+	 
+	var param = "&goTo=getMaster"   + "&strStrcd="     + strStrcd
+									+ "&strVencd="     + strVencd
+									+ "&strPumbuncd="  + strPumbuncd
+									+ "&strSchFlag="   + strSchFlag
+									+ "&sDate="        + sDate
+									+ "&eDate="        + eDate
+									+ "&strCustNm="    + encodeURI(encodeURIComponent(strCustNm))
+									+ "&strPromTy="    + strPromTy;
+    
+    //XMLHttpRequest 객체얻기
+    xhr = createXMLHttpRequest();
+    var url = "/edi/epro103.ep?"+param;//URL
+    xhr.onreadystatechange = responseAjaxMst;  //콜백 함수  등록
+    xhr.open("POST", url, true);//연결
+    xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');   //한글 (POST시 반듯이 해당문구를 사용해야 Param으로인식)
+    xhr.send(null);//전송
+    
+
+    setObjec("Content");
+ }
+ 
+ /**
+  * btn_New()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  신규  
+  * return값 : void
+  */
+ function btn_New(){
+	g_rowStatus = 1; //신규 Flag
+    if( strXhr == undefined || g_pre_row == -1){
+        showMessage(INFORMATION, OK, "GAUCE-1000", "발송하려는 약속내역을 조회/선택 하세요");
+        return;
+    }else {
+        if( strXhr[g_pre_row].SMS_YN != "T"){
+            showMessage(INFORMATION, OK, "GAUCE-1000", "해당 약속은 SMS발송에 동의 하지 않은 고객입니다.");
+            return;
+        } else {
+        	g_rowStatus = 1; //신규 Flag
+        }
+        //입력 초기화
+        setObjec("CententNew");
+        //SMS발송 기본 템플릿 설정
+        selectChangePt();
+    }
+ }
+ 
+ /**
+  * btn_Save()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  저장  
+  * return값 : void
+  */
+ function btn_Save(){
+     if( g_rowStatus != 1 ){
+         showMessage(INFORMATION, OK, "GAUCE-1000", "저장 할 내용이 없습니다.");
+         return;
+     } 
+     
+     if( !checkValidateSave() ) return;
+     if( showMessage(QUESTION, YESNO, "GAUCE-1000", "저장하시겠습니까?") == 1){
+    	 //저장내역 체크
+         var strStrCd    = strXhr[g_pre_row].STR_CD;   //점 코드
+         var strTakeDt   = strXhr[g_pre_row].TAKE_DT;  //접수일
+         var strTakeSeq  = strXhr[g_pre_row].TAKE_SEQ; //접수SEQ
+         var strVenCd    = '<%=vencd%>';               //협력사코드
+         var strSendType = document.getElementById("CO_SEND_TYPE").value;
+         var strRecvPH1  = document.getElementById("IN_RECV_PH1_I").value;
+         var strRecvPH2  = document.getElementById("IN_RECV_PH2_I").value;
+         var strRecvPH3  = document.getElementById("IN_RECV_PH3_I").value;
+         var strSendPH1  = document.getElementById("IN_SEND_PH1_I").value;
+         var strSendPH2  = document.getElementById("IN_SEND_PH2_I").value;
+         var strSendPH3  = document.getElementById("IN_SEND_PH3_I").value;
+         var strContent  = document.getElementById("TX_SEND_CONTENT_I").value;
+         
+         var param = "&goTo=save" 
+         + "&strStrCd="     + strStrCd
+         + "&strTakeDt="    + strTakeDt
+         + "&strTakeSeq="   + strTakeSeq
+         + "&strVenCd="     + strVenCd
+         + "&strSendType="  + strSendType
+         + "&strRecvPH1="   + strRecvPH1
+         + "&strRecvPH2="   + strRecvPH2
+         + "&strRecvPH3="   + strRecvPH3
+         + "&strSendPH1="   + strSendPH1
+         + "&strSendPH2="   + strSendPH2
+         + "&strSendPH3="   + strSendPH3
+         + "&strContent="   + encodeURI(encodeURIComponent(strContent));
+         
+         xhrSave = createXMLHttpRequest();
+         var url = "/edi/epro103.ep?"+param;//URL
+         xhrSave.onreadystatechange = responseAjaxSave;  //콜백 함수  등록
+         xhrSave.open("POST", url, true);//연결
+         xhrSave.setRequestHeader('Content-Type','application/x-www-form-urlencoded');   //한글 (POST시 반듯이 해당문구를 사용해야 Param으로인식)
+         xhrSave.send(null);//전송
+     } else {
+         return;
+     }
+ }
+ 
+ /**
+  * btn_Excel()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  저장  
+  * return값 : void
+  */
+ function btn_Excel(){
+	 /*
+	 var returnVal = window.showModalDialog("/edi/ecom001.ec?goTo=excelDowns",
+	            "",
+	            "dialogWidth:980px;dialogHeight:527px;scroll:no;" +
+	            "resizable:no;help:no;unadorned:yes;center:yes;status:no");
+	 */
+	window.open("/edi/ecom001.ec?goTo=excelDowns","엑셀다운로드","width=1020px,height=527px,status=yes");
+ }
+
+  
+ /*************************************************************************
+  * 3. 함수
+  *************************************************************************/
+ 
+ /**
+  * checkValidateSave()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011.02.21
+  * 개    요 : 값체크
+  * return값 :
+  */
+ function checkValidateSave() {
+	//발송유형
+	if( document.getElementById("CO_SEND_TYPE").value == "" ){
+		showMessage(INFORMATION, OK, "USER-1003", "발송유형");
+		document.getElementById("CO_SEND_TYPE").focus();
+		return false;
+	}
+	
+	//수신번호1
+	if( (document.getElementById("IN_RECV_PH1_I").value).length < 2 ){
+		showMessage(INFORMATION, OK, "USER-1003", "수신번호1");
+		document.getElementById("IN_RECV_PH1_I").focus();
+		return false;
+	}
+	//수신번호2
+	if( (document.getElementById("IN_RECV_PH2_I").value).length < 3 ){
+		showMessage(INFORMATION, OK, "USER-1003", "수신번호2");
+		document.getElementById("IN_RECV_PH2_I").focus();
+		return false;
+	}
+	//수신번호3
+	if( (document.getElementById("IN_RECV_PH3_I").value).length < 4 ){
+		showMessage(INFORMATION, OK, "USER-1003", "수신번호3");
+		document.getElementById("IN_RECV_PH3_I").focus();
+		return false;
+	}
+	
+	//발신번호1
+	if( (document.getElementById("IN_SEND_PH1_I").value).length < 2 ){
+		showMessage(INFORMATION, OK, "USER-1003", "발신번호1");
+		document.getElementById("IN_SEND_PH1_I").focus();
+		return false;
+	}
+	//발신번호2
+	if( (document.getElementById("IN_SEND_PH2_I").value).length < 3 ){
+		showMessage(INFORMATION, OK, "USER-1003", "발신번호2");
+		document.getElementById("IN_SEND_PH2_I").focus();
+		return false;
+	}
+	//발신번호3
+	if( (document.getElementById("IN_SEND_PH3_I").value).length < 4 ){
+		showMessage(INFORMATION, OK, "USER-1003", "발신번호3");
+		document.getElementById("IN_SEND_PH3_I").focus();
+		return false;
+	}
+	
+	//내용
+	if( document.getElementById("TX_SEND_CONTENT_I").value == "" ){
+		showMessage(INFORMATION, OK, "USER-1003", "내용");
+		document.getElementById("TX_SEND_CONTENT_I").focus();
+		return false;
+	}
+	
+	return true;
+ }
+ 
+ /**
+  * responseAjaxMst()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  마스터GET
+  * return값 : void
+  */ 
+ function responseAjaxMst(){
+	if(xhr.readyState==4) {
+	    if(xhr.status == 200) {
+		    strXhr = eval(xhr.responseText); 
+		    var master_content = "<table width='1265' border='0' cellspacing='0' cellpadding='0' class='g_table' id='tb_Litable' >";
+		    
+		    if (strXhr == undefined) {
+                // 초기화
+                defaultInputSet();
+                setObjec("Content");
+                master_content += "</table>";
+                document.getElementById("DIV_CONTETN").innerHTML = master_content;
+                setPorcCount("SELECT", 0); 
+		    } else {
+                if( strXhr.length > 0 ){
+                    for( i = 0; i < strXhr.length; i++  ){
+                        var MOBILE_PH = strXhr[i].MOBILE_PH1 + "-" + strXhr[i].MOBILE_PH2 + "-" + strXhr[i].MOBILE_PH3;
+                        master_content += "<tr onclick='javascript:fillRowColor(\""+i+"\",\"MST\");getDetail("+i+");' style='cursor:hand;'>";
+                        master_content += "<td class='r3' id='1tdId"+i+"'  width='130'>"+strXhr[i].STR_NAME+"</td>";
+                        master_content += "<td class='r1' id='2tdId"+i+"'  width='107'>"+getDateFormat(strXhr[i].TAKE_DT)+"</td>";
+                        master_content += "<td class='r1' id='3tdId"+i+"'  width='82'>"+strXhr[i].TAKE_SEQ+"</td>";
+                        master_content += "<td class='r1' id='4tdId"+i+"'  width='107'>"+getDateFormat(strXhr[i].IN_DELI_DT)+"</td>";
+                        master_content += "<td class='r1' id='5tdId"+i+"'  width='108'>"+getDateFormat(strXhr[i].FRST_PROM_DT)+"</td>";
+                        master_content += "<td class='r3' id='6tdId"+i+"'  width='130'>"+strXhr[i].CUST_NM+"</td>";
+                        master_content += "<td class='r1' id='7tdId"+i+"'  width='129'>"+MOBILE_PH+"</td>";
+                        master_content += "<td class='r3' id='8tdId"+i+"'  width='90'>"+strXhr[i].PROM_TYPE+"</td>";
+                        master_content += "<td class='r3' id='9tdId"+i+"'  width='91'>"+strXhr[i].PROC_STAT+"</td>";
+                        master_content += "<td class='r3' id='10tdId"+i+"' width='291'>"+strXhr[i].PROM_DTL+"</td>";
+                        master_content += "</tr>";   
+                    }
+                } else {
+                    // 초기화
+                    defaultInputSet();
+                    setObjec("Content");
+                }
+                master_content += "</table>";
+                document.getElementById("DIV_CONTETN").innerHTML = master_content;
+                setPorcCount("SELECT", strXhr.length); 
+                
+
+                // 2011.07.15 kjm 추가
+                // 조회버튼 클릭시 하단그리드도 같이 조회
+                fillRowColor(0,"MST");
+                getDetail(0);
+		    }
+		} 
+	}
+ }
+ 
+ /**
+  * responseAjaxDtl()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  마스터GET
+  * return값 : void
+  */ 
+ function responseAjaxDtl(){
+    if(xhrDtl.readyState==4) {
+        if(xhrDtl.status == 200) {
+        	strXhrDtl = eval(xhrDtl.responseText); 
+            var detail_content = "<table width='100%' border='0' cellspacing='0' cellpadding='0' class='g_table'>";
+            detail_content += "<tr><th width='30'>NO</th><th width='80'>발송일자</th><th width='60'>SEQ</th><th width='100'>발송유형</th>";
+
+            if (strXhrDtl == undefined) {
+                // 초기화
+                defaultInputSet();
+                setObjec("Content");
+                detail_content += "</table>";
+                document.getElementById("SMS_CONTETN").innerHTML = detail_content;
+                setPorcCount("SELECT", 0); 
+            } else {
+				if( strXhrDtl.length > 0 ){
+					for( i = 0; i < strXhrDtl.length; i++  ){
+						detail_content += "<tr onclick='fillRowColor(\""+i+"\",\"DTL\");setSMSInfo("+i+");' style='cursor:hand;'>";
+						detail_content += "<td class='r1' id='1stdId"+i+"' >"+(i+1)+"</td>";
+						detail_content += "<td class='r1' id='2stdId"+i+"' >"+getDateFormat(strXhrDtl[i].SEND_DT)+"</td>";
+						detail_content += "<td class='r1' id='3stdId"+i+"' >"+strXhrDtl[i].SEQ_NO+"</td>";
+						detail_content += "<td class='r3' id='4stdId"+i+"' >"+strXhrDtl[i].SEND_TYPE_NM+"</td>";
+						detail_content += "</tr>";   
+					} 
+				} else {
+					// 초기화
+					defaultInputSet();
+					setObjec("Content");
+				}
+				detail_content += "</table>";
+				document.getElementById("SMS_CONTETN").innerHTML = detail_content;
+              
+				//첫번째 row
+				for(i=1;i<5;i++) {
+				    document.getElementById(i+"stdId"+0).style.backgroundColor="#fff56E";
+				}
+				g_pre_rowDtl = 0;
+				
+				setSMSInfo(0);
+				setPorcCount("SELECT", strXhrDtl.length); 
+
+            }
+        } 
+    } 
+ }
+ 
+ /**
+  * responseAjaxSave()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  저장처리결과
+  * return값 : void
+  */ 
+ function responseAjaxSave(){
+    if(xhrSave.readyState==4) {
+        if(xhrSave.status == 200) {
+            showMessage(INFORMATION, OK, "USER-1000", xhrSave.responseText); 
+            getDetail(g_pre_row);
+            return;
+        } else {
+            showMessage(INFORMATION, OK, "USER-1000", "[오류]정상적으로 처리 되지 않았습니다.");
+            //getDetail(g_pre_row);
+            return;
+        }
+    } 
+ }
+ 
+ /**
+  * getDetail()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  SMS발신내역 조회  
+  * return값 : void
+  */
+ function getDetail(row){
+    var strStrcd = strXhr[row].STR_CD;      //점코드
+    var strTakeDt = strXhr[row].TAKE_DT;    //접수일자
+    var strTakeSeq = strXhr[row].TAKE_SEQ;  //접수순번
+    var param = "&goTo=getDetail"   + "&strStrcd="      + strStrcd
+                                    + "&strTakeDt="     + strTakeDt
+                                    + "&strTakeSeq="    + strTakeSeq;
+    //XMLHttpRequest 객체얻기
+    xhrDtl = createXMLHttpRequest();
+    var url = "/edi/epro103.ep?"+param;//URL
+    xhrDtl.onreadystatechange = responseAjaxDtl;  //콜백 함수  등록
+    xhrDtl.open("POST", url, true);//연결
+    xhrDtl.setRequestHeader('Content-Type','application/x-www-form-urlencoded');   //한글 (POST시 반듯이 해당문구를 사용해야 Param으로인식)
+    xhrDtl.send(null);//전송
+ }
+ 
+ /**
+  * setSMSInfo()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  SMS발신내역 조회  
+  * return값 : void
+  */
+ function setSMSInfo(row){
+     document.getElementById("CO_SEND_TYPE").value = strXhrDtl[row].SEND_TYPE;
+     document.getElementById("IN_RECV_PH1_I").value = strXhrDtl[row].RECV_PH1;
+     document.getElementById("IN_RECV_PH2_I").value = strXhrDtl[row].RECV_PH2;
+     document.getElementById("IN_RECV_PH3_I").value = strXhrDtl[row].RECV_PH3;
+     document.getElementById("IN_SEND_PH1_I").value = strXhrDtl[row].SEND_PH1;
+     document.getElementById("IN_SEND_PH2_I").value = strXhrDtl[row].SEND_PH2;
+     document.getElementById("IN_SEND_PH3_I").value = strXhrDtl[row].SEND_PH3;
+     document.getElementById("TX_SEND_CONTENT_I").value = strXhrDtl[row].SEND_CONTENT;
+     
+     //상태값 초기화
+     g_rowStatus = 0;
+ }
+  
+ /**
+  * setObjec()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  활성화, 비활성화
+  * return값 : void
+  */ 
+ function setObjec(Flag){
+     if( Flag == "onLoad" ){    //최초로드시
+         document.getElementById("CO_SEND_TYPE").disabled = true;
+         document.getElementById("IN_RECV_PH1_I").disabled = true;
+         document.getElementById("IN_RECV_PH2_I").disabled = true;
+         document.getElementById("IN_RECV_PH3_I").disabled = true;
+         document.getElementById("IN_SEND_PH1_I").disabled = true;
+         document.getElementById("IN_SEND_PH2_I").disabled = true;
+         document.getElementById("IN_SEND_PH3_I").disabled = true;
+         document.getElementById("TX_SEND_CONTENT_I").readOnly = true;
+     } else if( Flag == "Content" ){   //마스터 조회 건수가 있을시
+         document.getElementById("CO_SEND_TYPE").disabled = true;
+         document.getElementById("IN_RECV_PH1_I").disabled = true;
+         document.getElementById("IN_RECV_PH2_I").disabled = true;
+         document.getElementById("IN_RECV_PH3_I").disabled = true;
+         document.getElementById("IN_SEND_PH1_I").disabled = true;
+         document.getElementById("IN_SEND_PH2_I").disabled = true;
+         document.getElementById("IN_SEND_PH3_I").disabled = true;
+         document.getElementById("TX_SEND_CONTENT_I").readOnly = true;
+     } else if( Flag == "CententNew" ){
+         document.getElementById("CO_SEND_TYPE").disabled = false;
+         document.getElementById("IN_RECV_PH1_I").disabled = false;
+         document.getElementById("IN_RECV_PH2_I").disabled = false;
+         document.getElementById("IN_RECV_PH3_I").disabled = false;
+         document.getElementById("IN_SEND_PH1_I").disabled = false;
+         document.getElementById("IN_SEND_PH2_I").disabled = false;
+         document.getElementById("IN_SEND_PH3_I").disabled = false;
+         document.getElementById("TX_SEND_CONTENT_I").readOnly = false; 
+         //초기화
+         document.getElementById("CO_SEND_TYPE").selectedIndex = 0;
+         document.getElementById("IN_RECV_PH1_I").value = strXhr[g_pre_row].MOBILE_PH1; //등록된 고객전화번호
+         document.getElementById("IN_RECV_PH2_I").value = strXhr[g_pre_row].MOBILE_PH2; //등록된 고객전화번호
+         document.getElementById("IN_RECV_PH3_I").value = strXhr[g_pre_row].MOBILE_PH3; //등록된 고객전화번호
+         document.getElementById("IN_SEND_PH1_I").value = "";
+         document.getElementById("IN_SEND_PH2_I").value = "";
+         document.getElementById("IN_SEND_PH3_I").value = "";
+         document.getElementById("TX_SEND_CONTENT_I").value = "";
+     }
+ }
+
+ /**
+  * getPumbunCombo()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  점별브랜드콤보
+  * return값 : void
+  0. strcd : 점코드
+  1. vencd : 협력사코드
+  2. target : 진행 할 항목
+  4. YN : Y 전체 포함        N 전체 포함 안함
+  */ 
+ function getPumbunCombo(strcd, vencd, target, YN){
+      var param = "";
+      param = "&goTo=getPumbunCombo&strcd=" + strcd
+               + "&vencd=" + vencd
+               + "&gb=" + gb;
+     
+     <ajax:open callback="on_loadedXML" 
+         param="param" 
+         method="POST" 
+         urlvalue="/edi/ccom001.cc"/>
+     
+     <ajax:callback function="on_loadedXML">
+        var pumbun = document.getElementById(target);
+        if( rowsNode.length > 0 ){
+            
+            if( YN == "Y" ){
+                var emp_opt = document.createElement("option");
+                emp_opt.setAttribute("value", "%");
+                var emp_text = document.createTextNode("전체");
+                emp_opt.appendChild(emp_text); 
+                pumbun.appendChild(emp_opt);
+            }
+            
+            for( i =0; i < rowsNode.length; i++){
+                var opt = document.createElement("option");  
+                opt.setAttribute("value", rowsNode[i].childNodes[0].childNodes[0].nodeValue);
+                
+                var text = document.createTextNode(rowsNode[i].childNodes[1].childNodes[0].nodeValue);
+                opt.appendChild(text); 
+                pumbun.appendChild(opt);
+            }
+        } else {
+            var emp_opt = document.createElement("option");
+            emp_opt.setAttribute("value", "%");
+            var emp_text = document.createTextNode("전체");
+            emp_opt.appendChild(emp_text); 
+            pumbun.appendChild(emp_opt);
+        }
+     </ajax:callback>
+ }
+ 
+ /**
+  * getSelectCombo()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  조회부 공통 부문
+  * return값 : void
+  */ 
+ function getSelectCombo(syspat,compart, target, gb){
+     
+     var param = "&goTo=getEtcCode&syspat="+syspat+"&compart="+compart;
+     <ajax:open callback="on_SelectComboXML" 
+         param="param" 
+         method="POST" 
+         urlvalue="/edi/ccom001.cc"/>
+     
+     <ajax:callback function="on_SelectComboXML"> 
+     var sel_box = document.getElementById(target);
+     if( rowsNode.length > 0){
+         if( gb == "1" ){
+              var opt = document.createElement("option");  
+              opt.setAttribute("value", "%");
+              
+              var text = document.createTextNode("전체");
+              opt.appendChild(text); 
+              sel_box.appendChild(opt);
+         }
+         for( i =0; i < rowsNode.length; i++){
+             var opt = document.createElement("option");  
+             opt.setAttribute("value", rowsNode[i].childNodes[0].childNodes[0].nodeValue);
+             
+             var text = document.createTextNode(rowsNode[i].childNodes[1].childNodes[0].nodeValue);
+             opt.appendChild(text); 
+             sel_box.appendChild(opt);
+         }
+     } else {
+         var opt = document.createElement("option");  
+         opt.setAttribute("value", "%");
+         
+         var text = document.createTextNode("전체");
+         opt.appendChild(text); 
+         sel_box.appendChild(opt);
+     }    
+     </ajax:callback>
+ }
+ 
+ /**
+  * defaultInputSet()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  SMS발신등록내역 초기화
+  * return값 : void
+  */ 
+ function defaultInputSet(){
+	document.getElementById("CO_SEND_TYPE").selectedIndex = 0;
+	document.getElementById("IN_RECV_PH1_I").value = "";
+	document.getElementById("IN_RECV_PH2_I").value = "";
+	document.getElementById("IN_RECV_PH3_I").value = "";
+	document.getElementById("IN_SEND_PH1_I").value = "";
+	document.getElementById("IN_SEND_PH2_I").value = "";
+	document.getElementById("IN_SEND_PH3_I").value = "";
+	document.getElementById("TX_SEND_CONTENT_I").value = "";
+		
+	var detail_content = "<table width='100%' border='0' cellspacing='0' cellpadding='0' class='g_table'>";
+	detail_content += "<tr><th width='30'>NO</th><th width='80'>발송일자</th><th width='60'>SEQ</th><th width='100'>발송유형</th>";
+	detail_content += "</table>";
+	document.getElementById("SMS_CONTETN").innerHTML = detail_content;
+	
+	//상태값 초기화
+	g_rowStatus = 0;
+ }
+ 
+ /**
+  * fillRowColor()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-04-18
+  * 개    요 :  선택라인 초기화
+  * return값 : void
+  */ 
+ function fillRowColor(val, loc) {
+  	setObjec("Content");
+	// 마스터
+    if (loc=="MST") {
+        g_last_row = val;
+        if (g_pre_row != g_last_row){
+            for(i=1;i<11;i++) {
+                document.getElementById(i+"tdId"+val).style.backgroundColor="#fff56E";
+        
+                if (g_pre_row != -1) {
+                    document.getElementById(i+"tdId"+g_pre_row).style.backgroundColor="#ffffff";
+                }
+            }
+        }
+        g_pre_row = g_last_row;
+    //디테일
+    } else {
+        g_last_rowDtl = val;
+        if (g_pre_rowDtl != g_last_rowDtl){
+            for( j = 1; j < 5; j++) {
+                document.getElementById(j+"stdId"+val).style.backgroundColor="#fff56E";
+        
+                if (g_pre_rowDtl != -1) {
+                    document.getElementById(j+"stdId"+g_pre_rowDtl).style.backgroundColor="#ffffff";
+                }
+            }
+        }
+        g_pre_rowDtl = g_last_rowDtl;
+    }	  
+ }
+ 
+ /**
+  * selectChangePt()
+  * 작 성 자 : FKL
+  * 작 성 일 : 2011-08-10
+  * 개    요 :  약속유형변경시 SMS 기본 템플릿 설정
+  * return값 : void
+  */ 
+ function selectChangePt(){
+	if (!document.getElementById("CO_SEND_TYPE").disabled) {
+		var strNm      = strXhr[g_pre_row].STR_NAME;  //점명
+		var strCustNm  = strXhr[g_pre_row].CUST_NM;   //고객명
+		var strSentType= document.getElementById("CO_SEND_TYPE").childNodes[CO_SEND_TYPE.selectedIndex].text;    //전송타입
+		var strProType = strXhr[g_pre_row].PROM_TYPE; //약속유형
+		//Trim
+		strProType = strProType.replace(/^\s*/,'');
+		strProType = strProType.replace(/\s*$/,'');
+		document.getElementById("TX_SEND_CONTENT_I").value = ""
+		    + strCustNm +"님의 " + strProType +"이(가) " + strSentType + " 되었습니다. -" + strNm +"-"; 
+	}
+ }
+ 
+ function scrollAll(){
+    document.all.DIV_TITLE.scrollLeft = document.all.DIV_CONTETN.scrollLeft;
+ }
+
+ function scrollAll2(){
+    document.all.DIV_TITLE.scrollLeft = document.all.DIV_CONTETN.scrollLeft;
+ } 
+
+ function enterKeySkip(){
+     // 이벤트 객체에서 keyCode 가져오기.
+     var e = window.event;
+     var keyCode = e.keyCode ? e.keyCode : e.which ? e.which : e.charCode;
+     if(keyCode==13) {
+         event.returnValue = false;
+     } else {
+         event.returnValue = true;
+     }
+ }
+</script>
+<!--*************************************************************************-->
+<!--* E. 본문시작
+<!--*************************************************************************-->
+</head>
+<body class="PL10 PR07 PT15" onload="doinit();">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+	<tr>
+		<td>
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+			<tr>
+				<td width="396" class="title"><img
+					src="<%=dir%>/imgs/comm/title_head.gif" width="15" height="13"
+					align="absmiddle" class="PR05" />SMS발송관리</td>
+				<td>
+				<table border="0" align="right" cellpadding="0" cellspacing="0">
+					<tr>
+						<td><img src="<%=dir%>/imgs/btn/search.gif" width="50"
+							height="22" id="search" onclick="javascript:btn_Sch();" /></td>
+						<td><img src="<%=dir%>/imgs/btn/new.gif" width="50"
+							height="22" id="BTN_NEWROW" onclick="btn_New();" /></td>
+						<td><img src="<%=dir%>/imgs/btn/del.gif" width="50"
+							height="22" id="BTN_DEL" onclick="btn_del();" /></td>
+						<td><img src="<%=dir%>/imgs/btn/save.gif" width="50"
+							height="22" id="BTN_SAVE" onclick="btn_Save();" /></td>
+						<td><img src="<%=dir%>/imgs/btn/excel.gif" width="61"
+							height="22" id="BTN_EXCEL" onclick="btn_Excel();" /></td>
+						<td><img src="<%=dir%>/imgs/btn/print.gif" width="50"
+							height="22" id="BTN_PRINTS" /></td>
+						<td><img src="<%=dir%>/imgs/btn/set.gif" width="50"
+							height="22" id="BTN_CONF" /></td>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+		</td>
+	</tr>
+	<tr>
+		<td class="PT01 PB03">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0"
+			class="o_table">
+			<tr>
+				<td><!-- search start -->
+				<table width="100%" border="0" cellpadding="0" cellspacing="0"
+					class="s_table">
+					<tr>
+						<th width="80" class="point">점</th>
+						<td width="140"><input type="text" name="IN_STR_NM" id="IN_STR_NM"
+							size="21" maxlength="10" value="<%=strNm%>" disabled="disabled" /><input
+							type="hidden" name="IN_STR_CD" id="IN_STR_CD"></td>
+						<th width="80" class="point">협력사코드</th>
+						<td width="140"><input type="hidden" name="IN_VEN_CD" id="IN_VEN_CD"
+							value="<%=vencd%>" disabled="disabled" /> <input type="text"
+							name="IN_VEN_NM" id="IN_VEN_NM" size="21" value="<%=venNm%>"
+							disabled="disabled" /></td>
+						<th width="80">브랜드코드</th>
+						<td><select name="CO_PB_CD" id="CO_PB_CD" style="width: 143;">
+
+						</select></td>
+					</tr>
+					<tr>
+						<th class="point">조회구분</th>
+						<td><select id="IN_SCH_FLAG" name="IN_SCH_FLAG"
+							style="width: 138;">
+
+						</select></td>
+						<th width="80" class="point">기간</th>
+						<td colspan="3"><input type="text" name="IN_S_DATE" id="IN_S_DATE"
+                            size="10" title="YYYY/MM/DD" value="" maxlength="10"
+                            onkeypress="javascript:onlyNumber();" onblur="dateCheck(this);"
+                            onfocus="dateValid(this);"
+                            style='text-align: center; IME-MODE: disabled' />   <img
+							src="<%=dir%>/imgs/btn/date.gif" alt="시작일" align="absmiddle"
+							onclick="openCal('G',IN_S_DATE);return false;" /> ~ <input
+							type="text" name="IN_E_DATE" id="IN_E_DATE" size="10"
+							maxlength="10" onblur="dateCheck(this);"
+							onfocus="dateValid(this);" onkeypress="javascript:onlyNumber();"
+							style='text-align: center; IME-MODE: disabled' /> <img
+							src="<%=dir%>/imgs/btn/date.gif" alt="종료일" align="absmiddle"
+							onclick="openCal('G',IN_E_DATE);return false;" /></td>
+					</tr>
+					<tr>
+						<th>고객명</th>
+						<td><input type="text" name="IN_CUST_NM" id="IN_CUST_NM" size="21"
+							onkeyup="checkByteLength(this, 40);" /></td>
+						<th>약속유형</th>
+						<td colspan="3"><select id="IN_PROM_TYPE" name="IN_PROM_TYPE"
+							style="width: 138;">
+						</select></td>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+		</td>
+	</tr>
+	<tr>
+		<td class="dot"></td>
+	</tr>
+	<tr valign="top">
+		<td>
+		<table width="100%" border="0" cellspacing="0" cellpadding="0"
+			class="BD4A">
+			<tr valign="top">
+				<td>
+                <div id="DIV_TITLE" style=" width:815px; overflow:hidden;" > 
+                     <table width="1280" border="0" cellspacing="0" cellpadding="0" class="g_table"  >
+                        <tr>
+                        <th width="130">점</th>
+                        <th width="110">접수일자</th>
+                        <th width="80">SEQ</th>
+                        <th width="110">입고예정일</th>
+                        <th width="110">약속예정일</th>
+                        <th width="130">고객명</th>
+                        <th width="130">고객연락처</th>
+                        <th width="90">약속유형</th>
+                        <th width="90">약속상태</th>
+                        <th width="285">약속상세</th>
+                        <th width="15"></th>
+                        </tr>
+                     </table>
+                </div>
+				<div id="DIV_CONTETN" style="width: 815px; height: 230px; overflow:scroll" onscroll="scrollAll();">
+				</div>
+				</td>
+			</tr>
+		</table>
+		</td>
+	</tr>
+	<tr>
+		<td class="PT05">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+			<tr>
+				<td class="sub_title "><img
+					src="<%=dir%>/imgs/comm/ring_blue.gif" class="PR03"
+					align="absmiddle" />SMS발송리스트</td>
+				<td class="sub_title">&nbsp;<img
+					src="<%=dir%>/imgs/comm/ring_blue.gif" class="PR03"
+					align="absmiddle" />SMS발송상세</td>
+			</tr>
+			<tr>
+				<td height="5">
+				<td>
+			</tr>
+			<tr valign="top">
+				<td width="350">
+				<table width="100%" border="0" cellspacing="0" cellpadding="0"
+					class="BD4A">
+					<tr>
+						<td>
+						<div id="SMS_CONTETN"
+							style="width: 345px; height: 184px; overflow-x: hidden; overflow-y: scroll;">
+						<table width="100%" border="0" cellspacing="0" cellpadding="0"
+							class="g_table">
+							<tr>
+								<th width="30">NO</th>
+								<th width="80">발송일자</th>
+								<th width="60">SEQ</th>
+								<th width="100">발송유형</th>
+							</tr>
+						</table>
+						</div>
+						</td>
+					</tr>
+				</table>
+				</td>
+				<td class="PL05">
+				<table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+						<td>
+						<table width="100%" border="0" cellspacing="0" cellpadding="0"
+							class="s_table">
+							<tr>
+								<th class="POINT" width="70">발송유형</th>
+								<td ><select name="CO_SEND_TYPE" id="CO_SEND_TYPE" style="width:120;" onchange="selectChangePt()"></select></td>
+							</tr>
+							<tr>
+								<th class="POINT">수신번호</th>
+								<td><input type="text" name="IN_RECV_PH1_I" id="IN_RECV_PH1_I" onkeypress="javascript:onlyNumber();" size="4" maxlength="3"> - 
+								    <input type="text" name="IN_RECV_PH2_I" id="IN_RECV_PH2_I" onkeypress="javascript:onlyNumber();" size="4" maxlength="4"> -
+								    <input type="text" name="IN_RECV_PH3_I" id="IN_RECV_PH3_I" onkeypress="javascript:onlyNumber();" size="4" maxlength="4"></td>
+							</tr>
+							<tr>
+								<th class="POINT">발신번호</th>
+								<td><input type="text" name="IN_SEND_PH1_I" id="IN_SEND_PH1_I" onkeypress="javascript:onlyNumber();" size="4" maxlength="3"> - 
+								    <input type="text" name="IN_SEND_PH2_I" id="IN_SEND_PH2_I" onkeypress="javascript:onlyNumber();" size="4" maxlength="4"> -
+								    <input type="text" name="IN_SEND_PH3_I" id="IN_SEND_PH3_I" onkeypress="javascript:onlyNumber();"size="4" maxlength="4"></td>
+							</tr>
+							<tr>
+								<th class="POINT">내용</th>
+								<td class="PT02 PB02"><textarea
+									style="height: 105; width: 100%;" name="TX_SEND_CONTENT_I"
+									id="TX_SEND_CONTENT_I" onkeyup="enterKeySkip();checkByteLength(this, 80);" onKeyPress="enterKeySkip();"></textarea>
+								</td>
+							</tr>
+						</table>
+						</td>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+		</td>
+	</tr>
+</table>
+</body>
+</html>
+

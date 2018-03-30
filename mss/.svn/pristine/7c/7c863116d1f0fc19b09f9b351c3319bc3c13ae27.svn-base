@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  간접비 자동배부 기준 
+ -->
+<service name="/mren111.mr">
+    <!-- 자동배부에 등록된 점  -->
+    <gauce name="H_AUTO_STR_CD"> 
+        <column colName="CODE"             colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"             colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 월 간접비 자동배부 마스터 헤더 -->
+    <gauce name="H_MASTER">
+        <column colName="DIV_ITEM_CD"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_RATE"           colType="TB_DECIMAL"  size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHECKGB"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 월 간접비 자동배부 디테일 헤더 -->
+    <gauce name="H_DETAIL">
+        <column colName="STR_CD"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_ITEM_CD"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_ITEM_NM"       colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_RATE"       colType="TB_DECIMAL"  size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_ITEM_CD"            colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHECKGB"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--자동배부항목 등록된 점별 관리비 항목 -->
+    <gauce name="H_AUTO_ITEMCD">
+        <column colName="MNTN_ITEM_CD"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_ITEM_NM"            colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AUTO_DIV_ITEM"           colType="TB_STRING"  size="2"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 월 간접비 자동배부 마스터 조회  -->
+    <query name="SEL_MR_DIVMST"> 
+        <![CDATA[   
+			SELECT TA.DIV_ITEM_CD,
+			       TA.DIV_RATE,
+			       'T' CHECKGB
+			  FROM MSS.MR_DIVMST TA,
+			       COM.TC_COMMCODE TB
+			 WHERE TA.DIV_ITEM_CD = TB.COMM_CODE
+			   AND TB.COMM_PART = 'M078'
+			   AND TB.SYS_PART = 'D'
+			   AND TA.DIV_ITEM_CD LIKE ? || '%'
+        ]]>        
+    </query>
+    
+    
+    
+    <!-- 월 간접비 자동배부 디테일 조회  -->
+    <query name="SEL_MR_FCLDIVMST"> 
+        <![CDATA[   
+		        SELECT TA.STR_CD,
+				       TB.MNTN_ITEM_CD,
+				       TB.MNTN_ITEM_NM,
+				       TA.DIV_RATE,
+				       TA.DIV_ITEM_CD,
+				       'T' CHECKGB
+				  FROM MSS.MR_FCLDIVMST TA,
+				       MSS.MR_MNTNITEM TB,
+				       DPS.PC_STRMST TC
+				 WHERE TA.STR_CD = TB.STR_CD
+				   AND TA.DIV_ITEM_CD = TB.AUTO_DIV_ITEM
+				   AND TA.STR_CD = TC.STR_CD
+				   AND TB.AUTO_DIV_YN = 'Y'
+				   AND TA.DIV_ITEM_CD = ?
+        ]]>        
+    </query>
+    
+    <!-- 자동배부에 등록된 점  -->
+    <query name="SEL_AUTO_STR_CD"> 
+        <![CDATA[   
+             SELECT DISTINCT 
+                    TA.STR_CD AS CODE,
+		            TB.STR_NAME AS NAME
+			   FROM MSS.MR_MNTNITEM TA,
+			        DPS.PC_STRMST TB,
+			        MSS.MR_FCLMST TC
+			  WHERE TA.STR_CD = TB.STR_CD
+			    AND TB.STR_CD = TC.STR_CD
+			    AND TA.AUTO_DIV_YN = 'Y'
+			    AND TC.HUSE_FLAG = '1'
+			    AND TA.AUTO_DIV_ITEM = ?
+			  ORDER BY TA.STR_CD
+
+        ]]>        
+    </query>
+    
+    <!-- 자동배부항목 등록된 점별 관리비 항목 조회  -->
+    <query name="SEL_AUTO_ITEM_CD"> 
+        <![CDATA[   
+            SELECT MNTN_ITEM_CD,
+			       MNTN_ITEM_NM,
+			       AUTO_DIV_ITEM
+			  FROM MSS.MR_MNTNITEM
+			 WHERE STR_CD = ?
+			   AND AUTO_DIV_YN = 'Y'
+			   AND AUTO_DIV_ITEM = ?
+        ]]>        
+    </query>
+    
+    <!-- 배부기준 마스터  등록  -->
+    <query name="INS_MR_DIVMST"> 
+        <![CDATA[   
+          INSERT INTO MSS.MR_DIVMST (
+                            DIV_ITEM_CD
+                           ,DIV_RATE
+                           ,REG_ID
+                           ,REG_DATE
+                           ,MOD_ID
+                           ,MOD_DATE
+                          )
+		            VALUES (
+		                    ?
+		                   ,?
+		                   ,?
+		                   ,SYSDATE
+		                   ,?
+		                   ,SYSDATE
+		                    )
+        ]]>        
+    </query>
+    
+    <!-- 시설별 배부기준  등록  -->
+    <query name="INS_MR_FCLDIVMST"> 
+        <![CDATA[   
+          INSERT INTO MSS.MR_FCLDIVMST (
+                            DIV_ITEM_CD
+                           ,STR_CD
+                           ,DIV_RATE
+                           ,REG_ID
+                           ,REG_DATE
+                           ,MOD_ID
+                           ,MOD_DATE
+                           )
+                   VALUES (
+                            ?
+                           ,?
+                           ,?
+                           ,?
+                           ,SYSDATE
+                           ,?
+                           ,SYSDATE
+                            )
+        ]]>        
+    </query>
+    
+    <!-- 간접비  자동배부 수정 마스터 -->
+    <query name="UPD_MR_DIVMST"> 
+        <![CDATA[   
+            UPDATE MSS.MR_DIVMST
+			   SET DIV_RATE = ?
+			       ,MOD_ID = ?
+			       ,MOD_DATE = SYSDATE
+			 WHERE DIV_ITEM_CD = ?
+        ]]>        
+    </query>
+    
+    <!-- 간접비  자동배부 수정(시설별) 디테일 -->
+    <query name="UPD_MR_FCLDIVMST"> 
+        <![CDATA[   
+            UPDATE MSS.MR_FCLDIVMST
+			   SET DIV_RATE = ?
+			       ,MOD_ID = ?
+			       ,MOD_DATE = SYSDATE
+			 WHERE DIV_ITEM_CD = ?
+			   AND STR_CD = ?
+        ]]>        
+    </query>
+    
+    <!-- 간접비 자동배부 마스터 삭제  -->
+    <query name="DEL_MR_DIVMST"> 
+        <![CDATA[   
+           DELETE MSS.MR_DIVMST
+            WHERE DIV_ITEM_CD = ?
+        ]]>        
+    </query>
+    
+     <!-- 시설별 자동배부 전체 삭제  -->
+    <query name="DEL_MR_FCLDIVMST_ALL"> 
+        <![CDATA[   
+           DELETE MSS.MR_FCLDIVMST
+            WHERE DIV_ITEM_CD = ?  
+        ]]>        
+    </query>
+    
+    <!-- 시설별 자동배부 삭제  -->
+    <query name="DEL_MR_FCLDIVMST"> 
+        <![CDATA[   
+           DELETE MSS.MR_FCLDIVMST
+            WHERE DIV_ITEM_CD = ?  
+              AND STR_CD = ?
+        ]]>        
+    </query>
+    
+</service>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  전력요금표관리(주택용)
+ -->
+<service name="/mren104.mr">
+    <!-- 전력요금표관리(주택용) 내역 -->
+    <gauce name="H_SEL_MR_POWERPRCH">
+        <column colName="PWR_TYPE"  colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ"       colType="TB_DECIMAL" size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_S_QTY" colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_E_QTY" colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BAS_PRC"   colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT_PRC"  colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"    colType="TB_STRING"  size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUPCHK"    colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <gauce name="H_SEL_DUP_KEYVALUE">
+        <column colName="DUPVALUE"  colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 조회 Query  -->
+    <query name="SEL_MR_POWERPRCH"> 
+        <![CDATA[   
+			SELECT PWR_TYPE
+			     , SEQ
+			     , USE_S_QTY
+			     , USE_E_QTY
+			     , BAS_PRC
+			     , UNIT_PRC
+			     , REMARK
+			     , 'N' AS DUPCHK
+			  FROM MSS.MR_POWERPRCH
+			 WHERE PWR_TYPE = ?
+        ]]>        
+    </query>
+    
+    <!-- 등록(저장) Query  -->
+    <query name="INS_MR_POWERPRCH"> 
+        <![CDATA[   
+            INSERT 
+              INTO MSS.MR_POWERPRCH
+                 ( PWR_TYPE
+                 , SEQ
+                 , USE_S_QTY
+                 , USE_E_QTY
+                 , BAS_PRC
+                 , UNIT_PRC
+                 , REMARK
+                 , REG_ID 
+                 , REG_DATE 
+                 , MOD_ID 
+                 , MOD_DATE)
+            VALUES
+                 ( ?
+                 , (SELECT NVL(MAX(SEQ)+1, 1) AS SEQ
+                      FROM MSS.MR_POWERPRCH
+                     WHERE PWR_TYPE = ?)
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , SYSDATE  
+                 , ?
+                 , SYSDATE 
+                 )
+        ]]>        
+    </query>
+    
+    <!-- 등록(수정) Query  -->
+    <query name="UPD_MR_POWERPRCH"> 
+        <![CDATA[   
+            UPDATE MSS.MR_POWERPRCH
+               SET USE_S_QTY    = ?
+                 , USE_E_QTY    = ?
+                 , BAS_PRC      = ?
+                 , UNIT_PRC     = ?
+                 , REMARK       = ?
+                 , MOD_ID       = ?
+                 , MOD_DATE     = SYSDATE
+             WHERE PWR_TYPE     = ?
+               AND SEQ          = ?
+        ]]>        
+    </query>
+
+    <!-- 삭제 Query  -->
+    <query name="DEL_MR_POWERPRCH"> 
+        <![CDATA[ 
+            DELETE MSS.MR_POWERPRCH
+             WHERE PWR_TYPE     = ?
+               AND SEQ          = ?
+        ]]>        
+    </query>
+
+    <!-- 키값체크 Query  -->
+    <query name="SEL_DUP_KEYVALUE"> 
+        <![CDATA[ 
+		SELECT DISTINCT DUPVALUE
+		  FROM (
+        ]]>        
+    </query>
+    <!-- 키값체크 Query  -->
+    <query name="SEL_SUB_DUP_KEYVALUE"> 
+        <![CDATA[ 
+			SELECT PWR_TYPE||? AS DUPVALUE
+			  FROM MSS.MR_POWERPRCH
+			 WHERE ROWNUM = 1
+			   AND ((? >= USE_S_QTY AND  ? <=USE_E_QTY) OR
+			        (? >= USE_S_QTY AND  ? <=USE_E_QTY))
+               AND PWR_TYPE = ?
+        ]]>        
+    </query>
+    <query name="SEL_SUB_DUP_KEYVALUE_UPDATE"> 
+        <![CDATA[ 
+               AND SEQ  <> ?
+        ]]> 
+    </query>
+    <query name="SEL_DUP_UNIONALL"> 
+                UNION ALL
+    </query>
+    <query name="SEL_DUP_CLOSE"> 
+        )
+    </query>
+</service>

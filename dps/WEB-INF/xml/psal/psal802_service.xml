@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.06.07
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  매출일마감관리
+ -->
+<service name="/psal802.ps">
+
+    <gauce name="H_SEL_MASTER">        
+        <column colName="STR_CD"            colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_TASK_FLAG"   colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_UNIT_FLAG"   colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_UNIT_NAME"   colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SAP_CLOSE_FLAG"    colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_DT"          colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_YN"          colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SAP_IF"            colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SAP_IF_YN"         colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_ID"            colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="MOD_USER"          colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="MOD_DATE"          colType="TB_STRING"   size="14"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BF_CLOSE_YN"       colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AF_CLOSE_YN"       colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="M_CLOSE_YN"        colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+
+
+    <gauce name="H_SEL_AFFAIRS">        
+        <column colName="CODE"            colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"            colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+    <query name="SEL_DCLOSE">
+        <![CDATA[
+            SELECT MCIF.STR_CD
+                 , MCIF.CLOSE_TASK_FLAG
+                 , MCIF.CLOSE_UNIT_FLAG
+                 , MCIF.CLOSE_UNIT_NAME
+                 , MCIF.SAP_CLOSE_FLAG
+                 , MCIF.CLOSE_DT
+                 , NVL(DCLS.CLOSE_YN,'N')   AS CLOSE_YN
+                 , 'F'                      AS SAP_IF
+                 , CASE WHEN MCIF.SAP_CLOSE_FLAG IS NOT NULL
+                        THEN NVL(DCLS.SAP_IF_YN,'N')
+                   END                      AS SAP_IF_YN
+                 , DCLS.MOD_ID
+                 , COM.FN_GET_USER_NAME(DCLS.MOD_ID)          AS MOD_USER
+                 , TO_CHAR(DCLS.MOD_DATE,'YYYYMMDDHH24MISS')  AS MOD_DATE
+                 , NVL((SELECT CLOSE_YN
+                          FROM DPS.PC_DCLOSE
+                         WHERE STR_CD          = MCIF.STR_CD
+                           AND CLOSE_TASK_FLAG = MCIF.CLOSE_TASK_FLAG
+                           AND CLOSE_UNIT_FLAG = MCIF.CLOSE_UNIT_FLAG
+                           AND CLOSE_DT        = TO_CHAR((TO_DATE(MCIF.CLOSE_DT,'YYYYMMDD')-1),'YYYYMMDD')
+                       ),'N')                                 AS BF_CLOSE_YN
+                 , NVL((SELECT CLOSE_YN
+                          FROM DPS.PC_DCLOSE
+                         WHERE STR_CD          = MCIF.STR_CD
+                           AND CLOSE_TASK_FLAG = MCIF.CLOSE_TASK_FLAG
+                           AND CLOSE_UNIT_FLAG = MCIF.CLOSE_UNIT_FLAG
+                           AND CLOSE_DT        = TO_CHAR((TO_DATE(MCIF.CLOSE_DT,'YYYYMMDD')+1),'YYYYMMDD')
+                       ),'N')                                 AS AF_CLOSE_YN
+                 , NVL((SELECT CLOSE_YN
+                          FROM DPS.PC_MCLOSE
+                         WHERE STR_CD          = MCIF.STR_CD
+                           AND CLOSE_TASK_FLAG = MCIF.CLOSE_TASK_FLAG
+                           AND CLOSE_UNIT_FLAG = '41' -- 월매출
+                           AND CLOSE_YM        = SUBSTR(MCIF.CLOSE_DT, 1, 6)
+                       ),'N')                                 AS M_CLOSE_YN
+              FROM (SELECT A.STR_CD
+                         , A.CLOSE_TASK_FLAG
+                         , A.CLOSE_UNIT_FLAG
+                         , A.CLOSE_UNIT_NAME
+                         , A.SAP_CLOSE_FLAG
+                         , B.YYYYMMDD AS CLOSE_DT
+                      FROM DPS.PC_TIMEOUT A
+                         , (SELECT YYYYMMDD
+				              FROM (SELECT TO_CHAR(TO_DATE(?,'YYYYMM') + LEVEL - 1,'YYYYMMDD') AS YYYYMMDD
+				                      FROM DUAL
+				                   CONNECT BY TO_DATE(?,'YYYYMM') + LEVEL -1 <= LAST_DAY(TO_DATE(?,'YYYYMM')))
+				                     WHERE YYYYMMDD < TO_CHAR(SYSDATE,'YYYYMMDD')
+                           ) B
+                     WHERE A.CLOSE_FLAG      = 'D'
+                       AND A.CLOSE_TASK_FLAG = 'PSAL' -- 매출
+                       AND A.CLOSE_UNIT_FLAG  = '21'   -- 매출일마감
+                   ) MCIF
+                 , DPS.PC_DCLOSE DCLS
+             WHERE MCIF.STR_CD          = DCLS.STR_CD(+)
+               AND MCIF.CLOSE_TASK_FLAG = DCLS.CLOSE_TASK_FLAG(+)
+               AND MCIF.CLOSE_UNIT_FLAG = DCLS.CLOSE_UNIT_FLAG(+)
+               AND MCIF.STR_CD          = ?
+               AND MCIF.CLOSE_DT        = DCLS.CLOSE_DT(+)
+        ]]>
+    </query>
+    
+    <query name="SEL_DCLOSE_AFFAIRS">
+        <![CDATA[
+               AND MCIF.CLOSE_UNIT_FLAG = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_DCLOSE_ORDER">
+        <![CDATA[
+             ORDER BY CLOSE_DT, CLOSE_UNIT_FLAG
+        ]]>
+    </query>
+    
+    <query name="SEL_DCLOSE_CLOSE_YN">
+        <![CDATA[
+            SELECT CLOSE_YN
+              FROM DPS.PC_DCLOSE
+             WHERE STR_CD          = ?
+               AND CLOSE_TASK_FLAG = ?
+               AND CLOSE_UNIT_FLAG = ?
+        ]]>
+    </query>
+    <query name="SEL_DCLOSE_CLOSE_YN_WHERE_YM">
+        <![CDATA[
+               AND CLOSE_DT        = ?
+        ]]>
+    </query>
+    <query name="SEL_DCLOSE_CLOSE_YN_WHERE_YM_ADD">
+        <![CDATA[
+               AND CLOSE_DT        = TO_CHAR(TO_DATE(?,'YYYYMMDD')+(?),'YYYYMMDD') 
+        ]]>
+    </query>
+
+    <query name="SEL_MCLOSE_CLOSE_YN">
+        <![CDATA[
+            SELECT CLOSE_YN
+              FROM DPS.PC_MCLOSE
+             WHERE STR_CD          = ?
+               AND CLOSE_TASK_FLAG = ?
+               AND CLOSE_UNIT_FLAG = ?
+               AND CLOSE_YM        = SUBSTR(?, 1, 6)
+        ]]>
+    </query>
+    
+    
+    <query name="MERGE_DCLOSE">
+        <![CDATA[
+            MERGE INTO DPS.PC_DCLOSE MC
+            USING (SELECT ?          AS STR_CD
+                        , ?          AS CLOSE_TASK_FLAG
+                        , ?          AS CLOSE_UNIT_FLAG
+                        , ?          AS CLOSE_DT
+                        , ?          AS CLOSE_YN
+                        , ?          AS SAP_IF_YN
+                        , ?          AS USER_ID
+                     FROM DUAL
+                  ) UPD_DATA
+               ON(MC.STR_CD              = UPD_DATA.STR_CD
+                  AND MC.CLOSE_TASK_FLAG = UPD_DATA.CLOSE_TASK_FLAG
+                  AND MC.CLOSE_UNIT_FLAG = UPD_DATA.CLOSE_UNIT_FLAG
+                  AND MC.CLOSE_DT        = UPD_DATA.CLOSE_DT
+                 )
+             WHEN MATCHED THEN
+                  UPDATE SET MC.CLOSE_YN     = UPD_DATA.CLOSE_YN
+                           , MC.MOD_DATE     = SYSDATE
+                           , MC.MOD_ID       = UPD_DATA.USER_ID
+             WHEN NOT MATCHED THEN
+                  INSERT(STR_CD
+                       , CLOSE_TASK_FLAG
+                       , CLOSE_UNIT_FLAG
+                       , CLOSE_DT
+                       , CLOSE_YN
+                       , SAP_IF_YN
+                       , REG_DATE
+                       , REG_ID
+                       , MOD_DATE
+                       , MOD_ID
+                        ) 
+                  VALUES(UPD_DATA.STR_CD
+                       , UPD_DATA.CLOSE_TASK_FLAG
+                       , UPD_DATA.CLOSE_UNIT_FLAG
+                       , UPD_DATA.CLOSE_DT
+                       , UPD_DATA.CLOSE_YN
+                       , UPD_DATA.SAP_IF_YN
+                       , SYSDATE
+                       , UPD_DATA.USER_ID
+                       , SYSDATE
+                       , UPD_DATA.USER_ID
+                        )
+        ]]>
+    </query>
+
+    <query name="SEL_AFFAIRS_FLAG">
+        <![CDATA[
+                    SELECT CLOSE_UNIT_FLAG   AS CODE
+                         , CLOSE_UNIT_NAME   AS NAME
+                      FROM DPS.PC_TIMEOUT 
+                     WHERE CLOSE_FLAG      = 'D'
+                       AND CLOSE_TASK_FLAG = 'PSAL' -- 매출
+                       AND CLOSE_UNIT_FLAG  = '21'   -- 매출일마감
+        ]]>
+    </query>
+</service>

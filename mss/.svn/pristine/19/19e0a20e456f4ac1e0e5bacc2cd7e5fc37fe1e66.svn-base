@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 윤지영
+ * 회 사 명 : 한국후지쯔 
+ * 작 성 일 : 2016.12.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 행사별 사은품 현황내역
+ -->
+<service name="/mcae404.mc">
+
+	<!-- 행사별 사은품 현황내역 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"          colType="TB_STRING"     size="11"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="STK_DT"        	colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_CD"        	colType="TB_STRING"     size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_NAME"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NQTY"   		    colType="TB_DECIMAL"     size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="CPRSNT_QTY"        colType="TB_DECIMAL"     size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RE_QTY"        	colType="TB_DECIMAL"     size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce> 
+     
+    <query name="SEL_MASTER">
+        <![CDATA[    
+	       SELECT A.STR_CD
+	            , A.EVENT_CD 
+	            , A.EVENT_NAME 
+	            , A.STK_DT 
+	            , A.SKU_CD 
+	            , A.SKU_NAME 
+	            , A.NQTY 
+	            , A.CPRSNT_QTY 
+	            , A.RE_QTY 
+	         FROM  
+	              (SELECT A.STR_CD 
+	                   , A.EVENT_CD  
+	                   , DPS.FN_GET_EVENT_NAME(A.EVENT_CD) AS EVENT_NAME
+	                   , A.STK_DT    
+	                   , A.SKU_CD    
+	                   , B.SKU_NAME  
+	                   , SUM(A.PRSNT_QTY + EXCP_PRSNT_QTY + ETC_PRSNT ) AS NQTY  --정상지급+예외지급+기타지급 = 지급수량 
+	                   , SUM(A.CPRSNT_QTY) AS CPRSNT_QTY                         --지급취소수량
+	                   , SUM(PRSNT_QTY + EXCP_PRSNT_QTY + ETC_PRSNT) - SUM(A.CPRSNT_QTY) AS RE_QTY --(정상지급 + 예의지급 + 기타지급)-지급취소수량 = 소계
+	               FROM MSS.MC_EVTSKUSTOCK A  
+	                  , DPS.PC_SKUMST B      
+	                  , DPS.PC_STRSKUMST C   
+	              WHERE A.SKU_CD= B.SKU_CD
+	                AND A.SKU_CD= C.SKU_CD
+	                AND A.STR_CD = C.STR_CD 
+	                AND A.STR_CD  = ?
+	                AND A.EVENT_CD LIKE ? || '%'
+	                AND A.STK_DT BETWEEN ? AND ?
+	               GROUP BY A.STR_CD 
+	                      , A.EVENT_CD
+	                      , A.STK_DT 
+	                      , A.SKU_CD
+	                      , B.SKU_NAME) A 
+	         WHERE A.NQTY > 0 
+	            ORDER BY A.EVENT_CD 
+	                  , A.STK_DT 
+	                  , A.SKU_CD
+        ]]>        
+    </query>
+     
+</service>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  점내 불출 내역 조회
+ -->
+<service name="/mgif212.mg">
+ <!-- 점내 불출 내역 마스터  조회  -->
+    <gauce name="H_MASTER"> 
+       <column colName="STR_CD"                colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"         colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CONF_DT"           colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_SLIP_NO"        colType="TB_STRING" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POUT_FLAG"         colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POUT_FLAG_NM"      colType="TB_STRING" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"             colType="TB_STRING" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"           colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_QTY"        colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POUT_REQ_DT"        colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POUT_REQ_SLIP_NO"      colType="TB_STRING" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POUT_TYPE"         colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 점내 불출 내역 디테일  조회  -->
+    <gauce name="H_DETAIL"> 
+       <column colName="GIFT_TYPE_NAME"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="GIFT_AMT_NAME"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_S_NO"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_E_NO"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_QTY"            colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_AMT"            colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 점내 불출 내역 마스터  조회 -->
+     <query name="SEL_POUTRREQ_MASTER">
+         <![CDATA[ 
+			SELECT VA.STR_CD,
+			          TA.STR_NAME,
+			          VA.CONF_DT,
+			          VA.CONF_SLIP_NO,
+			          VA.POUT_FLAG,
+			          TC.COMM_NAME1 AS POUT_FLAG_NM,
+                      VA.EVENT_CD,
+                      TD.EVENT_NAME,
+			          VA.CONF_QTY,
+			          VA.CONF_AMT,
+			          VA.POUT_REQ_DT,
+			          VA.POUT_REQ_SLIP_NO,
+			          VA.POUT_TYPE
+			   FROM (
+			         SELECT TA.STR_CD,
+			                TA.CONF_DT,
+			                TA.CONF_SLIP_NO,
+			                TA.POUT_TYPE,
+			                TA.POUT_FLAG,
+			                TA.POUT_REQ_SLIP_NO,
+			                TA.POUT_REQ_DT,
+			                NVL(TA.EVENT_CD,'') AS EVENT_CD,
+			                DECODE(TA.POUT_FLAG,'2',SUM(NVL(CONF_QTY,0)) * -1,SUM(NVL(CONF_QTY,0)) ) AS CONF_QTY,
+			                DECODE(TA.POUT_FLAG,'2',SUM(NVL(CONF_AMT,0)) * -1,SUM(NVL(CONF_AMT,0)) ) AS CONF_AMT
+			         FROM MSS.MG_POUTREQCONF TA,
+			              MSS.MG_POUTREQ TB
+			         WHERE TA.POUT_REQ_SLIP_NO = TB.POUT_REQ_SLIP_NO (+) 
+			         AND TA.POUT_REQ_SEQ_NO    = TB.POUT_REQ_SEQ_NO (+) 
+			         AND TA.POUT_REQ_DT       = TB.POUT_REQ_DT (+) 
+			         AND TA.STR_CD            = TB.STR_CD (+) 
+			         AND TA.STR_CD = ?
+			         AND TA.CONF_DT BETWEEN ? AND ?
+			         AND TA.POUT_TYPE LIKE ?  
+			         AND TA.POUT_FLAG LIKE ? 
+			         GROUP BY TA.STR_CD,
+			                TB.ORG_CD, 
+			                TA.CONF_DT,
+			                TA.CONF_SLIP_NO,
+			                TA.POUT_TYPE,
+			                TA.POUT_FLAG,
+			                TA.POUT_REQ_SLIP_NO,
+			                TA.POUT_REQ_DT,
+			                TA.EVENT_CD
+			        ) VA,
+			        DPS.PC_STRMST TA,
+			        COM.TC_COMMCODE TC,
+                    DPS.PC_EVTMST TD
+               WHERE VA.STR_CD = TA.STR_CD
+               AND VA.POUT_TYPE = TC.COMM_CODE
+               AND VA.EVENT_CD = TD.EVENT_CD(+)
+			   AND TC.COMM_PART = 'M014'
+			   AND TC.SYS_PART = 'D'
+         ]]>
+     </query>  
+     
+      <!-- 점내불출신청 -MASTER-행사조건 -->
+    <query name="SEL_EVENT">
+        <![CDATA[ 
+          AND VA.EVENT_CD  LIKE ? || '%'
+        ]]>
+    </query> 
+       
+           <!-- 점내불출신청 -MASTER-행사조건 -->
+    <query name="SEL_POUTRREQ_MASTER_ORD">
+        <![CDATA[ 
+          ORDER BY VA.CONF_DT, VA.POUT_TYPE
+        ]]>
+    </query> 
+    
+       <!-- 점내 불출 내역 디테일  조회 -->
+     <query name="SEL_POUTRREQ_DETAIL">
+         <![CDATA[
+            SELECT TC.GIFT_TYPE_NAME,
+                   TB.GIFT_AMT_NAME,
+			       TB.GIFTCERT_AMT,
+			       VA.GIFT_S_NO,
+			       VA.GIFT_E_NO,
+			       VA.CONF_QTY,
+			       VA.CONF_AMT
+			FROM (
+			      SELECT TA.GIFT_TYPE_CD,
+			             TA.ISSUE_TYPE,
+			             TA.GIFT_AMT_TYPE,
+			             TA.GIFT_S_NO,
+			             TA.GIFT_E_NO,
+			             DECODE(TA.POUT_FLAG,'2',SUM(NVL(CONF_QTY,0)) * -1,SUM(NVL(CONF_QTY,0)) ) AS CONF_QTY,
+			             DECODE(TA.POUT_FLAG,'2',SUM(NVL(CONF_AMT,0)) * -1,SUM(NVL(CONF_AMT,0)) ) AS CONF_AMT
+			      FROM MSS.MG_POUTREQCONF TA
+			      WHERE TA.STR_CD = ?
+			      AND TA.CONF_DT = ?
+			      AND TA.CONF_SLIP_NO = ?
+			      GROUP BY  TA.GIFT_TYPE_CD,
+			             TA.ISSUE_TYPE,
+			             TA.GIFT_AMT_TYPE,
+			             TA.GIFT_S_NO,
+			             TA.GIFT_E_NO,
+			             TA.POUT_FLAG
+			      ) VA  ,
+			      MSS.MG_GIFTAMTMST TB,
+			      MSS.MG_GIFTTPMST TC
+			WHERE VA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+			AND VA.ISSUE_TYPE = TB.ISSUE_TYPE
+			AND VA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE
+			AND VA.GIFT_TYPE_CD = TC.GIFT_TYPE_CD
+			ORDER BY GIFTCERT_AMT
+                   , GIFT_S_NO
+         ]]>
+     </query>      
+ 
+</service>

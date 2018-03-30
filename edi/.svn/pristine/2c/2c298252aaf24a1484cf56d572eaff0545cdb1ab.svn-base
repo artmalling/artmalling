@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/ecmn104.em">
+    <!-- 게시판 조회 -->
+    <query name="SEL_BOARD">
+        <![CDATA[  
+		SELECT GB
+             , STR_CD
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NAME
+             , LPAD(REG_SEQ_NO, 3, 0) AS REG_SEQ_NO
+             , REG_DT
+             , REPL_DT
+             , REPL_SEQ_NO
+             , TIMES
+             , TITLE
+             , BUYER_CODE
+             , BUYER_NAME
+             , READ_CNT
+             , VEN_CD
+          FROM (
+                SELECT GB
+                     , STR_CD
+                     , REG_SEQ_NO
+                     , REG_DT
+                     , REPL_DT
+                     , REPL_SEQ_NO
+                     , TIMES
+                     , TITLE
+                     , BUYER_CODE
+                     , BUYER_NAME
+                     , READ_CNT
+                     , VEN_CD
+                  FROM (
+                        SELECT '1' AS GB
+                             , A.STR_CD AS STR_CD
+                             , A.REG_SEQ_NO AS REG_SEQ_NO
+                             , A.REG_DT AS REG_DT
+                             , '' AS REPL_DT
+                             , 0 AS REPL_SEQ_NO
+                             , SUBSTR(A.TIME, 1,2) || ':' || SUBSTR(A.TIME, 3,2) AS TIMES 
+                             , A.TITLE AS TITLE
+                             , A.BUYER_CODE AS BUYER_CODE
+                             , (SELECT BUYER_NAME FROM DPS.PC_BUYERMST WHERE STR_CD = A.STR_CD AND BUYER_CD = A.BUYER_CODE  ) AS BUYER_NAME
+                             , A.READ_CNT AS READ_CNT
+                             , '' AS VEN_CD
+                          FROM MSS.ET_EDIBOARD A,  MSS.ET_EDIBOARDAUTH B, DPS.PC_STRPBN C
+                         WHERE A.STR_CD = B.STR_CD
+                           AND A.REG_SEQ_NO = B.REG_SEQ_NO
+                           AND A.REG_DT = B.REG_DT
+                           AND B.STR_CD = C.STR_CD
+                           AND B.PUMBUN_CD = C.PUMBUN_CD
+                           AND A.STR_CD = ?
+                           AND C.VEN_CD = ?
+                           AND C.PUMBUN_CD like ? || '%'
+                           AND A.TITLE LIKE '%' || ? || '%'
+                           AND A.REG_DT >= ? AND A.REG_DT <= ?
+                      ORDER BY A.REG_DT DESC, A.REG_SEQ_NO DESC
+                         ) A
+                 WHERE ROWNUM <= ?
+                 UNION 
+                SELECT '2' AS GB
+                     , D.STR_CD AS STR_CD
+                     , D.REG_SEQ_NO AS REG_SEQ_NO
+                     , D.REG_DT AS REG_DT
+                     , D.REPL_DT AS REPL_DT
+                     , D.REPL_SEQ_NO AS REPL_SEQ_NO
+                     , SUBSTR(D.TIME, 1,2) || ':' || SUBSTR(D.TIME, 3,2) AS TIMES 
+                     , LPAD('└[Re]:', 10) || D.TITLE AS TITLE
+                     , D.USER_ID AS BUYER_CODE
+                     , MSS.FN_EDIREPLY_USERNM(D.STR_CD, D.USER_ID, D.REG_TP )  AS BUYER_NAME
+                     , D.READ_CNT AS READ_CNT
+                     , D.VEN_CD AS VEN_CD
+                  FROM (
+                        SELECT STR_CD
+                             , REG_DT
+                             , REG_SEQ_NO
+                          FROM ( 
+                                SELECT A.STR_CD
+                                     , A.REG_DT 
+                                     , A.REG_SEQ_NO 
+                                  FROM MSS.ET_EDIBOARD  A
+                                     , MSS.ET_EDIBOARDAUTH B
+                                     , DPS.PC_STRPBN C
+                                 WHERE A.STR_CD = B.STR_CD
+                                   AND A.REG_SEQ_NO = B.REG_SEQ_NO
+                                   AND A.REG_DT = B.REG_DT
+                                   AND B.STR_CD = C.STR_CD
+                                   AND B.PUMBUN_CD = C.PUMBUN_CD
+                                   AND A.STR_CD = ?
+                                   AND C.VEN_CD = ?
+                                   AND C.PUMBUN_CD like ? || '%'
+                                   AND A.TITLE LIKE '%' || ? || '%'
+                                   AND A.REG_DT >= ? AND A.REG_DT <= ?
+                              ORDER BY REG_DT DESC, REG_SEQ_NO desc
+                               ) A
+                         WHERE ROWNUM <= ?     
+                        ) A
+                        , MSS.ET_REPLY D
+                 WHERE A.STR_CD = D.STR_CD
+                   AND A.REG_DT = D.REG_DT
+                   AND A.REG_SEQ_NO = D.REG_SEQ_NO
+               ) A
+     ORDER BY STR_CD, REG_DT DESC, REG_SEQ_NO DESC, GB, REPL_DT DESC, REPL_SEQ_NO DESC
+        ]]>  
+    </query>
+    <!-- 조회건수 -->
+    <query name="SEL_ROWNUM">
+        <![CDATA[  
+        WHERE ROWNUM <= ?
+         ]]>  
+    </query>
+    <!-- 정렬 -->
+    <query name="SEL_ORDERBY">
+        <![CDATA[  
+        ORDER BY STR_CD, REG_DT DESC, REG_SEQ_NO DESC, GB, REPL_DT DESC, REPL_SEQ_NO DESC
+         ]]>  
+    </query>
+     
+    <!-- 게시판 상세조회 -->
+    <query name="SEL_DTBOARD">
+        <![CDATA[  
+        SELECT TITLE AS TITLE
+             , ( SELECT BUYER_NAME FROM DPS.PC_BUYERMST WHERE STR_CD = STR_CD AND BUYER_CD = BUYER_CODE ) AS BUYER_NAME
+             , CONTENT AS CONTENT
+		  FROM MSS.ET_EDIBOARD 
+		 WHERE STR_CD = ?
+		   AND REG_SEQ_NO = ?
+		   AND REG_DT = ?
+         ]]>  
+    </query>
+    
+    <!-- 게시판 팝업 댓글 등록자 -->
+    <query name="SEL_REGNM">
+        <![CDATA[  
+        SELECT B.PUMBUN_CD AS PUMBUN_CD
+             , DPS.FN_GET_PUMBUN_NAME(B.PUMBUN_CD) AS PUMBUNNM   
+		  FROM MSS.ET_EDIBOARD A 
+		     , MSS.ET_EDIBOARDAUTH B
+		     , (
+		         SELECT  STR_CD, PUMBUN_CD
+		           FROM  DPS.PC_STRPBN 
+		          WHERE  STR_CD = ?
+		            AND  VEN_CD = ?
+		        ) C
+		 WHERE  A.STR_CD     = B.STR_CD
+		   AND  A.REG_DT     = B.REG_DT 
+		   AND  A.REG_SEQ_NO = B.REG_SEQ_NO
+		   AND  B.STR_CD     = C.STR_CD
+		   AND  B.PUMBUN_CD  = C.PUMBUN_CD
+		   AND  A.STR_CD = ? 
+		   AND  A.REG_SEQ_NO = ?
+		   AND  A.REG_DT = ?
+         ]]>  
+    </query>
+    
+    
+     <!-- 댓글 상세조회 -->
+    <query name="SEL_DTREPLY">
+        <![CDATA[  
+        SELECT TITLE
+             , MSS.FN_EDIREPLY_USERNM(STR_CD, USER_ID, REG_TP )  AS BUYER_NAME
+             , CONTENT
+		  FROM MSS.ET_REPLY
+		 WHERE STR_CD = ?
+		   AND REPL_SEQ_NO = ?
+		   AND REPL_DT = ?
+         ]]>  
+    </query>
+    
+    <!-- 게시판 답변글 등록 -->
+    <query name="INT_REPLE">
+        <![CDATA[
+        INSERT INTO MSS.ET_REPLY
+                               (
+                                REPL_DT,
+                                REPL_SEQ_NO,
+                                REG_DT,
+                                REG_SEQ_NO,
+                                TITLE,
+                                CONTENT,
+                                TIME,
+                                USER_ID,
+                                READ_CNT,
+                                REG_ID,
+                                REG_DATE,
+                                MOD_ID,
+                                MOD_DATE,
+                                STR_CD,
+                                VEN_CD,
+                                REG_TP
+                               ) 
+                        VALUES (
+                                 TO_CHAR(SYSDATE, 'YYYYMMDD'),
+                                 ?,
+                                 ?,
+                                 ?,
+                                 ?,
+                                 ?,
+                                 TO_CHAR(SYSDATE, 'HH24MISS'),
+                                 ?,
+                                 0,
+                                 ?,
+                                 TO_CHAR(SYSDATE, 'YYYYMMDD'),
+                                 ?,
+                                 TO_CHAR(SYSDATE, 'YYYYMMDD'),
+                                 ?,
+                                 ?,
+                                 '2'
+                               )
+        ]]>
+    </query>
+    
+      <!-- 게시판 답변글 수정 -->
+    <query name="UPD_REPLY">
+        <![CDATA[
+        UPDATE MSS.ET_REPLY 
+           SET TITLE         = ?
+             , CONTENT     = ?
+             , MOD_ID      = ?
+             , MOD_DATE = SYSDATE
+         WHERE STR_CD      = ?
+           AND REPL_SEQ_NO = ?      
+           AND REPL_DT     = ?
+        ]]>
+    </query>
+    
+      <!-- 게시판 답변글 삭제 -->
+    <query name="DEL_REPLY">
+        <![CDATA[
+        DELETE 
+		  FROM MSS.ET_REPLY
+		 WHERE STR_CD = ?
+		   AND REPL_SEQ_NO = ?
+		   AND REPL_DT = ?
+        ]]>
+    </query>
+    
+    <!-- 게시판 조회 시 조회횟수 1 증가 -->
+    <query name="UPD_BOARD_CNT">
+        <![CDATA[  
+        UPDATE MSS.ET_EDIBOARD 
+		   SET READ_CNT = READ_CNT + 1
+		 WHERE STR_CD = ?
+		   AND REG_SEQ_NO = ?
+		   AND REG_DT = ?
+         ]]>  
+    </query>
+    
+    <!-- 댓글 조회 시 조회횟수 1 증가 -->
+    <query name="UPD_REPLY_CNT">
+        <![CDATA[  
+        UPDATE MSS.ET_REPLY 
+		   SET READ_CNT = READ_CNT + 1
+		 WHERE STR_CD = ?
+		   AND REPL_SEQ_NO = ?
+		   AND REPL_DT = ?
+         ]]>  
+    </query>
+    
+    <!-- 게시판 답변글  시퀀스 -->
+    <query name="SEL_SEQNO">
+        <![CDATA[
+        SELECT NVL(MAX(REPL_SEQ_NO), 0)+1  AS SEQNO FROM MSS.ET_REPLY WHERE REPL_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+        ]]>
+    </query>
+    
+    
+   
+
+</service>

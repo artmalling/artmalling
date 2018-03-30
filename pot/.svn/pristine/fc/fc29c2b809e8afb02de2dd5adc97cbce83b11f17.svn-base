@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.17
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : POS 영수증 메세지조회 공통 XML
+ -->
+<service name="/ccom020.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_POSRCPMSG">
+      <column colName="SEL"       colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="MSG_FLAG"  colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="MSG_ID"    colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="MSG_EXPL"  colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- POS 영수증 메세지조회 SQL -->
+    <query name="SEL_POSRCPMSG">
+        <![CDATA[                                        
+            SELECT 'F'        AS SEL
+                 , MSG_FLAG, MSG_ID, MSG_EXPL
+              FROM DPS.PC_POSRCPMSG 
+             WHERE 1=1
+        ]]>
+    </query>
+    <query name="SEL_POSRCPMSG_WHERE_MSG_ID">
+        <![CDATA[
+               AND MSG_ID   = ?
+        ]]>
+    </query>
+    <query name="SEL_POSRCPMSG_WHERE_LIKE_MSG_ID">
+        <![CDATA[
+               AND MSG_ID   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_POSRCPMS_WHERE_MSG_EXPL">
+        <![CDATA[
+               AND MSG_EXPL LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_POSRCPMS_WHERE_STR_CD">
+        <![CDATA[
+               AND STR_CD           IN ('**', ?)
+        ]]>
+    </query>
+    <query name="SEL_POSRCPMS_WHERE_MSG_FLAG">
+        <![CDATA[
+               AND MSG_FLAG         = ?
+        ]]>
+    </query>
+    <query name="SEL_POSRCPMS_WHERE_USE_YN">
+        <![CDATA[
+               AND USE_YN           = ?
+        ]]>
+    </query>
+    <query name="SEL_POSRCPMS_ORDER">
+        <![CDATA[
+             ORDER BY MSG_ID
+        ]]>
+    </query>
+</service>

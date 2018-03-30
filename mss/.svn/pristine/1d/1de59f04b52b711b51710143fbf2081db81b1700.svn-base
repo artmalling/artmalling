@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 윤지영
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2017.01.05
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 관리비 엑셀 업로드
+ -->
+<service name="/mren408.mr"> 
+	
+	<gauce name="H_SEL_MASTER">
+	    <column colName="VEN_CD"               colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	  	  
+		<column colName="PAY_AMT"              colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+		<column colName="PAY_DT"               colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	   
+	    <column colName="PAY_ARR_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	     
+	    <column colName="REMARK"          	   colType="TB_STRING"   size="100"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND"/>	     
+	    <column colName="ERR_MSG"          	   colType="TB_STRING"   size="100"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND"/>	     
+	    <column colName="SUCCESS_YN"           colType="TB_STRING"   size="1"  dec="0"    keyType="TB_NORMAL" roundMode="ROUND"/>	     
+	    <column colName="REG_ID"          	   colType="TB_STRING"   size="10"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	     
+	    <column colName="REG_DATE"             colType="TB_STRING"   size="30"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	     
+		<column colName="USER_ID"              colType="TB_STRING"   size="30"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND"/>	  	  
+	    <column colName="LOAD_DT"              colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	  	  
+	    <column colName="SEQ_NO"          	   colType="TB_DECIMAL"  size="3"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	  	  
+	    <column colName="STR_CD"               colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	  	  	    
+		<column colName="CAL_YM"               colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	  	  		
+	</gauce>
+	
+	<gauce name="H_SEL_EXCEL">
+	    <column colName="VEN_CD"               colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	  	  
+		<column colName="PAY_AMT"              colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+		<column colName="PAY_DT"               colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	   
+	    <column colName="PAY_ARR_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	     
+	    <column colName="REMARK"          	   colType="TB_STRING"   size="100"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	     
+	</gauce>
+	
+	<!-- 임대료관리비 입금내역 조회-->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			 SELECT VEN_CD 
+			 	  , PAY_AMT
+			 	  , PAY_DT
+			 	  , PAY_ARR_AMT 
+			 	  , REMARK
+			 	  , ERRMSG 
+			 	  , SUCCESS_YN 
+			 	  , REG_ID 
+			 	  , REG_DATE
+			 	  , USER_ID 
+			 	  , LOAD_DT 
+			 	  , SEQ_NO 
+			 	  , STR_CD 
+			 	  , CAL_YM 
+			 FROM MSS.MR_CALPAY_EXCEL
+			WHERE USER_ID = ?  
+			  AND STR_CD = ? 
+			  AND CAL_YM = ?
+			  AND NVL(SUCCESS_YN, 'N') = 'N' 
+			  AND LOAD_DT = ?
+        ]]>
+    </query> 
+	
+	<!-- 임대료관리비 입금내역(TEMP) 삭제 -->
+    <query name="DEL_CALPAY_EXCEL">
+        <![CDATA[
+			DELETE FROM MSS.MR_CALPAY_EXCEL
+			 WHERE USER_ID = ?  
+			   AND SUCCESS_YN = 'N'
+        ]]>
+    </query> 
+    
+    <!-- 임대료관리비 입금내역(TEMP) 등록  -->    
+    <query name="INS_CALPAY_EXCEL">
+        <![CDATA[
+			INSERT INTO MSS.MR_CALPAY_EXCEL 
+			        ( USER_ID
+			        , LOAD_DT
+			        , SEQ_NO 
+			        , STR_CD 
+			        , VEN_CD 
+			        , CAL_YM
+			        , PAY_DT 
+			        , PAY_AMT
+			        , PAY_ARR_AMT 
+			        , REMARK
+			        , ERRMSG 
+			        , SUCCESS_YN 
+			        , REG_ID 
+			        , REG_DATE ) 
+			VALUES  ( ? 
+			        , TO_CHAR(SYSDATE,'YYYYMMDD')
+			        , (SELECT NVL((MAX(SEQ_NO)+1), 1) 
+                        FROM MSS.MR_CALPAY_EXCEL
+                       WHERE USER_ID = ?
+                         AND LOAD_DT = ?)
+			        , ?
+			        , ?
+			        , ?
+			        , ?
+			        , ?
+			        , ?
+			        , ?
+			        , ?
+			        , 'N'
+			        , ?
+			        , SYSDATE ) 
+        ]]>
+    </query>    
+</service>

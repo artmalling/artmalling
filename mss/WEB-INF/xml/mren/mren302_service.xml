@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  월관리비등록
+ -->
+<service name="/mren302.mr">
+	<gauce name="H_SEL_MR_ITEMAMT">
+	    <column colName="MNTN_ITEM_CD"  colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MNTN_AMT"      colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REMARK"        colType="TB_STRING"   size="400" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_YM"        colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="STR_CD"        colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="LOAD_FLAG"     colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	</gauce>
+  
+    <!-- 계량기마스터 조회 -->
+    <query name="SEL_MR_ITEMAMT">
+       <![CDATA[   
+            SELECT ITEM.MNTN_ITEM_CD
+                 , ITEM.MNTN_AMT 
+                 , ITEM.REMARK
+                 , ITEM.CAL_YM 
+                 , ITEM.STR_CD
+                 , 'Y' AS LOAD_FLAG
+              FROM MSS.MR_ITEMAMT   ITEM
+                 , MSS.MR_MNTNITEM  MNTI
+             WHERE ITEM.MNTN_ITEM_CD = MNTI.MNTN_ITEM_CD
+               AND ITEM.STR_CD = MNTI.STR_CD
+               AND MNTI.CAL_CD = '90'
+               AND ITEM.MNTN_ITEM_CD LIKE ?||'%'
+               AND ITEM.STR_CD = ?
+               AND ITEM.CAL_YM = ? 
+             ORDER BY MNTN_ITEM_CD
+        ]]>
+    </query>
+    
+    <!-- 신규등록 중복체크 -->
+    <query name="SEL_MR_ITEMAMT_COUNT">
+       <![CDATA[   
+            SELECT COUNT(*) AS CNT
+              FROM MSS.MR_ITEMAMT
+             WHERE CAL_YM       = ?
+               AND STR_CD       = ?
+               AND MNTN_ITEM_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 매장별 계량기마스터 등록 -->
+    <query name="INS_MR_ITEMAMT">
+        INSERT 
+          INTO MSS.MR_ITEMAMT
+             ( CAL_YM
+             , STR_CD
+             , MNTN_ITEM_CD
+             , MNTN_AMT
+             , REMARK
+             , REG_ID
+             , REG_DATE
+             , MOD_ID
+             , MOD_DATE)
+        VALUES 
+             ( ?
+             , ?
+             , ?
+             , ?
+             , ?
+             , ?
+             , SYSDATE
+             , ?
+             , SYSDATE)
+    </query>   
+     
+    <!-- 매장별 계량기마스터 매핑 변경 -->
+    <query name="UPD_MR_ITEMAMT">
+            UPDATE MSS.MR_ITEMAMT
+               SET MNTN_AMT     = ?
+                 , REMARK       = ?
+                 , MOD_ID       = ?
+                 , MOD_DATE     = SYSDATE
+             WHERE MNTN_ITEM_CD = ?
+               AND STR_CD       = ?
+               AND CAL_YM       = ? 
+    </query>
+    
+    <!-- 매장별 계량기마스터 매핑 삭제 -->
+    <query name="DEL_MR_ITEMAMT">
+        DELETE MSS.MR_ITEMAMT
+         WHERE MNTN_ITEM_CD  = ?
+           AND STR_CD   = ?
+           AND CAL_YM   = ?
+    </query>
+    
+    <gauce name="H_SEL_MR_MNTNITEM">
+        <column colName="CODE"  colType="TB_STRING"   size="2"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="NAME"  colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    <!-- 관리비 항목코드 조회 -->
+    <query name="SEL_MR_MNTNITEM_ALL">
+		SELECT CODE, NAME
+		  FROM (SELECT '%'      AS CODE
+		             , '전체'    AS NAME
+		          FROM DUAL
+		         UNION ALL
+				SELECT MNTN_ITEM_CD AS CODE
+				     , MNTN_ITEM_NM AS NAME
+				  FROM MSS.MR_MNTNITEM
+				 WHERE CAL_CD = '90' /*간접비만 등록*/
+				   AND STR_CD = ?)
+		 ORDER BY CODE
+    </query>
+    
+    <!-- 관리비 항목코드 조회 -->
+    <query name="SEL_MR_MNTNITEM">
+		SELECT CODE, NAME
+		  FROM (SELECT MNTN_ITEM_CD AS CODE
+				     , MNTN_ITEM_NM AS NAME
+				  FROM MSS.MR_MNTNITEM
+				 WHERE CAL_CD = '90' /*간접비만 등록*/
+				   AND STR_CD = ?)
+		 ORDER BY CODE
+    </query>
+    
+    <gauce name="H_SEL_CLOSE_YN">
+        <column colName="CLOSE_YN"  colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    <!-- 월마감여부체크 -->
+    <query name="SEL_CLOSE_YN">
+		SELECT ? AS CLOSE_YN
+		  FROM DUAL
+    </query>
+</service>

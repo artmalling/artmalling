@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 한국후지쯔
+ * 작 성 일    : 2010.05.19
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       : 제휴카드사 비용분담율 관리
+ -->
+<service name="/dmbo204.do">
+    <!-- 적립율등록  -->
+    <gauce name="H_MASTER"> 
+        <column colName="BRCH_ID"          colType="TB_STRING"   size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"        colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_TYPE_DTL"     colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_TYPE_DTL_NM"  colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_RATE"         colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DCUBE_RATE"       colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JCOMP_RATE"       colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_FEE_RATE"     colType="TB_DECIMAL"  size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"         colType="TB_STRING"   size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_UP_CODE"       colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+     
+    <!-- 코드/명 조회 -->
+    <gauce name="H_COMMON">
+      <column colName="CODE"       colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"       colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SORT"       colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>     
+    
+    <!-- 코드조회 SQL : 전체  -->
+    <query name="SEL_ALLGB">
+        <![CDATA[
+           SELECT '%'           AS CODE 
+                , '전체'        AS NAME 
+                , ''            AS SORT
+             FROM DUAL
+           UNION ALL
+        ]]>
+    </query>
+    
+    <!-- 코드/명 조회  -->
+    <query name="SEL_ETC_CODE">   
+        <![CDATA[    
+            SELECT APP_S_DT   AS CODE
+                 , TO_CHAR(TO_DATE(APP_S_DT), 'YYYY/MM/DD')   AS NAME
+                 , '1' AS SORT
+              FROM DCS.DO_PADD_RULE
+             GROUP BY APP_S_DT 
+            ORDER BY APP_S_DT DESC
+        ]]>        
+    </query>
+    
+    <!-- 코드/명 조회  -->
+    <query name="SEL_ETC_CODE2">   
+        <![CDATA[    
+            SELECT SHORT_CD   CODE
+                 , BRCH_NAME  NAME
+                 , '1' AS SORT
+              FROM DCS.DB_BRANCH 
+             WHERE SHORT_CD IS NOT NULL
+             ORDER BY CODE
+        ]]>        
+    </query>
+
+    <!-- 제휴카드사 비용분담율 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[   
+            SELECT A.BRCH_ID
+                 , ( SELECT BRCH_NAME 
+                       FROM DCS.DB_BRANCH 
+                      WHERE BRCH_ID = A.BRCH_ID
+                   ) BRCH_NAME
+                 , A.PAY_TYPE_DTL
+                 , ( SELECT BRCH_NAME 
+                       FROM DCS.DB_BRANCH 
+                      WHERE SHORT_CD  =  A.PAY_TYPE_DTL
+                   ) PAY_TYPE_DTL_NM
+                 , A.ADD_RATE
+                 , B.DCUBE_RATE
+                 , B.JCOMP_RATE
+                 , B.ADD_FEE_RATE  
+                 , A.APP_S_DT
+                 , DECODE (B.JCOMP_RATE, null , 'I','U')  IN_UP_CODE
+              FROM DCS.DO_PADD_RULE A
+                 , DCS.DA_JCOMP_RULE B
+             WHERE A.BRCH_ID         = B.BRCH_ID(+)
+               AND A.PAY_TYPE_DTL    = B.PAY_TYPE_DTL(+)
+               AND A.APP_S_DT        = B.APP_S_DT(+)
+               AND A.PAY_TYPE_CD     = ( 
+                                        SELECT COMM_NAME1
+                                          FROM COM.TC_COMMCODE
+                                         WHERE SYS_PART = 'D'
+                                           AND COMM_PART = 'D062'
+                                           AND COMM_CODE = '3'
+                                       )  -- 제휴카드 결재구분
+               AND A.BRCH_ID      LIKE  ? || '%'
+               AND A.PAY_TYPE_DTL LIKE  ? || '%'
+               AND A.APP_S_DT        =  ?
+             ORDER BY A.BRCH_ID, A.PAY_TYPE_DTL
+        ]]>        
+    </query>  
+    
+    <!-- 적립율등록  -->
+    <query name="INS_JCOMP_RULE">        
+        <![CDATA[
+            INSERT INTO DCS.DA_JCOMP_RULE (
+                                           BRCH_ID
+                                         , PAY_TYPE_DTL
+                                         , APP_S_DT
+                                         , ADD_RATE
+                                         , DCUBE_RATE
+                                         , JCOMP_RATE   
+                                         , ADD_FEE_RATE 
+                                         , REG_DATE  
+                                         , REG_ID 
+                                         , MOD_DATE
+                                         , MOD_ID
+                                          ) 
+                                   VALUES (
+                                           ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , SYSDATE
+                                         , ? 
+                                         , SYSDATE
+                                         , ?                  
+                                         )   
+         ]]>   
+    </query>  
+    
+    <!-- 적립율등록 -->
+    <query name="UPD_JCOMP_RULE">
+        <![CDATA[
+            UPDATE DCS.DA_JCOMP_RULE
+               SET ADD_RATE       = ?  
+                 , DCUBE_RATE     = ?
+                 , JCOMP_RATE     = ?
+                 , ADD_FEE_RATE   = ?  
+                 , MOD_DATE       = SYSDATE  
+                 , MOD_ID         = ?  
+             WHERE BRCH_ID        = ?
+               AND PAY_TYPE_DTL   = ?
+               AND APP_S_DT       = ?
+        ]]>
+    </query> 
+      
+    <!-- 기준 월별 존재 여부 체크 -->
+    <query name="SEL_PADD_RULE_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT 
+              FROM DCS.DO_PADD_RULE
+             WHERE BRCH_ID   = ?   
+               AND APP_S_DT  = ?
+         ]]>
+    </query>
+</service>

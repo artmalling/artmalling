@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal533.ps">
+	<gauce name="CHECK"> 
+		<column colName="CHECK"             colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+	
+    <gauce name="H_SEL_MASTER"> 
+    	<column colName="SEL"               colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_YM"           colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORDERER_CD"        colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"            colType="TB_DECIMAL"     size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORDERER_NM"        colType="TB_STRING"      size="50"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DED_CD"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DED_NM"            colType="TB_STRING"      size="50"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAT_YN"            colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INPUT_AMT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUP_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAT_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETC"               colType="TB_STRING"      size="100"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DZ_IF_YN"          colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DZ_IF_DT"          colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DATE"          colType="TB_STRING"      size="20"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_ID"            colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_DATE"          colType="TB_DECIMAL"     size="20"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_ID"            colType="TB_DECIMAL"     size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_FLAG"         colType="TB_DECIMAL"     size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+    <gauce name="MAIN_MASTER"> 
+    
+		<column colName="DED_NM"             colType="TB_STRING"       size="40"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ORDERER_NM"         colType="TB_STRING"       size="20"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="INQR_ORDER1"        colType="TB_DECIMAL"      size="3"         dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="INQR_ORDER2"        colType="TB_DECIMAL"      size="3"         dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DED_AMT"            colType="TB_DECIMAL"      size="13"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		
+	</gauce>
+    <!-- VAT 여부 세팅 -->
+        <gauce name="H_SETVAT">  
+        <column colName="COMM_CODE"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REFER_CODE"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <query name="CHECK_JUNGBOK">        
+        <![CDATA[
+			SELECT COUNT(*) AS CHECK
+     		  FROM DSP.PS_DEDONLINE
+		     WHERE SALE_YM = ?
+		       AND STR_CD = ?
+		       AND ORDERER_CD= ?
+		       AND DED_CD = ?
+        ]]>        
+    </query>
+    <query name="SEL_DITAIL">        
+        <![CDATA[
+		    SELECT 'F'  AS SEL
+	             , A.SALE_YM
+	             , A.STR_CD
+	             , A.ORDERER_CD
+	             , A.SEQ_NO
+	             , B.COMM_NAME1 AS ORDERER_NM
+	             , A.DED_CD
+	             , C.COMM_NAME1 AS DED_NM
+	             , A.VAT_YN
+	             , A.INPUT_AMT
+	             , A.SUP_AMT
+	             , A.VAT_AMT
+	             , A.ETC
+	             FROM  DPS.PS_DEDONLINE A
+	             , ( SELECT COMM_CODE
+	                           , COMM_NAME1
+	                        FROM COM. TC_COMMCODE 
+	                       WHERE SYS_PART = 'D'
+	                          AND COMM_PART = 'P613'
+	                          AND  USE_YN = 'Y'
+	             ) B
+	             , ( SELECT COMM_CODE
+	                           , COMM_NAME1
+	                        FROM COM. TC_COMMCODE 
+	                       WHERE SYS_PART = 'D'
+	                          AND COMM_PART = 'P618'
+	                          AND  USE_YN = 'Y'
+	             ) C
+	         WHERE A.SALE_YM = ?
+	            AND  A.STR_CD = ?
+	            AND  A.ORDERER_CD LIKE ? || '%'
+	            AND  B.COMM_CODE = A.ORDERER_CD
+	            AND  C.COMM_CODE = A.DED_CD
+    
+    ]]>        
+    </query>
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			 SELECT X.DED_NM
+		          , x.ORDERER_NM
+		          , X.INQR_ORDER1
+		          , X.INQR_ORDER2
+		          , X.DED_AMT
+		       FROM (
+		            SELECT '00'             AS DED_CD
+		                 , A.ORDERER_CD     AS ORDERER_CD
+		                 , 0                AS INQR_ORDER1
+		                 , B.INQR_ORDER     AS INQR_ORDER2
+		                 , ' 합 계'          AS DED_NM
+		                 , B.COMM_NAME1     AS ORDERER_NM
+		                 , SUM(NVL(A.INPUT_AMT,0)) AS DED_AMT
+		              FROM DPS.PS_DEDONLINE A
+		                 , (SELECT COMM_CODE
+		                         , COMM_NAME1
+		                         , INQR_ORDER  AS INQR_ORDER
+		                      FROM COM.TC_COMMCODE
+		                     WHERE COMM_PART = 'P613'
+		                       AND SYS_PART  = 'D'
+		                       AND USE_YN = 'Y'
+		                   ) B
+		             WHERE A.ORDERER_CD     = B.COMM_CODE
+		               AND A.SALE_YM      = ?
+		               AND A.STR_CD       = ?
+		               AND A.ORDERER_CD   LIKE ? || '%' 
+		             GROUP BY A.ORDERER_CD
+		                    , B.INQR_ORDER
+		                    , B.COMM_NAME1
+		            UNION ALL
+		            SELECT A.DED_CD      AS DED_CD
+		                 , A.ORDERER_CD  AS ORDERER_CD
+		                 , C.INQR_ORDER  AS INQR_ORDER1
+		                 , B.INQR_ORDER  AS INQR_ORDER2
+		                 , C.COMM_NAME1  AS DED_NAME 
+		                 , B.COMM_NAME1  AS ORDERER_NAME
+		                 , SUM(NVL(A.INPUT_AMT,0)) AS DED_AMT
+		              FROM DPS.PS_DEDONLINE A
+		                 , (SELECT COMM_CODE
+		                         , COMM_NAME1
+		                         , INQR_ORDER  AS INQR_ORDER
+		                      FROM COM.TC_COMMCODE
+		                     WHERE COMM_PART = 'P613'
+		                       AND SYS_PART  = 'D'
+		                       AND USE_YN = 'Y'
+		                   ) B
+		                 , (SELECT COMM_CODE
+		                         , COMM_NAME1
+		                         , INQR_ORDER AS INQR_ORDER
+		                      FROM COM.TC_COMMCODE
+		                     WHERE COMM_PART = 'P618'
+		                       AND USE_YN = 'Y'
+		                   ) C
+		             WHERE A.ORDERER_CD = B.COMM_CODE
+		               AND A.DED_CD     = C.COMM_CODE
+		               AND A.SALE_YM      = ?
+		               AND A.STR_CD       = ?
+		               AND A.ORDERER_CD   LIKE ? || '%' 
+		             GROUP BY A.DED_CD      
+		                    , A.ORDERER_CD    
+		                    , C.INQR_ORDER 
+		                    , B.INQR_ORDER 
+		                    , C.COMM_NAME1  
+		                    , B.COMM_NAME1  
+		            ) X
+		       ORDER BY
+		             X.INQR_ORDER1
+		           , X.INQR_ORDER2
+        ]]>        
+    </query>
+    <!-- KEYVALUE 체크 -->
+    <query name="SEL_VATXYN">
+        <![CDATA[
+			SELECT COMM_CODE
+			     , REFER_CODE
+			  FROM COM.TC_COMMCODE 
+			 WHERE SYS_PART  = 'D' 
+			   AND COMM_PART = 'P618' 
+			   AND COMM_CODE = ?
+        ]]>
+    </query>
+    
+   <query name="SEL_SEQ_NO">
+        <![CDATA[
+			 SELECT NVL(MAX(SEQ_NO) + 1,1) AS SEQ_NO  
+          		FROM DPS.PS_DEDONLINE
+        ]]>
+    </query>
+    <query name="INS_MASTER">
+        <![CDATA[
+		   INSERT INTO  DPS.PS_DEDONLINE (                  SALE_YM
+		                                                  , STR_CD
+		                                                  , ORDERER_CD
+		                                                  , SEQ_NO
+		                                                  , DED_CD
+		                                                  , INPUT_AMT
+		                                                  , SUP_AMT
+		                                                  , VAT_YN
+		                                                  , VAT_AMT
+		                                                  , ETC
+		                                                  , DZ_IF_YN
+		                                                  , DZ_IF_DT
+		                                                  , REG_DATE
+		                                                  , REG_ID
+		                                                  , MOD_DATE
+		                                                  , MOD_ID
+		                                                  ) VALUES (
+		                                                    ?
+		                                                  , ?
+		                                                  , ?
+		                                                  , ?
+		                                                  , ?
+		                                                  , ?
+		                                                  , ?
+		                                                  , ?
+		                                                  , ?
+		                                                  , ?
+		                                                  , ?
+		                                                  , ?
+		                                                  , SYSDATE
+		                                                  , ?
+		                                                  , SYSDATE
+		                                                  , ?
+		                                                  ) 
+		]]>
+    </query>
+    <query name="UPD_MASTER">
+        <![CDATA[
+		    UPDATE  DPS.PS_DEDONLINE
+		             SET DED_CD = ?
+		                 , INPUT_AMT = ?
+		                 , SUP_AMT = ?
+		                 , VAT_YN = ?
+		                 , VAT_AMT = ?
+		                 , ETC = ?
+		                 , MOD_DATE = SYSDATE
+		                 , MOD_ID = ?
+		       WHERE SALE_YM = ?
+		           AND STR_CD = ?
+		           AND ORDERER_CD = ?
+		           AND SEQ_NO = ?
+    
+    ]]>
+    </query>
+    
+    <query name="DEL_MASTER">
+        <![CDATA[
+        	DELETE DPS.PS_DEDONLINE
+				 WHERE SALE_YM = ?
+				 AND      STR_CD= ?
+				 AND ORDERER_CD = ?
+				 AND SEQ_NO = ?
+     ]]>
+    </query>
+</service>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.01.25
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 조직공통 
+ -->
+<service name="/ccom210.cc">	
+
+ <!-- 행사코드별 협력사 조회 조건 -->
+    <gauce name="H_EVENT_COND">
+        <column colName="SERVICE_ID"    colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="STR_CD"        colType="TB_STRING" size="30"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_S_DT"    colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_E_DT"    colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="COND_TXT"      colType="TB_STRING" size="30"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="ADD_CONDITION" colType="TB_STRING" size="200"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 행사코드별 협력사 콤보 Title -->
+    <gauce name="H_EVENT">
+        <column colName="STR_CD"  colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_CD"	colType="TB_STRING" size="11"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_NM"	colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_S_DT"  colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_E_DT"  colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+
+    <!-- 행사코드별 협력사   조회 -->
+    <query name="SEL_STR_EVENT_POP">
+        <![CDATA[
+            SELECT A.STR_CD, A.EVENT_CD 
+                 , EVENT_NAME 
+                 , TO_CHAR(TO_DATE(B.EVENT_S_DT),'YYYY/MM/DD') EVENT_S_DT 
+                 , TO_CHAR(TO_DATE(B.EVENT_E_DT),'YYYY/MM/DD') EVENT_E_DT 
+              FROM MSS.MC_EVTMST A, DPS.PC_STREVT B, DPS.PC_EVTMST C
+             WHERE A.EVENT_CD = B.EVENT_CD
+               AND A.EVENT_CD = C.EVENT_CD
+               AND B.EVENT_CD = C.EVENT_CD
+               AND A.STR_CD = B.STR_CD
+               AND (A.EVENT_CD LIKE ?||'%' OR EVENT_NAME LIKE '%'||?|| '%')
+               AND A.STR_CD LIKE ? || '%'
+               AND ((? >= B.EVENT_S_DT AND ? <= B.EVENT_E_DT) OR
+                    (? >= B.EVENT_S_DT AND ? <= B.EVENT_E_DT) OR
+                    (B.EVENT_S_DT >= ? AND B.EVENT_S_DT <= ?) OR
+                    (B.EVENT_E_DT >= ? AND B.EVENT_E_DT <= ?)) 
+        ]]>
+    </query> 
+    
+       <!-- 행사코드별 협력사   조회 -->
+    <query name="SEL_STR_EVENT_POP_COND_02">
+        <![CDATA[
+               AND A.EVENT_GIFT_TYPE <> ? 
+        ]]>
+    </query> 
+    
+       <!-- 행사코드별 협력사   조회 -->
+    <query name="SEL_STR_EVENT_POP_TAIL">
+        <![CDATA[
+               ORDER BY A.STR_CD, A.EVENT_CD
+        ]]>
+    </query> 
+
+      <!-- 행사 명   조회 -->
+    <query name="SEL_STR_EVT_NAME">
+        <![CDATA[
+            SELECT A.STR_CD
+                 , A.EVENT_CD 
+                 , B.EVENT_NAME 
+                 , TO_CHAR(TO_DATE(A.EVENT_S_DT),'YYYY/MM/DD') EVENT_S_DT 
+                 , TO_CHAR(TO_DATE(A.EVENT_E_DT),'YYYY/MM/DD') EVENT_E_DT 
+              FROM DPS.PC_STREVT A, DPS.PC_EVTMST B
+             WHERE A.EVENT_CD = B.EVENT_CD
+               AND A.EVENT_CD = ?
+               AND A.STR_CD LIKE ? || '%'
+        ]]>
+    </query> 
+    
+</service>
+

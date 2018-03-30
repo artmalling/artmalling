@@ -1,0 +1,321 @@
+<!-- 
+/*******************************************************************************
+ * 시스템명 : 협력사 EDI> 브랜드별 품목 단축코드 조회 팝업
+ * 작 성 일 : 2012.06.08
+ * 작 성 자 : DHL
+ * 수 정 자 : 
+ * 파 일 명 : ccom2220.jsp
+ * 버    전 : 1.0 (버전은 1.0부터 시작하며 0.1씩 증가)
+ * 개    요 : 
+ * 이    력 : 2012.06.08 신규작성
+           
+ ******************************************************************************/
+-->
+<%@ page language="java" contentType="text/html; charset=UTF-8"  pageEncoding="UTF-8"
+ import="kr.fujitsu.ffw.base.BaseProperty,kr.fujitsu.ffw.util.String2,kr.fujitsu.ffw.control.ActionForm" %>
+<%@ page import="ecom.util.Util" %>
+<%@ page import="java.util.*" %>
+<%@ page import="sun.misc.FormattedFloatingDecimal.Form"%>
+<%@ page import="ecom.vo.SessionInfo2"%>
+<%@ taglib uri="/WEB-INF/tld/c.tld" prefix="c"%>
+<%@ taglib uri="/WEB-INF/tld/ajax-lib.tld" prefix="ajax"%>
+
+
+<html>
+<head>
+<ajax:library />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>아트몰링</title>
+<link href="/edi/css/ds.css" rel="stylesheet" type="text/css" />
+<script language="javascript"  src="/edi/js/common.js"  type="text/javascript"></script>
+
+<script language="javascript">
+
+//param값 전역변수 선언
+var returnParam    = dialogArguments[0];
+var pmkSrtCd       = dialogArguments[1];
+//var pummokCd       = dialogArguments[2];
+var pumbunCd       = dialogArguments[2];
+var multiGb        = dialogArguments[3];
+
+
+/**
+ * doInit()
+ * 작 성 자 : 정진영
+ * 작 성 일 : 2011-02-16
+ * 개    요 : initialize
+ * return값 : void
+**/
+function doinit(){
+	
+	 document.getElementById("PUMBUNCD").value = pumbunCd;
+	 //document.getElementById("PUMMOKCD").value = pummokCd;
+	 document.getElementById("PMKSRTCD").value = pmkSrtCd;
+	 // alert('pumbunCd='+pumbunCd+' pummokCd='+pummokCd+' pmkSrtCd='+pmkSrtCd);
+	 
+	 if(pumbunCd.length > 0 ||pmkSrtCd.length > 0 ||pummokCd.length > 0 ||pummokNm.length > 0){
+		 btn_Search();
+	 }
+	 
+	 document.getElementById("PMKSRTCD").focus();
+	 //document.getElementById("PUMMOKCD").focus();
+	 
+}
+/**
+ * btn_close()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2011-04-18
+ * 개    요 :  팝업 닫기 
+ * return값 : void
+ */ 
+function btn_Close(){
+    window.close();
+}
+
+/**
+ * btn_Conf()
+ * 작 성 자 : 정진영
+ * 작 성 일 : 2011.02.21
+ * 개    요 : 확인버튼 클릭 처리
+ * return값 : void
+ * */ 
+
+function btn_Conf()
+{
+	 //alert("sdas :" + document.getElementsByName("d_pummokcd").length );
+	 //alert("sdas :" + document.getElementsByName("d_pmksrtcd").length );
+	 
+	 var idx = 0; 
+	 var rowCnt = 0;
+	 var objJson = "";
+	 
+	 var strPmkSrtCd   = document.getElementsByName("d_pmksrtcd");
+	 var strPummokCd   = document.getElementsByName("d_pummokcd");
+     var strPummokNm    = document.getElementsByName("d_pummokNm");
+     var strUnitCd      = document.getElementsByName("d_unitcd");
+     var strTagflag     = document.getElementsByName("d_tag_flag");
+     var strTagOwnFlag  = document.getElementsByName("d_tag_own_flag");
+	    
+     //for( i = 0; i < document.getElementsByName("d_pummokcd").length; i++ ){
+     for( i = 0; i < document.getElementsByName("d_pmksrtcd").length; i++ ){
+    	 
+    	 if( document.getElementsByName("PUMMOKCHB")[i].checked == true ){
+    		 var objJson = "[{";
+    		 objJson += ""+strPmkSrtCd[i].value+":"+strPummokCd[i].value+":"+strPummokNm[i].value+":"+strUnitCd[i].value+":"+strTagflag[i].value+":"+strTagOwnFlag[i].value+"";
+    		 
+    		 objJson += "}]";
+    		 alert("aa : " + objJson);
+    		 returnParam[idx++] = eval(objJson)[0];
+    		 
+    	 }
+ 
+     }
+     alert(objJson);
+       
+     window.returnValue = true;
+     window.close();
+ 
+}    
+
+function chBak(val) {
+    for(i=1;i<4;i++) {
+        document.getElementById(i+"tdId"+val).style.backgroundColor="#ffff00";
+    }
+}
+
+function reBak(val) {
+    for(i=1;i<4;i++) {
+        document.getElementById(i+"tdId"+val).style.backgroundColor="#ffffff";
+    }
+}
+
+function doOnClick( row ){
+	var rowCnt = document.getElementsByName("d_pummokcd").length;
+	
+	var strPmkSrtCd    = document.getElementsByName("d_pmksrtcd");
+	var strPummokCd    = document.getElementsByName("d_pummokcd");
+	var strPummokNm    = document.getElementsByName("d_pummokNm");
+	var strUnitCd      = document.getElementsByName("d_unitcd");
+	var strTagflag     = document.getElementsByName("d_tag_flag");
+	var strTagOwnFlag  = document.getElementsByName("d_tag_own_flag");
+	
+	if( rowCnt > 0 ){
+		var objJson = "";
+		
+			objJson += ""+strPmkSrtCd[row].value+":"+strPummokCd[row].value+":"+strPummokNm[row].value+":"+strUnitCd[row].value+":"+strTagflag[row].value+":"+strTagOwnFlag[row].value+"";
+			 
+		
+		returnParam[0] = objJson;
+		
+		window.returnValue = true;
+        window.close();
+	}
+	return;
+}
+
+function btn_Search(){
+	
+    //var strPummokcd = document.getElementById("PUMMOKCD").value;
+    var strPmkSrtcd = document.getElementById("PMKSRTCD").value;
+
+    var param = "&goTo=getPmkSrt" + "&strPmkSrtcd=" + strPmkSrtcd
+                                  + "&pumbunCd=" + pumbunCd;
+     
+	<ajax:open callback="on_getPmkSrtXML" 
+						param="param" 
+						method="POST" 
+						urlvalue="/edi/ccom222.cc"/>
+	
+	<ajax:callback function="on_getPmkSrtXML">
+	    var content = "";
+		if( rowsNode.length > 0 ){
+			  
+			   content += "<table width='100%' border='0' cellspacing='0' cellpadding='0' class='g_table'>";
+			   content += "<tr>";
+			   //content += "<th width='30'>선택</th>";
+			   content += "<th width='80'>단축코드</th>";
+			   content += "<th width='80'>품목코드</th>";
+			   content += "<th>품목명</th>";
+			   content += "</tr>";
+			   
+			   
+			   for( i = 0; i < rowsNode.length; i++ ){
+				    var strPmkSrt = rowsNode[i].childNodes[1].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[1].childNodes[0].nodeValue;  //단축 코드
+				    var strPummok = rowsNode[i].childNodes[2].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[2].childNodes[0].nodeValue;  //품목 코드
+				    var strPummokNm = rowsNode[i].childNodes[3].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[3].childNodes[0].nodeValue;  //품목명
+				    var strUnit_cd = rowsNode[i].childNodes[10].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[10].childNodes[0].nodeValue;  //단위
+				    var strTag_flag = rowsNode[i].childNodes[11].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[11].childNodes[0].nodeValue;  //택구분
+				    var strTag_own_flag = rowsNode[i].childNodes[12].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[12].childNodes[0].nodeValue;  //택구분
+				    
+				    
+				    content += "<tr onMouseOver='chBak("+i+");' onMouseOut='reBak("+i+");' >";
+				    content += "<input type='hidden' name='d_unitcd' id='d_unitcd"+i+"' value='"+strUnit_cd+"' />";
+				    content += "<input type='hidden' name='d_tag_flag' id='d_tag_flag"+i+"' value='"+strTag_flag+"' />";
+				    content += "<input type='hidden' name='d_tag_own_flag' id='d_tag_own_flag"+i+"' value='"+strTag_own_flag+"' />";
+				    //content += "<td class='r1'><input  type='checkbox' name='PUMMOKCHB' id='PUMMOKCHB"+i+"'  /></td>";
+				    content += "<td class='r1' id='1tdId"+i+"' onclick='doOnClick("+i+");' style='cursor:hand;' ><input type='hidden' name='d_pmksrtcd' id='d_pmksrtcd"+i+"' value='"+strPmkSrt+"' /> "+strPmkSrt+"</td>";
+				    content += "<td class='r1' id='2tdId"+i+"' onclick='doOnClick("+i+");' style='cursor:hand;' ><input type='hidden' name='d_pummokcd' id='d_pummokcd"+i+"' value='"+strPummok+"' /> "+strPummok+"</td>";
+				    content += "<td class='r3' id='3tdId"+i+"' onclick='doOnClick("+i+");' style='cursor:hand;'><input type='hidden' name='d_pummokNm' id='d_pummokNm"+i+"' value='"+strPummokNm+"'  /> "+strPummokNm+"</td>";
+				    content += "</tr>";
+			   }      
+			   
+		} else {
+			content += "<table width='100%' border='0' cellspacing='0' cellpadding='0' class='g_table'>";
+            content += "<tr>";
+           // content += "<th width='30'>선택</th>";
+            content += "<th width='80'>단축코드</th>";
+            content += "<th width='80'>품목코드</th>";
+            content += "<th>품목명</th>";
+            content += "</tr>";
+		}
+		
+		 content += "</table>";
+	     document.getElementById("DIV_CONTENTS").innerHTML = content;
+	
+	</ajax:callback>
+
+}
+
+</script>
+
+</head>
+<body onload="doinit();">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+        <td class="pop01"></td>
+        <td class="pop02" ></td>
+        <td class="pop03" ></td>
+    </tr>
+    <tr>
+        <td class="pop04"></td>
+        <td>
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td>
+                         <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+	                            <td class="title">
+	                                <img src="/edi/imgs/comm/title_head.gif" width="15" height="13"  align="absmiddle" class="popR05 PL03" /> 
+	                                <span id="title1" class="PL03">브랜드별 품목단축코드</span>
+	                            </td>
+	                            <td>
+	                                <table border="0" align="right" cellpadding="0" cellspacing="0">
+	                                    <tr>
+	                                        <td><img src="/edi/imgs/btn/search.gif" width="50" height="22"  onClick="btn_Search();"/></td>
+							              <!--    <td><img src="/edi/imgs/btn/confirm.gif" width="50" height="22" onClick="btn_Conf()"/></td>-->
+							                <td><img src="/edi/imgs/btn/close.gif" width="50" height="22"   onClick="btn_Close();"/></td>
+	                                    </tr>
+	                                </table>
+	                            </td>
+                            </tr>
+                         </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="popT01 PB03">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="o_table">
+                            <tr>
+                                <td>
+                                    <table width="100%" border="0" cellpadding="0" cellspacing="0" class="s_table">
+                                        <tr>
+                                            <th width="50">브랜드</th>
+                                            <td colspan="3">
+                                                <input type="text" name="PUMBUNCD" id="PUMBUNCD" size="11" disabled="disabled"  />
+                                            </td>
+                                            <!-- 
+                                            <th width="50">품목코드</th>
+                                            <td width="80">
+                                                <input type="text" name="PUMMOKCD" id="PUMMOKCD" size="11" disabled="disabled" maxlength="8" onkeypress="javascript:onlyNumber();" style='text-align:left;IME-MODE: disabled' onblur="btn_Search();" />
+                                            </td>
+                                             -->
+                                        </tr>
+                                        <tr>
+                                            <th width="50">단축코드</th>
+                                            <td width="80">
+                                                <input type="text" name="PMKSRTCD" id="PMKSRTCD" size="11" maxlength="4" onkeypress="javascript:onlyNumber();" style='text-align:left;IME-MODE: disabled' onblur="btn_Search();"/>
+                                            </td>
+                                            <th width="50">품목명</th>
+                                            <td >
+                                                <input type="text" name="PUMMOKNM" id="PUMMOKNM" size="13" disabled="disabled" style="text-align:left;"/>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                       
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="BD4A">
+                            <tr valign="top">
+                                <td>    
+                                <div id="DIV_CONTENTS" style=" width:100%; height:275; overflow-y:scroll;">
+                                    <table width='100%' border='0' cellspacing='0' cellpadding='0' class='g_table'>
+                                        <tr>
+                                            <th width="30">선택</th>
+                                            <th width="80">단축코드</th>
+                                            <th width="80">품목코드</th>
+                                            <th>품목명</th>
+                                        </tr>
+                                    </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td class="pop06" ></td>        
+    </tr>
+    <tr>
+        <td class="pop07" ></td>
+        <td class="pop08" ></td>
+        <td class="pop09" ></td>
+    </tr>
+</table>
+</body>
+</html>

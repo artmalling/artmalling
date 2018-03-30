@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.09
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  공지사항관리
+ -->
+<service name="/tcom201.tc">    
+
+    <gauce name="H_NOTI_LIST">
+        <column colName="CHK"         	  colType="TB_STRING" size="12"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="NOTI_ID"         colType="TB_STRING" size="12"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="NOTI_GBN"        colType="TB_STRING" size="20"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="NOTI_TITLE"      colType="TB_STRING" size="500"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="S_DATE"          colType="TB_STRING" size="12"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="E_DATE"          colType="TB_STRING" size="12"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="ORG_CD"          colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="STR_CD"          colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="STR_NAME"        colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="DEPT_CD"         colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="DEPT_NAME"       colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="USER_NAME"       colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL"  roundMode="" />  
+        <column colName="REG_DATE"        colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="NOTI_FLAG"       colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+    </gauce>
+    
+    <!-- 사용자리스트 조회 -->
+    <query name="SEL_NOTI_LIST_1">        
+        <![CDATA[  
+            SELECT 'F' 																	AS CHK
+                 , A.NOTI_ID                                                            AS NOTI_ID
+                 , DECODE(A.SEND_TO_ALL,'Y','전체공지','팀공지')                       AS NOTI_GBN
+                 , A.NOTI_TITLE                                                         AS NOTI_TITLE
+                 , A.S_DATE                                                             AS S_DATE
+                 , A.E_DATE                                                             AS E_DATE
+                 , B.ORG_CD                                                             AS ORG_CD
+                 , SUBSTR(B.ORG_CD, 2, 2)                                               AS STR_CD
+                -- , SUBSTR(B.ORG_CD,1,1) TE
+                 , (
+                        DPS.FN_GET_STORE_NAME(SUBSTR(B.ORG_CD, 2, 2))
+                     || CASE WHEN LVL1  > 1 THEN ' 외' ELSE '' END
+                    )                                                                   AS STR_NAME
+                 , SUBSTR(B.ORG_CD, 4, 2)                                               AS DEPT_CD
+                 , CASE WHEN LVL2 = 0 OR SUBSTR(B.ORG_CD,1,1) ='1' THEN ''
+                        ELSE  DPS.FN_GET_ORG_NAME( SUBSTR(B.ORG_CD, 2, 2)
+                                                 , SUBSTR(B.ORG_CD, 4, 2)
+                                                 , '00','00','00')
+                            || CASE WHEN LVL2 > 1 THEN ' 외' ELSE '' END
+                        END                                                              AS DEPT_NAME
+                 , C.USER_NAME
+                    || '('
+                    || DPS.FN_GET_STORE_NAME(C.STR_CD)
+                    || DECODE(DPS.FN_GET_ORG_NAME(C.STR_CD,  C.DEPT_CD , '00','00','00'),'',''
+                               ,' / '|| DPS.FN_GET_ORG_NAME(C.STR_CD,  C.DEPT_CD , '00','00','00'))
+                    || ')'                                                              AS USER_NAME
+                 --, A.REG_DATE 
+                 , TO_CHAR(A.REG_DATE,'YYYY/MM/DD HH24:MI:SS')                          AS REG_DATE
+                 , COM.FN_GET_COMM_NAME('D','TC05', A.NOTI_FLAG) 						AS NOTI_FLAG
+              FROM COM.TC_NOTI      A
+                 , (
+						SELECT NOTI_ID, SUM(LVL1)LVL1, SUM(LVL2)LVL2, MAX(ORG_CD) ORG_CD
+						  FROM (
+						  
+						            SELECT NOTI_ID
+						                 , COUNT(DISTINCT STR_CD) LVL1
+						                 , DECODE(ORG_LEVEL,2,COUNT(*)) LVL2
+						                 , MAX(ORG_LEVEL || ORG_CD) ORG_CD
+						              FROM 
+						                 (
+						                    SELECT A.NOTI_ID
+						                         , NVL(B.ORG_LEVEL,1) ORG_LEVEL
+						                         , SUBSTR(A.ORG_CD,1,2) STR_CD
+						                         , A.ORG_CD
+						                      FROM COM.TC_NOTI_RECV A
+						                         , DPS.PC_ORGMST    B
+						                     WHERE A.ORG_CD = B.ORG_CD(+)
+        ]]>        
+    </query> 
+    
+    <query name="SEL_NOTI_LIST_STR_CD">
+        <![CDATA[   
+               AND B.STR_CD = ? 
+        ]]>
+    </query>   
+    <query name="SEL_NOTI_LIST_DEPT_CD">
+        <![CDATA[   
+               AND B.DEPT_CD = ? 
+        ]]>
+    </query>   
+    <query name="SEL_NOTI_LIST_ORG_FLAG">
+        <![CDATA[   
+               AND B.ORG_FLAG = ? 
+        ]]>
+    </query>   
+    <query name="SEL_NOTI_LIST_2">       
+        <![CDATA[   
+						                                               )
+						             GROUP BY NOTI_ID, ORG_LEVEL
+						        )
+						 GROUP BY NOTI_ID
+                    ) B
+                 , COM.TC_USRMST C
+        ]]>        
+    </query>
+    
+    <query name="SEL_NOTI_LIST_3">        
+        <![CDATA[ 
+             WHERE A.NOTI_ID = B.NOTI_ID
+        ]]>        
+    </query> 
+    <query name="SEL_NOTI_LIST_4">        
+        <![CDATA[   
+             WHERE A.NOTI_ID = B.NOTI_ID(+)  
+        ]]>        
+    </query>
+    <query name="SEL_NOTI_LIST_5">        
+        <![CDATA[   
+               AND A.MOD_ID  = C.USER_ID(+)
+        ]]>        
+    </query> 
+    
+    <query name="SEL_NOTI_LIST_NOTI_DATE">
+        <![CDATA[   
+               AND ( ? BETWEEN A.S_DATE AND A.E_DATE OR ? BETWEEN A.S_DATE AND A.E_DATE )
+        ]]>
+    </query>   
+    
+    <query name="SEL_NOTI_LIST_NOTI_GBN">
+        <![CDATA[   
+               AND A.SEND_TO_ALL = ? 
+        ]]>
+    </query>   
+    
+    <query name="SEL_NOTI_LIST_TITLE">
+        <![CDATA[   
+               AND A.NOTI_TITLE LIKE '%' || ? || '%'
+        ]]>
+    </query>  
+    
+    <query name="SEL_NOTI_LIST_CONTENT">
+        <![CDATA[   
+               AND A.NOTI_CONTENT LIKE '%' || ? || '%'
+        ]]>
+    </query> 
+    <query name="SEL_NOTI_LIST_FLAG">
+        <![CDATA[   
+               AND A.NOTI_FLAG = ? 
+        ]]>
+    </query>   
+    
+    <query name="SEL_NOTI_LIST_ORDER">
+        <![CDATA[   
+             ORDER BY A.NOTI_ID DESC
+        ]]>
+    </query> 
+     
+    
+    <!-- 팝업 : 데이터1-->
+    <gauce name="H_NOTICE">
+        <column colName="NOTI_ID"       colType="TB_STRING" size="12"       dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="NOTI_TITLE"    colType="TB_STRING" size="500"      dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="NOTI_CONTENT"  colType="TB_STRING" size="4000"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="NOTI_FLAG"     colType="TB_STRING" size="500"      dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="S_DATE"        colType="TB_STRING" size="10"       dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="E_DATE"        colType="TB_STRING" size="10"       dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="SEND_TO_ALL"   colType="TB_STRING" size="2"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="FILE_NM"       colType="TB_STRING" size="100"      dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="USER_ID"       colType="TB_STRING" size="10"       dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="USER_NAME"     colType="TB_STRING" size="40"       dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEL1"          colType="TB_STRING" size="4"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEL2"          colType="TB_STRING" size="4"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEL3"          colType="TB_STRING" size="4"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="FILE_PATH"     colType="TB_URL"    size="200"      dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="URL_CONTENT"   colType="TB_STRING" size="255"      dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="URL"           colType="TB_URL"    size="255"      dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_FILE_NM"   colType="TB_STRING"	size="100"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="NOTI_CONTENT2" colType="TB_STRING"	size="10000"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce> 
+    
+    <!-- 팝업 : 데이터 조회 -->
+    <query name="SEL_NOTICE">
+        <![CDATA[     
+			SELECT NOTI_ID
+			     , NOTI_TITLE
+			     , ? AS NOTI_CONTENT
+			     , NOTI_FLAG
+			     , S_DATE
+			     , E_DATE
+			     , SEND_TO_ALL
+			     , FILE_NM
+			     , MOD_ID                       AS USER_ID
+			     , COM.FN_GET_USER_NAME(MOD_ID) AS USER_NAME
+			     , TEL1
+			     , TEL2
+			     , TEL3
+			     , '' 	AS FILE_PATH
+                 , ?  	AS URL_CONTENT
+                 , ''   AS URL
+                 , FILE_NM 						AS ORG_FILE_NM
+			  FROM COM.TC_NOTI
+			 WHERE NOTI_ID = ? 
+        ]]>
+    </query> 
+    
+     <query name="SEL_NOTI_SEQ">
+        <![CDATA[      
+	        SELECT MAX(NOTI_SEQ) AS NOTI_SEQ
+	          FROM (
+	                  SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || '0001' AS NOTI_SEQ
+	                    FROM DUAL
+	                   UNION ALL
+	                  SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || LPAD(SUBSTR(NOTI_ID,9,4) + 1,4,0) AS NOTI_SEQ
+	                    FROM COM.TC_NOTI
+	                   WHERE NOTI_ID = ( SELECT MAX(NOTI_ID) FROM COM.TC_NOTI 
+	                                      WHERE NOTI_ID LIKE TO_CHAR(SYSDATE, 'YYYYMMDD') || '%' )
+	                )
+        ]]>
+    </query>
+    
+    <query name="INS_NOTI">
+        <![CDATA[  
+            INSERT INTO COM.TC_NOTI
+            (
+                  NOTI_ID
+                , NOTI_TITLE
+                , NOTI_CONTENT
+                , S_DATE
+                , E_DATE
+                , SEND_TO_ALL
+                , REG_ID
+                , REG_DATE
+                , MOD_ID
+                , MOD_DATE
+                , FILE_NM
+                , TEL1
+                , TEL2
+                , TEL3
+                , NOTI_FLAG
+            )
+            VALUES 
+            (
+                  ? 
+                , ?
+                , ?
+                , ?
+                , ?
+                , ?
+                , ?
+                , SYSDATE
+                , ?
+                , SYSDATE
+                , ?
+                , ?
+                , ?
+                , ?
+                , ?
+            )  
+        ]]>
+    </query> 
+    
+    <!--  CLOB 등록   --> 
+    <query name="CLOB_NOTI">
+	    <![CDATA[
+	        SELECT NOTI_CONTENT
+	          FROM COM.TC_NOTI
+	         WHERE NOTI_ID = ? 
+	           FOR UPDATE
+	       ]]>
+    </query> 
+    
+        <!-- 신규여부조회  -->
+    <query name="SEL_NOTI_CNT">
+        <![CDATA[   
+            SELECT COUNT(*) AS CNT
+              FROM COM.TC_NOTI
+             WHERE NOTI_ID = ? 
+        ]]>        
+    </query>
+    <query name="UPT_NOTI">
+        <![CDATA[  
+            UPDATE COM.TC_NOTI 
+              SET NOTI_TITLE    = ? 
+                , NOTI_CONTENT  = ? 
+                , S_DATE        = ? 
+                , E_DATE        = ? 
+                , SEND_TO_ALL   = ?  
+                , MOD_ID        = ? 
+                , MOD_DATE      = SYSDATE
+                , FILE_NM       = ?  
+                , TEL1          = ?  
+                , TEL2          = ?  
+                , TEL3          = ?  
+            WHERE NOTI_ID       = ?    
+        ]]>
+    </query> 
+    
+    <query name="DEL_NOTI">
+        <![CDATA[  
+            DELETE COM.TC_NOTI
+             WHERE NOTI_ID = ? 
+        ]]>
+    </query> 
+    
+    <query name="DEL_NOTI_RECV">
+        <![CDATA[  
+            DELETE COM.TC_NOTI_RECV
+             WHERE NOTI_ID = ? 
+        ]]>
+    </query> 
+    
+    <query name="INS_NOTI_RECV">
+        <![CDATA[  
+            INSERT INTO COM.TC_NOTI_RECV
+            (
+                  NOTI_ID
+                , ORG_CD 
+            )
+            VALUES 
+            (
+                  ? 
+                , ? 
+            )  
+        ]]>
+    </query>  
+    <gauce name="H_NOTI_ID">  
+       <column colName="NOTI_ID" colType="TB_STRING"  size="20"  dec="0"     keyType="TB_NORMAL"     roundMode="" />   
+    </gauce>  
+     
+    <!-- 팝업 : 데이터2-->
+    <gauce name="H_NOTICE_DEPT">
+        <column colName="NOTI_ID"   colType="TB_STRING" size="12"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="CHK"       colType="TB_STRING" size="1"      dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="ORG_CD"    colType="TB_STRING" size="10"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_CD"    colType="TB_STRING" size="10"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_NAME"  colType="TB_STRING" size="50"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_CD"   colType="TB_STRING" size="10"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_NAME" colType="TB_STRING" size="50"     dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="GBN" 		colType="TB_STRING" size="50"     dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+    </gauce> 
+    
+    <!-- 팝업 : 데이터 조회 -->
+    <query name="SEL_NOTICE_DEPT">
+        <![CDATA[     
+			SELECT A.NOTI_ID
+                 , 'T'                                                    AS CHK 
+			     , A.ORG_CD                                               AS ORG_CD
+			     , SUBSTR(A.ORG_CD, 1, 2)                                 AS STR_CD
+			     , DPS.FN_GET_STORE_NAME(SUBSTR(A.ORG_CD, 1, 2))          AS STR_NAME
+			     , DECODE(B.ORG_LEVEL,'2',SUBSTR(A.ORG_CD, 3, 2),'')      AS DEPT_CD
+			     , DECODE(B.ORG_LEVEL,'2',DPS.FN_GET_ORG_NAME( SUBSTR(A.ORG_CD, 1, 2)
+			                          , SUBSTR(A.ORG_CD, 3, 2)
+			                          , '00','00','00')  ,'')             AS DEPT_NAME 
+			     , STR_CD || DEPT_CD									  AS GBN
+			  FROM COM.TC_NOTI_RECV A 
+			     , DPS.PC_ORGMST    B
+			 WHERE A.ORG_CD = B.ORG_CD(+) 
+	           AND A.NOTI_ID = ? 
+        ]]>
+    </query> 
+    
+    
+    
+    <!-- 점 정보 -->
+    <gauce name="H_STR_CD">
+        <column colName="STR_CHK"   colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_CD"    colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_NAME"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce> 
+    <query name="SEL_STR_CD">
+        <![CDATA[  
+            SELECT 'F' AS STR_CHK, STR_CD, STR_NAME
+              FROM DPS.PC_STRMST
+             WHERE USE_YN = 'Y'
+             ORDER BY DISP_NO, STR_CD
+        ]]>
+    </query>  
+    
+    <gauce name="H_DEPT_CD">
+        <column colName="STR_CD"     colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_NAME"   colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_CD"    colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_CHK"   colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_NAME"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    
+    <query name="SEL_DEPT_CD">
+        <![CDATA[  
+            SELECT DISTINCT   
+                   STR_CD               AS STR_CD
+                 , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NAME
+                 , DEPT_CD              AS DEPT_CD
+                 , 'F'                  AS DEPT_CHK
+                 , ORG_SHORT_NAME       AS DEPT_NAME
+              FROM DPS.PC_ORGMST 
+             WHERE ORG_LEVEL = '2'   
+               AND USE_YN    = 'Y'
+               AND STR_CD    = ?  
+               AND ORG_FLAG  = ?  
+              ORDER BY STR_CD, DEPT_CD
+        ]]>
+    </query> 
+
+    <gauce name="H_ORG_CD">
+        <column colName="ORG_CD"            colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce> 
+   
+        <!-- 파일 데이첨부를 위한 데이터 셋 설정  -->
+    <gauce name="SEL_FILE">
+        <column colName="FILE_NAME" colType="TB_STRING" size="2560" dec="0"     keyType="TB_KEY" roundMode="" />
+        <column colName="FILE"      colType="TB_URL"    size="2560" dec="0"     keyType="TB_KEY" roundMode="" />
+    </gauce>
+    
+    
+</service>

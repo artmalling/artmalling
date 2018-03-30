@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김정민
+ * 회 사 명 : 
+ * 작 성 일 : 2011.06.07
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae103.mc">
+ <!-- 카드사 마스터 관리 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_NAME"   colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_CD"        colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BUY_COST_PRC"  colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_NAME"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_DT"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+
+    <!-- 카드사 마스터 관리 조회-->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT A.STR_CD
+                 , H.VEN_NAME 
+                 , F.PUMBUN_NAME
+                 , B.SKU_CD
+                 , C.SKU_NAME 
+                 , B.BUY_COST_PRC
+                 , E.EVENT_NAME
+                 , E.EVENT_S_DT||E.EVENT_E_DT AS EVENT_DT
+                 , E.EVENT_CD
+              FROM MSS.MC_EVTMST A, MSS.MC_EVTSKUMST B, DPS.PC_SKUMST C, DPS.PC_STRSKUMST D, DPS.PC_EVTMST E, DPS.PC_PBNMST F, DPS.PC_STRPBN G, DPS.PC_VENMST H
+             WHERE A.STR_CD = B.STR_CD
+               AND A.STR_CD = D.STR_CD
+               AND A.STR_CD = G.STR_CD
+               AND A.EVENT_CD = B.EVENT_CD  
+               AND A.EVENT_CD = E.EVENT_CD 
+               AND B.SKU_CD = C.SKU_CD
+               AND B.SKU_CD = D.SKU_CD  
+               AND C.PUMBUN_CD = D.PUMBUN_CD
+               AND C.PUMBUN_CD = F.PUMBUN_CD
+               AND C.PUMBUN_CD = G.PUMBUN_CD
+               AND F.VEN_CD = G.VEN_CD
+               AND F.VEN_CD = H.VEN_CD
+               AND D.PUMBUN_TYPE = '5' 
+               AND A.STR_CD LIKE ?
+               AND C.PUMBUN_CD LIKE ? || '%'
+               AND F.VEN_CD LIKE ? || '%'
+               AND B.SKU_CD LIKE ? || '%'
+               AND SKU_GB LIKE ?  || '%'
+               ORDER BY A.STR_CD
+                      , E.EVENT_CD DESC
+                      , H.VEN_NAME 
+                      , F.PUMBUN_NAME
+                      , B.SKU_CD
+                      , C.SKU_NAME 
+        ]]>
+    </query>    
+    
+</service>

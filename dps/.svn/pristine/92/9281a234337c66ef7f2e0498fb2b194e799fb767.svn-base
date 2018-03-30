@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.07
+ * 변 경 일 : 
+ * 변경내용 : 기간별 POS 거래번호별 단품 매출 조회
+ * 개    요 :  
+ -->
+<service name="/psal430.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="POS_JUM"          colType="TB_STRING"      size="3"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_YMD"          colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"           colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_SN"           colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_SEQ"          colType="TB_STRING"      size="3"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_GB"           colType="TB_STRING"      size="1"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOOD_CD"          colType="TB_STRING"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOOD_NM"          colType="TB_STRING"     size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"         colType="TB_DECIMAL"     size="18"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_UP"          colType="TB_DECIMAL"     size="18"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"         colType="TB_DECIMAL"     size="18"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SIJE_GB"          colType="TB_STRING"     size="1"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_W_SN"         colType="TB_STRING"      size="16"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_TIME"         colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"         colType="TB_STRING"      size="11"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_NORMAL"      colType="TB_DECIMAL"      size="18"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_EVENT"       colType="TB_DECIMAL"      size="18"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+ 
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_ORGSKU_01">        
+        <![CDATA[
+	        SELECT '505'                                                AS POS_JUM
+	            , A.SALE_DT                                          AS POS_YMD
+	            , A.POS_NO                                           AS POS_NO
+	            , SUBSTR(A.TRAN_NO,2,4)                              AS POS_SN
+	            , LPAD(B.SEQ_NO,3,'0')                               AS POS_SEQ
+	            , CASE WHEN A.TRAN_FLAG = '0' THEN '1'                              
+	                   WHEN A.TRAN_FLAG = '1' THEN '2'                               
+	                   ELSE '3' END                                  AS POS_GB       
+	            , B.ITEM_CD                                          AS GOOD_CD
+	            , DECODE(B.PUMMOK_CD,'7141',B.ITEM_NAME || ' N페이',B.ITEM_NAME)                                        AS GOOD_NM
+	            , CASE WHEN A.TRAN_FLAG = '0' THEN B.SALE_QTY
+	                   ELSE B.SALE_QTY * (-1) END                    AS SALE_QTY
+	            , CASE WHEN B.MOD_PRC <> 0 THEN B.MOD_PRC                           
+	                   WHEN B.EVENT_PRC <> 0 THEN B.EVENT_PRC                        
+	                   ELSE B.SALE_PRC END                           AS SALE_UP     
+	            , CASE WHEN A.TRAN_FLAG = '0' THEN B.SALE_AMT
+	                   ELSE B.SALE_AMT * (-1) END                    AS SALE_AMT
+	            , CASE WHEN 1 < (SELECT COUNT(1)
+	                              FROM DPS.PS_TRPAID C
+	                             WHERE C.STR_CD    = A.STR_CD
+	                               AND C.SALE_DT   = A.SALE_DT
+	                               AND C.POS_NO    = A.POS_NO
+	                               AND C.TRAN_NO   = A.TRAN_NO)  THEN '4'                    
+	                   ELSE (SELECT CASE WHEN D.PAY_TYPE IN ('00') THEN '1'                  
+	                                     WHEN D.PAY_TYPE IN ('10','11','12','13') THEN '2'    
+	                                     WHEN D.PAY_TYPE IN ('20','21','22') THEN '3'        
+	                                     ELSE '9' END                                      
+	                              FROM DPS.PS_TRPAID D
+	                             WHERE D.STR_CD    = A.STR_CD
+	                               AND D.SALE_DT   = A.SALE_DT
+	                               AND D.POS_NO    = A.POS_NO
+	                               AND D.TRAN_NO   = A.TRAN_NO) END  AS SIJE_GB
+	            , CASE WHEN A.TRAN_FLAG = '1' THEN
+	                        A.O_SALE_DT||A.O_POS_NO||SUBSTR(A.O_TRAN_NO,2,4)
+	                   ELSE '' END                                   AS POS_W_SN
+	            , SUBSTR(SALE_TIME,1,4)                              AS POS_TIME
+	            , B.EVENT_CD                                         AS EVENT_CD
+	            , B.SALE_PRC                                         AS SALE_NORMAL
+	            , B.EVENT_PRC                                        AS SALE_EVENT
+	     FROM DPS.PS_TRHEADER   A
+	        , DPS.PS_TRITEM     B
+	        , DPS.PC_ORGMST C
+	        , DPS.PC_STRPBN  D    
+	     WHERE A.STR_CD     = ?
+	       AND A.SALE_DT   >= ?    
+	       AND A.SALE_DT   <= ?
+	       AND D.STR_CD    = B.STR_CD
+	       AND D.PUMBUN_CD = B.PUMBUN_CD
+	       AND D.SALE_ORG_CD    = C.ORG_CD
+	       AND A.STR_CD    = B.STR_CD
+	       AND A.SALE_DT   = B.SALE_DT
+	       AND A.POS_NO    = B.POS_NO
+	       AND A.TRAN_NO   = B.TRAN_NO
+        ]]>        
+    </query>
+	       
+	       
+	       
+    <query name="SEL_SALE_ORGSKU_02">        
+        <![CDATA[
+	       AND B.REJCT_FLAG = '0'  
+	       AND A.TRAN_MODE  IN ('01','11','21','22','23','24','25','26','31')   
+	       AND B.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+	                      FROM COM.V_MYORG MYORG
+	                     WHERE MYORG.USER_ID     = ?
+	                  )
+	     ORDER BY A.SALE_DT, A.POS_NO, A.TRAN_NO, B.SEQ_NO
+        ]]>        
+    </query>
+    
+    
+     <query name="SEL_SALE_ORGSKU2_01">        
+        <![CDATA[
+	        SELECT '505'                                                AS POS_JUM
+	            , A.SALE_DT                                          AS POS_YMD
+	            , A.POS_NO                                           AS POS_NO
+	            , SUBSTR(A.TRAN_NO,2,4)                              AS POS_SN
+	            , LPAD(B.SEQ_NO,3,'0')                               AS POS_SEQ
+	            , CASE WHEN A.TRAN_FLAG = '0' THEN '1'                              
+	                   WHEN A.TRAN_FLAG = '1' THEN '2'                               
+	                   ELSE '3' END                                  AS POS_GB       
+	            , B.ITEM_CD                                          AS GOOD_CD
+	            , DECODE(B.PUMMOK_CD,'7141',B.ITEM_NAME || ' N페이',B.ITEM_NAME)                                        AS GOOD_NM
+	            , CASE WHEN A.TRAN_FLAG = '0' THEN B.SALE_QTY
+	                   ELSE B.SALE_QTY * (-1) END                    AS SALE_QTY
+	            , CASE WHEN B.MOD_PRC <> 0 THEN B.MOD_PRC                           
+	                   WHEN B.EVENT_PRC <> 0 THEN B.EVENT_PRC                        
+	                   ELSE B.SALE_PRC END                           AS SALE_UP     
+	            , CASE WHEN A.TRAN_FLAG = '0' THEN B.SALE_AMT
+	                   ELSE B.SALE_AMT * (-1) END                    AS SALE_AMT
+	            , CASE WHEN 1 < (SELECT COUNT(1)
+	                              FROM DPS.PS_TRPAID C
+	                             WHERE C.STR_CD    = A.STR_CD
+	                               AND C.SALE_DT   = A.SALE_DT
+	                               AND C.POS_NO    = A.POS_NO
+	                               AND C.TRAN_NO   = A.TRAN_NO)  THEN '4'                    
+	                   ELSE (SELECT CASE WHEN D.PAY_TYPE IN ('00') THEN '1'                  
+	                                     WHEN D.PAY_TYPE IN ('10','11','12','13') THEN '2'    
+	                                     WHEN D.PAY_TYPE IN ('20','21','22') THEN '3'        
+	                                     ELSE '9' END                                      
+	                              FROM DPS.PS_TRPAID D
+	                             WHERE D.STR_CD    = A.STR_CD
+	                               AND D.SALE_DT   = A.SALE_DT
+	                               AND D.POS_NO    = A.POS_NO
+	                               AND D.TRAN_NO   = A.TRAN_NO) END  AS SIJE_GB
+	            , CASE WHEN A.TRAN_FLAG = '1' THEN
+	                        A.O_SALE_DT||A.O_POS_NO||SUBSTR(A.O_TRAN_NO,2,4)
+	                   ELSE '' END                                   AS POS_W_SN
+	            , SUBSTR(SALE_TIME,1,4)                              AS POS_TIME
+	            , B.EVENT_CD                                         AS EVENT_CD
+	            , B.SALE_PRC                                         AS SALE_NORMAL
+	            , B.EVENT_PRC                                        AS SALE_EVENT
+	     FROM DPS.PS_TRHEADER   A
+	        , DPS.PS_TRITEM     B
+	        , DPS.PC_ORGMST C
+	        , DPS.PC_STRPBN  D    
+	     WHERE A.STR_CD     = ?
+	       AND A.SALE_DT   >= ?    
+	       AND A.SALE_DT   <= ?
+	       AND D.STR_CD    = B.STR_CD
+	       AND D.PUMBUN_CD = B.PUMBUN_CD
+	       AND D.BUY_ORG_CD    = C.ORG_CD
+	       AND A.STR_CD    = B.STR_CD
+	       AND A.SALE_DT   = B.SALE_DT
+	       AND A.POS_NO    = B.POS_NO
+	       AND A.TRAN_NO   = B.TRAN_NO
+        ]]>        
+    </query>
+	       
+	       	       
+	       
+     <query name="SEL_SALE_ORGSKU2_02">        
+        <![CDATA[
+	       AND B.REJCT_FLAG = '0'  
+	       AND A.TRAN_MODE  IN ('01','11','21','22','23','24','25','26','31')   
+	       AND B.PUMBUN_CD IN ( SELECT MYORG.PUMBUN_CD
+	                      FROM COM.V_MYORG MYORG
+	                     WHERE MYORG.USER_ID     = ?
+	                  )
+	     ORDER BY A.SALE_DT, A.POS_NO, A.TRAN_NO, B.SEQ_NO
+        ]]>        
+    </query>
+    
+    
+    <query name="WHERE_DEPT_CD">        
+        <![CDATA[
+        				AND C.DEPT_CD  = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_TEAM_CD">        
+        <![CDATA[
+        				AND C.TEAM_CD  = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_PC_CD">        
+        <![CDATA[
+        				AND C.PC_CD    = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_PUMBUN_CD">        
+        <![CDATA[
+        				AND B.PUMBUN_CD    = ?
+        ]]>
+	</query>
+    
+    <query name="WHERE_NAVER">        
+        <![CDATA[
+        				AND B.PUMBUN_CD IN
+    						(SELECT DISTINCT PUMBUN_CD FROM DPS.PC_PBNMST
+   							WHERE PUMBUN_NAME LIKE ('%(N%'))
+        ]]>
+	</query>
+    
+    
+</service>

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.02.21
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 가맹점(상품권관리) 
+ -->
+<service name="/ccom213.cc">	
+
+    <!-- POPUP HEADER -->
+    <gauce name="H_SEL_CODE">
+        <column colName="CHK"           colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CODE"          colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="NAME"          colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 상품권 협력사 통합 조회-->
+    <query name="SEL_EVT_VEN_ALL">
+        <![CDATA[
+        SELECT DISTINCT 
+              'F'          AS CHK
+             , B.VEN_CD      AS CODE
+             , B.VEN_NAME    AS NAME  
+          FROM DPS.PC_VENMST A
+             , DPS.PC_STRVENMST B
+               LEFT OUTER JOIN
+               MSS.MG_STRVENMST C
+            ON B.STR_CD = C.STR_CD
+           AND B.VEN_CD = C.VEN_CD
+         WHERE A.VEN_CD = B.VEN_CD
+           AND A.BIZ_FLAG IN('95' , '92')
+           AND (B.VEN_CD LIKE ? ||'%'
+            OR B.VEN_NAME LIKE '%'|| ? ||'%')
+        ]]>
+    </query> 
+    
+    <!-- 상품권 협력사 개별 조회 (제휴, 가맹 , 위탁 협력사) -->
+    <query name="SEL_EVT_VEN_01">
+        <![CDATA[
+        SELECT DISTINCT 
+               'F'          AS CHK
+             , CODE
+             , NAME  
+        FROM (SELECT B.VEN_CD      AS CODE
+                   , B.VEN_NAME    AS NAME 
+                   , C.GIFT_VEN_FLAG
+                FROM DPS.PC_VENMST A
+                   , DPS.PC_STRVENMST B
+                     LEFT OUTER JOIN
+                     MSS.MG_STRVENMST C
+                  ON B.STR_CD = C.STR_CD
+                 AND B.VEN_CD = C.VEN_CD
+               WHERE A.VEN_CD = B.VEN_CD
+                 AND A.BIZ_FLAG  = ?
+        ]]>
+    </query> 
+    
+        <query name="SEL_EVT_VEN_02">
+        <![CDATA[
+        SELECT DISTINCT 
+               'F'          AS CHK
+             , CODE
+             , NAME  
+        FROM (SELECT B.VEN_CD      AS CODE
+                   , B.VEN_NAME    AS NAME  
+                   , C.GIFT_VEN_FLAG
+                FROM DPS.PC_VENMST A
+                   , DPS.PC_STRVENMST B
+                     LEFT OUTER JOIN
+                     MSS.MG_STRVENMST C
+                  ON B.STR_CD = C.STR_CD
+                 AND B.VEN_CD = C.VEN_CD
+                 AND C.GIFT_VEN_FLAG IN ('2','3')
+               WHERE A.VEN_CD = B.VEN_CD
+        ]]>
+    </query> 
+    
+        <query name="SEL_EVT_VEN_A_01">
+        <![CDATA[
+        SELECT DISTINCT 
+               'F'          AS CHK
+             , CODE
+             , NAME  
+        FROM (SELECT B.VEN_CD      AS CODE
+                   , B.VEN_NAME    AS NAME  
+                   , C.GIFT_VEN_FLAG
+                FROM DPS.PC_VENMST A
+                   , DPS.PC_STRVENMST B
+                     LEFT OUTER JOIN
+                     MSS.MG_STRVENMST C
+                  ON B.STR_CD = C.STR_CD
+                 AND B.VEN_CD = C.VEN_CD
+                 AND C.GIFT_VEN_FLAG IN ('2','3')
+               WHERE A.VEN_CD = B.VEN_CD
+                 AND A.BIZ_FLAG IN (? , ?, ?)
+        ]]>
+    </query> 
+    
+     <!-- 상품권 협력사 개별 조회 (제휴, 가맹 , 위탁 협력사) : 상품권쪽에 등록된 협력사  -->
+    <query name="SEL_EVT_VEN_05">
+        <![CDATA[
+        SELECT DISTINCT 
+               'F'          AS CHK
+             , CODE
+             , NAME  
+        FROM (SELECT B.VEN_CD      AS CODE
+                   , B.VEN_NAME    AS NAME  
+                   , C.GIFT_VEN_FLAG
+                FROM DPS.PC_VENMST A
+                   , DPS.PC_STRVENMST B
+                   , MSS.MG_STRVENMST C
+               WHERE A.VEN_CD = B.VEN_CD
+                 AND B.STR_CD = C.STR_CD
+                 AND B.VEN_CD = C.VEN_CD
+                 AND C.GIFT_VEN_FLAG  = ?
+        ]]>
+    </query> 
+    
+    <query name="SEL_CONDI_VEN">
+        <![CDATA[
+               AND B.VEN_CD LIKE ? ||'%'
+               AND B.VEN_NAME LIKE '%'||?||'%'
+        ]]>
+    </query> 
+    <!-- POPUP SEARCH ADD -->
+    <query name="SEL_CONDI_STR">
+        <![CDATA[
+               AND B.STR_CD LIKE ? ||'%'
+        ]]>
+    </query> 
+    
+    <query name="SEL_CONDI_BUY_SALE_FLAG">
+        <![CDATA[
+               AND A.BUY_SALE_FLAG LIKE ? ||'%'
+        ]]>
+    </query> 
+    
+         <query name="SEL_ORDER_01">
+        <![CDATA[
+        )
+        ORDER BY CODE
+        ]]>
+    </query> 
+     <query name="SEL_ORDER_02">
+        <![CDATA[
+        )
+        WHERE GIFT_VEN_FLAG != ?
+        ORDER BY CODE
+        ]]>
+    </query> 
+    <query name="SEL_ORDER_03">
+        <![CDATA[
+        )
+        WHERE GIFT_VEN_FLAG != ? OR GIFT_VEN_FLAG IS NULL
+        ORDER BY CODE
+        ]]>
+    </query> 
+
+    <query name="SEL_ORDER_A_01">
+        <![CDATA[
+        )
+        --WHERE GIFT_VEN_FLAG IS NULL
+        ORDER BY CODE
+        ]]>
+    </query> 
+</service>
+

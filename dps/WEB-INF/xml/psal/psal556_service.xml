@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 강연식
+ * 회 사 명 : 
+ * 작 성 일 : 2015.06.22
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  OK캐쉬백포인트사용현황(마케팅)
+ -->
+<service name="/psal556.ps">
+    <!-- OK캐쉬백포인트사용현황 MASTER 헤더  -->
+    <gauce name="H_SEL_OK_SAL_MST">
+        <column colName="SALE_DT"     colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TOT_PLUS_AMT"     colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TOT_MINUS_AMT"     colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="AMT"     colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="OK_COUNT"     colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="OK_AMT"     colType="TB_DECIMAL" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/> 
+    </gauce>
+    
+    <!-- OK캐쉬백포인트사용현황 DETAIL 헤더  -->
+    <gauce name="H_SEL_OK_SAL_DTL">
+        <column colName="SALE_DT"     	colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="POS_NO"      	colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TRAN_NO"     	colType="TB_STRING"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SEQ_NO"     	colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_FLAG"   	colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="OKCASHBAG_CNT" colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_AMT"  	colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_AMT"     	colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="USE_PSBL_POINT"	colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="ACML_POINT"     	colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="BRCH_FEE"     	colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="OKCASHBAG_NO"  colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PWD_NO"  		colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="APPR_NO"  	colType="TB_STRING"  size="17"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="APPR_VANID"  	colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="OCC_POINT"  	colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="RSLT_CD"      	colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="APPR_DT"      	colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="ORGSALEDATE"   colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="ORGAPPRNO"     colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="ORGRECPNO"     colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- OK캐쉬백포인트사용현황 MASTER 조회쿼리  TOP-->
+    <query name="SEL_OK_SAL_MST_TOP">
+        <![CDATA[
+        SELECT SALE_DT, SUM(TOT_PLUS_AMT) AS TOT_PLUS_AMT, SUM(TOT_MINUS_AMT) AS TOT_MINUS_AMT, SUM(TOT_PLUS_AMT) + SUM(TOT_MINUS_AMT) AS AMT,SUM(OK_COUNT) AS OK_COUNT, SUM(OK_AMT) AS OK_AMT 
+    FROM
+    (
+    SELECT SALE_DT,
+        CASE WHEN TOT_AMT > 0 THEN SUM(TOT_AMT) END AS TOT_PLUS_AMT,
+        CASE WHEN TOT_AMT < 0 THEN SUM(TOT_AMT) END AS TOT_MINUS_AMT,
+        SUM(TOT_AMT) AS TOT_AMT,
+        COUNT(*) AS OK_COUNT,
+        SUM(OKAMT) AS OK_AMT
+        FROM
+    (         
+    SELECT A.SALE_DT AS SALE_DT
+            ,DECODE(A.TRAN_FLAG,'0',A.SALE_TOT_AMT,'1',-A.SALE_TOT_AMT) AS TOT_AMT
+            ,B.PAY_AMT AS OKAMT
+            FROM DPS.PS_TRHEADER A,
+            (SELECT SALE_DT,POS_NO,TRAN_NO,DECODE(ORGSALEDATE,NULL,PAY_AMT,-PAY_AMT) AS PAY_AMT FROM DPS.PS_OKCASHBAGUSE
+            WHERE SALE_DT BETWEEN ? AND ? ) B
+            WHERE A.SALE_DT = B.SALE_DT
+                AND A.POS_NO = B.POS_NO
+                AND A.TRAN_NO = B.TRAN_NO
+                AND A.TRAN_MODE = '01'
+        )
+        GROUP BY SALE_DT,TOT_AMT
+    )
+    GROUP BY SALE_DT
+    ORDER BY SALE_DT ASC 
+        ]]>
+    </query>
+    
+    <!-- OK캐쉬백포인트사용현황 MASTER 조회쿼리 MIDDLE-->
+    <query name="SEL_OK_SAL_MST_MIDDLE">
+        <![CDATA[
+                  UNION ALL
+                 SELECT OK.STR_CD
+                      , OK.SALE_DT
+                      , OK.POS_NO
+                      , OK.OKCASHBAG_NO
+                      , OK.SALE_AMT
+                      , 0              AS PAY_CNT
+                      , 0              AS PAY_AMT
+                      , 0              AS BRCH_FEE
+                      , 1              AS RTN_CNT
+                      , OK.PAY_AMT     AS RTN_AMT
+                      , OK.BRCH_FEE    AS RTN_BRCH_FEE
+                      , OK.RSLT_CD
+                   FROM DPS.PS_OKCASHBAGUSE OK
+                      , DPS.PS_TRHEADER  TR
+                  WHERE OK.STR_CD   = TR.STR_CD
+                    AND OK.SALE_DT  = TR.SALE_DT
+                    AND OK.POS_NO   = TR.POS_NO
+                    AND OK.TRAN_NO  = TR.TRAN_NO
+                    AND OK.STR_CD   LIKE ? || '%'
+                    AND OK.SALE_DT BETWEEN ? AND ?
+                    AND TR.TRAN_FLAG = '1'
+        ]]>
+    </query>
+    
+    <!-- OK캐쉬백포인트사용현황 MASTER 조회쿼리 BOTTOM-->
+    <query name="SEL_OK_SAL_MST_BOTTOM">
+        <![CDATA[
+               ) X
+         GROUP BY 
+               X.STR_CD
+             , X.SALE_DT
+         ORDER BY
+               X.STR_CD
+             , X.SALE_DT
+        ]]>
+    </query>
+    
+    <query name="SEL_OK_SAL_MST_WHERE_POS_NO">
+        <![CDATA[
+                    AND OK.POS_NO   LIKE ?||'%'
+        ]]>
+    </query>
+    
+    <query name="SEL_OK_SAL_DTL">
+        <![CDATA[
+        SELECT 
+              
+              OK.SALE_DT
+             , OK.POS_NO
+        	 , OK.TRAN_NO
+        	 , OK.SEQ_NO
+             , TC.COMM_NAME1  AS SALE_FLAG
+             , 1 OKCASHBAG_CNT
+             , DECODE(TC.COMM_CODE,'0',OK.SALE_AMT,OK.SALE_AMT*-1) SALE_AMT
+             , DECODE(TC.COMM_CODE,'0',OK.PAY_AMT,OK.PAY_AMT*-1) PAY_AMT
+             , DECODE(TC.COMM_CODE,'0',OK.USE_PSBL_POINT,OK.USE_PSBL_POINT*-1) USE_PSBL_POINT
+			 , DECODE(TC.COMM_CODE,'0',OK.ACML_POINT,OK.ACML_POINT*-1) ACML_POINT
+             , DECODE(TC.COMM_CODE,'0',OK.BRCH_FEE,OK.BRCH_FEE*-1) BRCH_FEE
+             , OK.OKCASHBAG_NO
+             , OK.PWD_NO
+			 , OK.APPR_NO
+			 , OK.APPR_VANID
+			 , OK.OCC_POINT
+             , OK.RSLT_CD
+             , OK.APPR_DT
+			 , OK.ORGSALEDATE
+			 , OK.ORGAPPRNO
+			 , OK.ORGRECPNO
+          FROM DPS.PS_OKCASHBAGUSE OK
+             , DPS.PS_TRHEADER  TR
+             , COM.TC_COMMCODE  TC
+         WHERE OK.STR_CD      = TR.STR_CD
+           AND OK.SALE_DT     = TR.SALE_DT
+           AND OK.POS_NO      = TR.POS_NO
+           AND OK.TRAN_NO     = TR.TRAN_NO
+           AND TC.COMM_PART    = 'P610'
+           AND TR.TRAN_FLAG    = TC.COMM_CODE
+           AND OK.STR_CD      = ?
+           AND OK.SALE_DT     = ?
+         ORDER BY OK.POS_NO
+         		, OK.SALE_DT
+        	 	, OK.TRAN_NO
+        ]]>
+    </query>
+    
+</service>

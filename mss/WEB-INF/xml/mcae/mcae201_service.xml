@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae201.mc">
+<!-- 사은행사 MASTER 조회 -->
+    <gauce name="H_MASTER">
+        <column colName="STR_CD"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"          colType="TB_STRING"     size="11"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_S_DT"        colType="TB_STRING"     size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_E_DT"        colType="TB_STRING"     size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_MNG_FLAG"    colType="TB_STRING"     size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CHAR_ID"     colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_THME_CD"     colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_L_CD"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_M_CD"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_S_CD"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <gauce name="H_DETAIL">
+        <column colName="SEQ_NO"    colType="TB_DECIMAL"    size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RANK"      colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PRMM_NAME" colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="WIN_CNT"   colType="TB_DECIMAL"    size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+     
+    <query name="SEL_MASTER">
+        <![CDATA[   
+                SELECT STR.STR_CD
+			         , MST.EVENT_CD
+			         , MST.EVENT_NAME
+			         , MST.EVENT_S_DT
+			         , MST.EVENT_E_DT
+			         , MST.EVENT_MNG_FLAG
+			         , MST.EVENT_CHAR_ID 
+			         , MST.EVENT_THME_CD
+			         , (SELECT EVENT_THME_NAME
+			              FROM DPS.PC_EVTTHMEMST
+			             WHERE EVENT_THME_LEVEL = '1' 
+			               AND EVENT_L_CD = THM.EVENT_L_CD) AS EVENT_L_CD
+			         , (SELECT EVENT_THME_NAME
+			              FROM DPS.PC_EVTTHMEMST
+			             WHERE EVENT_THME_LEVEL = '2' 
+			               AND EVENT_L_CD = THM.EVENT_L_CD
+			               AND EVENT_M_CD = THM.EVENT_M_CD) AS EVENT_M_CD
+			         , (SELECT EVENT_THME_NAME
+			              FROM DPS.PC_EVTTHMEMST
+			             WHERE EVENT_THME_LEVEL = '3' 
+			               AND EVENT_L_CD = THM.EVENT_L_CD
+			               AND EVENT_M_CD = THM.EVENT_M_CD
+			               AND EVENT_S_CD = THM.EVENT_S_CD) AS EVENT_S_CD
+			      FROM DPS.PC_EVTMST MST, DPS.PC_STREVT STR, DPS.PC_EVTTHMEMST THM
+			     WHERE MST.EVENT_CD = STR.EVENT_CD
+			       AND MST.EVENT_THME_CD = THM.EVENT_THME_CD
+			       AND STR.STR_CD = ?
+			       AND MST.EVENT_TYPE = '5'
+			       AND ((? >= MST.EVENT_S_DT AND ? <= MST.EVENT_E_DT) OR
+			                    (? >= MST.EVENT_S_DT AND ? <= MST.EVENT_E_DT) OR
+			                    (MST.EVENT_S_DT >= ? AND MST.EVENT_S_DT <= ?) OR
+			                    (MST.EVENT_E_DT >= ? AND MST.EVENT_E_DT <= ?))
+			       AND MST.EVENT_CD LIKE ? || '%'
+			  ORDER BY STR.STR_CD
+                     , MST.EVENT_CD
+                     , MST.EVENT_NAME
+        ]]>        
+    </query>
+    
+    <query name="SEL_DETAIL">
+        <![CDATA[   
+                SELECT SEQ_NO
+			         , RANK
+			         , PRMM_NAME
+			         , WIN_CNT
+			      FROM MSS.MC_PRMMINFO
+			     WHERE STR_CD = ?
+			       AND EVENT_CD = ?
+        ]]>        
+    </query>
+    
+     <!-- Detail SAVE -->
+    <query name="INS_PRMMINFO">
+        <![CDATA[
+            INSERT INTO  MSS.MC_PRMMINFO ( 
+                                      STR_CD 
+                                    , EVENT_CD
+                                    , SEQ_NO
+                                    , RANK
+                                    , PRMM_NAME
+                                    , WIN_CNT 
+                                    , REG_DATE
+                                    , REG_ID
+                                    , MOD_DATE
+                                    , MOD_ID
+                                       )
+                   VALUES  ( 
+                               ?
+                             , ?
+                             ,  (SELECT NVL(MAX(SEQ_NO), 0) + 1 SEQ_NO
+                                     FROM MSS.MC_PRMMINFO
+                                    WHERE STR_CD   = ?
+                                      AND EVENT_CD = ? )
+                             , ?
+                             , ? 
+                             , ? 
+                             , SYSDATE
+                             , ?
+                             , SYSDATE 
+                             , ?
+                           ) 
+        ]]>
+    </query> 
+    
+    <!-- UPDATE -->
+    <query name="UPD_PRMMINFO">
+        <![CDATA[        
+            UPDATE MSS.MC_PRMMINFO
+               SET RANK         = ?
+                 , PRMM_NAME    = ?
+                 , WIN_CNT      = ?
+                 , MOD_ID       = ?
+                 , MOD_DATE     = SYSDATE
+             WHERE STR_CD       = ?
+               AND EVENT_CD     = ? 
+               AND SEQ_NO       = ?
+        ]]> 
+    </query>
+    
+     <!-- DELETE -->
+    <query name="DEL_PRMMINFO">
+        <![CDATA[            
+             DELETE FROM MSS.MC_PRMMINFO
+              WHERE STR_CD       = ?
+                AND EVENT_CD     = ? 
+                AND SEQ_NO       = ?
+        ]]>
+    </query> 
+    
+</service>

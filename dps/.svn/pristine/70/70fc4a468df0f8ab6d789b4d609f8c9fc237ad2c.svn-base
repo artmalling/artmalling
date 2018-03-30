@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.06.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  저장품입고확정
+ -->
+<service name="/pstk402.pt">
+
+    <gauce name="H_SEL_MASTER">        
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"            colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_SEQ_NO"        colType="TB_STRING"   size="5"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_FLAG"          colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"             colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_STATUS"        colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_DT"            colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_TOT_QTY"         colType="TB_INT"      size="7"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_TOT_AMT"         colType="TB_DECIMAL"  size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce> 
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"            colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_SEQ_NO"        colType="TB_STRING"   size="5"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"             colType="TB_INT"      size="5"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"          colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"        colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"          colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"            colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"            colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"              colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"             colType="TB_STRING"   size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT_CD"            colType="TB_STRING"   size="3"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_QTY"             colType="TB_INT"      size="7"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_PRC"             colType="TB_INT"      size="9"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_AMT"             colType="TB_DECIMAL"  size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+  
+    <query name="SEL_INSTOREHD">
+        <![CDATA[
+            SELECT ISH.STR_CD
+                 , ISH.SLIP_NO
+                 , ISH.SLIP_SEQ_NO
+                 , ISH.SLIP_FLAG
+                 , ISH.VEN_CD
+                 , SVM.VEN_NAME
+                 , ISH.SLIP_STATUS
+                 , ISH.CONF_DT
+                 , ISH.IN_TOT_QTY
+                 , ISH.IN_TOT_AMT
+              FROM DPS.PT_INSTOREHD ISH
+                 , DPS.PC_STRVENMST SVM
+             WHERE ISH.STR_CD      = SVM.STR_CD
+               AND ISH.VEN_CD      = SVM.VEN_CD
+               AND ISH.STR_CD      = ?
+               AND ISH.SLIP_NO     BETWEEN ? AND ?
+        ]]>
+    </query>
+    <query name="SEL_INSTOREHD_WHERE_VEN_CD">
+        <![CDATA[
+               AND ISH.VEN_CD      = ?        
+        ]]>
+    </query>
+    <query name="SEL_INSTOREHD_WHERE_SLIP_STATUS">
+        <![CDATA[
+               AND ISH.SLIP_STATUS = ?        
+        ]]>
+    </query>
+    <query name="SEL_INSTOREHD_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND ISH.VEN_CD      = (SELECT VEN_CD FROM DPS.PC_STRPBN WHERE STR_CD = ISH.STR_CD AND PUMBUN_CD = ? )
+        ]]>
+    </query>
+    <query name="SEL_INSTOREHD_ORDER">
+        <![CDATA[
+             ORDER BY ISH.SLIP_NO, ISH.SLIP_SEQ_NO
+        ]]>
+    </query>
+    <query name="SEL_INSTOREDT">
+        <![CDATA[
+            SELECT STR_CD
+                 , SLIP_NO
+                 , SLIP_SEQ_NO
+                 , SEQ_NO
+                 , PUMBUN_CD
+                 , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NAME
+                 , PUMMOK_CD
+                 , DEPT_CD
+                 , TEAM_CD
+                 , PC_CD   
+                 , SKU_CD
+                 , DPS.FN_GET_SKU_NAME(SKU_CD) AS SKU_NAME
+                 , UNIT_CD
+                 , IN_QTY
+                 , IN_PRC
+                 , IN_AMT
+              FROM DPS.PT_INSTOREDT
+             WHERE SLIP_NO     = ?
+               AND STR_CD      = ?
+               AND SLIP_SEQ_NO = ?
+        ]]>
+    </query>
+    <query name="SEL_INSTOREDT_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND PUMBUN_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_INSTOREDT_ORDER">
+        <![CDATA[
+             ORDER BY SEQ_NO
+        ]]>
+    </query>
+    <query name="SEL_INSTOREHD_CONF_FLAG">
+        <![CDATA[
+            SELECT SLIP_STATUS AS CONF_FLAG
+              FROM DPS.PT_INSTOREHD
+             WHERE SLIP_NO     = ?
+               AND STR_CD      = ?
+               AND SLIP_SEQ_NO = ?
+        ]]>
+    </query>
+    <query name="SEL_INSTORE_CONF_CNT">
+        <![CDATA[
+            SELECT COUNT(*)  AS CNT
+              FROM (SELECT ISD.STR_CD
+                         , ISD.SLIP_NO AS YYYYMMDD
+                         , ISD.SKU_CD
+                         , ISD.DEPT_CD
+                         , ISD.TEAM_CD
+                         , ISD.PC_CD
+                         , ISH.VEN_CD
+                         , ISD.IN_QTY
+                         , ISD.IN_AMT
+                         , ISH.SLIP_FLAG
+                         , ?          AS USER_ID
+                      FROM DPS.PT_INSTOREHD ISH
+                         , DPS.PT_INSTOREDT ISD
+                     WHERE ISH.SLIP_NO     = ISD.SLIP_NO
+                       AND ISH.STR_CD      = ISD.STR_CD
+                       AND ISH.SLIP_SEQ_NO = ISD.SLIP_SEQ_NO
+                       AND ISD.SLIP_NO     = ?
+                       AND ISD.STR_CD      = ?
+                       AND ISD.SLIP_SEQ_NO = ?
+                   )
+        ]]>
+    </query>
+    <query name="MERGE_STOREGOOD">
+        <![CDATA[
+            MERGE INTO DPS.PT_STOREGOOD SG
+            USING (SELECT ISD.STR_CD
+                        , ISD.SLIP_NO AS YYYYMMDD
+                        , ISD.SKU_CD
+                        , ISD.DEPT_CD
+                        , ISD.TEAM_CD
+                        , ISD.PC_CD
+                        , ISH.VEN_CD
+                        , ISD.IN_QTY
+                        , ISD.IN_AMT
+                        , ISH.SLIP_FLAG
+                        , ?          AS USER_ID
+                     FROM DPS.PT_INSTOREHD ISH
+                        , DPS.PT_INSTOREDT ISD
+                    WHERE ISH.SLIP_NO     = ISD.SLIP_NO
+                      AND ISH.STR_CD      = ISD.STR_CD
+                      AND ISH.SLIP_SEQ_NO = ISD.SLIP_SEQ_NO
+                      AND ISD.SLIP_NO     = ?
+                      AND ISD.STR_CD      = ?
+                      AND ISD.SLIP_SEQ_NO = ?
+                  ) TISG
+               ON(SG.STR_CD    = TISG.STR_CD
+                  AND SG.YYYYMMDD = TISG.YYYYMMDD
+                  AND SG.SKU_CD   = TISG.SKU_CD
+                 )
+             WHEN MATCHED THEN
+                  UPDATE SET SG.IN_QTY     = NVL(SG.IN_QTY,0)     + DECODE(TISG.SLIP_FLAG,'0',TISG.IN_QTY,0)
+                           , SG.IN_AMT     = NVL(SG.IN_AMT,0)     + DECODE(TISG.SLIP_FLAG,'0',TISG.IN_AMT,0)
+                           , SG.IN_RFD_QTY = NVL(SG.IN_RFD_QTY,0) + DECODE(TISG.SLIP_FLAG,'1',TISG.IN_QTY,0)
+                           , SG.IN_RFD_AMT = NVL(SG.IN_RFD_AMT,0) + DECODE(TISG.SLIP_FLAG,'1',TISG.IN_AMT,0)
+                           , MOD_DATE      = SYSDATE
+                           , MOD_ID        = TISG.USER_ID
+             WHEN NOT MATCHED THEN
+                  INSERT(STR_CD
+                       , YYYYMMDD
+                       , SKU_CD
+                       , DEPT_CD
+                       , TEAM_CD
+                       , PC_CD
+                       , VEN_CD
+                       , IN_QTY
+                       , IN_AMT
+                       , IN_RFD_QTY
+                       , IN_RFD_AMT
+                       , REG_DATE
+                       , REG_ID
+                       , MOD_DATE
+                       , MOD_ID 
+                        ) 
+                  VALUES(TISG.STR_CD
+                       , TISG.YYYYMMDD
+                       , TISG.SKU_CD
+                       , TISG.DEPT_CD
+                       , TISG.TEAM_CD
+                       , TISG.PC_CD
+                       , TISG.VEN_CD
+                       , DECODE(TISG.SLIP_FLAG,'0',TISG.IN_QTY,0)
+                       , DECODE(TISG.SLIP_FLAG,'0',TISG.IN_AMT,0)
+                       , DECODE(TISG.SLIP_FLAG,'1',TISG.IN_QTY,0)
+                       , DECODE(TISG.SLIP_FLAG,'1',TISG.IN_AMT,0)
+                       , SYSDATE
+                       , TISG.USER_ID
+                       , SYSDATE
+                       , TISG.USER_ID
+                        )
+        ]]>
+    </query>
+    <query name="UPD_INSTOREHD">
+        <![CDATA[
+            UPDATE DPS.PT_INSTOREHD
+               SET SLIP_STATUS  = ?
+                 , CONF_DT      = ?
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE SLIP_NO      = ?
+               AND STR_CD       = ?
+               AND SLIP_SEQ_NO  = ?
+        ]]>
+    </query>
+</service>

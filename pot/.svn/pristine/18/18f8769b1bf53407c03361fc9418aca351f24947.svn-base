@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : 
+ * 작 성 일 : 2010.06.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  EOD 로그현황
+ -->
+<service name="/tcom305.tc"> 
+    <gauce name="H_SEL_EODLOG">   
+        <column colName="BLD_DT"        colType="TB_STRING"  size="8"     dec="0" keyType="TB_NORMAL" Mode="" />       
+        <column colName="BLD_TIME"      colType="TB_STRING"  size="10"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="STR_CD"        colType="TB_STRING"  size="2"     dec="0" keyType="TB_NORMAL" Mode="" />  
+        <column colName="STR_NAME"      colType="TB_STRING"  size="40"    dec="0" keyType="TB_NORMAL" Mode="" />  
+        <column colName="PROC_ID"       colType="TB_STRING"  size="40"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="PROCESS_DESC"  colType="TB_STRING"  size="50"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="LOG_CD"        colType="TB_STRING"  size="3"     dec="0" keyType="TB_NORMAL" Mode="" />          
+        <column colName="TRG_CNT"       colType="TB_DECIMAL" size="9"     dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="SKIP_CNT"      colType="TB_DECIMAL" size="9"     dec="0" keyType="TB_NORMAL" Mode="" />   
+        <column colName="EXE_CNT"       colType="TB_DECIMAL" size="9"     dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="ERR_CNT"       colType="TB_DECIMAL" size="9"     dec="0" keyType="TB_NORMAL" Mode="" />   
+        <column colName="CMPL_CNT"      colType="TB_DECIMAL" size="9"     dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="LOG_MSG"       colType="TB_STRING"  size="200"   dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="ERR_CD"        colType="TB_STRING"  size="10"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="ERR_MSG"       colType="TB_STRING"  size="200"   dec="0" keyType="TB_NORMAL" Mode="" />  
+    </gauce> 
+        <!-- 사용자리스트 조회 -->
+    <query name="SEL_EODLOG_LIST">        
+        <![CDATA[
+  SELECT A.BLD_DT
+       , A.BLD_TIME
+       , A.STR_CD
+       , NVL(C.STR_NAME, '전체') AS STR_NAME
+       , A.PROC_ID     -- 프로세스ID
+       , B.PROCESS_DESC
+       , A.LOG_CD      -- START, END
+       , A.TRG_CNT     -- 대상건수
+       , A.SKIP_CNT    -- SKIP건수
+       , A.EXE_CNT     -- 실행건수
+       , A.ERR_CNT     -- 에러건수
+       , A.CMPL_CNT    -- 완료건수
+       , A.LOG_MSG     -- 로그메세지
+       , A.ERR_CD      -- 에러코드
+       , A.ERR_MSG     -- 에러메세지
+   FROM  DPS.PC_EODLOG A
+       , DPS.PC_RISEOD B
+       , DPS.PC_STRMST C
+   WHERE A.BLD_DT  = ?
+     AND A.PROC_ID = B.PROCESS_ID (+)
+     AND A.STR_CD  = C.STR_CD (+)
+   ORDER BY
+         A.BLD_TIME
+       , A.PROC_ID
+        ]]>        
+    </query>    
+</service>

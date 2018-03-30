@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  품목코드를 관리한다.
+ -->
+<service name="/pcod401.pc">
+
+  <gauce name="H_SEL_MASTER">
+        <column colName="PUMMOK_CD"     colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"   colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="V_PUMMOK_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_NAME"     colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_SRT_CD" colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_LEVEL"  colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="L_CD"          colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="L_NM"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="M_CD"          colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="M_NM"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="S_CD"          colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="S_NM"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="D_CD"          colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="D_NM"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_PUMMOK_CD"   colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FCL_FLAG"      colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FRESH_YN"      colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAG_FLAG"      colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT_CD"       colType="TB_STRING" size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <gauce name="H_SEL_STRPMKPRFRT">
+        <column colName="PUMMOK_CD"      colType="TB_STRING"  size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"  size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOAL_PROF_RATE" colType="TB_DECIMAL" size="5" dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"       colType="TB_STRING"  size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"       colType="TB_STRING"  size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OLD_APP_S_DT"   colType="TB_STRING"  size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 품목 마스터 트리 조회 -->
+    <query name="SEL_TREE_PMKMST">
+        <![CDATA[
+            SELECT DISTINCT 
+                   PMK.PUMMOK_CD
+                 , PMK.PUMMOK_NAME
+                 , DECODE( PMK.PUMMOK_LEVEL,1,'('||PMK.L_CD||') ',2,'('||PMK.M_CD||') ',3,'('||PMK.S_CD||') ',4,'('||PMK.D_CD||') ')||PMK.PUMMOK_NAME AS V_PUMMOK_NAME
+                 , PMK.RECP_NAME
+                 , PMK.PUMMOK_SRT_CD
+                 , PMK.PUMMOK_LEVEL
+                 , CASE PMK.L_CD WHEN '00' THEN '' ELSE PMK.L_CD END          AS L_CD     
+                 , LCDNM.PUMMOK_NAME                                          AS L_NM
+                 , CASE PMK.M_CD WHEN '00' THEN '' ELSE PMK.M_CD END          AS M_CD     
+                 , MCDNM.PUMMOK_NAME                                          AS M_NM
+                 , CASE PMK.S_CD WHEN '00' THEN '' ELSE PMK.S_CD END          AS S_CD     
+                 , SCDNM.PUMMOK_NAME                                          AS S_NM
+                 , CASE PMK.D_CD WHEN '00' THEN '' ELSE PMK.D_CD END          AS D_CD     
+                 , CASE PMK.D_CD WHEN '00' THEN '' ELSE PMK.PUMMOK_NAME END   AS D_NM
+                 , PMK.P_PUMMOK_CD
+                 , PMK.FCL_FLAG 
+                 , PMK.FRESH_YN   
+                 , PMK.TAG_FLAG 
+                 , PMK.UNIT_CD
+              FROM(
+                   SELECT '0'   AS PUMMOK_CD, '전체' AS PUMMOK_NAME, null AS RECP_NAME, null AS PUMMOK_SRT_CD, '0' as PUMMOK_LEVEL
+                        , '00'  AS L_CD     , '00'   AS M_CD       , '00' AS S_CD     , '00' AS D_CD         , null AS P_PUMMOK_CD
+                        , null  AS FCL_FLAG , null   AS FRESH_YN   , null AS TAG_FLAG , null AS UNIT_CD      
+                     FROM DUAL
+        ]]>
+    </query>
+    <query  name="SEL_TREE_PMKMST_UP_S">
+        <![CDATA[
+                    UNION ALL
+                   SELECT PUMMOK_CD, PUMMOK_NAME, RECP_NAME, PUMMOK_SRT_CD, PUMMOK_LEVEL
+                        , L_CD     , M_CD       , S_CD     , D_CD         , P_PUMMOK_CD
+                        , FCL_FLAG , FRESH_YN   , TAG_FLAG , UNIT_CD      
+                     FROM DPS.PC_PMKMST
+                    START WITH 1 = 1
+        ]]>
+    </query>
+    <query  name="SEL_TREE_PMKMST_UP_E">
+        <![CDATA[
+                  CONNECT BY PRIOR P_PUMMOK_CD = PUMMOK_CD
+        ]]>
+    </query>
+    <query  name="SEL_TREE_PMKMST_DOWN_S">
+        <![CDATA[
+                    UNION ALL
+                   SELECT PUMMOK_CD, PUMMOK_NAME, RECP_NAME, PUMMOK_SRT_CD, PUMMOK_LEVEL
+                        , L_CD     , M_CD       , S_CD     , D_CD         , P_PUMMOK_CD
+                        , FCL_FLAG , FRESH_YN   , TAG_FLAG , UNIT_CD      
+                     FROM DPS.PC_PMKMST
+                    START WITH 1 = 1
+        ]]>
+    </query>
+    <query  name="SEL_TREE_PMKMST_DOWN_E">
+        <![CDATA[
+                  CONNECT BY PRIOR PUMMOK_CD = P_PUMMOK_CD
+        ]]>
+    </query>
+    <query name="SEL_TREE_PMKMST_WHERE_L_CD">
+                      AND L_CD = ?
+    </query>
+    <query name="SEL_TREE_PMKMST_WHERE_M_CD">
+                      AND M_CD = ?
+    </query> 
+    <query name="SEL_TREE_PMKMST_WHERE_S_CD">
+                      AND S_CD = ?
+    </query>
+    <query name="SEL_TREE_PMKMST_ORDER">
+                  ) PMK
+                , DPS.PC_PMKMST LCDNM
+                , DPS.PC_PMKMST MCDNM
+                , DPS.PC_PMKMST SCDNM
+            WHERE PMK.L_CD = LCDNM.L_CD(+)
+              AND PMK.L_CD = MCDNM.L_CD(+)
+              AND PMK.L_CD = SCDNM.L_CD(+)
+              AND PMK.M_CD = MCDNM.M_CD(+)
+              AND PMK.M_CD = SCDNM.M_CD(+)
+              AND PMK.S_CD = SCDNM.S_CD(+)
+              AND LCDNM.PUMMOK_LEVEL(+) = '1'
+              AND MCDNM.PUMMOK_LEVEL(+) = '2'
+              AND SCDNM.PUMMOK_LEVEL(+) = '3'
+            ORDER BY PUMMOK_CD
+    </query>
+    <query name="SEL_STRPMKPRFRT">
+        <![CDATA[
+            SELECT PUMMOK_CD
+                 , STR_CD
+                 , GOAL_PROF_RATE
+                 , APP_S_DT
+                 , APP_E_DT
+                 , APP_S_DT  AS OLD_APP_S_DT
+              FROM DPS.PC_STRPMKPRFRT 
+             WHERE PUMMOK_CD  = ?
+             ORDER BY STR_CD, APP_S_DT
+        ]]>
+    </query>
+    
+    <!-- 품목코드 중복조회  -->
+    <query name="SEL_PMKMST_PUMMOK_CD_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_PMKMST 
+             WHERE PUMMOK_CD =  ?
+        ]]>        
+    </query>
+    
+    <!-- 점별목표이익율  종료일자  조회  -->
+    <query name="SEL_STRPMKPRFRT_APP_E_DT">
+        <![CDATA[
+            SELECT NVL( TO_CHAR( TO_DATE( MIN( APP_S_DT ) , 'YYYYMMDD') -1, 'YYYYMMDD' ), '99991231') AS APP_E_DT
+              FROM DPS.PC_STRPMKPRFRT 
+             WHERE PUMMOK_CD =  ?
+               AND STR_CD    =  ?
+               AND APP_S_DT  >  ?
+               AND APP_S_DT  <> ?
+        ]]>        
+    </query>
+    
+    <!-- 품목  마스터 신규 입력  -->
+    <query name="INS_PMKMST">
+        <![CDATA[
+            INSERT INTO DPS.PC_PMKMST(PUMMOK_CD    
+                                    , PUMMOK_NAME      
+                                    , RECP_NAME    
+                                    , PUMMOK_SRT_CD
+                                    , PUMMOK_LEVEL 
+                                    , L_CD         
+                                    , M_CD         
+                                    , S_CD         
+                                    , D_CD         
+                                    , P_PUMMOK_CD  
+                                    , FCL_FLAG     
+                                    , FRESH_YN     
+                                    , TAG_FLAG     
+                                    , UNIT_CD     
+                                    , USE_YN       
+                                    , REG_DATE     
+                                    , REG_ID       
+                                    , MOD_DATE     
+                                    , MOD_ID       
+                                     )
+                               VALUES(?
+                                    , ?   
+                                    , ?     
+                                    , ? 
+                                    , ?  
+                                    , ?          
+                                    , ?          
+                                    , ?          
+                                    , ?          
+                                    , ?   
+                                    , ?      
+                                    , ?      
+                                    , ?      
+                                    , ?       
+                                    , ?       
+                                    , SYSDATE      
+                                    , ?        
+                                    , SYSDATE      
+                                    , ?        
+                                     ) 
+        ]]>        
+    </query>
+    
+    <!-- 품목  마스터 수정 입력  -->
+    <query name="UPD_PMKMST">
+        <![CDATA[
+            UPDATE DPS.PC_PMKMST
+               SET PUMMOK_NAME = ?
+                 , RECP_NAME   = ?
+                 , TAG_FLAG    = ?
+                 , UNIT_CD     = ?
+                 , FCL_FLAG    = ?    
+                 , MOD_DATE    = SYSDATE 
+                 , MOD_ID      = ?
+             WHERE PUMMOK_CD   = ?
+        ]]>        
+    </query>   
+    
+    <!-- 점별목표이익율 신규 입력  -->
+    <query name="INS_STRPMKPRFRT">
+        <![CDATA[
+            INSERT INTO DPS.PC_STRPMKPRFRT(PUMMOK_CD
+                                         , STR_CD
+                                         , APP_S_DT
+                                         , APP_E_DT
+                                         , GOAL_PROF_RATE
+                                         , REG_DATE
+                                         , REG_ID
+                                         , MOD_DATE
+                                         , MOD_ID
+                                          )
+                                    VALUES(?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                          )
+        ]]>        
+    </query>
+    
+    <!-- 점별목표이익율 수정 입력  -->
+    <query name="UPD_STRPMKPRFRT">
+        <![CDATA[
+            UPDATE DPS.PC_STRPMKPRFRT
+               SET APP_S_DT       = ?
+                 , APP_E_DT       = ?
+                 , GOAL_PROF_RATE = ?
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE PUMMOK_CD      = ?
+               AND STR_CD         = ?
+               AND APP_S_DT       = ?
+        ]]>        
+    </query>
+    
+    <!-- 점별목표이익율 종료일자 수정 입력  -->
+    <query name="UPD_STRPMKPRFRT_APP_E_DT">
+        <![CDATA[
+            UPDATE DPS.PC_STRPMKPRFRT BF
+               SET BF.APP_E_DT = TO_CHAR(TO_DATE(?,'YYYYMMDD')-1,'YYYYMMDD')
+             WHERE BF.PUMMOK_CD =  ?
+               AND BF.STR_CD    =  ?
+               AND BF.APP_S_DT  = (SELECT MAX(APP_S_DT)
+                                     FROM DPS.PC_STRPMKPRFRT AF
+                                    WHERE BF.PUMMOK_CD = AF.PUMMOK_CD
+                                      AND BF.STR_CD    = AF.STR_CD
+                                      AND AF.APP_S_DT  < ?
+                                  )
+        ]]>        
+    </query>
+</service>

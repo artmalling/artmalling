@@ -1,0 +1,766 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.09.19
+ * 변 경 일 :
+ * 변경내용 :
+ * 개    요 : SAP I/F
+ -->
+<service name="/mgif618.mg">
+
+ <!-- SAP I/F 콤보  -->
+    <gauce name="H_SAP_IF">
+        <column colName="CODE"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   <!-- I/F 요청일(생성일) -->
+        <column colName="NAME"          colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   <!-- 회사코드 -->
+        <column colName="SORT"          colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   <!-- 시스템코드 -->
+        <column colName="REFER_CODE"    colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   <!-- 전기일(매출발생일/강사료지급일) -->
+        <column colName="REFER_VALUE"   colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   <!-- 전표No -->
+        <column colName="CAL_GB"        colType="TB_STRING" size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   <!-- 순번(추가) -->
+    </gauce>
+    <!-- //SAP I/F 콤보 -->
+    
+    <!-- SAP I/F 콤보 조회 쿼리 -->
+    <query name="SEL_SAP_IF">
+        <![CDATA[
+        SELECT A.CODE
+             , A.NAME
+             , A.SORT
+             , A.REFER_CODE
+             , A.REFER_VALUE
+             , B.REFER_VALUE AS CAL_GB
+         FROM 
+	           (SELECT COMM_CODE    AS CODE
+	                 , COMM_NAME1   AS NAME
+	                 , INQR_ORDER   AS SORT
+	                 , REFER_CODE
+	                 , REFER_VALUE
+	              FROM COM.TC_COMMCODE
+	             WHERE SYS_PART  = 'D'
+	               AND COMM_PART = 'P701'
+	               AND USE_YN    = 'Y'
+	               AND REFER_VALUE = '6'
+	          ORDER BY SORT, CODE ) A
+	          , (SELECT COMM_CODE    AS CODE
+	                 , COMM_NAME1   AS NAME
+	                 , INQR_ORDER   AS SORT
+	                 , REFER_CODE
+	                 , REFER_VALUE
+	              FROM COM.TC_COMMCODE
+	             WHERE SYS_PART  = 'D'
+	               AND COMM_PART = 'P702'
+	               AND USE_YN    = 'Y'
+	          ORDER BY SORT, CODE) B
+          WHERE A.CODE = B.CODE
+         ]]>
+    </query>
+    <!-- //SAP I/F 콤보 조회 쿼리 --> 
+    
+    <!-- SAP I/F 그리드 -->
+    <gauce name="H_SEL_MASTER">
+        <column colName="BUDAT"    colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      <!-- 전기일                   -->
+        <column colName="LELNR"    colType="TB_STRING"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      <!-- 전표번호                  -->
+        <column colName="BUZEI"   colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       <!-- 차수                    -->
+        <column colName="NEWKO"    colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      <!-- 계정코드                  -->
+        <column colName="NEWKONM"    colType="TB_STRING"  size="400"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      <!-- 계정코드                  -->
+        <column colName="SGTXT"    colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      <!-- 적요                    -->
+        <column colName="C_WRBTR"    colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    <!-- 차변금액                  -->
+        <column colName="C_WMWST"    colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   <!-- 차변세액                  --> 
+        <column colName="C_FWBAS"    colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   <!-- 차변과세표준금액              --> 
+        <column colName="D_WRBTR"    colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   <!-- 대변금액                  --> 
+        <column colName="D_WMWST"    colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  <!-- 대변세액                  --> 
+        <column colName="D_FWBAS"    colType="TB_DECIMAL"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  <!-- 대변과세표준금액              --> 
+        <column colName="BSCHL"   colType="TB_STRING"  size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       <!-- 전기키                   -->
+        <column colName="HKONT"   colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       <!-- 조정계정                  -->
+        <column colName="HKONTNM"   colType="TB_STRING"  size="400"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       <!-- 조정계정명                  -->
+        <column colName="UMSKZ"   colType="TB_STRING"  size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       <!-- 특별 GL                 -->
+        <column colName="MWSKZ" colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />          <!-- 세금코드                  -->
+        <column colName="GJAHR" colType="TB_STRING"  size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- 회계연도                  -->
+        <column colName="BUPLA" colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- 사업장                   -->
+        <column colName="GSBER" colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />          <!-- 사업영역                  -->
+        <column colName="KOSTL" colType="TB_STRING" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- 코스트센터                 -->
+        <column colName="ZTERM" colType="TB_STRING" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- 지급조건                  -->
+        <column colName="ZFBDT" colType="TB_STRING" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- 지급기산일                 -->
+        <column colName="BLART" colType="TB_STRING"  size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- 전표유형                  -->
+        <column colName="ZLSPR" colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- 지급보류                  -->
+        <column colName="ZUONR" colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- 지정                    -->
+        <column colName="BKTXT" colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- HEADER적요              -->
+        <column colName="FDTAG" colType="TB_STRING"  size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- 만기일                   -->
+        <column colName="STR_CD" colType="TB_STRING"  size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- 점코드                   -->
+        <column colName="TRANTP" colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         <!-- SAP구분                 -->
+        <column colName="TRANYN" colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        <!-- SAP 전송유무              -->
+        <column colName="TRANDT" colType="TB_STRING"  size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        <!-- 생성일                   -->
+        <column colName="DEBCRE_FLAG" colType="TB_STRING"  size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    <!-- 차,대변 구분               -->
+        <column colName="BELNR" colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    <!-- 회계전표번호               --> 
+        <column colName="XSTAT" colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    <!-- 전표상태정보            -->  
+    </gauce>
+    <!-- //SAP I/F 그리드 -->
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- SAP I/F 조회 쿼리 : 일자별 검색 -->
+    <query name="SEL_MASTER_DT">
+        <![CDATA[
+		SELECT  A.BUDAT,          -- 전기일
+                A.LELNR,          -- 전표번호
+                A.BUZEI,          -- 차수
+                A.NEWKO,          -- 계정코드
+                B.NEWKONM,        -- 계정명
+                A.SGTXT,          -- 적요
+                A.C_WRBTR,        -- 차변금액
+                A.C_WMWST,        -- 차변세액
+                A.C_FWBAS,        -- 차변과세표준금액
+                A.D_WRBTR,        -- 대변금액 
+                A.D_WMWST,        -- 대변세액
+                A.D_FWBAS,        -- 대변과세표준금액
+                A.BSCHL,          -- 전기키
+                A.HKONT,          -- 조정계정
+                C.HKONTNM,        -- 조정계정명
+                A.UMSKZ,          -- 특별 GL
+                A.MWSKZ,          -- 세금코드
+                A.GJAHR,          -- 회계연도
+                A.BUPLA,          -- 사업장
+                A.GSBER,          -- 사업영역
+                A.KOSTL,          -- 코스트센터
+                A.ZTERM,          -- 지급조건
+                A.ZFBDT,          -- 지급기산일
+                A.BLART,          -- 전표유형
+                A.ZLSPR,          -- 지급보류
+                A.ZUONR,          -- 지정
+                A.BKTXT,          -- HEADER적요
+                A.FDTAG,          -- 만기일
+                A.STR_CD,         -- 점코드
+                A.TRANTP,         -- SAP구분
+                A.TRANYN,         -- SAP 전송유무
+                A.TRANDT,         -- 생성일
+                A.DEBCRE_FLAG,    -- 차,대변 구분
+                (
+                  SELECT X.BELNR 
+                  FROM   IFS.XI_DOCH X 
+                  WHERE  X.BUDAT = A.BUDAT
+                  AND    X.SYCODE = A.SYCODE
+                  AND    X.BUKRS = A.BUKRS
+                  AND    X.LELNR = A.LELNR
+                ) AS BELNR,
+                (
+                  SELECT X.XSTAT
+                  FROM   IFS.XI_DOCH X 
+                  WHERE  X.BUDAT = A.BUDAT
+                  AND    X.SYCODE = A.SYCODE
+                  AND    X.BUKRS = A.BUKRS
+                  AND    X.LELNR = A.LELNR
+                ) AS XSTAT
+        FROM    (
+                 SELECT B.BUKRS,
+                        A.BUDAT,
+                        B.SYCODE,
+                        A.LELNR,
+                        A.BUZEI,
+                        A.NEWKO,
+                        A.SGTXT, 
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.WRBTR))),0) AS C_WRBTR,
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.WMWST))),0) AS C_WMWST, 
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.FWBAS))),0) AS C_FWBAS, 
+                        0       AS D_WRBTR,
+                        0       AS D_WMWST, 
+                        0       AS D_FWBAS, 
+                        B.STR_CD,
+                        A.GJAHR, 
+                        A.BSCHL, 
+                        A.HKONT, 
+                        A.UMSKZ, 
+                        A.MWSKZ, 
+                        A.BUPLA, 
+                        A.GSBER, 
+                        A.KOSTL, 
+                        A.ZTERM, 
+                        A.ZFBDT, 
+                        A.ZLSPR, 
+                        A.ZUONR,  
+                        A.FDTAG,
+                        B.BLART, 
+                        B.BKTXT, 
+                        B.TRANTP, 
+                        B.TRANYN, 
+                        B.TRANDT,
+                        A.DEBCRE_FLAG
+                 FROM   COM.XI_DOCL A, COM.XI_DOCH B
+                 WHERE  A.BUDAT = B.BUDAT
+                 AND    A.LELNR = B.LELNR
+                 AND    A.SYCODE = B.SYCODE
+                 AND    A.BUKRS  = B.BUKRS
+                 AND    B.BUDAT  = ?
+                 AND    B.TRANTP = ?
+                 AND    B.STR_CD = ?
+                 AND    A.DEBCRE_FLAG = '1'
+                 UNION ALL
+                 SELECT B.BUKRS,
+                        A.BUDAT,
+                        B.SYCODE,
+                        A.LELNR,
+                        A.BUZEI,
+                        A.NEWKO,
+                        A.SGTXT, 
+                        0           AS C_WRBTR,
+                        0           AS C_WMWST, 
+                        0           AS C_FWBAS,
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.WRBTR))),0) AS D_WRBTR,
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.WMWST))),0) AS D_WMWST, 
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.FWBAS))),0) AS D_FWBAS, 
+                        B.STR_CD,
+                        A.GJAHR, 
+                        A.BSCHL, 
+                        A.HKONT, 
+                        A.UMSKZ, 
+                        A.MWSKZ, 
+                        A.BUPLA, 
+                        A.GSBER, 
+                        A.KOSTL, 
+                        A.ZTERM, 
+                        A.ZFBDT, 
+                        A.ZLSPR, 
+                        A.ZUONR, 
+                        A.FDTAG,
+                        B.BLART, 
+                        B.BKTXT, 
+                        B.TRANTP, 
+                        B.TRANYN, 
+                        B.TRANDT,
+                        A.DEBCRE_FLAG
+                 FROM   COM.XI_DOCL A, COM.XI_DOCH B
+                 WHERE  A.BUDAT = B.BUDAT
+                 AND    A.LELNR = B.LELNR
+                 AND    A.SYCODE = B.SYCODE
+                 AND    A.BUKRS  = B.BUKRS
+                 AND    B.BUDAT  = ?
+                 AND    B.TRANTP = ?
+                 AND    B.STR_CD = ?
+                 AND    A.DEBCRE_FLAG = '2'
+                 ) A
+               , (
+                  SELECT COMM_CODE  AS NEWKO
+                       , COMM_NAME1 AS NEWKONM
+                    FROM COM.TC_COMMCODE
+                   WHERE SYS_PART = 'D'
+                     AND COMM_PART = 'P704'
+                 ) B
+               , (
+                  SELECT COMM_CODE  AS HKONT
+                       , COMM_NAME1 AS HKONTNM
+                    FROM COM.TC_COMMCODE
+                   WHERE SYS_PART = 'D'
+                     AND COMM_PART = 'P704'
+                 ) C
+           WHERE A.NEWKO  = B.NEWKO(+)
+           AND   A.HKONT  = C.HKONT(+)
+        ORDER BY  A.BUDAT,
+                  A.LELNR,
+                  A.BUZEI,
+                  A.DEBCRE_FLAG,
+                  A.NEWKO,
+                  A.SGTXT
+         ]]>
+    </query>
+    <!-- //SAP I/F 조회 쿼리 --> 
+    
+     <!-- SAP I/F 조회 쿼리 : 월별 검색 -->
+    <query name="SEL_MASTER_YM">
+        <![CDATA[
+        SELECT  A.BUDAT,          -- 전기일
+                A.LELNR,          -- 전표번호
+                A.BUZEI,          -- 차수
+                A.NEWKO,          -- 계정코드
+                B.NEWKONM,        -- 계정명
+                A.SGTXT,          -- 적요
+                A.C_WRBTR,        -- 차변금액
+                A.C_WMWST,        -- 차변세액
+                A.C_FWBAS,        -- 차변과세표준금액
+                A.D_WRBTR,        -- 대변금액 
+                A.D_WMWST,        -- 대변세액
+                A.D_FWBAS,        -- 대변과세표준금액
+                A.BSCHL,          -- 전기키
+                A.HKONT,          -- 조정계정
+                C.HKONTNM,     -- 조정계정명
+                A.UMSKZ,          -- 특별 GL
+                A.MWSKZ,          -- 세금코드
+                A.GJAHR,          -- 회계연도
+                A.BUPLA,          -- 사업장
+                A.GSBER,          -- 사업영역
+                A.KOSTL,          -- 코스트센터
+                A.ZTERM,          -- 지급조건
+                A.ZFBDT,          -- 지급기산일
+                A.BLART,          -- 전표유형
+                A.ZLSPR,          -- 지급보류
+                A.ZUONR,          -- 지정
+                A.BKTXT,          -- HEADER적요
+                A.FDTAG,          -- 만기일
+                A.STR_CD,         -- 점코드
+                A.TRANTP,         -- SAP구분
+                A.TRANYN,         -- SAP 전송유무
+                A.TRANDT,         -- 생성일
+                A.DEBCRE_FLAG,    -- 차,대변 구분
+                (
+                  SELECT X.BELNR 
+                  FROM   IFS.XI_DOCH X 
+                  WHERE  X.BUDAT = A.BUDAT
+                  AND    X.SYCODE = A.SYCODE
+                  AND    X.BUKRS = A.BUKRS
+                  AND    X.LELNR = A.LELNR
+                ) AS BELNR,
+                (
+                  SELECT X.XSTAT
+                  FROM   IFS.XI_DOCH X 
+                  WHERE  X.BUDAT = A.BUDAT
+                  AND    X.SYCODE = A.SYCODE
+                  AND    X.BUKRS = A.BUKRS
+                  AND    X.LELNR = A.LELNR
+                ) AS XSTAT
+        FROM    (
+                 SELECT B.BUKRS,
+                        A.BUDAT,
+                        B.SYCODE,
+                        A.LELNR,
+                        A.BUZEI,
+                        A.NEWKO,
+                        A.SGTXT, 
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.WRBTR))),0) AS C_WRBTR,
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.WMWST))),0) AS C_WMWST, 
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.FWBAS))),0) AS C_FWBAS, 
+                        0       AS D_WRBTR,
+                        0       AS D_WMWST, 
+                        0       AS D_FWBAS, 
+                        B.STR_CD,
+                        A.GJAHR, 
+                        A.BSCHL, 
+                        A.HKONT, 
+                        A.UMSKZ, 
+                        A.MWSKZ, 
+                        A.BUPLA, 
+                        A.GSBER, 
+                        A.KOSTL, 
+                        A.ZTERM, 
+                        A.ZFBDT, 
+                        A.ZLSPR, 
+                        A.ZUONR,  
+                        A.FDTAG,
+                        B.BLART, 
+                        B.BKTXT, 
+                        B.TRANTP, 
+                        B.TRANYN, 
+                        B.TRANDT,
+                        A.DEBCRE_FLAG
+                 FROM   COM.XI_DOCL A, COM.XI_DOCH B
+                 WHERE  A.BUDAT = B.BUDAT
+                 AND    A.LELNR = B.LELNR
+                 AND    A.SYCODE = B.SYCODE
+                 AND    A.BUKRS  = B.BUKRS
+                 AND    B.BUDAT LIKE ? || '%'
+                 AND    B.TRANTP = ?
+                 AND    B.STR_CD = ?
+                 AND    A.DEBCRE_FLAG = '1'
+                 UNION ALL
+                 SELECT B.BUKRS,
+                        A.BUDAT,
+                        B.SYCODE,
+                        A.LELNR,
+                        A.BUZEI,
+                        A.NEWKO,
+                        A.SGTXT, 
+                        0           AS C_WRBTR,
+                        0           AS C_WMWST, 
+                        0           AS C_FWBAS,
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.WRBTR))),0) AS D_WRBTR,
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.WMWST))),0) AS D_WMWST, 
+                        NVL(TO_NUMBER(RTRIM(LTRIM(A.FWBAS))),0) AS D_FWBAS, 
+                        B.STR_CD,
+                        A.GJAHR, 
+                        A.BSCHL, 
+                        A.HKONT, 
+                        A.UMSKZ, 
+                        A.MWSKZ, 
+                        A.BUPLA, 
+                        A.GSBER, 
+                        A.KOSTL, 
+                        A.ZTERM, 
+                        A.ZFBDT, 
+                        A.ZLSPR, 
+                        A.ZUONR, 
+                        A.FDTAG,
+                        B.BLART, 
+                        B.BKTXT, 
+                        B.TRANTP, 
+                        B.TRANYN, 
+                        B.TRANDT,
+                        A.DEBCRE_FLAG
+                 FROM   COM.XI_DOCL A, COM.XI_DOCH B
+                 WHERE  A.BUDAT = B.BUDAT
+                 AND    A.LELNR = B.LELNR
+                 AND    A.SYCODE = B.SYCODE
+                 AND    A.BUKRS  = B.BUKRS
+                 AND    B.BUDAT LIKE ? || '%'
+                 AND    B.TRANTP = ?
+                 AND    B.STR_CD = ?
+                 AND    A.DEBCRE_FLAG = '2'
+                 ) A
+               , (
+                  SELECT COMM_CODE  AS NEWKO
+                       , COMM_NAME1 AS NEWKONM
+                    FROM COM.TC_COMMCODE
+                   WHERE SYS_PART = 'D'
+                     AND COMM_PART = 'P704'
+                 ) B
+               , (
+                  SELECT COMM_CODE  AS HKONT
+                       , COMM_NAME1 AS HKONTNM
+                    FROM COM.TC_COMMCODE
+                   WHERE SYS_PART = 'D'
+                     AND COMM_PART = 'P704'
+                 ) C
+           WHERE A.NEWKO  = B.NEWKO(+)
+           AND   A.HKONT  = C.HKONT(+)
+        ORDER BY  A.BUDAT,
+                  A.LELNR,
+                  A.BUZEI,
+                  A.DEBCRE_FLAG,
+                  A.NEWKO,
+                  A.SGTXT
+         ]]>
+    </query>
+    <!-- //SAP I/F 조회 쿼리 --> 
+    <!-- IFS SAP I/F Header 등록 -->
+    <query name="INS_IFS_XI_DOC_HEADER_DT">
+        <![CDATA[
+            INSERT INTO IFS.XI_DOCH(
+                                    REQDT
+                                  , BUKRS
+                                  , SYCODE
+                                  , BUDAT
+                                  , LELNR
+                                  , GJAHR
+                                  , BLART
+                                  , BLDAT
+                                  , XBLNR
+                                  , BKTXT
+                                  , WAERS
+                                  , KURSF
+                                  , BELNR
+                                  , UNAME
+                                  , CPUDT
+                                  , CPUTM
+                                  , XSTAT
+                                  , XDATS
+                                  , XTIMS
+                                  , XMSG
+                                  , REG_DATE
+                                   )
+                             SELECT TO_CHAR(SYSDATE,'YYYYMMDD')
+                                  , BUKRS
+                                  , SYCODE
+                                  , BUDAT
+                                  , LELNR
+                                  , GJAHR
+                                  , BLART
+                                  , BLDAT
+                                  , XBLNR
+                                  , BKTXT
+                                  , WAERS
+                                  , KURSF
+                                  , BELNR
+                                  , UNAME
+                                  , CPUDT
+                                  , CPUTM
+                                  , XSTAT
+                                  , XDATS
+                                  , XTIMS
+                                  , XMSG
+                                  , SYSDATE
+                              FROM COM.XI_DOCH
+                             WHERE BUDAT  = ?
+                               AND TRANTP = ?
+                               AND STR_CD = ?
+                               AND TRANYN = 'N'
+        ]]>
+    </query>
+    
+    <query name="INS_IFS_XI_DOC_HEADER_YM">
+        <![CDATA[
+            INSERT INTO IFS.XI_DOCH(
+                                    REQDT
+                                  , BUKRS
+                                  , SYCODE
+                                  , BUDAT
+                                  , LELNR
+                                  , GJAHR
+                                  , BLART
+                                  , BLDAT
+                                  , XBLNR
+                                  , BKTXT
+                                  , WAERS
+                                  , KURSF
+                                  , BELNR
+                                  , UNAME
+                                  , CPUDT
+                                  , CPUTM
+                                  , XSTAT
+                                  , XDATS
+                                  , XTIMS
+                                  , XMSG
+                                  , REG_DATE
+                                   )
+                             SELECT TO_CHAR(SYSDATE,'YYYYMMDD')
+                                  , BUKRS
+                                  , SYCODE
+                                  , BUDAT
+                                  , LELNR
+                                  , GJAHR
+                                  , BLART
+                                  , BLDAT
+                                  , XBLNR
+                                  , BKTXT
+                                  , WAERS
+                                  , KURSF
+                                  , BELNR
+                                  , UNAME
+                                  , CPUDT
+                                  , CPUTM
+                                  , XSTAT
+                                  , XDATS
+                                  , XTIMS
+                                  , XMSG
+                                  , SYSDATE
+                              FROM COM.XI_DOCH
+                             WHERE BUDAT  LIKE ? || '%'
+                               AND TRANTP = ?
+                               AND STR_CD = ?
+                               AND TRANYN = 'N'
+        ]]>
+    </query>
+    <!-- //IFS SAP I/F Header 등록 -->
+
+    <!-- IFS SAP I/F List 등록 -->
+    <query name="INS_IFS_XI_DOC_LIST_DT">
+        <![CDATA[
+            INSERT INTO IFS.XI_DOCL(
+                                    REQDT
+                                  , BUKRS
+                                  , SYCODE
+                                  , BUDAT
+                                  , LELNR
+                                  , BUZEI
+                                  , GJAHR
+                                  , BSCHL
+                                  , NEWKO
+                                  , HKONT
+                                  , UMSKZ
+                                  , WRBTR
+                                  , WMWST
+                                  , FWBAS
+                                  , MWSKZ
+                                  , BUPLA
+                                  , GSBER
+                                  , KOSTL
+                                  , ZTERM
+                                  , ZFBDT
+                                  , ZLSPR
+                                  , ZUONR
+                                  , SGTXT
+                                  , FDTAG
+                                  , REG_DATE
+                                   )
+                             SELECT TO_CHAR(SYSDATE,'YYYYMMDD')
+                                  , XL.BUKRS
+                                  , XL.SYCODE
+                                  , XL.BUDAT
+                                  , XL.LELNR
+                                  , XL.BUZEI
+                                  , XL.GJAHR
+                                  , XL.BSCHL
+                                  , XL.NEWKO
+                                  , XL.HKONT
+                                  , XL.UMSKZ
+                                  , XL.WRBTR
+                                  , XL.WMWST
+                                  , XL.FWBAS
+                                  , XL.MWSKZ
+                                  , XL.BUPLA
+                                  , XL.GSBER
+                                  , XL.KOSTL
+                                  , XL.ZTERM
+                                  , XL.ZFBDT
+                                  , XL.ZLSPR
+                                  , XL.ZUONR
+                                  , XL.SGTXT
+                                  , XL.FDTAG
+                                  , SYSDATE
+                               FROM COM.XI_DOCH XH
+                                  , COM.XI_DOCL XL
+                              WHERE XH.BUKRS  = XL.BUKRS
+                                AND XH.SYCODE = XL.SYCODE
+                                AND XH.BUDAT  = XL.BUDAT
+                                AND XH.LELNR  = XL.LELNR
+                                AND XH.BUDAT  = ?
+                                AND XH.TRANTP = ?
+                                AND XH.STR_CD  = ?
+                                AND XH.TRANYN = 'N'
+        ]]>
+    </query>
+    
+    <query name="INS_IFS_XI_DOC_LIST_YM">
+        <![CDATA[
+            INSERT INTO IFS.XI_DOCL(
+                                    REQDT
+                                  , BUKRS
+                                  , SYCODE
+                                  , BUDAT
+                                  , LELNR
+                                  , BUZEI
+                                  , GJAHR
+                                  , BSCHL
+                                  , NEWKO
+                                  , HKONT
+                                  , UMSKZ
+                                  , WRBTR
+                                  , WMWST
+                                  , FWBAS
+                                  , MWSKZ
+                                  , BUPLA
+                                  , GSBER
+                                  , KOSTL
+                                  , ZTERM
+                                  , ZFBDT
+                                  , ZLSPR
+                                  , ZUONR
+                                  , SGTXT
+                                  , FDTAG
+                                  , REG_DATE
+                                   )
+                             SELECT TO_CHAR(SYSDATE,'YYYYMMDD')
+                                  , XL.BUKRS
+                                  , XL.SYCODE
+                                  , XL.BUDAT
+                                  , XL.LELNR
+                                  , XL.BUZEI
+                                  , XL.GJAHR
+                                  , XL.BSCHL
+                                  , XL.NEWKO
+                                  , XL.HKONT
+                                  , XL.UMSKZ
+                                  , XL.WRBTR
+                                  , XL.WMWST
+                                  , XL.FWBAS
+                                  , XL.MWSKZ
+                                  , XL.BUPLA
+                                  , XL.GSBER
+                                  , XL.KOSTL
+                                  , XL.ZTERM
+                                  , XL.ZFBDT
+                                  , XL.ZLSPR
+                                  , XL.ZUONR
+                                  , XL.SGTXT
+                                  , XL.FDTAG
+                                  , SYSDATE
+                               FROM COM.XI_DOCH XH
+                                  , COM.XI_DOCL XL
+                              WHERE XH.BUKRS  = XL.BUKRS
+                                AND XH.SYCODE = XL.SYCODE
+                                AND XH.BUDAT  = XL.BUDAT
+                                AND XH.LELNR  = XL.LELNR
+                                AND XH.BUDAT  LIKE ? || '%'
+                                AND XH.TRANTP = ?
+                                AND XH.STR_CD  = ?
+                                AND XH.TRANYN = 'N'
+        ]]>
+    </query>
+    <!-- //IFS SAP I/F LineItem 등록 -->
+ 
+     <query name="UPS_COM_XI_DOC_DT">
+        <![CDATA[
+      UPDATE COM.XI_DOCH
+         SET TRANYN = 'Y',
+             TRANDT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+       WHERE BUDAT  = ? 
+         AND TRANTP = ?
+         AND STR_CD = ?
+         AND TRANYN = 'N'
+        ]]>
+    </query>
+    
+      <query name="UPS_COM_XI_DOC_YM">
+        <![CDATA[
+      UPDATE COM.XI_DOCH
+         SET TRANYN = 'Y',
+             TRANDT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+       WHERE BUDAT  LIKE ? || '%'
+         AND TRANTP = ?
+         AND STR_CD = ?
+         AND TRANYN = 'N'
+        ]]>
+    </query>
+    
+    <query name="UPS_IFS_DOCH_DT">
+        <![CDATA[
+      UPDATE COM.XI_DOCH
+         SET REQDT = TO_CHAR(SYSDATE,'YYYYMMDD')
+       WHERE BUDAT  = ? 
+         AND TRANTP = ?
+         AND STR_CD  = ?
+         AND TRANYN = 'N'
+        ]]>
+    </query>
+    
+    <query name="UPS_IFS_DOCH_YM">
+        <![CDATA[
+      UPDATE COM.XI_DOCH
+         SET REQDT = TO_CHAR(SYSDATE,'YYYYMMDD')
+       WHERE BUDAT  LIKE ? || '%'
+         AND TRANTP = ?
+         AND STR_CD  = ?
+         AND TRANYN = 'N'
+        ]]>
+    </query>
+    
+      <query name="UPS_IFS_DOCL_DT">
+        <![CDATA[
+        UPDATE COM.XI_DOCL
+           SET REQDT = TO_CHAR(SYSDATE,'YYYYMMDD')
+        WHERE (BUKRS,SYCODE,BUDAT,LELNR,BUZEI) IN             
+		         (SELECT XH.BUKRS
+		               , XH.SYCODE
+		               , XH.BUDAT
+		               , XH.LELNR
+		               , XL.BUZEI
+	                FROM COM.XI_DOCH XH
+	                   , COM.XI_DOCL XL
+	               WHERE XH.BUKRS  = XL.BUKRS
+	                 AND XH.SYCODE = XL.SYCODE
+	                 AND XH.BUDAT  = XL.BUDAT
+	                 AND XH.LELNR  = XL.LELNR
+	                 AND XH.BUDAT  = ? 
+	                 AND XH.TRANTP = ?
+	                 AND XH.STR_CD  = ?
+	                 AND XH.TRANYN = 'N')
+        ]]>
+    </query>
+    
+     <query name="UPS_IFS_DOCL_YM">
+        <![CDATA[
+       UPDATE COM.XI_DOCL
+           SET REQDT = TO_CHAR(SYSDATE,'YYYYMMDD')
+        WHERE (BUKRS,SYCODE,BUDAT,LELNR,BUZEI) IN             
+                 (SELECT XH.BUKRS
+                       , XH.SYCODE
+                       , XH.BUDAT
+                       , XH.LELNR
+                       , XL.BUZEI
+                    FROM COM.XI_DOCH XH
+                       , COM.XI_DOCL XL
+                   WHERE XH.BUKRS  = XL.BUKRS
+                     AND XH.SYCODE = XL.SYCODE
+                     AND XH.BUDAT  = XL.BUDAT
+                     AND XH.LELNR  = XL.LELNR
+                     AND XH.BUDAT  LIKE ? || '%'
+                     AND XH.TRANTP = ?
+                     AND XH.STR_CD  = ?
+                     AND XH.TRANYN = 'N')
+        ]]>
+    </query>
+</service>

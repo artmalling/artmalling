@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae205.mc">
+<!-- MASTER 조회 -->
+    <gauce name="H_MASTER">  
+        <column colName="STR_CD"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"      colType="TB_STRING"      size="11"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"    colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT"         colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+    </gauce>
+     <gauce name="H_DETAIL">  
+        <column colName="RANK_SEQ_NO"   colType="TB_STRING"      size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="WIN_NAME"      colType="TB_STRING"      size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SS_NO"         colType="TB_STRING"      size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PHONE1_NO"     colType="TB_STRING"      size="3"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PHONE2_NO"     colType="TB_STRING"      size="4"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PHONE3_NO"     colType="TB_STRING"      size="4"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="HP1_NO"        colType="TB_STRING"      size="3"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="HP2_NO"        colType="TB_STRING"      size="4"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="HP3_NO"        colType="TB_STRING"      size="4"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="ADDR"          colType="TB_STRING"      size="80"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="EMAIL"         colType="TB_STRING"      size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="TAX_AMT"       colType="TB_DECIMAL"     size="12"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SEQ_NO"        colType="TB_STRING"     size="5"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce> 
+    <query name="SEL_MASTER">
+        <![CDATA[     
+		    SELECT STR.STR_CD
+		         , MST.EVENT_CD
+		         , MST.EVENT_NAME
+		         , CASE WHEN (SELECT COUNT(*)
+                     FROM MSS.MC_PRMMWIN
+                    WHERE STR_CD = '01'
+                      AND EVENT_CD = MST.EVENT_CD) <> 0  THEN '추첨완료'  ELSE '미완료' END AS EVENT
+		      FROM DPS.PC_EVTMST MST, DPS.PC_STREVT STR
+		     WHERE MST.EVENT_CD = STR.EVENT_CD
+		       AND MST.EVENT_TYPE = '5'
+		       AND STR.STR_CD = ?
+		       AND ((? >= MST.EVENT_S_DT AND ? <= MST.EVENT_E_DT) OR
+		                                (? >= MST.EVENT_S_DT AND ? <= MST.EVENT_E_DT) OR
+		                                (MST.EVENT_S_DT >= ? AND MST.EVENT_S_DT <= ?) OR
+		                                (MST.EVENT_E_DT >= ? AND MST.EVENT_E_DT <= ?))
+		       AND MST.EVENT_CD LIKE ? || '%' 
+        ]]>        
+    </query> 
+    
+    <query name="SEL_DETAIL">
+        <![CDATA[     
+	          SELECT RANK_SEQ_NO 
+	                 , WIN_NAME
+	                 , DCS.SC_Crypto_FUN('DEC', SS_NO) AS SS_NO
+	                 , DCS.SC_Crypto_FUN('DEC', PHONE1_NO) AS PHONE1_NO
+	                 , DCS.SC_Crypto_FUN('DEC', PHONE2_NO) AS PHONE2_NO
+	                 , DCS.SC_Crypto_FUN('DEC', PHONE3_NO) AS PHONE3_NO
+	                 , DCS.SC_Crypto_FUN('DEC', HP1_NO) AS HP1_NO
+	                 , DCS.SC_Crypto_FUN('DEC', HP2_NO) AS HP2_NO
+	                 , DCS.SC_Crypto_FUN('DEC', HP3_NO) AS HP3_NO
+	                 , ADDR
+	                 , DCS.SC_Crypto_FUN('DEC', EMAIL) AS EMAIL
+	                 , TAX_AMT
+	                 , SEQ_NO
+	              FROM MSS.MC_PRMMWIN WIN
+	             WHERE STR_CD   =?
+	               AND EVENT_CD = ?
+	          ORDER BY RANK_SEQ_NO, WIN_NAME 
+        ]]>        
+    </query> 
+    
+     <!-- Detail SAVE - INSERT -->
+    <query name="INS_PRMMWIN">
+        <![CDATA[
+            INSERT INTO  MSS.MC_PRMMWIN ( 
+                                      STR_CD
+                                    , EVENT_CD
+                                    , SEQ_NO
+                                    , WIN_NAME
+                                    , SS_NO
+                                    , PHONE1_NO
+                                    , PHONE2_NO
+                                    , PHONE3_NO
+                                    , HP1_NO
+                                    , HP2_NO
+                                    , HP3_NO
+                                    , RANK_SEQ_NO
+                                    , ADDR
+                                    , EMAIL
+                                    , TAX_AMT
+                                    , REG_DATE
+                                    , REG_ID
+                                    , MOD_DATE
+                                    , MOD_ID
+                                       )
+                   VALUES  ( 
+                               ?
+                             , ?
+                             ,  (SELECT NVL(MAX(SEQ_NO), 0) + 1 SEQ_NO
+                                     FROM MSS.MC_PRMMWIN
+                                    WHERE STR_CD = ?
+                                      AND EVENT_CD = ? )
+                             , ?
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , DCS.SC_Crypto_FUN('ENC', ?)
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , DCS.SC_Crypto_FUN('ENC', ?) 
+                             , ?
+                             , ?
+                             , DCS.SC_Crypto_FUN('ENC', ?)
+                             , ?
+                             , SYSDATE
+                             , ?
+                             , SYSDATE 
+                             , ?
+                           ) 
+        ]]>
+    </query> 
+    
+    <!-- Detail SAVE - UPDATE -->
+    <query name="UPD_PRMMWIN">
+        <![CDATA[
+            UPDATE MSS.MC_PRMMWIN
+		       SET WIN_NAME      = ?
+		         , SS_NO         = DCS.SC_Crypto_FUN('ENC', ?) 
+		         , PHONE1_NO     = DCS.SC_Crypto_FUN('ENC', ?)
+		         , PHONE2_NO     = DCS.SC_Crypto_FUN('ENC', ?)
+		         , PHONE3_NO     = DCS.SC_Crypto_FUN('ENC', ?)
+		         , HP1_NO        = DCS.SC_Crypto_FUN('ENC', ?)
+		         , HP2_NO        = DCS.SC_Crypto_FUN('ENC', ?)
+		         , HP3_NO        = DCS.SC_Crypto_FUN('ENC', ?)
+		         , RANK_SEQ_NO   = ?
+		         , ADDR          = ?
+		         , EMAIL         = DCS.SC_Crypto_FUN('ENC', ?)
+ 		         , TAX_AMT       = ?
+		         , MOD_DATE      = SYSDATE
+		         , MOD_ID        = ?
+		     WHERE STR_CD        = ?
+		       AND EVENT_CD      = ?
+		       AND SEQ_NO        = ?
+        ]]>
+    </query>
+     
+     <!-- Detail SAVE - DELETE -->
+    <query name="DEL_PRMMWIN">
+        <![CDATA[
+             DELETE FROM MSS.MC_PRMMWIN
+			  WHERE STR_CD   = ?
+			    AND EVENT_CD = ?
+			    AND SEQ_NO   = ?
+        ]]>
+    </query>
+     
+    <!-- 순위 조회 -->
+    <gauce name="H_RANK">  
+        <column colName="CODE"          colType="TB_STRING"      size="5"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NAME"          colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PRMM_NAME"     colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+    </gauce>
+    
+    <query name="SEL_RANK">
+        <![CDATA[      
+               SELECT SEQ_NO AS CODE
+		         , RANK || '('||PRMM_NAME||')' AS NAME
+		         , PRMM_NAME
+		      FROM MSS.MC_PRMMINFO
+		     WHERE STR_CD=?
+		       AND EVENT_CD =?
+        ]]>        
+    </query> 
+  
+</service>

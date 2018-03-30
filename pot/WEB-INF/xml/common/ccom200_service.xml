@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.01.25
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 사은관리 공통 
+ -->
+<service name="/ccom200.cc">	
+
+    <!-- 행사코드별 협력사 콤보 Title -->
+    <gauce name="H_COMBO">
+        <column colName="CODE"	colType="TB_STRING" size="6"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="NAME"	colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+
+    <!-- 행사코드별 협력사   조회 -->
+    <query name="SEL_VEN_BY_EVENT">
+        <![CDATA[
+			SELECT DISTINCT
+			       C.VEN_CD
+			     , DPS.FN_GET_VENDOR_NAME(C.VEN_CD) AS VEN_NAME
+			  FROM MSS.MC_EVTSKUMST A, DPS.PC_STRSKUMST B, DPS.PC_STRPBN C
+			 WHERE A.STR_CD = B.STR_CD
+			   AND A.SKU_CD = B.SKU_CD
+			   AND B.PUMBUN_CD = C.PUMBUN_CD
+               AND B.STR_CD = C.STR_CD
+               AND A.SKU_GB = '1'
+			   AND A.EVENT_CD= ?
+			   AND A.STR_CD = ?
+	      ORDER BY C.VEN_CD
+        ]]>
+    </query> 
+
+    <!-- 행사코드별 협력사   조회 -->
+    <query name="SEL_VEN_ALL">
+        <![CDATA[
+			SELECT VEN_CD
+			     , VEN_NAME
+			  FROM DPS.PC_VENMST
+        ]]>
+    </query> 
+    
+    <!-- 협력사 선택에 따른 품번조회-->
+    <query name="SEL_PBN_BY_VEN">
+        <![CDATA[
+        SELECT A.PUMBUN_CD, A.PUMBUN_CD
+          FROM DPS.PC_PBNMST A, DPS.PC_STRPBN B
+          WHERE A.PUMBUN_CD = B.PUMBUN_CD
+           AND A.VEN_CD = ?
+           AND B.STR_CD = ?
+      ORDER BY A.PUMBUN_CD
+        ]]>
+    </query>
+    
+    
+     <!-- 사은행사 마스터 : 제휴카드 정보조회 -->
+    <query name="SEL_CARD_COMP">
+        <![CDATA[
+		SELECT CCOMP_CD
+		     , CCOMP_NM
+		  FROM DPS.PD_CARDCOMP
+	  ORDER BY CCOMP_CD 
+        ]]>
+    </query>  
+    
+     <!-- 매입사 정보조회 -->
+    <query name="SEL_CARD_BCOMP">
+        <![CDATA[  
+            SELECT BCOMP_CD AS CODE
+                 , CCOMP_NM AS NAME
+              FROM DPS.PD_CARDCOMP
+             WHERE CCOMP_CD IN ( SELECT DISTINCT BCOMP_CD
+                                   FROM DPS.PD_CARDCOMP
+                                )
+            ORDER BY BCOMP_CD 
+        ]]>
+    </query>  
+    
+</service>
+

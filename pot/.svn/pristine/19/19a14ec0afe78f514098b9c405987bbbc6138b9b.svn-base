@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 조직공통 
+ -->
+<service name="/ccom911.cc">	
+
+    <!-- 공통 헤더 -->
+    <gauce name="H_COMMON">
+        <column colName="CODE_CD"	colType="TB_STRING" size="54"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CODE_NM"	colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+
+     <!-- 팝업 조회 조건 헤더  -->
+    <gauce name="H_POP_COND">
+        <column colName="SERVICE_ID"  	colType="TB_STRING" size="50"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CODE"       	colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="NAME"          colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="ADD_CONDITION"	colType="TB_STRING" size="200"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>        
+
+     <!-- 팝업 조회 조건 헤더(조건 추가 사용하고자 할때)  -->
+    <gauce name="H_POP_ADDCOND">
+        <column colName="SERVICE_ID"  	colType="TB_STRING" size="50"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="COND_TXT"    	colType="TB_STRING" size="20"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="ADD_CONDITION"	colType="TB_STRING" size="200"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+     
+    <!-- 코드 중복 여부  헤더 -->
+    <gauce name="H_IS_CODE">
+        <column colName="BOOL"		colType="TB_STRING" size="5"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+
+
+    <!-- 공통 간편 QUERY 조회  헤더 -->
+    <gauce name="H_COMMON_EASY">
+        <column colName="COL1"	colType="TB_STRING" size="100"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="COL2"	colType="TB_STRING" size="100"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="COL3"	colType="TB_STRING" size="100"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="COL4"	colType="TB_STRING" size="100"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="COL5"	colType="TB_STRING" size="100"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    
+
+<!-- 
+    	*** 팝업 조회용 쿼리 작성시 유의사항
+    	
+    	*  이 팝업은 쿼리가  [조회조건]을 필수로 하여 작성 됩니다.
+    	*  따라서 쿼리를 생성할 때는 
+    	*  첫째,둘째 조건으로 [조회조건]을 주어야합니다. 그 이후에 기타 조건을 추가하셔도 됩니다.
+		*  단, js에서 function 호출할 때의 [추가조건]갯수와 
+		*  쿼리의 '?' 갯수 를 맞추어주셔야 합니다. 
+
+ -->
+ 
+    <!-- USER   조회 -->
+    <query name="SEL_USR_MST">
+        <![CDATA[
+			SELECT USER_ID, USER_NAME 
+			  FROM COM.TC_USRMST
+			 WHERE USER_ID LIKE '%' || ? || '%' 
+        ]]>
+    </query> 
+
+
+    <!-- USER   조회 -->
+    <query name="SEL_USR_MST_ONE">
+        <![CDATA[
+			SELECT USER_ID, USER_NAME 
+			  FROM COM.TC_USRMST
+			 WHERE USER_ID = ? 
+        ]]>
+    </query> 
+
+    <query name="SEL_USR_MST_TEST">
+        <![CDATA[
+            SELECT USER_ID, USER_NAME 
+			  FROM COM.TC_USRMST
+			 WHERE USER_ID LIKE ? || '%' 
+               AND USER_NAME LIKE '%' || ? || '%' 
+        ]]>
+    </query> 
+
+
+    <!-- 협력사 팝업   조회 -->
+    <query name="SEL_VEN_MST">
+        <![CDATA[
+            SELECT VEN_CD, VEN_NAME 
+              FROM DPS.PC_VENMST
+             WHERE VEN_CD LIKE ? || '%' 
+               AND VEN_NAME LIKE '%' || ? || '%' 
+        ]]>
+    </query> 
+    
+    <!-- 협력사 명   조회 -->
+    <query name="SEL_VEN_MST_ONE">
+        <![CDATA[
+            SELECT VEN_CD
+                 , VEN_NAME 
+              FROM DPS.PC_VENMST
+             WHERE VEN_CD = ? 
+        ]]>
+    </query> 
+    
+    <!-- 행사코드조회 POPUP-->
+    <query name="SEL_ENT_MST">
+        <![CDATA[
+			SELECT   EVENT_CD AS CODE_CD
+			        ,EVENT_NAME AS CODE_NM
+			  FROM  DPS.PC_EVTMST
+			 WHERE  (EVENT_CD LIKE  ?||'%' AND
+			         EVENT_NAME LIKE '%'||?||'%')
+        ]]>
+    </query> 
+    
+    <!-- 행사코드조회  -->
+    <query name="SEL_ENT_MST_ONE">
+        <![CDATA[
+			SELECT   EVENT_CD AS CODE_CD
+			        ,EVENT_NAME AS CODE_NM
+			  FROM  DPS.PC_EVTMST
+			 WHERE  (EVENT_CD LIKE ?||'%' AND
+			         EVENT_NAME LIKE '%'||?||'%')
+        ]]>
+    </query>
+    
+    <!--  사내 캠페인관리 캠페인 코드 조회  -->
+    <query name="SEL_CAMID_POP">
+        <![CDATA[
+            SELECT CAM_ID, CAM_NAME 
+            FROM MSS.MS_CAMPAIN
+            WHERE  (CAM_ID LIKE  ?||'%' AND
+                     CAM_NAME LIKE '%'||?||'%')          
+        ]]>
+    </query>
+    
+    <!--  사내 캠페인관리 캠페인 코드 조회  -->
+    <query name="SEL_CAMID_POP_ONE">
+        <![CDATA[
+            SELECT CAM_ID, CAM_NAME 
+            FROM MSS.MS_CAMPAIN
+            WHERE  (CAM_ID LIKE '%'||?||'%')          
+        ]]>
+    </query> 
+    
+    <!-- 품번 팝업   조회 -->
+    <query name="SEL_PBNMST">
+        <![CDATA[
+            SELECT 
+                   PUMBUN_CD     AS CODE_CD
+                 , PUMBUN_NAME   AS NAME_NM
+              FROM DPS.PC_PBNMST
+             WHERE (PUMBUN_CD    LIKE ?||'%' AND
+                    PUMBUN_NAME  LIKE '%'||?||'%')
+        ]]>
+    </query> 
+    
+    <!-- 품번명   조회 -->
+    <query name="SEL_PBNMST_ONE">
+        <![CDATA[
+            SELECT 
+                   PUMBUN_CD    AS CODE_CD
+                 , PUMBUN_NAME  AS NAME_NM
+              FROM DPS.PC_PBNMST
+             WHERE PUMBUN_CD    = ?
+        ]]>
+    </query> 
+    
+    <!-- 회원명 조회 SQL -->
+    <query name="SEL_CUSTOMER_ONE">
+        <![CDATA[
+            SELECT CUST_ID    AS CODE_CD
+                 , CUST_NAME  AS CODE_NM
+              FROM DCS.DM_CUSTOMER
+             WHERE CUST_ID  = ?
+        ]]>
+    </query>
+    
+    <!-- 가맹점명 조회 SQL -->
+    <query name="SEL_BRANCH_ONE">
+        <![CDATA[
+            SELECT A.BRCH_ID   AS CODE_CD
+                 , A.BRCH_NAME AS CODE_NM
+              FROM DCS.DB_BRANCH A
+             WHERE A.BRCH_ID = ?
+        ]]>
+    </query>
+    
+    <!-- 팀명 조회 SQL -->
+    <query name="SEL_TEAM_LIST_ONE">
+        <![CDATA[
+                
+              SELECT A.ORG_CD           AS CODE_CD
+                   , A.ORG_SHORT_NAME   AS CODE_NM
+                FROM DPS.PC_ORGMST    A
+               WHERE A.ORG_CD  IN (
+                                  SELECT DISTINCT SUBSTR(ORG_CD, 1, 6) || '0000'           AS ORG_CD
+                                    FROM DPS.PC_ORGMST
+                                   WHERE ORG_LEVEL  <> '3'
+                                     AND MNG_ORG_YN IN ( ?, 'Y')
+                                     AND ORG_FLAG   = ?
+                                     AND KOSTL_CD IS NOT NULL
+                                )
+                 AND A.ORG_LEVEL  = '3'
+                 AND A.ORG_CD IN ( SELECT DISTINCT
+                                          SUBSTR(ORG_CD, 1, 6) || '0000'
+                                     FROM COM.V_MYORG
+                                    WHERE USER_ID = ?
+                                  )
+               ORDER BY
+                     A.ORG_CD
+        ]]>
+    </query>
+    <!-- PC명 조회 SQL -->
+    <query name="SEL_PC_LIST_ONE">
+        <![CDATA[
+            SELECT ORG_CD           AS CODE_CD
+                 , REPLACE(ORG_SHORT_NAME, '&', 'N')   AS CODE_NM
+              FROM DPS.PC_ORGMST
+             WHERE STR_CD     = ?
+               AND ORG_LEVEL  = '4'
+               AND MNG_ORG_YN = ?
+               AND ORG_FLAG   = ?
+        ]]>
+    </query> 
+     <!-- 카드발급사 조회 SQL -->
+    <query name="SEL_CARDBIN_ONE">
+        <![CDATA[
+            SELECT CODE_CD
+                 , CODE_NM
+              FROM ( SELECT DISTINCT CCOMP_CD AS CODE_CD
+                         , (SELECT CCOMP_NM 
+                             FROM DPS.PD_CARDCOMP 
+                            WHERE CCOMP_CD = A.CCOMP_CD
+                           ) AS CODE_NM
+                       FROM DPS.PD_CARDBIN A
+                   )
+             WHERE CODE_CD = ?
+    ]]>
+    </query>
+    
+    <!-- VAN사 조회 SQL -->
+    <query name="SEL_VANCODE_ONE">
+        <![CDATA[
+            SELECT COMM_CODE    AS CODE_CD
+                 , COMM_NAME1   AS CODE_NM
+              FROM COM.TC_COMMCODE
+             WHERE SYS_PART  = 'D'
+               AND COMM_PART = 'D041'
+               AND USE_YN    = 'Y'
+               AND COMM_CODE = ?
+        ]]>
+    </query> 
+    
+    <!-- 공통코드 조회 SQL -->
+    <query name="SEL_COMM_CODE_ONLY">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE    LIKE ?||'%' 
+               AND COMM_NAME1   LIKE '%'||?||'%'
+               AND SYS_PART  = ?
+               AND COMM_PART = ?
+               AND USE_YN = 'Y'
+             ORDER BY INQR_ORDER, COMM_CODE
+        ]]>
+    </query>
+    <!-- 공통코드 조회 SQL -->
+    <query name="SEL_COMM_CODE_ONLY_ONE">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE = ?
+               AND SYS_PART  = ?
+               AND COMM_PART = ?
+               AND USE_YN = 'Y'
+        ]]>
+    </query>
+    <!-- 공통코드 조회 SQL -->
+    <query name="SEL_COMM_CODE_TO_NAME">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE    LIKE ?||'%'
+               AND COMM_CODE    LIKE ?||'%'
+               AND SYS_PART  = ?
+               AND COMM_PART = ?
+               AND USE_YN = 'Y'
+             ORDER BY INQR_ORDER, COMM_CODE
+        ]]>
+    </query>
+    <!-- 공통코드 조회 SQL -->
+    <query name="SEL_COMM_CODE_">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE    LIKE ?||'%'
+               AND COMM_CODE    LIKE ?||'%'
+               AND COMM_NAME1   LIKE '%'||?||'%'
+               AND SYS_PART  = ?
+               AND COMM_PART = ?
+               AND USE_YN = 'Y'
+             ORDER BY INQR_ORDER, COMM_CODE
+        ]]>
+    </query>
+    <!-- 공통코드 조회 사용여부체크안함 SQL -->
+    <query name="SEL_COMM_CODE_USE_NONE_ONLY">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE    LIKE ?||'%' 
+               AND COMM_NAME1   LIKE '%'||?||'%'
+               AND SYS_PART  = ?
+               AND COMM_PART = ?
+             ORDER BY INQR_ORDER, COMM_CODE
+        ]]>
+    </query>
+    <!-- 공통코드 조회 사용여부체크안함 SQL -->
+    <query name="SEL_COMM_CODE_USE_NONE_ONLY_ONE">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE = ?
+               AND SYS_PART  = ?
+               AND COMM_PART = ?
+        ]]>
+    </query>
+    <!-- 공통코드 조회 사용여부체크안함 SQL -->
+    <query name="SEL_COMM_CODE_USE_NONE_TO_NAME">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE    LIKE ?||'%'
+               AND COMM_CODE    LIKE ?||'%'
+               AND SYS_PART  = ?
+               AND COMM_PART = ?
+             ORDER BY INQR_ORDER, COMM_CODE
+        ]]>
+    </query>
+    <!-- 공통코드 조회사용여부체크안함  SQL -->
+    <query name="SEL_COMM_CODE_USE_NONE_">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE    LIKE ?||'%'
+               AND COMM_CODE    LIKE ?||'%'
+               AND COMM_NAME1   LIKE '%'||?||'%'
+               AND SYS_PART  = ?
+               AND COMM_PART = ?
+             ORDER BY INQR_ORDER, COMM_CODE
+        ]]>
+    </query>
+
+    <!-- 마진마스터의 행사구분조회  SQL -->
+    <query name="SEL_MARGINMST_EVENT_FLAG">
+        <![CDATA[
+            SELECT DISTINCT
+                   EVENT_FLAG   AS COL1
+                 , (SELECT COMM_CODE FROM COM.TC_COMMCODE WHERE SYS_PART = 'D' AND COMM_PART = 'P016' AND  EVENT_FLAG BETWEEN RESERVED1 AND RESERVED2)           AS COL2
+                 , ''           AS COL3
+                 , ''           AS COL4
+                 , ''           AS COL5 
+              FROM DPS.PC_MARGINMST
+             WHERE STR_CD    = ?
+               AND PUMBUN_CD = ?
+             ORDER BY COL1
+        ]]>
+    </query>
+    <!-- 마진마스터의 정상마진율 조회  SQL -->
+    <query name="SEL_MARGINMST_NORM_MG_RATE">
+        <![CDATA[
+            SELECT NORM_MG_RATE AS COL1
+                 , MG_FLAG      AS COL2
+                 , ''           AS COL3
+                 , ''           AS COL4
+                 , ''           AS COL5 
+              FROM DPS.PC_MARGINMST
+             WHERE STR_CD     = ?
+               AND PUMBUN_CD  = ?
+               AND EVENT_FLAG = ?
+               AND EVENT_CD   = '00000000000'
+               AND ?          BETWEEN APP_S_DT AND APP_E_DT
+        ]]>
+    </query>
+    <!-- 공통코드 조회 시 사용여부와 참조코드 체크 SQL -->
+    <query name="SEL_COMM_CODE_USE_REFER_ONLY">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE    LIKE ?||'%' 
+               AND COMM_NAME1   LIKE '%'||?||'%'
+               AND SYS_PART   = ?
+               AND COMM_PART  = ?               
+               AND USE_YN     LIKE  ?||'%'              
+               AND REFER_CODE = ?
+             ORDER BY INQR_ORDER, COMM_CODE
+        ]]>
+    </query>
+    <!-- 공통코드 조회 시 사용여부와 참조코드 체크 SQL -->
+    <query name="SEL_COMM_CODE_USE_REFER_ONLY_ONE">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE  = ?
+               AND SYS_PART   = ?
+               AND COMM_PART  = ?         
+               AND USE_YN     LIKE  ?||'%'             
+               AND REFER_CODE = ?
+        ]]>
+    </query>
+    <!-- 공통코드 조회 시 사용여부와 참조코드 체크  SQL -->
+    <query name="SEL_COMM_CODE_USE_REFER_TO_NAME">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE    LIKE ?||'%'
+               AND COMM_CODE    LIKE ?||'%'
+               AND SYS_PART   = ?
+               AND COMM_PART  = ?  
+               AND USE_YN     LIKE  ?||'%'               
+               AND REFER_CODE = ?
+             ORDER BY INQR_ORDER, COMM_CODE
+        ]]>
+    </query>
+    <!-- 공통코드 조회 시 사용여부와 참조코드 체크  SQL -->
+    <query name="SEL_COMM_CODE_USE_REFER_">
+        <![CDATA[          
+            SELECT COMM_CODE
+                 , COMM_NAME1 
+              FROM COM.TC_COMMCODE
+             WHERE COMM_CODE    LIKE ?||'%'
+               AND COMM_CODE    LIKE ?||'%'
+               AND COMM_NAME1   LIKE '%'||?||'%'
+               AND SYS_PART   = ?
+               AND COMM_PART  = ?  
+               AND USE_YN     LIKE  ?||'%'               
+               AND REFER_CODE = ?
+             ORDER BY INQR_ORDER, COMM_CODE
+        ]]>
+    </query>
+
+    <!-- 점별단품가격마스터의 정상가를 조회  SQL -->
+    <query name="SEL_STRSKUPRCMST_NORM_PRC">
+        <![CDATA[
+            SELECT NORM_COST_PRC AS COL1
+                 , NORM_SALE_PRC AS COL2
+                 , NORM_MG_RATE  AS COL3
+                 , ''            AS COL4
+                 , ''            AS COL5 
+              FROM DPS.PC_STRSKUPRCMST
+             WHERE STR_CD     = ?
+               AND SKU_CD     = ?
+               AND EVENT_CD   = '00000000000'
+               AND ?          BETWEEN APP_S_DT AND APP_E_DT
+        ]]>
+    </query>
+    <!-- 점별품번의 조직코드 조회  SQL -->
+    <query name="SEL_STRPBN_ORG_CD">
+        <![CDATA[
+            SELECT BUY_ORG_CD    AS COL1
+                 , SALE_ORG_CD   AS COL2
+                 , ''            AS COL3
+                 , ''            AS COL4
+                 , ''            AS COL5 
+              FROM DPS.PC_STRPBN
+             WHERE STR_CD     = ?
+               AND PUMBUN_CD  = ?
+        ]]>
+    </query>
+    
+    
+    <!-- ToDoList  헤더 -->
+    <gauce name="H_COMM_TODOLIST">
+        <column colName="TDL_USER_ID"		colType="TB_STRING" size="10"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="RQS_USER_ID"		colType="TB_STRING" size="10"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="TDL_NAME"			colType="TB_STRING" size="100"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="TDL_URL"			colType="TB_STRING" size="100"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="TDL_LIMIT_DATE"	colType="TB_STRING" size="14"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="TDL_DATE"			colType="TB_STRING" size="14"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="TDL_SEQ"			colType="TB_STRING" size="3"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="TDL_FLAG"			colType="TB_STRING" size="1"	dec="0" keyType="TB_NORMAL"  roundMode=""/>
+    </gauce>
+   
+    <query name="SEL_TODOLIST_CNT">
+        <![CDATA[
+            SELECT COUNT(*) + 1    AS TDL_SEQ  
+              FROM COM.TC_TODOLIST
+             WHERE TDL_DATE LIKE TO_CHAR(SYSDATE, 'YYYYMMDD') || '%'
+               AND TDL_USER_ID  = ?
+        ]]>
+    </query>
+     
+    <query name="INS_TODOLIST">
+        <![CDATA[
+			INSERT INTO COM.TC_TODOLIST
+			(
+			      TDL_DATE
+			    , TDL_USER_ID
+			    , TDL_SEQ
+			    , RQS_USER_ID
+			    , TDL_NAME
+			    , TDL_URL
+			    , TDL_LIMIT_DATE
+			    , TDL_FLAG
+			    , TDL_READ_FLAG
+			)
+			VALUES
+			(
+			      TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+			    , ?
+			    , ?
+			    , ?
+			    , ?
+			    , ?
+			    , ?
+			    , ?
+			    , 'N'
+			)
+        ]]>
+    </query>
+     
+    <query name="UPT_TODOLIST">
+        <![CDATA[
+        	UPDATE COM.TC_TODOLIST
+        	   SET TDL_FLAG 	= ?
+        	 WHERE TDL_DATE		= ?
+        	   AND TDL_USER_ID 	= ?
+        	   AND TDL_SEQ 		= ? 
+        ]]>
+    </query>
+    
+    
+</service>
+

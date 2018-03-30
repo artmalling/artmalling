@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.05.30
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  회원 연령별성별 매출 현황(일)
+ -->
+<service name="/dbri315.db">
+    <!-- 월단위 포인트 현황  -->
+    <gauce name="H_MASTER"> 
+        <column colName="AGE_NM"    		colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEX_NM"    		colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"       	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AGE_AMT"       	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"       	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_RATE"       	colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AGE_RATE"       	colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEX_RATE"      	colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_SAEL_AMT"     	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_AGE_AMT"     	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_TOT_AMT"     	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_SALE_RATE"     colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_AGE_RATE"     	colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_SEX_RATE"     	colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_SAEL_AMT"    	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_SAEL_RATE"  	colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>  
+    
+    <!-- 회원 연령별성별 매출 현황(일) -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT 
+			            --  AA.AGE
+			            --, AA.SEX
+			              AA.AGE_NM
+			            , AA.SEX_NM
+			            , SALE_AMT  -- 월년령성별매출
+			            , AGE_AMT    -- 월년령대매출
+			            , TOT_AMT    -- 월전체매출
+			            , SALE_RATE    -- 전체매출구성비
+			            , AGE_RATE    -- 년령별전체매출구성비
+			            , SEX_RATE    -- 성별년령별구성비
+			            , PRE_SALE_AMT  -- 대비월년령성별매출
+			            , PRE_AGE_AMT    -- 대비월년령대매출
+			            , PRE_TOT_AMT    -- 대비월전체매출
+			            , PRE_SALE_RATE    -- 대비전체매출구성비
+			            , PRE_AGE_RATE    -- 대비년령별전체매출구성비
+			            , PRE_SEX_RATE    -- 대비성별년령별구성비
+			            , SALE_AMT - PRE_SALE_AMT  AS ADD_SALE_AMT-- 매출증감액
+			            --, ROUND((SALE_AMT - PRE_SALE_AMT) / PRE_SALE_AMT * 100, 2) AS ADD_SALE_RATE-- 매출증감액율
+			            , CASE WHEN PRE_SALE_AMT = 0 THEN 0 ELSE 
+			              ROUND((SALE_AMT - PRE_SALE_AMT) / PRE_SALE_AMT * 100, 2) END AS ADD_SALE_RATE-- 매출증감액율
+			FROM    
+			    (
+			        SELECT 
+			              XX.AGE
+			            , XX.SEX
+			            , XX.AGE_NM
+			            , XX.SEX_NM
+			            , SUM(XX.SALE_AMT) AS SALE_AMT  -- 월년령성별매출
+			            , SUM(YY.AGE_AMT) AS AGE_AMT    -- 월년령대매출
+			            , SUM(ZZ.TOT_AMT) AS TOT_AMT    -- 월전체매출
+			            /*        
+			            , ROUND(SUM(XX.SALE_AMT) / SUM(ZZ.TOT_AMT)*100,2) AS SALE_RATE    -- 전체매출구성비
+			            , ROUND(SUM(YY.AGE_AMT) / SUM(ZZ.TOT_AMT)*100,2) AS AGE_RATE    -- 년령별전체매출구성비
+			            , ROUND(SUM(XX.SALE_AMT) / SUM(YY.AGE_AMT)*100,2) AS SEX_RATE    -- 성별년령별구성비
+			            */
+				        , CASE WHEN SUM(ZZ.TOT_AMT) = 0 THEN 0 ELSE ROUND(SUM(XX.SALE_AMT) / SUM(ZZ.TOT_AMT)*100,2) END AS SALE_RATE    -- 전체매출구성비
+				        , CASE WHEN SUM(ZZ.TOT_AMT) = 0 THEN 0 ELSE ROUND(SUM(YY.AGE_AMT) / SUM(ZZ.TOT_AMT)*100,2) END AS AGE_RATE    -- 년령별전체매출구성비
+				        , CASE WHEN SUM(YY.AGE_AMT) = 0 THEN 0 ELSE ROUND(SUM(XX.SALE_AMT) / SUM(YY.AGE_AMT)*100,2) END AS SEX_RATE    -- 성별년령별구성비				            
+			        FROM (
+			            SELECT  TRUNC(CUST_AGE/10)||'0' AS AGE
+			                  , CUST_SEX               AS SEX
+			                  , TRUNC(CUST_AGE/10)||'0'||' '||'대'  AS AGE_NM
+			                  , DECODE(CUST_SEX,'M','남','F','여','') AS SEX_NM
+			                  --, SUM(SALE_AMT)    AS SALE_AMT
+			                  , SUM(NORM_SALE_AMT)    AS SALE_AMT
+			                  , 0               AS AGE_TOT_AMT
+			                  , 0               AS TOT_AMT
+			            FROM  DPS.PS_DAYCUST B
+			            WHERE 1=1 --STR_CD = '01'
+			              AND SALE_DT >= ?
+			              AND SALE_DT <= ?
+			            GROUP BY  CUST_SEX, TRUNC(CUST_AGE/10)||'0'
+			            ) XX,
+			            (
+			            SELECT  TRUNC(CUST_AGE/10)||'0' AS AGE
+			                  , 'T'               AS SEX
+			                  , TRUNC(CUST_AGE/10)||'0'||' '||'대'  AS AGE_NM
+			                  , 'T' AS SEX_NM
+			                  , 0
+			                  , 0
+			                  --, SUM(SALE_AMT) AGE_AMT
+			                  , SUM(NORM_SALE_AMT) AGE_AMT
+			            FROM  DPS.PS_DAYCUST B
+			            WHERE 1=1 --STR_CD = '01'
+			              AND SALE_DT >= ?
+			              AND SALE_DT <= ?
+			            GROUP BY  'T', TRUNC(CUST_AGE/10)||'0'
+			            ) YY,
+			            (
+			            SELECT  '00'     AS AGE
+			                  , 'T'        AS SEX
+			                  , '00'      AS AGE_NM
+			                  , 'T'     AS SEX_NM
+			                  , 0
+			                  , 0
+			                  --, SUM(SALE_AMT) TOT_AMT
+			                  , SUM(NORM_SALE_AMT) TOT_AMT
+			            FROM  DPS.PS_DAYCUST B
+			            WHERE 1=1 --STR_CD = '01'
+			              AND SALE_DT >= ?
+			              AND SALE_DT <= ?
+			            GROUP BY 'T', '00'
+			            ) ZZ
+			        WHERE XX.AGE = YY.AGE
+			        GROUP BY XX.AGE, XX.SEX, XX.AGE_NM ,XX.SEX_NM
+			        ORDER BY 1,2,3 DESC,4
+			    ) AA,
+			    (
+			        SELECT 
+			              XX.AGE
+			            , XX.SEX
+			            , XX.AGE_NM
+			            , XX.SEX_NM
+			            , SUM(XX.SALE_AMT) AS PRE_SALE_AMT  -- 월년령성별매출
+			            , SUM(YY.AGE_AMT) AS PRE_AGE_AMT    -- 월년령대매출
+			            , SUM(ZZ.TOT_AMT) AS PRE_TOT_AMT    -- 월전체매출
+			            /*
+			            , ROUND(SUM(XX.SALE_AMT) / SUM(ZZ.TOT_AMT)*100,2) AS PRE_SALE_RATE    -- 전체매출구성비
+			            , ROUND(SUM(YY.AGE_AMT) / SUM(ZZ.TOT_AMT)*100,2) AS PRE_AGE_RATE    -- 년령별전체매출구성비
+			            , ROUND(SUM(XX.SALE_AMT) / SUM(YY.AGE_AMT)*100,2) AS PRE_SEX_RATE    -- 성별년령별구성비
+			            */
+				        , CASE WHEN SUM(ZZ.TOT_AMT) = 0 THEN 0 ELSE ROUND(SUM(XX.SALE_AMT) / SUM(ZZ.TOT_AMT)*100,2) END AS PRE_SALE_RATE    -- 전체매출구성비
+				        , CASE WHEN SUM(ZZ.TOT_AMT) = 0 THEN 0 ELSE ROUND(SUM(YY.AGE_AMT) / SUM(ZZ.TOT_AMT)*100,2) END AS PRE_AGE_RATE    -- 년령별전체매출구성비
+				        , CASE WHEN SUM(YY.AGE_AMT) = 0 THEN 0 ELSE ROUND(SUM(XX.SALE_AMT) / SUM(YY.AGE_AMT)*100,2) END AS PRE_SEX_RATE    -- 성별년령별구성비				            
+			        FROM (
+			            SELECT  TRUNC(CUST_AGE/10)||'0' AS AGE
+			                  , CUST_SEX               AS SEX
+			                  , TRUNC(CUST_AGE/10)||'0'||' '||'대'  AS AGE_NM
+			                  , DECODE(CUST_SEX,'M','남','F','여','') AS SEX_NM
+			                  --, SUM(SALE_AMT)    AS SALE_AMT
+			                  , SUM(NORM_SALE_AMT)    AS SALE_AMT
+			                  , 0               AS AGE_TOT_AMT
+			                  , 0               AS TOT_AMT
+			            FROM  DPS.PS_DAYCUST B
+			            WHERE 1=1 --STR_CD = '01'
+			              AND SALE_DT >= ?
+			              AND SALE_DT <= ?
+			            GROUP BY  CUST_SEX, TRUNC(CUST_AGE/10)||'0'
+			            ) XX,
+			            (
+			            SELECT  TRUNC(CUST_AGE/10)||'0' AS AGE
+			                  , 'T'               AS SEX
+			                  , TRUNC(CUST_AGE/10)||'0'||' '||'대'  AS AGE_NM
+			                  , 'T' AS SEX_NM
+			                  , 0
+			                  , 0
+			                  --, SUM(SALE_AMT) AGE_AMT
+			                  , SUM(NORM_SALE_AMT) AGE_AMT
+			            FROM  DPS.PS_DAYCUST B
+			            WHERE 1=1 --STR_CD = '01'
+			              AND SALE_DT >= ?
+			              AND SALE_DT <= ?
+			            GROUP BY  'T', TRUNC(CUST_AGE/10)||'0'
+			            ) YY,
+			            (
+			            SELECT  '00'     AS AGE
+			                  , 'T'        AS SEX
+			                  , '00'      AS AGE_NM
+			                  , 'T'     AS SEX_NM
+			                  , 0
+			                  , 0
+			                  --, SUM(SALE_AMT) TOT_AMT
+			                  , SUM(NORM_SALE_AMT) TOT_AMT
+			            FROM  DPS.PS_DAYCUST B
+			            WHERE 1=1 --STR_CD = '01'
+			              AND SALE_DT >= ?
+			              AND SALE_DT <= ?
+			            GROUP BY 'T', '00'
+			            ) ZZ
+			        WHERE XX.AGE = YY.AGE
+			        GROUP BY XX.AGE, XX.SEX, XX.AGE_NM ,XX.SEX_NM
+			        ORDER BY 1,2,3 DESC,4
+			    ) BB
+			WHERE AA.AGE = BB.AGE(+)
+			  AND AA.SEX = BB.SEX(+) 
+        ]]>        
+    </query>  
+</service>

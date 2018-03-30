@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.02.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개     요 :  무기명카드 발급 매수 등록
+ -->
+<service name="/dctm106.dm">
+     <gauce name="H_MASTER"> 
+          <column colName="CUST_ID"        colType="TB_STRING"      size="9"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+          <column colName="CUST_NAME"      colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+          <column colName="HHOLD_ID"       colType="TB_STRING"      size="9"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+          <column colName="HHOLD_MAN_ID"   colType="TB_STRING"      size="9"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+          <column colName="HHOLD_NAME"     colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+          <column colName="CARD_NO"        colType="TB_STRING"      size="64"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+          <column colName="COMM_NAME1"     colType="TB_STRING"      size="20"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+          <column colName="TAG"            colType="TB_STRING"      size="1"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     </gauce>
+
+     <!--세대원 조회 왼쪽 -->
+     <query name="searchMaster">          
+          <![CDATA[
+                SELECT A.CUST_ID
+                      , A.CUST_NAME
+                      , A.HHOLD_ID
+                      , B.HHOLD_MAN_ID
+                      , D.CUST_NAME  HHOLD_NAME
+                      , DCS.SC_Crypto_FUN('DEC', C.CARD_NO) AS CARD_NO
+                      , COM.FN_GET_COMM_NAME('D', 'D005', C.CARD_TYPE_CD) COMM_NAME1
+                      , DECODE(A.CUST_ID, ?, 'Y', 'N') TAG 
+                  FROM DCS.DM_CUSTOMER A
+                      , DCS.DM_HOUSEHOLD B
+                      , DCS.DM_CARD C
+                      , DCS.DM_CUSTOMER D
+                 WHERE A.HHOLD_ID       = B.HHOLD_ID
+                   AND A.CUST_ID        = C.CUST_ID
+                   AND A.CUST_STAT_FLAG = '0'
+                   AND B.HHOLD_MAN_ID   = D.CUST_ID
+                   AND A.CUST_ID        = (
+                                           SELECT A.CUST_ID 
+                                             FROM DCS.DM_CUSTOMER A
+                                                , DCS.DM_HOUSEHOLD B
+                                                , DCS.DM_CARD C
+                                            WHERE A.HHOLD_ID = B.HHOLD_ID
+                                              AND A.CUST_ID  = C.CUST_ID
+                                              AND ROWNUM      = 1
+          ]]>          
+     </query>
+          
+     <query name="SEL_MASTER_WHERE_SS_NO">          
+          <![CDATA[
+                AND A.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+          ]]>          
+     </query>
+     <query name="SEL_MASTER_WHERE_CUST_ID">          
+          <![CDATA[
+                AND A.CUST_ID    = ?
+          ]]>          
+     </query> 
+     <query name="SEL_MASTER_WHERE_CARD_NO">          
+          <![CDATA[
+                AND C.CARD_NO    = DCS.SC_Crypto_FUN('ENC', ?)
+          ]]>          
+     </query>  
+     <query name="SEL_MASTER_ORDER">          
+          <![CDATA[
+                )
+                 ORDER BY A.CUST_ID, C.CARD_NO
+          ]]>          
+     </query> 
+
+     <!--세대주 조회  오른쪽-->
+     <query name="searchMaster2">          
+          <![CDATA[
+                SELECT A.CUST_ID
+                      , A.CUST_NAME
+                      , A.HHOLD_ID
+                      , B.HHOLD_MAN_ID
+                      , D.CUST_NAME
+                      , DCS.SC_Crypto_FUN('DEC', C.CARD_NO) AS CARD_NO
+                      , COM.FN_GET_COMM_NAME('D', 'D005', C.CARD_TYPE_CD) COMM_NAME1
+                      , DECODE(A.CUST_ID, ?, 'Y', 'N') TAG 
+                  FROM DCS.DM_CUSTOMER A
+                      , DCS.DM_HOUSEHOLD B
+                      , DCS.DM_CARD C
+                      , DCS.DM_CUSTOMER D
+                 WHERE A.HHOLD_ID       = B.HHOLD_ID
+                   AND A.CUST_ID        = C.CUST_ID
+                   AND A.CUST_STAT_FLAG = '0'
+                   AND B.HHOLD_MAN_ID   = D.CUST_ID
+                   AND B.HHOLD_MAN_ID   = (
+                                           SELECT HHOLD_MAN_ID 
+                                             FROM DCS.DM_CUSTOMER A
+                                                , DCS.DM_HOUSEHOLD B
+                                                , DCS.DM_CARD C
+                                            WHERE A.HHOLD_ID = B.HHOLD_ID
+                                              AND A.CUST_ID  = C.CUST_ID
+                                              AND ROWNUM      = 1
+          ]]>          
+     </query>	
+     
+     <!--세대주 확인-->
+     <query name="SEL_HHOLD_MAN_ID_CHK">          
+          <![CDATA[
+                SELECT HHOLD_MAN_ID 
+                  FROM DCS.DM_CUSTOMER A
+                     , DCS.DM_HOUSEHOLD B
+                 WHERE A.HHOLD_ID = B.HHOLD_ID
+                   AND A.CUST_ID  LIKE ? || '%'
+          ]]>          
+     </query>   
+     
+     <!--세대원 조회 왼쪽 -->
+     <query name="SEL_COMP_PERS_FLAG">          
+          <![CDATA[
+                SELECT A.COMP_PERS_FLAG
+                  FROM DCS.DM_CUSTOMER A
+                 WHERE A.CUST_ID   = (
+                                       SELECT A.CUST_ID 
+                                         FROM DCS.DM_CUSTOMER A
+                                            , DCS.DM_HOUSEHOLD B
+                                            , DCS.DM_CARD C
+                                        WHERE A.HHOLD_ID = B.HHOLD_ID
+                                          AND A.CUST_ID  = C.CUST_ID
+                                          AND ROWNUM      = 1
+          ]]>          
+     </query>
+     
+     <query name="SEL_MASTER_END">          
+          <![CDATA[
+                )
+          ]]>          
+     </query>
+</service>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.06.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal445.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="SALE_DT"                  colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"                colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"              colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"                colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"              colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"                   colType="TB_STRING"      size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"                 colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_QTY"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_AMT"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_SHOPBG">        
+        <![CDATA[
+            SELECT A.SALE_DT
+                 , A.PUMBUN_CD
+                 , B.PUMBUN_NAME
+                 , A.PUMMOK_CD
+                 , C.PUMMOK_NAME
+                 , A.SKU_CD
+                 , D.SKU_NAME
+                 , A.COLL_QTY
+                 , A.COLL_AMT
+              FROM DPS.PS_DISSHOPBGCAN A
+                 , DPS.PC_STRPBN       B
+                 , DPS.PC_PMKMST       C
+                 , DPS.PC_STRSKUMST    D
+             WHERE A.STR_CD          = B.STR_CD
+               AND A.PUMBUN_CD       = B.PUMBUN_CD
+               AND A.PUMMOK_CD       = C.PUMMOK_CD
+               AND A.STR_CD          = D.STR_CD
+               AND A.SKU_CD          = D.SKU_CD
+               AND A.PUMBUN_TYPE     = '3'
+               AND A.STR_CD          = ?
+               AND A.SALE_DT         BETWEEN ? AND ?
+             ORDER BY
+                   A.SALE_DT
+                 , A.PUMBUN_CD
+                 , A.PUMMOK_CD
+                 , A.SKU_CD
+   
+  
+            
+        ]]>        
+    </query>
+    
+</service>

@@ -1,0 +1,1487 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.25
+ * 변 경 일 : 
+ * 변경내용: 
+ * 개     요 :  실행품번별일매출계획 조회, 수정 및 확정
+ -->
+<service name="/psal203.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="CONF_FLAG"         colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"           colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"           colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"             colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"          colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="YYYYMM"            colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_DT"           colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT"  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT"   colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT"  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT"  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE" colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE" colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 대비일자 데이터 -->
+    <gauce name="H_SEL_SCHEDULE"> 
+        <column colName="STD_WEIGHT"        colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 영업일자 데이터 -->
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="PUMBUN_CD"                     colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"                   colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JUNGSANG"                      colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT_TOTAL_JUNG"     colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT_TOTAL_JUNG"   colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAB_JUNGSANG"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT1"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT1"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT2"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT2"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT3"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT3"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT4"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT4"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT5"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT5"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT6"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT6"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT7"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT7"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT8"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT8"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT9"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT9"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT10"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT10"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT11"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT11"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT12"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT12"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT13"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT13"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT14"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT14"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT15"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT15"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT16"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT16"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT17"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT17"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT18"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT18"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT19"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT19"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT20"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT20"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT21"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT21"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT22"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT22"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT23"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT23"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT24"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT24"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT25"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT25"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT26"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT26"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT27"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT27"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT28"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT28"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT29"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT29"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT30"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT30"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_NORM_SAMT31"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_NORM_SAMT31"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+        <column colName="EVENT"                         colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT_TOTAL_EVENT"     colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT_TOTAL_EVENT"   colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAB_EVENT"                     colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT1"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT1"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT2"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT2"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT3"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT3"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT4"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT4"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT5"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT5"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT6"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT6"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT7"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT7"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT8"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT8"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT9"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT9"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT10"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT10"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT11"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT11"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT12"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT12"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT13"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT13"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT14"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT14"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT15"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT15"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT16"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT16"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT17"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT17"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT18"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT18"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT19"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT19"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT20"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT20"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT21"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT21"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT22"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT22"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT23"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT23"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT24"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT24"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT25"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT25"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT26"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT26"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT27"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT27"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT28"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT28"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT29"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT29"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT30"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT30"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_EVT_SAMT31"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_EVT_SAMT31"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+                                                        
+        <column colName="TOTALSALE"                     colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT_TOTAL_SALE"     colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT_TOTAL_SALE"   colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAB_SALE"                      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT1"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT1"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT2"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT2"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT3"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT3"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT4"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT4"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT5"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT5"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT6"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT6"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT7"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT7"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT8"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT8"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT9"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT9"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT10"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT10"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT11"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT11"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT12"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT12"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT13"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT13"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT14"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT14"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT15"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT15"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT16"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT16"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT17"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT17"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT18"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT18"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT19"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT19"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT20"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT20"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT21"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT21"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT22"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT22"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT23"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT23"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT24"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT24"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT25"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT25"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT26"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT26"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT27"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT27"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT28"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT28"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT29"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT29"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT30"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT30"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_TAMT31"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT31"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+        <column colName="PROF"                          colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT_TOTAL_PROF"     colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT_TOTAL_PROF"   colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAB_PROF"                      colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT1"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT1"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT2"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT2"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT3"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT3"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT4"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT4"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT5"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT5"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT6"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT6"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT7"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT7"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT8"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT8"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT9"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT9"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT10"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT10"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT11"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT11"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT12"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT12"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT13"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT13"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT14"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT14"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT15"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT15"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT16"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT16"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT17"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT17"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT18"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT18"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT19"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT19"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT20"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT20"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT21"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT21"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT22"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT22"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT23"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT23"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT24"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT24"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT25"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT25"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT26"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT26"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT27"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT27"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT28"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT28"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT29"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT29"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT30"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT30"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_TAMT31"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_TAMT31"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+        <column colName="SALECRATE"                     colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE_TOTAL_SALE"    colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE_TOTAL_SALE"  colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAB_SALE_RATE"                 colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE1"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE1"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE2"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE2"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE3"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE3"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE4"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE4"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE5"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE5"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE6"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE6"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE7"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE7"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE8"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE8"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE9"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE9"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE10"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE10"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE11"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE11"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE12"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE12"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE13"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE13"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE14"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE14"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE15"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE15"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE16"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE16"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE17"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE17"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE18"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE18"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE19"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE19"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE20"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE20"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE21"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE21"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE22"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE22"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE23"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE23"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE24"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE24"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE25"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE25"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE26"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE26"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE27"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE27"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE28"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE28"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE29"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE29"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE30"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE30"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_SALE_CRATE31"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_CRATE31"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+        <column colName="PROFCRATE"                     colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE_TOTAL_PROF"    colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE_TOTAL_PROF"  colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAB_PROF_RATE"                 colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE1"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE1"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE2"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE2"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE3"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE3"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE4"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE4"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE5"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE5"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE6"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE6"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE7"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE7"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE8"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE8"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE9"              colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE9"            colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE10"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE10"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE11"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE11"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE12"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE12"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE13"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE13"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE14"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE14"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE15"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE15"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE16"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE16"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE17"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE17"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE18"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE18"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE19"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE19"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE20"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE20"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE21"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE21"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE22"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE22"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE23"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE23"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE24"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE24"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE25"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE25"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE26"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE26"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE27"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE27"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE28"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE28"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE29"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE29"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE30"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE30"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BFYY_PROF_CRATE31"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_PROF_CRATE31"           colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_FLAG"                     colType="TB_STRING"      size="2"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+    <!-- 확정 조회 -->
+    <gauce name="H_CONF_FLAG_M">
+        <column colName="CONF_FLAG"         colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 대비 요일 조회 -->
+    <gauce name="H_SEL_BFYYWEEK">
+        <column colName="STR_CD"          colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="SALE_DT"         colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="CMPR_DT"         colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="CMPR_DAY"        colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 조회 쿼리  -->
+    <query name="SEL_PS_ACTPUMBUN">        
+        <![CDATA[
+            SELECT (CASE WHEN NVL(A.CONF_FLAG, 'N') = 'Y' THEN 'T' ELSE 'F' END)  AS CONF_FLAG
+                 , A.STR_CD
+                 , A.DEPT_CD
+                 , A.TEAM_CD
+                 , A.PC_CD
+                 , B.ORG_SHORT_NAME               AS ORG_NAME 
+                 , A.EXE_YM                       AS YYYYMM
+                 , A.CONF_DT
+                 , SUM(A.ORIGIN_NORM_SAMT)        AS ORIGIN_NORM_SAMT
+                 , SUM(A.ORIGIN_EVT_SAMT)         AS ORIGIN_EVT_SAMT
+                 , SUM(A.ORIGIN_SALE_TAMT)        AS ORIGIN_SALE_TAMT
+                 , SUM(A.ORIGIN_PROF_TAMT)        AS ORIGIN_PROF_TAMT
+                 , 100                            AS ORIGIN_SALE_CRATE
+                 , 100                            AS ORIGIN_PROF_CRATE
+              FROM DPS.PS_ACTPUMBUN      A
+                 , DPS.PC_ORGMST         B
+             WHERE A.ORG_CD     = B.ORG_CD
+               AND A.STR_CD     = B.STR_CD
+               AND A.DEPT_CD    = B.DEPT_CD
+               AND A.TEAM_CD    = B.TEAM_CD
+               AND A.PC_CD      = B.PC_CD
+               AND A.STR_CD     = ?
+               AND A.DEPT_CD    = ?
+               AND A.TEAM_CD    = ?
+               AND A.PC_CD      LIKE ? || '%'
+               AND A.EXE_YM     = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                             )
+               AND EXISTS (SELECT PUMBUN_CD
+                             FROM DPS.PC_STRPBN
+                            WHERE STR_CD    = A.STR_CD
+                              AND PUMBUN_CD = A.PUMBUN_CD
+                              --AND BIZ_TYPE  != '5'
+                          )
+             GROUP BY
+                   A.CONF_FLAG
+                 , A.STR_CD
+                 , A.DEPT_CD
+                 , A.TEAM_CD
+                 , A.PC_CD
+                 , B.ORG_SHORT_NAME
+                 , A.EXE_YM
+                 , A.CONF_DT
+
+                 
+               
+            
+        ]]>        
+    </query>
+    
+    <!-- PC별가중치정보 일자별 조회 쿼리  -->
+    <query name="H_SEL_DETAIL">        
+        <![CDATA[
+                        SELECT A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , '정상'                                  AS JUNGSANG
+                 , A.BFYY_NORM_SAMT_TOTAL_JUNG        AS BFYY_NORM_SAMT_TOTAL_JUNG
+                 , A.ORIGIN_NORM_SAMT_TOTAL_JUNG      AS ORIGIN_NORM_SAMT_TOTAL_JUNG
+                 , 0                                  AS GAB_JUNGSANG
+                 , A.BFYY_NORM_SAMT1                  AS BFYY_NORM_SAMT1
+                 , A.ORIGIN_NORM_SAMT1                AS ORIGIN_NORM_SAMT1
+                 , A.BFYY_NORM_SAMT2                  AS BFYY_NORM_SAMT2
+                 , A.ORIGIN_NORM_SAMT2                AS ORIGIN_NORM_SAMT2
+                 , A.BFYY_NORM_SAMT3                  AS BFYY_NORM_SAMT3
+                 , A.ORIGIN_NORM_SAMT3                AS ORIGIN_NORM_SAMT3
+                 , A.BFYY_NORM_SAMT4                  AS BFYY_NORM_SAMT4
+                 , A.ORIGIN_NORM_SAMT4                AS ORIGIN_NORM_SAMT4
+                 , A.BFYY_NORM_SAMT5                  AS BFYY_NORM_SAMT5
+                 , A.ORIGIN_NORM_SAMT5                AS ORIGIN_NORM_SAMT5
+                 , A.BFYY_NORM_SAMT6                  AS BFYY_NORM_SAMT6
+                 , A.ORIGIN_NORM_SAMT6                AS ORIGIN_NORM_SAMT6
+                 , A.BFYY_NORM_SAMT7                  AS BFYY_NORM_SAMT7
+                 , A.ORIGIN_NORM_SAMT7                AS ORIGIN_NORM_SAMT7
+                 , A.BFYY_NORM_SAMT8                  AS BFYY_NORM_SAMT8
+                 , A.ORIGIN_NORM_SAMT8                AS ORIGIN_NORM_SAMT8
+                 , A.BFYY_NORM_SAMT9                  AS BFYY_NORM_SAMT9
+                 , A.ORIGIN_NORM_SAMT9                AS ORIGIN_NORM_SAMT9
+                 , A.BFYY_NORM_SAMT10                 AS BFYY_NORM_SAMT10
+                 , A.ORIGIN_NORM_SAMT10               AS ORIGIN_NORM_SAMT10
+                 , A.BFYY_NORM_SAMT11                 AS BFYY_NORM_SAMT11
+                 , A.ORIGIN_NORM_SAMT11               AS ORIGIN_NORM_SAMT11
+                 , A.BFYY_NORM_SAMT12                 AS BFYY_NORM_SAMT12
+                 , A.ORIGIN_NORM_SAMT12               AS ORIGIN_NORM_SAMT12
+                 , A.BFYY_NORM_SAMT13                 AS BFYY_NORM_SAMT13
+                 , A.ORIGIN_NORM_SAMT13               AS ORIGIN_NORM_SAMT13
+                 , A.BFYY_NORM_SAMT14                 AS BFYY_NORM_SAMT14
+                 , A.ORIGIN_NORM_SAMT14               AS ORIGIN_NORM_SAMT14
+                 , A.BFYY_NORM_SAMT15                 AS BFYY_NORM_SAMT15
+                 , A.ORIGIN_NORM_SAMT15               AS ORIGIN_NORM_SAMT15
+                 , A.BFYY_NORM_SAMT16                 AS BFYY_NORM_SAMT16
+                 , A.ORIGIN_NORM_SAMT16               AS ORIGIN_NORM_SAMT16
+                 , A.BFYY_NORM_SAMT17                 AS BFYY_NORM_SAMT17
+                 , A.ORIGIN_NORM_SAMT17               AS ORIGIN_NORM_SAMT17
+                 , A.BFYY_NORM_SAMT18                 AS BFYY_NORM_SAMT18
+                 , A.ORIGIN_NORM_SAMT18               AS ORIGIN_NORM_SAMT18
+                 , A.BFYY_NORM_SAMT19                 AS BFYY_NORM_SAMT19
+                 , A.ORIGIN_NORM_SAMT19               AS ORIGIN_NORM_SAMT19
+                 , A.BFYY_NORM_SAMT20                 AS BFYY_NORM_SAMT20
+                 , A.ORIGIN_NORM_SAMT20               AS ORIGIN_NORM_SAMT20
+                 , A.BFYY_NORM_SAMT21                 AS BFYY_NORM_SAMT21
+                 , A.ORIGIN_NORM_SAMT21               AS ORIGIN_NORM_SAMT21
+                 , A.BFYY_NORM_SAMT22                 AS BFYY_NORM_SAMT22
+                 , A.ORIGIN_NORM_SAMT22               AS ORIGIN_NORM_SAMT22
+                 , A.BFYY_NORM_SAMT23                 AS BFYY_NORM_SAMT23
+                 , A.ORIGIN_NORM_SAMT23               AS ORIGIN_NORM_SAMT23
+                 , A.BFYY_NORM_SAMT24                 AS BFYY_NORM_SAMT24
+                 , A.ORIGIN_NORM_SAMT24               AS ORIGIN_NORM_SAMT24
+                 , A.BFYY_NORM_SAMT25                 AS BFYY_NORM_SAMT25
+                 , A.ORIGIN_NORM_SAMT25               AS ORIGIN_NORM_SAMT25
+                 , A.BFYY_NORM_SAMT26                 AS BFYY_NORM_SAMT26
+                 , A.ORIGIN_NORM_SAMT26               AS ORIGIN_NORM_SAMT26
+                 , A.BFYY_NORM_SAMT27                 AS BFYY_NORM_SAMT27
+                 , A.ORIGIN_NORM_SAMT27               AS ORIGIN_NORM_SAMT27
+                 , A.BFYY_NORM_SAMT28                 AS BFYY_NORM_SAMT28
+                 , A.ORIGIN_NORM_SAMT28               AS ORIGIN_NORM_SAMT28
+                 , A.BFYY_NORM_SAMT29                 AS BFYY_NORM_SAMT29
+                 , A.ORIGIN_NORM_SAMT29               AS ORIGIN_NORM_SAMT29
+                 , A.BFYY_NORM_SAMT30                 AS BFYY_NORM_SAMT30
+                 , A.ORIGIN_NORM_SAMT30               AS ORIGIN_NORM_SAMT30
+                 , A.BFYY_NORM_SAMT31                 AS BFYY_NORM_SAMT31
+                 , A.ORIGIN_NORM_SAMT31               AS ORIGIN_NORM_SAMT31
+                 
+                 , '행사'                                  AS EVENT
+                 , A.BFYY_EVT_SAMT_TOTAL_EVENT        AS BFYY_EVT_SAMT_TOTAL_EVENT
+                 , A.ORIGIN_EVT_SAMT_TOTAL_EVENT      AS ORIGIN_EVT_SAMT_TOTAL_EVENT
+                 , 0                                  AS GAB_EVENT
+                 , A.BFYY_EVT_SAMT1                   AS BFYY_EVT_SAMT1
+                 , A.ORIGIN_EVT_SAMT1                 AS ORIGIN_EVT_SAMT1
+                 , A.BFYY_EVT_SAMT2                   AS BFYY_EVT_SAMT2
+                 , A.ORIGIN_EVT_SAMT2                 AS ORIGIN_EVT_SAMT2
+                 , A.BFYY_EVT_SAMT3                   AS BFYY_EVT_SAMT3
+                 , A.ORIGIN_EVT_SAMT3                 AS ORIGIN_EVT_SAMT3
+                 , A.BFYY_EVT_SAMT4                   AS BFYY_EVT_SAMT4
+                 , A.ORIGIN_EVT_SAMT4                 AS ORIGIN_EVT_SAMT4
+                 , A.BFYY_EVT_SAMT5                   AS BFYY_EVT_SAMT5
+                 , A.ORIGIN_EVT_SAMT5                 AS ORIGIN_EVT_SAMT5
+                 , A.BFYY_EVT_SAMT6                   AS BFYY_EVT_SAMT6
+                 , A.ORIGIN_EVT_SAMT6                 AS ORIGIN_EVT_SAMT6
+                 , A.BFYY_EVT_SAMT7                   AS BFYY_EVT_SAMT7
+                 , A.ORIGIN_EVT_SAMT7                 AS ORIGIN_EVT_SAMT7
+                 , A.BFYY_EVT_SAMT8                   AS BFYY_EVT_SAMT8
+                 , A.ORIGIN_EVT_SAMT8                 AS ORIGIN_EVT_SAMT8
+                 , A.BFYY_EVT_SAMT9                   AS BFYY_EVT_SAMT9
+                 , A.ORIGIN_EVT_SAMT9                 AS ORIGIN_EVT_SAMT9
+                 , A.BFYY_EVT_SAMT10                  AS BFYY_EVT_SAMT10
+                 , A.ORIGIN_EVT_SAMT10                AS ORIGIN_EVT_SAMT10
+                 , A.BFYY_EVT_SAMT11                  AS BFYY_EVT_SAMT11
+                 , A.ORIGIN_EVT_SAMT11                AS ORIGIN_EVT_SAMT11
+                 , A.BFYY_EVT_SAMT12                  AS BFYY_EVT_SAMT12
+                 , A.ORIGIN_EVT_SAMT12                AS ORIGIN_EVT_SAMT12
+                 , A.BFYY_EVT_SAMT13                  AS BFYY_EVT_SAMT13
+                 , A.ORIGIN_EVT_SAMT13                AS ORIGIN_EVT_SAMT13
+                 , A.BFYY_EVT_SAMT14                  AS BFYY_EVT_SAMT14
+                 , A.ORIGIN_EVT_SAMT14                AS ORIGIN_EVT_SAMT14
+                 , A.BFYY_EVT_SAMT15                  AS BFYY_EVT_SAMT15
+                 , A.ORIGIN_EVT_SAMT15                AS ORIGIN_EVT_SAMT15
+                 , A.BFYY_EVT_SAMT16                  AS BFYY_EVT_SAMT16
+                 , A.ORIGIN_EVT_SAMT16                AS ORIGIN_EVT_SAMT16
+                 , A.BFYY_EVT_SAMT17                  AS BFYY_EVT_SAMT17
+                 , A.ORIGIN_EVT_SAMT17                AS ORIGIN_EVT_SAMT17
+                 , A.BFYY_EVT_SAMT18                  AS BFYY_EVT_SAMT18
+                 , A.ORIGIN_EVT_SAMT18                AS ORIGIN_EVT_SAMT18
+                 , A.BFYY_EVT_SAMT19                  AS BFYY_EVT_SAMT19
+                 , A.ORIGIN_EVT_SAMT19                AS ORIGIN_EVT_SAMT19
+                 , A.BFYY_EVT_SAMT20                  AS BFYY_EVT_SAMT20
+                 , A.ORIGIN_EVT_SAMT20                AS ORIGIN_EVT_SAMT20
+                 , A.BFYY_EVT_SAMT21                  AS BFYY_EVT_SAMT21
+                 , A.ORIGIN_EVT_SAMT21                AS ORIGIN_EVT_SAMT21
+                 , A.BFYY_EVT_SAMT22                  AS BFYY_EVT_SAMT22
+                 , A.ORIGIN_EVT_SAMT22                AS ORIGIN_EVT_SAMT22
+                 , A.BFYY_EVT_SAMT23                  AS BFYY_EVT_SAMT23
+                 , A.ORIGIN_EVT_SAMT23                AS ORIGIN_EVT_SAMT23
+                 , A.BFYY_EVT_SAMT24                  AS BFYY_EVT_SAMT24
+                 , A.ORIGIN_EVT_SAMT24                AS ORIGIN_EVT_SAMT24
+                 , A.BFYY_EVT_SAMT25                  AS BFYY_EVT_SAMT25
+                 , A.ORIGIN_EVT_SAMT25                AS ORIGIN_EVT_SAMT25
+                 , A.BFYY_EVT_SAMT26                  AS BFYY_EVT_SAMT26
+                 , A.ORIGIN_EVT_SAMT26                AS ORIGIN_EVT_SAMT26
+                 , A.BFYY_EVT_SAMT27                  AS BFYY_EVT_SAMT27
+                 , A.ORIGIN_EVT_SAMT27                AS ORIGIN_EVT_SAMT27
+                 , A.BFYY_EVT_SAMT28                  AS BFYY_EVT_SAMT28
+                 , A.ORIGIN_EVT_SAMT28                AS ORIGIN_EVT_SAMT28
+                 , A.BFYY_EVT_SAMT29                  AS BFYY_EVT_SAMT29
+                 , A.ORIGIN_EVT_SAMT29                AS ORIGIN_EVT_SAMT29
+                 , A.BFYY_EVT_SAMT30                  AS BFYY_EVT_SAMT30
+                 , A.ORIGIN_EVT_SAMT30                AS ORIGIN_EVT_SAMT30
+                 , A.BFYY_EVT_SAMT31                  AS BFYY_EVT_SAMT31
+                 , A.ORIGIN_EVT_SAMT31                AS ORIGIN_EVT_SAMT31
+                   
+                 , '총매출'                           AS TOTALSALE
+                 , A.BFYY_SALE_TAMT_TOTAL_SALE        AS BFYY_SALE_TAMT_TOTAL_SALE
+                 , A.ORIGIN_SALE_TAMT_TOTAL_SALE      AS ORIGIN_SALE_TAMT_TOTAL_SALE
+                 , 0                                  AS GAB_SALE
+                 , A.BFYY_SALE_TAMT1                  AS BFYY_SALE_TAMT1
+                 , A.ORIGIN_SALE_TAMT1                AS ORIGIN_SALE_TAMT1
+                 , A.BFYY_SALE_TAMT2                  AS BFYY_SALE_TAMT2
+                 , A.ORIGIN_SALE_TAMT2                AS ORIGIN_SALE_TAMT2
+                 , A.BFYY_SALE_TAMT3                  AS BFYY_SALE_TAMT3
+                 , A.ORIGIN_SALE_TAMT3                AS ORIGIN_SALE_TAMT3
+                 , A.BFYY_SALE_TAMT4                  AS BFYY_SALE_TAMT4
+                 , A.ORIGIN_SALE_TAMT4                AS ORIGIN_SALE_TAMT4
+                 , A.BFYY_SALE_TAMT5                  AS BFYY_SALE_TAMT5
+                 , A.ORIGIN_SALE_TAMT5                AS ORIGIN_SALE_TAMT5
+                 , A.BFYY_SALE_TAMT6                  AS BFYY_SALE_TAMT6
+                 , A.ORIGIN_SALE_TAMT6                AS ORIGIN_SALE_TAMT6
+                 , A.BFYY_SALE_TAMT7                  AS BFYY_SALE_TAMT7
+                 , A.ORIGIN_SALE_TAMT7                AS ORIGIN_SALE_TAMT7
+                 , A.BFYY_SALE_TAMT8                  AS BFYY_SALE_TAMT8
+                 , A.ORIGIN_SALE_TAMT8                AS ORIGIN_SALE_TAMT8
+                 , A.BFYY_SALE_TAMT9                  AS BFYY_SALE_TAMT9
+                 , A.ORIGIN_SALE_TAMT9                AS ORIGIN_SALE_TAMT9
+                 , A.BFYY_SALE_TAMT10                 AS BFYY_SALE_TAMT10
+                 , A.ORIGIN_SALE_TAMT10               AS ORIGIN_SALE_TAMT10
+                 , A.BFYY_SALE_TAMT11                 AS BFYY_SALE_TAMT11
+                 , A.ORIGIN_SALE_TAMT11               AS ORIGIN_SALE_TAMT11
+                 , A.BFYY_SALE_TAMT12                 AS BFYY_SALE_TAMT12
+                 , A.ORIGIN_SALE_TAMT12               AS ORIGIN_SALE_TAMT12
+                 , A.BFYY_SALE_TAMT13                 AS BFYY_SALE_TAMT13
+                 , A.ORIGIN_SALE_TAMT13               AS ORIGIN_SALE_TAMT13
+                 , A.BFYY_SALE_TAMT14                 AS BFYY_SALE_TAMT14
+                 , A.ORIGIN_SALE_TAMT14               AS ORIGIN_SALE_TAMT14
+                 , A.BFYY_SALE_TAMT15                 AS BFYY_SALE_TAMT15
+                 , A.ORIGIN_SALE_TAMT15               AS ORIGIN_SALE_TAMT15
+                 , A.BFYY_SALE_TAMT16                 AS BFYY_SALE_TAMT16
+                 , A.ORIGIN_SALE_TAMT16               AS ORIGIN_SALE_TAMT16
+                 , A.BFYY_SALE_TAMT17                 AS BFYY_SALE_TAMT17
+                 , A.ORIGIN_SALE_TAMT17               AS ORIGIN_SALE_TAMT17
+                 , A.BFYY_SALE_TAMT18                 AS BFYY_SALE_TAMT18
+                 , A.ORIGIN_SALE_TAMT18               AS ORIGIN_SALE_TAMT18
+                 , A.BFYY_SALE_TAMT19                 AS BFYY_SALE_TAMT19
+                 , A.ORIGIN_SALE_TAMT19               AS ORIGIN_SALE_TAMT19
+                 , A.BFYY_SALE_TAMT20                 AS BFYY_SALE_TAMT20
+                 , A.ORIGIN_SALE_TAMT20               AS ORIGIN_SALE_TAMT20
+                 , A.BFYY_SALE_TAMT21                 AS BFYY_SALE_TAMT21
+                 , A.ORIGIN_SALE_TAMT21               AS ORIGIN_SALE_TAMT21
+                 , A.BFYY_SALE_TAMT22                 AS BFYY_SALE_TAMT22
+                 , A.ORIGIN_SALE_TAMT22               AS ORIGIN_SALE_TAMT22
+                 , A.BFYY_SALE_TAMT23                 AS BFYY_SALE_TAMT23
+                 , A.ORIGIN_SALE_TAMT23               AS ORIGIN_SALE_TAMT23
+                 , A.BFYY_SALE_TAMT24                 AS BFYY_SALE_TAMT24
+                 , A.ORIGIN_SALE_TAMT24               AS ORIGIN_SALE_TAMT24
+                 , A.BFYY_SALE_TAMT25                 AS BFYY_SALE_TAMT25
+                 , A.ORIGIN_SALE_TAMT25               AS ORIGIN_SALE_TAMT25
+                 , A.BFYY_SALE_TAMT26                 AS BFYY_SALE_TAMT26
+                 , A.ORIGIN_SALE_TAMT26               AS ORIGIN_SALE_TAMT26
+                 , A.BFYY_SALE_TAMT27                 AS BFYY_SALE_TAMT27
+                 , A.ORIGIN_SALE_TAMT27               AS ORIGIN_SALE_TAMT27
+                 , A.BFYY_SALE_TAMT28                 AS BFYY_SALE_TAMT28
+                 , A.ORIGIN_SALE_TAMT28               AS ORIGIN_SALE_TAMT28
+                 , A.BFYY_SALE_TAMT29                 AS BFYY_SALE_TAMT29
+                 , A.ORIGIN_SALE_TAMT29               AS ORIGIN_SALE_TAMT29
+                 , A.BFYY_SALE_TAMT30                 AS BFYY_SALE_TAMT30
+                 , A.ORIGIN_SALE_TAMT30               AS ORIGIN_SALE_TAMT30
+                 , A.BFYY_SALE_TAMT31                 AS BFYY_SALE_TAMT31
+                 , A.ORIGIN_SALE_TAMT31               AS ORIGIN_SALE_TAMT31
+        
+                 , '이익'                                  AS PROF
+                 , A.BFYY_PROF_TAMT_TOTAL_PROF        AS BFYY_PROF_TAMT_TOTAL_PROF
+                 , A.ORIGIN_PROF_TAMT_TOTAL_PROF      AS ORIGIN_PROF_TAMT_TOTAL_PROF
+                 , 0                                  AS GAB_PROF
+                 , A.BFYY_PROF_TAMT1                  AS BFYY_PROF_TAMT1
+                 , A.ORIGIN_PROF_TAMT1                AS ORIGIN_PROF_TAMT1
+                 , A.BFYY_PROF_TAMT2                  AS BFYY_PROF_TAMT2
+                 , A.ORIGIN_PROF_TAMT2                AS ORIGIN_PROF_TAMT2
+                 , A.BFYY_PROF_TAMT3                  AS BFYY_PROF_TAMT3
+                 , A.ORIGIN_PROF_TAMT3                AS ORIGIN_PROF_TAMT3
+                 , A.BFYY_PROF_TAMT4                  AS BFYY_PROF_TAMT4
+                 , A.ORIGIN_PROF_TAMT4                AS ORIGIN_PROF_TAMT4
+                 , A.BFYY_PROF_TAMT5                  AS BFYY_PROF_TAMT5
+                 , A.ORIGIN_PROF_TAMT5                AS ORIGIN_PROF_TAMT5
+                 , A.BFYY_PROF_TAMT6                  AS BFYY_PROF_TAMT6
+                 , A.ORIGIN_PROF_TAMT6                AS ORIGIN_PROF_TAMT6
+                 , A.BFYY_PROF_TAMT7                  AS BFYY_PROF_TAMT7
+                 , A.ORIGIN_PROF_TAMT7                AS ORIGIN_PROF_TAMT7
+                 , A.BFYY_PROF_TAMT8                  AS BFYY_PROF_TAMT8
+                 , A.ORIGIN_PROF_TAMT8                AS ORIGIN_PROF_TAMT8
+                 , A.BFYY_PROF_TAMT9                  AS BFYY_PROF_TAMT9
+                 , A.ORIGIN_PROF_TAMT9                AS ORIGIN_PROF_TAMT9
+                 , A.BFYY_PROF_TAMT10                 AS BFYY_PROF_TAMT10
+                 , A.ORIGIN_PROF_TAMT10               AS ORIGIN_PROF_TAMT10
+                 , A.BFYY_PROF_TAMT11                 AS BFYY_PROF_TAMT11
+                 , A.ORIGIN_PROF_TAMT11               AS ORIGIN_PROF_TAMT11
+                 , A.BFYY_PROF_TAMT12                 AS BFYY_PROF_TAMT12
+                 , A.ORIGIN_PROF_TAMT12               AS ORIGIN_PROF_TAMT12
+                 , A.BFYY_PROF_TAMT13                 AS BFYY_PROF_TAMT13
+                 , A.ORIGIN_PROF_TAMT13               AS ORIGIN_PROF_TAMT13
+                 , A.BFYY_PROF_TAMT14                 AS BFYY_PROF_TAMT14
+                 , A.ORIGIN_PROF_TAMT14               AS ORIGIN_PROF_TAMT14
+                 , A.BFYY_PROF_TAMT15                 AS BFYY_PROF_TAMT15
+                 , A.ORIGIN_PROF_TAMT15               AS ORIGIN_PROF_TAMT15
+                 , A.BFYY_PROF_TAMT16                 AS BFYY_PROF_TAMT16
+                 , A.ORIGIN_PROF_TAMT16               AS ORIGIN_PROF_TAMT16
+                 , A.BFYY_PROF_TAMT17                 AS BFYY_PROF_TAMT17
+                 , A.ORIGIN_PROF_TAMT17               AS ORIGIN_PROF_TAMT17
+                 , A.BFYY_PROF_TAMT18                 AS BFYY_PROF_TAMT18
+                 , A.ORIGIN_PROF_TAMT18               AS ORIGIN_PROF_TAMT18
+                 , A.BFYY_PROF_TAMT19                 AS BFYY_PROF_TAMT19
+                 , A.ORIGIN_PROF_TAMT19               AS ORIGIN_PROF_TAMT19
+                 , A.BFYY_PROF_TAMT20                 AS BFYY_PROF_TAMT20
+                 , A.ORIGIN_PROF_TAMT20               AS ORIGIN_PROF_TAMT20
+                 , A.BFYY_PROF_TAMT21                 AS BFYY_PROF_TAMT21
+                 , A.ORIGIN_PROF_TAMT21               AS ORIGIN_PROF_TAMT21
+                 , A.BFYY_PROF_TAMT22                 AS BFYY_PROF_TAMT22
+                 , A.ORIGIN_PROF_TAMT22               AS ORIGIN_PROF_TAMT22
+                 , A.BFYY_PROF_TAMT23                 AS BFYY_PROF_TAMT23
+                 , A.ORIGIN_PROF_TAMT23               AS ORIGIN_PROF_TAMT23
+                 , A.BFYY_PROF_TAMT24                 AS BFYY_PROF_TAMT24
+                 , A.ORIGIN_PROF_TAMT24               AS ORIGIN_PROF_TAMT24
+                 , A.BFYY_PROF_TAMT25                 AS BFYY_PROF_TAMT25
+                 , A.ORIGIN_PROF_TAMT25               AS ORIGIN_PROF_TAMT25
+                 , A.BFYY_PROF_TAMT26                 AS BFYY_PROF_TAMT26
+                 , A.ORIGIN_PROF_TAMT26               AS ORIGIN_PROF_TAMT26
+                 , A.BFYY_PROF_TAMT27                 AS BFYY_PROF_TAMT27
+                 , A.ORIGIN_PROF_TAMT27               AS ORIGIN_PROF_TAMT27
+                 , A.BFYY_PROF_TAMT28                 AS BFYY_PROF_TAMT28
+                 , A.ORIGIN_PROF_TAMT28               AS ORIGIN_PROF_TAMT28
+                 , A.BFYY_PROF_TAMT29                 AS BFYY_PROF_TAMT29
+                 , A.ORIGIN_PROF_TAMT29               AS ORIGIN_PROF_TAMT29
+                 , A.BFYY_PROF_TAMT30                 AS BFYY_PROF_TAMT30
+                 , A.ORIGIN_PROF_TAMT30               AS ORIGIN_PROF_TAMT30
+                 , A.BFYY_PROF_TAMT31                 AS BFYY_PROF_TAMT31
+                 , A.ORIGIN_PROF_TAMT31               AS ORIGIN_PROF_TAMT31
+     
+                 , '매출구성비'                                       AS SALECRATE
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,   0, 0, 100)   AS BFYY_SALE_CRATE_TOTAL_SALE
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE, 0, 0, 100)   AS ORIGIN_SALE_CRATE_TOTAL_SALE
+                 , 0                    AS GAB_SALE_RATE
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT1   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE1
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT1 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE1
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT2   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE2
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT2 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE2
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT3   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE3
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT3 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE3
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT4   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE4
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT4 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE4
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT5   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE5
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT5 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE5
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT6   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE6
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT6 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE6
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT7   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE7
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT7 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE7
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT8   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE8
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT8 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE8
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT9   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE9
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT9 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE9
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT10   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE10
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT10 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE10
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT11   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE11
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT11 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE11
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT12   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE12
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT12 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE12
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT13   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE13
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT13 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE13
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT14   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE14
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT14 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE14
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT15   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE15
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT15 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE15
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT16   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE16
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT16 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE16
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT17   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE17
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT17 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE17
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT18   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE18
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT18 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE18
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT19   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE19
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT19 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE19
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT20   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE20
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT20 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE20
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT21   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE21
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT21 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE21
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT22   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE22
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT22 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE22
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT23   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE23
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT23 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE23
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT24   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE24
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT24 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE24
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT25   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE25
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT25 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE25
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT26   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE26
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT26 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE26
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT27   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE27
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT27 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE27
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT28   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE28
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT28 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE28
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT29   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE29
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT29 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE29
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT30   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE30
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT30 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE30
+                 , DECODE(A.BFYY_SALE_TAMT_TOTAL_SALE,  0,0,ROUND(A.BFYY_SALE_TAMT31   / A.BFYY_SALE_TAMT_TOTAL_SALE   * 100,2)) AS BFYY_SALE_CRATE31
+                 , DECODE(A.ORIGIN_SALE_TAMT_TOTAL_SALE,0,0,ROUND(A.ORIGIN_SALE_TAMT31 / A.ORIGIN_SALE_TAMT_TOTAL_SALE * 100,2)) AS ORIGIN_SALE_CRATE31
+
+                 , '이익구성비'                                       AS PROFCRATE
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF,   0, 0, 100)   AS BFYY_PROF_CRATE_TOTAL_PROF
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF, 0, 0, 100)   AS ORIGIN_PROF_CRATE_TOTAL_PROF
+                 , 0                    AS GAB_PROF_RATE
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT1   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE1
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT1 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE1
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT2   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE2
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT2 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE2
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT3   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE3
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT3 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE3
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT4   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE4
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT4 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE4
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT5   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE5
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT5 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE5
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT6   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE6
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT6 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE6
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT7   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE7
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT7 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE7
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT8   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE8
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT8 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE8
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT9   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE9
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT9 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE9
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT10   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE10
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT10 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE10
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT11   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE11
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT11 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE11
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT12   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE12
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT12 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE12
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT13   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE13
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT13 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE13
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT14   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE14
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT14 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE14
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT15   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE15
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT15 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE15
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT16   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE16
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT16 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE16
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT17   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE17
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT17 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE17
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT18   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE18
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT18 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE18
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT19   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE19
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT19 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE19
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT20   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE20
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT20 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE20
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT21   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE21
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT21 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE21
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT22   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE22
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT22 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE22
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT23   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE23
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT23 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE23
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT24   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE24
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT24 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE24
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT25   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE25
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT25 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE25
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT26   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE26
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT26 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE26
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT27   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE27
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT27 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE27
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT28   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE28
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT28 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE28
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT29   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE29
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT29 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE29
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT30   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE30
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT30 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE30
+                 , DECODE(A.BFYY_PROF_TAMT_TOTAL_PROF  ,0,0,ROUND(A.BFYY_PROF_TAMT31   / A.BFYY_PROF_TAMT_TOTAL_PROF   * 100,2))  AS BFYY_PROF_CRATE31
+                 , DECODE(A.ORIGIN_PROF_TAMT_TOTAL_PROF,0,0,ROUND(A.ORIGIN_PROF_TAMT31 / A.ORIGIN_PROF_TAMT_TOTAL_PROF * 100,2))  AS ORIGIN_PROF_CRATE31
+                 , A.CONF_FLAG
+            FROM (
+                 SELECT A.PUMBUN_CD
+                         , A.PUMBUN_NAME
+                         , SUM(A.BFYY_NORM_SAMT                                               )  AS BFYY_NORM_SAMT_TOTAL_JUNG
+                         , SUM(A.ORIGIN_NORM_SAMT                                             )  AS ORIGIN_NORM_SAMT_TOTAL_JUNG
+                         , SUM(A.BFYY_EVT_SAMT                                                )  AS BFYY_EVT_SAMT_TOTAL_EVENT
+                         , SUM(A.ORIGIN_EVT_SAMT                                              )  AS ORIGIN_EVT_SAMT_TOTAL_EVENT
+                         , SUM(A.BFYY_SALE_TAMT                                               )  AS BFYY_SALE_TAMT_TOTAL_SALE
+                         , SUM(A.ORIGIN_SALE_TAMT                                             )  AS ORIGIN_SALE_TAMT_TOTAL_SALE
+                         , SUM(A.BFYY_PROF_TAMT                                               )  AS BFYY_PROF_TAMT_TOTAL_PROF
+                         , SUM(A.ORIGIN_PROF_TAMT                                             )  AS ORIGIN_PROF_TAMT_TOTAL_PROF
+                         , SUM((CASE WHEN A.DT = '1' THEN A.BFYY_NORM_SAMT ELSE 0 END)        )  AS BFYY_NORM_SAMT1
+                         , SUM((CASE WHEN A.DT = '1' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)      )  AS ORIGIN_NORM_SAMT1
+                         , SUM((CASE WHEN A.DT = '1' THEN A.BFYY_EVT_SAMT ELSE 0 END)         )  AS BFYY_EVT_SAMT1
+                         , SUM((CASE WHEN A.DT = '1' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)       )  AS ORIGIN_EVT_SAMT1
+                         , SUM((CASE WHEN A.DT = '1' THEN A.BFYY_SALE_TAMT ELSE 0 END)        )  AS BFYY_SALE_TAMT1
+                         , SUM((CASE WHEN A.DT = '1' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)      )  AS ORIGIN_SALE_TAMT1
+                         , SUM((CASE WHEN A.DT = '1' THEN A.BFYY_PROF_TAMT ELSE 0 END)        )  AS BFYY_PROF_TAMT1
+                         , SUM((CASE WHEN A.DT = '1' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)      )  AS ORIGIN_PROF_TAMT1
+
+                         , SUM((CASE WHEN A.DT = '2' THEN A.BFYY_NORM_SAMT ELSE 0 END)        )  AS BFYY_NORM_SAMT2
+                         , SUM((CASE WHEN A.DT = '2' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)      )  AS ORIGIN_NORM_SAMT2
+                         , SUM((CASE WHEN A.DT = '2' THEN A.BFYY_EVT_SAMT ELSE 0 END)         )  AS BFYY_EVT_SAMT2
+                         , SUM((CASE WHEN A.DT = '2' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)       )  AS ORIGIN_EVT_SAMT2
+                         , SUM((CASE WHEN A.DT = '2' THEN A.BFYY_SALE_TAMT ELSE 0 END)        )  AS BFYY_SALE_TAMT2
+                         , SUM((CASE WHEN A.DT = '2' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)      )  AS ORIGIN_SALE_TAMT2
+                         , SUM((CASE WHEN A.DT = '2' THEN A.BFYY_PROF_TAMT ELSE 0 END)        )  AS BFYY_PROF_TAMT2
+                         , SUM((CASE WHEN A.DT = '2' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)      )  AS ORIGIN_PROF_TAMT2
+
+                         , SUM((CASE WHEN A.DT = '3' THEN A.BFYY_NORM_SAMT ELSE 0 END)        )  AS BFYY_NORM_SAMT3
+                         , SUM((CASE WHEN A.DT = '3' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)      )  AS ORIGIN_NORM_SAMT3
+                         , SUM((CASE WHEN A.DT = '3' THEN A.BFYY_EVT_SAMT ELSE 0 END)         )  AS BFYY_EVT_SAMT3
+                         , SUM((CASE WHEN A.DT = '3' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)       )  AS ORIGIN_EVT_SAMT3
+                         , SUM((CASE WHEN A.DT = '3' THEN A.BFYY_SALE_TAMT ELSE 0 END)        )  AS BFYY_SALE_TAMT3
+                         , SUM((CASE WHEN A.DT = '3' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)      )  AS ORIGIN_SALE_TAMT3
+                         , SUM((CASE WHEN A.DT = '3' THEN A.BFYY_PROF_TAMT ELSE 0 END)        )  AS BFYY_PROF_TAMT3
+                         , SUM((CASE WHEN A.DT = '3' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)      )  AS ORIGIN_PROF_TAMT3
+
+                         , SUM((CASE WHEN A.DT = '4' THEN A.BFYY_NORM_SAMT ELSE 0 END)        )  AS BFYY_NORM_SAMT4
+                         , SUM((CASE WHEN A.DT = '4' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)      )  AS ORIGIN_NORM_SAMT4
+                         , SUM((CASE WHEN A.DT = '4' THEN A.BFYY_EVT_SAMT ELSE 0 END)         )  AS BFYY_EVT_SAMT4
+                         , SUM((CASE WHEN A.DT = '4' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)       )  AS ORIGIN_EVT_SAMT4
+                         , SUM((CASE WHEN A.DT = '4' THEN A.BFYY_SALE_TAMT ELSE 0 END)        )  AS BFYY_SALE_TAMT4
+                         , SUM((CASE WHEN A.DT = '4' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)      )  AS ORIGIN_SALE_TAMT4
+                         , SUM((CASE WHEN A.DT = '4' THEN A.BFYY_PROF_TAMT ELSE 0 END)        )  AS BFYY_PROF_TAMT4
+                         , SUM((CASE WHEN A.DT = '4' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)      )  AS ORIGIN_PROF_TAMT4
+
+                         , SUM((CASE WHEN A.DT = '5' THEN A.BFYY_NORM_SAMT ELSE 0 END)        )  AS BFYY_NORM_SAMT5
+                         , SUM((CASE WHEN A.DT = '5' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)      )  AS ORIGIN_NORM_SAMT5
+                         , SUM((CASE WHEN A.DT = '5' THEN A.BFYY_EVT_SAMT ELSE 0 END)         )  AS BFYY_EVT_SAMT5
+                         , SUM((CASE WHEN A.DT = '5' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)       )  AS ORIGIN_EVT_SAMT5
+                         , SUM((CASE WHEN A.DT = '5' THEN A.BFYY_SALE_TAMT ELSE 0 END)        )  AS BFYY_SALE_TAMT5
+                         , SUM((CASE WHEN A.DT = '5' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)      )  AS ORIGIN_SALE_TAMT5
+                         , SUM((CASE WHEN A.DT = '5' THEN A.BFYY_PROF_TAMT ELSE 0 END)        )  AS BFYY_PROF_TAMT5
+                         , SUM((CASE WHEN A.DT = '5' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)      )  AS ORIGIN_PROF_TAMT5
+
+                         , SUM((CASE WHEN A.DT = '6' THEN A.BFYY_NORM_SAMT ELSE 0 END)        )  AS BFYY_NORM_SAMT6
+                         , SUM((CASE WHEN A.DT = '6' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)      )  AS ORIGIN_NORM_SAMT6
+                         , SUM((CASE WHEN A.DT = '6' THEN A.BFYY_EVT_SAMT ELSE 0 END)         )  AS BFYY_EVT_SAMT6
+                         , SUM((CASE WHEN A.DT = '6' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)       )  AS ORIGIN_EVT_SAMT6
+                         , SUM((CASE WHEN A.DT = '6' THEN A.BFYY_SALE_TAMT ELSE 0 END)        )  AS BFYY_SALE_TAMT6
+                         , SUM((CASE WHEN A.DT = '6' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)      )  AS ORIGIN_SALE_TAMT6
+                         , SUM((CASE WHEN A.DT = '6' THEN A.BFYY_PROF_TAMT ELSE 0 END)        )  AS BFYY_PROF_TAMT6
+                         , SUM((CASE WHEN A.DT = '6' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)      )  AS ORIGIN_PROF_TAMT6
+
+                         , SUM((CASE WHEN A.DT = '7' THEN A.BFYY_NORM_SAMT ELSE 0 END)        )  AS BFYY_NORM_SAMT7
+                         , SUM((CASE WHEN A.DT = '7' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)      )  AS ORIGIN_NORM_SAMT7
+                         , SUM((CASE WHEN A.DT = '7' THEN A.BFYY_EVT_SAMT ELSE 0 END)         )  AS BFYY_EVT_SAMT7
+                         , SUM((CASE WHEN A.DT = '7' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)       )  AS ORIGIN_EVT_SAMT7
+                         , SUM((CASE WHEN A.DT = '7' THEN A.BFYY_SALE_TAMT ELSE 0 END)        )  AS BFYY_SALE_TAMT7
+                         , SUM((CASE WHEN A.DT = '7' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)      )  AS ORIGIN_SALE_TAMT7
+                         , SUM((CASE WHEN A.DT = '7' THEN A.BFYY_PROF_TAMT ELSE 0 END)        )  AS BFYY_PROF_TAMT7
+                         , SUM((CASE WHEN A.DT = '7' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)      )  AS ORIGIN_PROF_TAMT7
+
+                         , SUM((CASE WHEN A.DT = '8' THEN A.BFYY_NORM_SAMT ELSE 0 END)        )  AS BFYY_NORM_SAMT8
+                         , SUM((CASE WHEN A.DT = '8' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)      )  AS ORIGIN_NORM_SAMT8
+                         , SUM((CASE WHEN A.DT = '8' THEN A.BFYY_EVT_SAMT ELSE 0 END)         )  AS BFYY_EVT_SAMT8
+                         , SUM((CASE WHEN A.DT = '8' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)       )  AS ORIGIN_EVT_SAMT8
+                         , SUM((CASE WHEN A.DT = '8' THEN A.BFYY_SALE_TAMT ELSE 0 END)        )  AS BFYY_SALE_TAMT8
+                         , SUM((CASE WHEN A.DT = '8' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)      )  AS ORIGIN_SALE_TAMT8
+                         , SUM((CASE WHEN A.DT = '8' THEN A.BFYY_PROF_TAMT ELSE 0 END)        )  AS BFYY_PROF_TAMT8
+                         , SUM((CASE WHEN A.DT = '8' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)      )  AS ORIGIN_PROF_TAMT8
+
+                         , SUM((CASE WHEN A.DT = '9' THEN A.BFYY_NORM_SAMT ELSE 0 END)        )  AS BFYY_NORM_SAMT9
+                         , SUM((CASE WHEN A.DT = '9' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)      )  AS ORIGIN_NORM_SAMT9
+                         , SUM((CASE WHEN A.DT = '9' THEN A.BFYY_EVT_SAMT ELSE 0 END)         )  AS BFYY_EVT_SAMT9
+                         , SUM((CASE WHEN A.DT = '9' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)       )  AS ORIGIN_EVT_SAMT9
+                         , SUM((CASE WHEN A.DT = '9' THEN A.BFYY_SALE_TAMT ELSE 0 END)        )  AS BFYY_SALE_TAMT9
+                         , SUM((CASE WHEN A.DT = '9' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)      )  AS ORIGIN_SALE_TAMT9
+                         , SUM((CASE WHEN A.DT = '9' THEN A.BFYY_PROF_TAMT ELSE 0 END)        )  AS BFYY_PROF_TAMT9
+                         , SUM((CASE WHEN A.DT = '9' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)      )  AS ORIGIN_PROF_TAMT9
+
+                         , SUM((CASE WHEN A.DT = '10' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT10
+                         , SUM((CASE WHEN A.DT = '10' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT10
+                         , SUM((CASE WHEN A.DT = '10' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT10
+                         , SUM((CASE WHEN A.DT = '10' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT10
+                         , SUM((CASE WHEN A.DT = '10' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT10
+                         , SUM((CASE WHEN A.DT = '10' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT10
+                         , SUM((CASE WHEN A.DT = '10' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT10
+                         , SUM((CASE WHEN A.DT = '10' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT10
+
+                         , SUM((CASE WHEN A.DT = '11' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT11
+                         , SUM((CASE WHEN A.DT = '11' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT11
+                         , SUM((CASE WHEN A.DT = '11' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT11
+                         , SUM((CASE WHEN A.DT = '11' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT11
+                         , SUM((CASE WHEN A.DT = '11' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT11
+                         , SUM((CASE WHEN A.DT = '11' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT11
+                         , SUM((CASE WHEN A.DT = '11' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT11
+                         , SUM((CASE WHEN A.DT = '11' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT11
+
+                         , SUM((CASE WHEN A.DT = '12' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT12
+                         , SUM((CASE WHEN A.DT = '12' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT12
+                         , SUM((CASE WHEN A.DT = '12' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT12
+                         , SUM((CASE WHEN A.DT = '12' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT12
+                         , SUM((CASE WHEN A.DT = '12' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT12
+                         , SUM((CASE WHEN A.DT = '12' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT12
+                         , SUM((CASE WHEN A.DT = '12' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT12
+                         , SUM((CASE WHEN A.DT = '12' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT12
+
+                         , SUM((CASE WHEN A.DT = '13' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT13
+                         , SUM((CASE WHEN A.DT = '13' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT13
+                         , SUM((CASE WHEN A.DT = '13' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT13
+                         , SUM((CASE WHEN A.DT = '13' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT13
+                         , SUM((CASE WHEN A.DT = '13' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT13
+                         , SUM((CASE WHEN A.DT = '13' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT13
+                         , SUM((CASE WHEN A.DT = '13' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT13
+                         , SUM((CASE WHEN A.DT = '13' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT13
+
+                         , SUM((CASE WHEN A.DT = '14' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT14
+                         , SUM((CASE WHEN A.DT = '14' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT14
+                         , SUM((CASE WHEN A.DT = '14' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT14
+                         , SUM((CASE WHEN A.DT = '14' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT14
+                         , SUM((CASE WHEN A.DT = '14' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT14
+                         , SUM((CASE WHEN A.DT = '14' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT14
+                         , SUM((CASE WHEN A.DT = '14' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT14
+                         , SUM((CASE WHEN A.DT = '14' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT14
+
+                         , SUM((CASE WHEN A.DT = '15' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT15
+                         , SUM((CASE WHEN A.DT = '15' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT15
+                         , SUM((CASE WHEN A.DT = '15' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT15
+                         , SUM((CASE WHEN A.DT = '15' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT15
+                         , SUM((CASE WHEN A.DT = '15' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT15
+                         , SUM((CASE WHEN A.DT = '15' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT15
+                         , SUM((CASE WHEN A.DT = '15' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT15
+                         , SUM((CASE WHEN A.DT = '15' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT15
+
+                         , SUM((CASE WHEN A.DT = '16' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT16
+                         , SUM((CASE WHEN A.DT = '16' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT16
+                         , SUM((CASE WHEN A.DT = '16' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT16
+                         , SUM((CASE WHEN A.DT = '16' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT16
+                         , SUM((CASE WHEN A.DT = '16' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT16
+                         , SUM((CASE WHEN A.DT = '16' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT16
+                         , SUM((CASE WHEN A.DT = '16' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT16
+                         , SUM((CASE WHEN A.DT = '16' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT16
+
+                         , SUM((CASE WHEN A.DT = '17' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT17
+                         , SUM((CASE WHEN A.DT = '17' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT17
+                         , SUM((CASE WHEN A.DT = '17' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT17
+                         , SUM((CASE WHEN A.DT = '17' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT17
+                         , SUM((CASE WHEN A.DT = '17' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT17
+                         , SUM((CASE WHEN A.DT = '17' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT17
+                         , SUM((CASE WHEN A.DT = '17' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT17
+                         , SUM((CASE WHEN A.DT = '17' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT17
+
+                         , SUM((CASE WHEN A.DT = '18' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT18
+                         , SUM((CASE WHEN A.DT = '18' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT18
+                         , SUM((CASE WHEN A.DT = '18' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT18
+                         , SUM((CASE WHEN A.DT = '18' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT18
+                         , SUM((CASE WHEN A.DT = '18' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT18
+                         , SUM((CASE WHEN A.DT = '18' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT18
+                         , SUM((CASE WHEN A.DT = '18' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT18
+                         , SUM((CASE WHEN A.DT = '18' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT18
+
+                         , SUM((CASE WHEN A.DT = '19' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT19
+                         , SUM((CASE WHEN A.DT = '19' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT19
+                         , SUM((CASE WHEN A.DT = '19' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT19
+                         , SUM((CASE WHEN A.DT = '19' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT19
+                         , SUM((CASE WHEN A.DT = '19' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT19
+                         , SUM((CASE WHEN A.DT = '19' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT19
+                         , SUM((CASE WHEN A.DT = '19' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT19
+                         , SUM((CASE WHEN A.DT = '19' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT19
+
+                         , SUM((CASE WHEN A.DT = '20' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT20
+                         , SUM((CASE WHEN A.DT = '20' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT20
+                         , SUM((CASE WHEN A.DT = '20' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT20
+                         , SUM((CASE WHEN A.DT = '20' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT20
+                         , SUM((CASE WHEN A.DT = '20' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT20
+                         , SUM((CASE WHEN A.DT = '20' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT20
+                         , SUM((CASE WHEN A.DT = '20' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT20
+                         , SUM((CASE WHEN A.DT = '20' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT20
+
+                         , SUM((CASE WHEN A.DT = '21' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT21
+                         , SUM((CASE WHEN A.DT = '21' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT21
+                         , SUM((CASE WHEN A.DT = '21' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT21
+                         , SUM((CASE WHEN A.DT = '21' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT21
+                         , SUM((CASE WHEN A.DT = '21' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT21
+                         , SUM((CASE WHEN A.DT = '21' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT21
+                         , SUM((CASE WHEN A.DT = '21' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT21
+                         , SUM((CASE WHEN A.DT = '21' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT21
+
+                         , SUM((CASE WHEN A.DT = '22' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT22
+                         , SUM((CASE WHEN A.DT = '22' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT22
+                         , SUM((CASE WHEN A.DT = '22' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT22
+                         , SUM((CASE WHEN A.DT = '22' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT22
+                         , SUM((CASE WHEN A.DT = '22' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT22
+                         , SUM((CASE WHEN A.DT = '22' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT22
+                         , SUM((CASE WHEN A.DT = '22' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT22
+                         , SUM((CASE WHEN A.DT = '22' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT22
+
+                         , SUM((CASE WHEN A.DT = '23' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT23
+                         , SUM((CASE WHEN A.DT = '23' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT23
+                         , SUM((CASE WHEN A.DT = '23' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT23
+                         , SUM((CASE WHEN A.DT = '23' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT23
+                         , SUM((CASE WHEN A.DT = '23' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT23
+                         , SUM((CASE WHEN A.DT = '23' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT23
+                         , SUM((CASE WHEN A.DT = '23' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT23
+                         , SUM((CASE WHEN A.DT = '23' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT23
+
+                         , SUM((CASE WHEN A.DT = '24' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT24
+                         , SUM((CASE WHEN A.DT = '24' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT24
+                         , SUM((CASE WHEN A.DT = '24' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT24
+                         , SUM((CASE WHEN A.DT = '24' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT24
+                         , SUM((CASE WHEN A.DT = '24' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT24
+                         , SUM((CASE WHEN A.DT = '24' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT24
+                         , SUM((CASE WHEN A.DT = '24' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT24
+                         , SUM((CASE WHEN A.DT = '24' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT24
+
+                         , SUM((CASE WHEN A.DT = '25' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT25
+                         , SUM((CASE WHEN A.DT = '25' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT25
+                         , SUM((CASE WHEN A.DT = '25' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT25
+                         , SUM((CASE WHEN A.DT = '25' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT25
+                         , SUM((CASE WHEN A.DT = '25' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT25
+                         , SUM((CASE WHEN A.DT = '25' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT25
+                         , SUM((CASE WHEN A.DT = '25' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT25
+                         , SUM((CASE WHEN A.DT = '25' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT25
+
+                         , SUM((CASE WHEN A.DT = '26' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT26
+                         , SUM((CASE WHEN A.DT = '26' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT26
+                         , SUM((CASE WHEN A.DT = '26' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT26
+                         , SUM((CASE WHEN A.DT = '26' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT26
+                         , SUM((CASE WHEN A.DT = '26' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT26
+                         , SUM((CASE WHEN A.DT = '26' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT26
+                         , SUM((CASE WHEN A.DT = '26' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT26
+                         , SUM((CASE WHEN A.DT = '26' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT26
+
+                         , SUM((CASE WHEN A.DT = '27' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT27
+                         , SUM((CASE WHEN A.DT = '27' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT27
+                         , SUM((CASE WHEN A.DT = '27' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT27
+                         , SUM((CASE WHEN A.DT = '27' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT27
+                         , SUM((CASE WHEN A.DT = '27' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT27
+                         , SUM((CASE WHEN A.DT = '27' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT27
+                         , SUM((CASE WHEN A.DT = '27' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT27
+                         , SUM((CASE WHEN A.DT = '27' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT27
+
+                         , SUM((CASE WHEN A.DT = '28' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT28
+                         , SUM((CASE WHEN A.DT = '28' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT28
+                         , SUM((CASE WHEN A.DT = '28' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT28
+                         , SUM((CASE WHEN A.DT = '28' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT28
+                         , SUM((CASE WHEN A.DT = '28' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT28
+                         , SUM((CASE WHEN A.DT = '28' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT28
+                         , SUM((CASE WHEN A.DT = '28' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT28
+                         , SUM((CASE WHEN A.DT = '28' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT28
+
+                         , SUM((CASE WHEN A.DT = '29' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT29
+                         , SUM((CASE WHEN A.DT = '29' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT29
+                         , SUM((CASE WHEN A.DT = '29' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT29
+                         , SUM((CASE WHEN A.DT = '29' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT29
+                         , SUM((CASE WHEN A.DT = '29' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT29
+                         , SUM((CASE WHEN A.DT = '29' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT29
+                         , SUM((CASE WHEN A.DT = '29' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT29
+                         , SUM((CASE WHEN A.DT = '29' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT29
+
+                         , SUM((CASE WHEN A.DT = '30' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT30
+                         , SUM((CASE WHEN A.DT = '30' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT30
+                         , SUM((CASE WHEN A.DT = '30' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT30
+                         , SUM((CASE WHEN A.DT = '30' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT30
+                         , SUM((CASE WHEN A.DT = '30' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT30
+                         , SUM((CASE WHEN A.DT = '30' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT30
+                         , SUM((CASE WHEN A.DT = '30' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT30
+                         , SUM((CASE WHEN A.DT = '30' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT30
+
+                         , SUM((CASE WHEN A.DT = '31' THEN A.BFYY_NORM_SAMT ELSE 0 END)       )  AS BFYY_NORM_SAMT31
+                         , SUM((CASE WHEN A.DT = '31' THEN A.ORIGIN_NORM_SAMT ELSE 0 END)     )  AS ORIGIN_NORM_SAMT31
+                         , SUM((CASE WHEN A.DT = '31' THEN A.BFYY_EVT_SAMT ELSE 0 END)        )  AS BFYY_EVT_SAMT31
+                         , SUM((CASE WHEN A.DT = '31' THEN A.ORIGIN_EVT_SAMT ELSE 0 END)      )  AS ORIGIN_EVT_SAMT31
+                         , SUM((CASE WHEN A.DT = '31' THEN A.BFYY_SALE_TAMT ELSE 0 END)       )  AS BFYY_SALE_TAMT31
+                         , SUM((CASE WHEN A.DT = '31' THEN A.ORIGIN_SALE_TAMT ELSE 0 END)     )  AS ORIGIN_SALE_TAMT31
+                         , SUM((CASE WHEN A.DT = '31' THEN A.BFYY_PROF_TAMT ELSE 0 END)       )  AS BFYY_PROF_TAMT31
+                         , SUM((CASE WHEN A.DT = '31' THEN A.ORIGIN_PROF_TAMT ELSE 0 END)     )  AS ORIGIN_PROF_TAMT31
+                         , DECODE(NVL(A.CONF_FLAG,'N'),'N','N','Y') AS CONF_FLAG
+                      FROM (
+                            SELECT A.STR_CD
+                                 , A.DEPT_CD
+                                 , A.TEAM_CD
+                                 , A.PC_CD
+                                 , A.PUMBUN_CD
+                                 , B.PUMBUN_NAME
+                                 , (CASE WHEN SUBSTR(A.EXE_DT,7,2) < 10 THEN SUBSTR(A.EXE_DT,8,1) ELSE SUBSTR(A.EXE_DT, 7,2) END )  AS DT
+                                 , A.BFYY_NORM_SAMT
+                                 , A.ORIGIN_NORM_SAMT
+                                 , A.BFYY_EVT_SAMT
+                                 , A.ORIGIN_EVT_SAMT
+                                 , A.BFYY_SALE_TAMT
+                                 , A.ORIGIN_SALE_TAMT
+                                 , A.BFYY_PROF_TAMT
+                                 , A.ORIGIN_PROF_TAMT
+                                 , A.BFYY_SALE_CRATE
+                                 , A.ORIGIN_SALE_CRATE
+                                 , A.BFYY_PROF_CRATE
+                                 , A.ORIGIN_PROF_CRATE
+                                 , A.CONF_FLAG
+                              FROM DPS.PS_ACTPUMBUN      A
+                                 , DPS.PC_STRPBN           B
+                             WHERE A.PUMBUN_CD    = B.PUMBUN_CD
+                               AND A.STR_CD       = B.STR_CD
+                               AND A.STR_CD       = ?
+                               AND A.DEPT_CD      = ?
+                               AND A.TEAM_CD      = ?
+                               AND A.PC_CD        = ?
+                               AND A.EXE_YM       = ?
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                                FROM COM.V_MYORG MYORG
+                                               WHERE MYORG.STR_CD      = A.STR_CD
+                                                 AND MYORG.DEPT_CD     = A.DEPT_CD
+                                                 AND MYORG.TEAM_CD     = A.TEAM_CD
+                                                 AND MYORG.PC_CD       = A.PC_CD
+                                                 AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                                 AND MYORG.USER_ID     = ?
+                                             )
+                            ) A
+                            GROUP BY A.PUMBUN_CD
+                                   , A.PUMBUN_NAME
+                                   , A.CONF_FLAG 
+                      ) A
+
+
+                        
+        ]]>        
+    </query>
+    
+    <!-- 당초품번별월매출계획 확정 조회 쿼리  -->
+    <query name="SEL_CONF_FLAG_M">        
+        <![CDATA[
+            
+            SELECT DISTINCT A.CONF_FLAG
+              FROM DPS.PS_ACTPUMBUN A
+             WHERE A.STR_CD                   = ? 
+               AND A.ORG_LEVEL                = '4'
+               AND A.DEPT_CD                  = ?
+               AND A.TEAM_CD                  = ?
+               AND A.PC_CD                    = ?
+               AND A.EXE_YM                   LIKE ? || '%'
+               AND A.CONF_FLAG                = 'Y'
+               AND EXISTS (SELECT PUMBUN_CD
+                             FROM DPS.PC_STRPBN
+                            WHERE STR_CD    = A.STR_CD
+                              AND PUMBUN_CD = A.PUMBUN_CD
+                              --AND BIZ_TYPE  != '5'
+                          )
+        ]]>        
+    </query>
+    
+    <!-- 영업일자 데이터 조회 쿼리  -->
+    <query name="SEL_WEIGHT">        
+        <![CDATA[
+            SELECT DISTINCT 'Y'           AS FLAG
+              FROM DPS.PS_ACTPCWEIGHT     A
+             WHERE A.STR_CD     = ?
+               AND A.DEPT_CD    = ?
+               AND A.TEAM_CD    = ?
+               AND A.PC_CD      = ?
+               AND A.YYYYMM     = ?
+               
+            
+        ]]>        
+    </query>
+    
+    <!-- 대비요일 조회 쿼리  -->
+    <query name="SEL_PS_BFYY_WEEK">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , A.SALE_DT
+                 , A.CMPR_DT
+                 , A.CMPR_DAY
+              FROM DPS.PS_SCHEDULE     A
+             WHERE A.STR_CD     = ?
+               AND A.SALE_DT    = ?
+               
+            
+        ]]>        
+    </query>
+    
+    <!-- 신규 입력  -->
+    <query name="INS_PS_ACTPUMBUN">        
+        <![CDATA[
+            INSERT INTO DPS.PS_ACTPUMBUN   ( 
+                                              STR_CD
+                                            , EXE_YM
+                                            , EXE_DT
+                                            , ORG_CD
+                                            , PUMBUN_CD
+                                            , ORG_LEVEL
+                                            , DEPT_CD
+                                            , TEAM_CD
+                                            , PC_CD
+                                            , BFYY_NORM_SAMT
+                                            , BFYY_EVT_SAMT
+                                            , BFYY_SALE_TAMT
+                                            , BFYY_PROF_TAMT
+                                            , BFYY_SALE_CRATE
+                                            , BFYY_PROF_CRATE
+                                            , ORIGIN_NORM_SAMT
+                                            , ORIGIN_EVT_SAMT
+                                            , ORIGIN_SALE_TAMT
+                                            , ORIGIN_PROF_TAMT
+                                            , ORIGIN_SALE_CRATE
+                                            , ORIGIN_PROF_CRATE
+                                            , ORIGIN_SALE_IRATE
+                                            , ORIGIN_PROF_IRATE
+                                            , REG_DATE
+                                            , REG_ID
+                                            , MOD_DATE
+                                            , MOD_ID
+                                            )
+                                    VALUES  ( 
+                                              ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , ?
+                                            , SYSDATE
+                                            , ?
+                                            , SYSDATE
+                                            , ?
+                                            )
+                                        
+            
+        ]]>        
+    </query>
+    
+    <!-- 수정  -->
+    
+    <query name="UPD_PS_ACTPUMBUN">
+        <![CDATA[
+            UPDATE DPS.PS_ACTPUMBUN
+               SET ORIGIN_NORM_SAMT      = ?
+                 , ORIGIN_EVT_SAMT       = ?
+                 , ORIGIN_SALE_TAMT      = ?
+                 , ORIGIN_PROF_TAMT      = ?
+                 , ORIGIN_SALE_CRATE     = ?
+                 , ORIGIN_PROF_CRATE     = ?
+                 , ORIGIN_SALE_IRATE     = ROUND(?,2)
+                 , ORIGIN_PROF_IRATE     = ROUND(?,2)
+                 , MOD_DATE              = SYSDATE
+                 , MOD_ID                = ?
+             WHERE STR_CD          = ?
+               AND DEPT_CD         = ?
+               AND TEAM_CD         = ?
+               AND PC_CD           = ?
+               AND PUMBUN_CD       = ?
+               AND EXE_YM          = ?
+               AND EXE_DT          = ?
+               
+        ]]>
+    </query>
+    
+    <!-- 당초PC별월매출계획 수정 -->    
+    <query name="UPD_ACTTEAM">
+        <![CDATA[
+            UPDATE DPS.PS_ACTTEAM
+               SET CONF_DT              = ?
+                 , CONF_ID              = ?
+                 , CONF_FLAG            = ?
+                 , MOD_DATE             = SYSDATE
+                 , MOD_ID               = ?
+             WHERE STR_CD               = ? 
+               AND DEPT_CD              = ?
+               AND TEAM_CD              = ?
+               AND EXE_YM               = ?
+               AND NVL(CONF_FLAG,'N')   = ?
+               
+        ]]>
+    </query>
+    
+    <!-- 당초PC별월매출계획 수정 -->    
+    <query name="UPD_ACTPC">
+        <![CDATA[
+            UPDATE DPS.PS_ACTPC
+               SET CONF_DT              = ?
+                 , CONF_ID              = ?
+                 , CONF_FLAG            = ?
+                 , MOD_DATE             = SYSDATE
+                 , MOD_ID               = ?
+             WHERE STR_CD               = ? 
+               AND DEPT_CD              = ?
+               AND TEAM_CD              = ?
+               AND PC_CD                = ?
+               AND ORG_LEVEL            = '4'
+               AND EXE_YM               = ?
+               AND NVL(CONF_FLAG,'N')   = ?
+               
+        ]]>
+    </query>
+    
+    
+    <!-- 당초PC별월매출계획 수정 -->    
+    <query name="UPD_ACTPUMBUN">
+        <![CDATA[
+            UPDATE DPS.PS_ACTPUMBUN     A
+               SET CONF_DT              = ?
+                 , CONF_ID              = ?
+                 , CONF_FLAG            = ?
+                 , MOD_DATE             = SYSDATE
+                 , MOD_ID               = ?
+             WHERE STR_CD               = ? 
+               AND DEPT_CD              = ?
+               AND TEAM_CD              = ?
+               AND PC_CD                = ?
+               AND ORG_LEVEL            = '4'
+               AND EXE_YM               = ?
+               AND NVL(CONF_FLAG,'N')   = ?
+               AND EXISTS (SELECT PUMBUN_CD
+                             FROM DPS.PC_STRPBN
+                            WHERE STR_CD    = A.STR_CD
+                              AND PUMBUN_CD = A.PUMBUN_CD
+                              --AND BIZ_TYPE  != '5'
+                          )
+               
+        ]]>
+    </query>
+    
+    <!-- 삭제  -->
+    <query name="DEL_PS_ACTPUMBUN">
+        <![CDATA[
+            DELETE DPS.PS_ACTPCWEIGHT
+             WHERE STR_CD     = ?
+               AND DEPT_CD    = ?
+               AND TEAM_CD    = ?
+               AND PC_CD      = ?
+               AND PUMBUN_CD  = ?
+               AND EXE_YM     = ?
+               AND EXE_DT     = ?
+        ]]>
+    </query>
+    
+    
+</service>

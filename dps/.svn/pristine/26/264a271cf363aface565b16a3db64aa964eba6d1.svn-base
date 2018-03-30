@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은 
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal522.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+   		<column colName="STR_CD"          colType="TB_STRING" size="2"   dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_DT"         colType="TB_STRING" size="8"   dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="POS_NO"          colType="TB_STRING" size="4"   dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PUMBUN_CD"       colType="TB_STRING" size="6"   dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PUMBUN_NAME"       colType="TB_STRING" size="40"   dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PUMMOK_CD"       colType="TB_STRING" size="8"   dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PUMMOK_NAME"       colType="TB_STRING" size="40"   dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EVENT_CD"        colType="TB_STRING" size="11"  dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EVENT_NAME"        colType="TB_STRING" size="40"  dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EVENT_FLAG"      colType="TB_STRING" size="2"   dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="EVENT_RATE"      colType="TB_STRING" size="2"   dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SEQ"         colType="TB_DECIMAL" size="5"   dec="0"    keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="MOD_EVENT_FLAG_C"  colType="TB_STRING" size="2"		dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="MOD_MG_RATE_C"     colType="TB_DECIMAL" size="5"		dec="2"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_QTY_C"       colType="TB_DECIMAL" size="7"		dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TOT_SALE_AMT_C"    colType="TB_DECIMAL" size="13"	dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REDU_AMT_C"        colType="TB_DECIMAL" size="13"	dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DC_AMT_C"          colType="TB_DECIMAL" size="13"	dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="MOD_EVENT_FLAG_N"  colType="TB_STRING" size="2"		dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="MG_APP_DT_N"       colType="TB_STRING" size="8"		dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="MOD_MG_RATE_N"     colType="TB_DECIMAL" size="5"		dec="2"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SALE_QTY_N"       colType="TB_DECIMAL" size="7"		dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TOT_SALE_AMT_N"    colType="TB_DECIMAL" size="13"	dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REDU_AMT_N"        colType="TB_DECIMAL" size="13"	dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="DC_AMT_N"          colType="TB_DECIMAL" size="13"	dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REG_DATE"  colType="TB_STRING" size="50"		dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REG_ID"       colType="TB_STRING" size="10"		dec="0"		 keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+   <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT            
+		           DPPM.STR_CD          AS STR_CD
+		          ,DPPM.SALE_DT         AS SALE_DT
+		          ,DPPM.POS_NO          AS POS_NO
+		          ,DPPM.PUMBUN_CD       AS PUMBUN_CD
+		          ,PBN.PUMBUN_NAME      AS PUMBUN_NAME
+		          ,DPPM.PUMMOK_CD       AS PUMMOK_CD
+		          ,PMK.PUMMOK_NAME      AS PUMMOK_NAME
+		          ,DPPM.EVENT_CD        AS EVENT_CD
+		          ,EVT.EVENT_NAME       AS EVENT_NAME
+		          ,DPPM.EVENT_FLAG      AS EVENT_FLAG
+		          ,DPPM.EVENT_RATE      AS EVENT_RATE
+		          ,DPPM.SEQ             AS SEQ
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '1' THEN DPPM.MOD_EVENT_FLAG ELSE '' END) AS MOD_EVENT_FLAG_C
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '1' THEN DPPM.MOD_MG_RATE    ELSE 0  END) AS MOD_MG_RATE_C
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '1' THEN DPPM.SALE_QTY       ELSE 0  END) AS SALE_QTY_C
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '1' THEN DPPM.TOT_SALE_AMT   ELSE 0  END) AS TOT_SALE_AMT_C
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '1' THEN DPPM.REDU_AMT       ELSE 0  END) AS REDU_AMT_C
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '1' THEN DPPM.DC_AMT         ELSE 0  END) AS DC_AMT_C
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '0' THEN DPPM.MOD_EVENT_FLAG ELSE '' END) AS MOD_EVENT_FLAG_N
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '0' THEN DPPM.MG_APP_DT      ELSE '' END) AS MG_APP_DT_N
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '0' THEN DPPM.MOD_MG_RATE    ELSE 0  END) AS MOD_MG_RATE_N
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '0' THEN DPPM.SALE_QTY       ELSE 0  END) AS SALE_QTY_N
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '0' THEN DPPM.TOT_SALE_AMT   ELSE 0  END) AS TOT_SALE_AMT_N
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '0' THEN DPPM.REDU_AMT       ELSE 0  END) AS REDU_AMT_N
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '0' THEN DPPM.DC_AMT         ELSE 0  END) AS DC_AMT_N
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '1' THEN TO_CHAR(DPPM.REG_DATE,'YYYY/MM/DD HH24:MI:SS')       ELSE ''  END) AS REG_DATE
+		          ,MAX(CASE WHEN DPPM.OCCUR_FLAG = '1' THEN DPPM.REG_ID         ELSE ''  END) 								  AS REG_ID
+		    FROM DPS.PS_DAYPBNPOSMOD DPPM
+		        ,DPS.PC_PBNMST PBN
+		        ,DPS.PC_PMKMST PMK
+		        ,DPS.PC_EVTMST EVT
+		    WHERE DPPM.PUMBUN_CD = PBN.PUMBUN_CD
+		    AND   DPPM.PUMMOK_CD = PMK.PUMMOK_CD
+		    AND   DPPM.EVENT_CD  = EVT.EVENT_CD
+		    AND   DPPM.STR_CD = ?
+		    AND   SUBSTR(DPPM.ORG_CD,3,2) LIKE ? || '%'
+		    AND   SUBSTR(DPPM.ORG_CD,5,2) LIKE ? || '%'
+		    AND   SUBSTR(DPPM.ORG_CD,7,2) LIKE ? || '%'
+		    AND   DPPM.SALE_DT BETWEEN ? AND ? 
+		    AND   DPPM.PUMBUN_CD LIKE ? || '%'
+        ]]>        
+    </query>
+    
+    <!-- 쿼리는 전부 대문자 -->
+   <query name="SEL_MG_DATE">        
+        <![CDATA[
+		    AND   ((DPPM.MG_APP_DT BETWEEN ? AND ? AND DPPM.OCCUR_FLAG = '0') OR DPPM.OCCUR_FLAG = '1')
+        ]]>        
+    </query>
+  
+   <!-- 쿼리는 전부 대문자 -->
+   <query name="SEL_GROUP">        
+        <![CDATA[
+		    GROUP BY DPPM.STR_CD       
+		          ,DPPM.SALE_DT        
+		          ,DPPM.POS_NO         
+		          ,DPPM.PUMBUN_CD      
+		          ,PBN.PUMBUN_NAME     
+		          ,DPPM.PUMMOK_CD      
+		          ,PMK.PUMMOK_NAME     
+		          ,DPPM.EVENT_CD       
+		          ,EVT.EVENT_NAME      
+		          ,DPPM.EVENT_FLAG     
+		          ,DPPM.EVENT_RATE     
+		          ,DPPM.SEQ       
+		    ORDER BY DPPM.STR_CD       
+		          ,DPPM.SALE_DT        
+		          ,DPPM.POS_NO         
+		          ,DPPM.PUMBUN_CD      
+		          ,PBN.PUMBUN_NAME     
+		          ,DPPM.PUMMOK_CD      
+		          ,PMK.PUMMOK_NAME     
+		          ,DPPM.EVENT_CD       
+		          ,EVT.EVENT_NAME      
+		          ,DPPM.EVENT_FLAG     
+		          ,DPPM.EVENT_RATE     
+		          ,DPPM.SEQ  
+        ]]>        
+    </query>
+    
+    
+    
+</service>

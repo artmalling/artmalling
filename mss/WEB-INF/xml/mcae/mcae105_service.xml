@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 
+ * 작 성 일 : 2011.02.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae105.mc">
+ <!-- 대상범위 마스터 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"      colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRG_CD"      colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRG_NAME"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRG_F"       colType="TB_DECIMAL" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRG_T"       colType="TB_DECIMAL" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BTN_DEL"     colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 대상범위 마스터 조회-->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT STR_CD
+			     , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+			     , TRG_CD
+			     , TRG_NAME
+			     , TRG_F
+			     , TRG_T
+			     , '' AS BTN_DEL
+			  FROM MSS.MC_EVTTRGMST
+			 WHERE STR_CD = ?
+			   AND TRG_CD LIKE ? || '%'
+		  ORDER BY TRG_CD
+        ]]>
+    </query>   
+
+    <!-- 대상범위 마스터 저장-->
+    <query name="INS_EVTTRGMST">
+        <![CDATA[
+	   INSERT INTO MSS.MC_EVTTRGMST(STR_CD
+	                              , TRG_CD
+	                              , TRG_NAME
+	                              , TRG_F
+	                              , TRG_T
+	                              , REG_DATE
+	                              , REG_ID
+	                              , MOD_DATE
+	                              , MOD_ID)
+	                         VALUES( ?
+	                               , (SELECT LPAD(NVL(MAX(TRG_CD),0) + 1,2,0) FROM MSS.MC_EVTTRGMST WHERE STR_CD = ?)
+	                               , ?
+	                               , ?
+	                               , ?
+	                               , SYSDATE
+	                               , ?
+	                               , SYSDATE
+	                               , ?)
+        ]]>
+    </query>  
+    
+    <!-- 대상범위 코드명 수정-->
+    <query name="UPD_EVTTRGMST">
+        <![CDATA[
+               UPDATE MSS.MC_EVTTRGMST
+                 SET TRG_NAME = ?
+                   , MOD_DATE = SYSDATE
+                   , MOD_ID = ?
+               WHERE STR_CD = ?
+                 AND TRG_CD = ?
+        ]]>
+    </query>  
+    
+    
+    
+</service>

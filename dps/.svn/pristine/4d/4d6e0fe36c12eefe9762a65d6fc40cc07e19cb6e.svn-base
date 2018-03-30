@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal514.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"                colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"               colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOTAL_FLAG"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"                colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BALANCE_FLAG"          colType="TB_STRING"      size="3"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMM_NAME1"            colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_CNT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_AMT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MODYGB"                colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_AMT_O"       colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 --> 
+    <query name="SEL_SALE_POS">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , A.SALE_DT
+                 , A.TOTAL_FLAG
+                 , A.POS_NO
+                 , A.BALANCE_FLAG
+                 , C.COMM_NAME1
+                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_CNT END AS NORM_TRAN_CNT
+                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_AMT END AS NORM_TRAN_AMT
+                 , NVL(C.REFER_CODE,'N')     AS MODYGB
+                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_AMT END AS NORM_TRAN_AMT_O
+              FROM DPS.PS_TRTOTAL A
+                 , DPS.PC_POSMST     B
+                 , (SELECT COMM_CODE
+                         , COMM_NAME1
+                         , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+                         , REFER_CODE
+                      FROM COM.TC_COMMCODE
+                     WHERE COMM_PART = 'P606'
+                       AND SYS_PART  = 'D') C
+             WHERE A.STR_CD       = B.STR_CD
+               AND A.POS_NO       = B.POS_NO
+               AND A.BALANCE_FLAG = C.COMM_CODE
+               AND A.TOTAL_FLAG   = '01'
+               AND A.STR_CD       = ?
+               AND A.POS_NO       = ?
+               AND A.SALE_DT      = ?
+             ORDER BY 
+                   C.INQR_ORDER
+             
+        ]]>        
+    </query> 
+        
+    <!-- 거래 집계 데이타 수정  -->    
+    <query name="UPT_TRTOTAL">        
+        <![CDATA[        
+			UPDATE DPS.PS_TRTOTAL
+			   SET NORM_TRAN_AMT  = ?
+			     , MOD_DATE       = SYSDATE
+			     , MOD_ID         = ?
+			 WHERE STR_CD         = ?
+			   AND SALE_DT        = ?
+			   AND POS_NO         = ?
+			   AND TOTAL_FLAG     = ? 
+			   AND BALANCE_FLAG   = ?
+        ]]>        
+    </query> 
+    
+    
+    <!-- 현금출금 계산처리  -->
+    <query name="UPD_300_TRTOTAL">        
+        <![CDATA[        
+               
+            UPDATE DPS.PS_TRTOTAL
+               SET NORM_TRAN_AMT  = (   SELECT NVL(SUM(NORM_TRAN_AMT),0)            
+							              FROM DPS.PS_TRTOTAL                            
+							             WHERE STR_CD       = ?                           
+							               AND SALE_DT      = ?                           
+							               AND POS_NO       = ?                           
+							               AND TOTAL_FLAG   = ?                           
+							               AND BALANCE_FLAG IN ( '301', '302', '303' ) 
+               )  
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE STR_CD         = ?
+               AND SALE_DT        = ?
+               AND POS_NO         = ?
+               AND TOTAL_FLAG     = ? 
+               AND BALANCE_FLAG   = ?
+                          
+        ]]>        
+    </query>     
+    
+
+ <!-- 현금매출시 정산지 200 번생성(현금입금(준비금 + 현금매출 + PDA입금)) -->
+    <query name="UPD_200_TRTOTAL">        
+        <![CDATA[        
+               
+            UPDATE DPS.PS_TRTOTAL
+               SET NORM_TRAN_AMT  = (   SELECT NVL(SUM(NORM_TRAN_AMT),0)            
+                                          FROM DPS.PS_TRTOTAL                            
+                                         WHERE STR_CD       = ?                           
+                                           AND SALE_DT      = ?                           
+                                           AND POS_NO       = ?                           
+                                           AND TOTAL_FLAG   = ?                           
+                                           AND BALANCE_FLAG IN ( '201', '202', '203' ) 
+               )  
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE STR_CD         = ?
+               AND SALE_DT        = ?
+               AND POS_NO         = ?
+               AND TOTAL_FLAG     = ? 
+               AND BALANCE_FLAG   = ?
+                          
+        ]]>        
+    </query>      
+    
+    
+  <!-- 현금잔액 계산처리 -->                     
+    <query name="UPD_401_TRTOTAL">        
+        <![CDATA[        
+               
+            UPDATE DPS.PS_TRTOTAL
+               SET NORM_TRAN_AMT  = (   SELECT NVL(SUM(CASE WHEN BALANCE_FLAG = '200' THEN NVL(NORM_TRAN_AMT,0) ELSE 0 END), 0) - NVL(SUM(CASE WHEN BALANCE_FLAG = '300' THEN NVL(NORM_TRAN_AMT,0) ELSE 0 END), 0)
+                                          FROM DPS.PS_TRTOTAL                            
+                                         WHERE STR_CD       = ?                           
+                                           AND SALE_DT      = ?                           
+                                           AND POS_NO       = ?                           
+                                           AND TOTAL_FLAG   = ?                           
+                                           AND BALANCE_FLAG IN ( '200', '300' ) 
+               )  
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE STR_CD         = ?
+               AND SALE_DT        = ?
+               AND POS_NO         = ?
+               AND TOTAL_FLAG     = ? 
+               AND BALANCE_FLAG   = ?
+                          
+        ]]>        
+    </query>          
+    
+    
+    
+    <!-- 과부족 계산처리  -->
+    <query name="UPD_403_TRTOTAL">        
+        <![CDATA[        
+            UPDATE DPS.PS_TRTOTAL
+               SET NORM_TRAN_AMT  = (   SELECT NVL(SUM(CASE WHEN BALANCE_FLAG = '402' THEN NVL(NORM_TRAN_AMT,0) WHEN BALANCE_FLAG = '401' THEN NVL(NORM_TRAN_AMT,0) * -1 END),0)          
+                                          FROM DPS.PS_TRTOTAL                            
+                                         WHERE STR_CD       = ?                           
+                                           AND SALE_DT      = ?                           
+                                           AND POS_NO       = ?                           
+                                           AND TOTAL_FLAG   = ?                           
+                                           AND BALANCE_FLAG IN ( '401', '402' ) 
+               )  
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE STR_CD         = ?
+               AND SALE_DT        = ?
+               AND POS_NO         = ?
+               AND TOTAL_FLAG     = ? 
+               AND BALANCE_FLAG   = ?
+        ]]>        
+    </query>      
+    
+
+
+    <!-- 결재내역계 계산처리  -->
+    <query name="UPD_189_TRTOTAL">        
+        <![CDATA[        
+            UPDATE DPS.PS_TRTOTAL
+               SET NORM_TRAN_AMT  = (   SELECT SUM(CASE WHEN BALANCE_FLAG IN ( '101', '103', '105', '107', '109', '111', '114', '117', '119', '121', '123', '125', '127', '129', '131', '133', '135') THEN                 
+                                                             NORM_TRAN_AMT                 
+                                                        ELSE                 
+                                                             NORM_TRAN_AMT * -1                 
+                                                   END)          
+                                          FROM DPS.PS_TRTOTAL                            
+                                         WHERE STR_CD       = ?                           
+                                           AND SALE_DT      = ?                           
+                                           AND POS_NO       = ?                           
+                                           AND TOTAL_FLAG   = ?                           
+                                           AND TO_NUMBER(BALANCE_FLAG) BETWEEN 101 AND 135  
+                                    )  
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE STR_CD         = ?
+               AND SALE_DT        = ?
+               AND POS_NO         = ?
+               AND TOTAL_FLAG     = ? 
+               AND BALANCE_FLAG   = ?
+        ]]>        
+    </query>      
+    
+    
+    <!-- 현금매출시 정산지  번생성(매출 - 반품)                      -->
+    <query name="UPD_202_TRTOTAL">        
+        <![CDATA[        
+            UPDATE DPS.PS_TRTOTAL
+               SET NORM_TRAN_AMT  = (   SELECT NVL(SUM(CASE WHEN BALANCE_FLAG = '101' THEN NORM_TRAN_AMT ELSE NORM_TRAN_AMT * -1 END),0)         
+                                          FROM DPS.PS_TRTOTAL                            
+                                         WHERE STR_CD       = ?                           
+                                           AND SALE_DT      = ?                           
+                                           AND POS_NO       = ?                           
+                                           AND TOTAL_FLAG   = ?                           
+                                           AND BALANCE_FLAG IN ('101', '102') 
+               )  
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE STR_CD         = ?
+               AND SALE_DT        = ?
+               AND POS_NO         = ?
+               AND TOTAL_FLAG     = ? 
+               AND BALANCE_FLAG   = ?
+        ]]>        
+    </query>      
+    
+        
+    <!-- 현금환불 -->
+    <query name="UPD_303_TRTOTAL">        
+        <![CDATA[        
+            UPDATE DPS.PS_TRTOTAL
+               SET NORM_TRAN_AMT  = (   SELECT NVL(SUM(NORM_TRAN_AMT),0)         
+                                          FROM DPS.PS_TRTOTAL                            
+                                         WHERE STR_CD       = ?                           
+                                           AND SALE_DT      = ?                           
+                                           AND POS_NO       = ?                           
+                                           AND TOTAL_FLAG   = ?                           
+                                           AND BALANCE_FLAG IN ('113', '116') 
+                                    )  
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE STR_CD         = ?
+               AND SALE_DT        = ?
+               AND POS_NO         = ?
+               AND TOTAL_FLAG     = ? 
+               AND BALANCE_FLAG   = ?
+        ]]>        
+    </query>      
+         
+    
+    <!-- LOG생성 -->
+    <query name="INS_TRTOTALLOG">        
+        <![CDATA[
+			INSERT INTO DPS.PS_TRTOTALLOG
+			      (  STR_CD
+			       , PROC_DATE
+			       , TRAN_NO
+			       , SALE_DT
+			       , POS_NO
+			       , PROC_ID
+			       , PROC_NM
+			       , COL_101_N
+			       , COL_101_O
+			       , COL_102_N
+			       , COL_102_O
+			       , COL_111_N
+			       , COL_111_O
+			       , COL_112_N
+			       , COL_112_O
+			       , COL_113_N
+			       , COL_113_O
+			       , COL_114_N
+			       , COL_114_O
+			       , COL_115_N
+			       , COL_115_O
+			       , COL_116_N
+			       , COL_116_O
+			       , COL_302_N
+			       , COL_302_O
+			       , COL_402_N
+			       , COL_402_O
+			       , REG_DATE
+			       , REG_ID
+			       , MOD_DATE
+			       , MOD_ID
+			      )
+			VALUES ( ?                                         -- STR_CD
+			       , TO_CHAR(SYSDATE,'YYYYMMDD')               -- PROC_DATE
+			       , TO_NUMBER(?)                              -- TRAN_NO
+			       , ?                                         -- SALE_DT
+			       , ?                                         -- POS_NO
+			       , ?                                         -- PROC_ID
+			       , ?                                         -- PROC_NM
+			       , 0                                         -- COL_101_N
+			       , 0                                         -- COL_101_O
+			       , 0                                         -- COL_102_N
+			       , 0                                         -- COL_102_O
+			       , 0                                         -- COL_111_N
+			       , 0                                         -- COL_111_O
+			       , 0                                         -- COL_112_N
+			       , 0                                         -- COL_112_O
+			       , 0                                         -- COL_113_N
+			       , 0                                         -- COL_113_O
+			       , 0                                         -- COL_114_N
+			       , 0                                         -- COL_114_O
+			       , 0                                         -- COL_115_N
+			       , 0                                         -- COL_115_O
+			       , 0                                         -- COL_116_N
+			       , 0                                         -- COL_116_O
+			       , 0                                         -- COL_302_N
+			       , 0                                         -- COL_302_O
+			       , 0                                         -- COL_402_N
+			       , 0                                         -- COL_402_O
+			       , SYSDATE
+			       , ?
+			       , SYSDATE
+			       , ?
+			       ) 
+			 
+        ]]>        
+    </query>       
+    
+    
+    
+    <!-- LOG생성 -->
+    <query name="UPD_TRTOTALLOG">        
+        <![CDATA[
+            UPDATE DPS.PS_TRTOTALLOG
+               SET MOD_DATE = SYSDATE
+                 , MOD_ID   = ?
+                 @@upColum1
+                 @@upColum2
+            WHERE STR_CD     = ?
+              AND PROC_DATE  = TO_CHAR(SYSDATE,'YYYYMMDD') 
+              AND TRAN_NO    = TO_NUMBER(?) 
+             
+        ]]>        
+    </query>       
+        
+        
+
+    <!-- SEQ 생성 -->
+    <query name="SEL_TRTOTALLOG">        
+        <![CDATA[        
+            SELECT NVL(MAX(TRAN_NO) + 1,1)   TRAN_NO
+              FROM dps.PS_TRTOTALLOG 
+             WHERE STR_CD    = ? 
+               AND PROC_DATE = TO_CHAR(SYSDATE,'YYYYMMDD') 
+         ]]>        
+    </query>       
+         
+
+
+
+
+
+    <gauce name="H_SEL_GIFT"> 
+        <column colName="STR_CD"                colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"               colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOTAL_FLAG"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"                colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BALANCE_FLAG"          colType="TB_STRING"      size="3"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_CNT"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_AMT"               colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MODYGB"                colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_AMT_O"             colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 --> 
+    <query name="SEL_GIFT_LIST">        
+        <![CDATA[ 
+            SELECT A.STR_CD                  AS STR_CD
+				 , A.SALE_DT                 AS SALE_DT
+				 , A.TOTAL_FLAG              AS TOTAL_FLAG
+                 , A.POS_NO                  AS POS_NO
+                 , A.BALANCE_FLAG            AS BALANCE_FLAG
+                 , C.COMM_NAME1              AS GIFT_NAME
+                 , A.NORM_TRAN_CNT           AS USE_CNT
+                 , A.NORM_TRAN_AMT           AS USE_AMT
+                 , NVL(C.REFER_CODE,'N')     AS MODYGB
+                 , A.NORM_TRAN_AMT           AS USE_AMT_O
+              FROM DPS.PS_TRTOTALGIFT A 
+                 , (SELECT COMM_CODE
+                         , COMM_NAME1
+                         , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+                         , CASE WHEN REFER_VALUE =  1 THEN 'Y'
+                                ELSE 'N' 
+                           END REFER_CODE
+                      FROM COM.TC_COMMCODE
+                     WHERE COMM_PART = 'P616'
+                       AND SYS_PART  = 'D') C
+             WHERE A.BALANCE_FLAG = C.COMM_CODE
+               AND A.TOTAL_FLAG   = '01'
+               AND A.STR_CD       = ?
+               AND A.POS_NO       = ?
+               AND A.SALE_DT      = ?
+             ORDER BY A.BALANCE_FLAG, A.POS_NO                   
+             
+        ]]>        
+    </query> 
+ 
+
+
+    <!-- SEQ 생성 -->
+    <query name="SEL_TRTOTALGLOG">        
+        <![CDATA[        
+            SELECT NVL(MAX(TRAN_NO) + 1,1)   TRAN_NO
+              FROM dps.PS_TRTOTALGLOG 
+             WHERE STR_CD    = ? 
+               AND PROC_DATE = TO_CHAR(SYSDATE,'YYYYMMDD') 
+         ]]>        
+    </query>       
+         
+    <!-- LOG생성 -->
+    <query name="INS_TRTOTALGLOG">        
+        <![CDATA[
+            INSERT INTO DPS.PS_TRTOTALGLOG
+                  (  STR_CD
+                   , PROC_DATE
+                   , TRAN_NO
+                   , SALE_DT
+                   , POS_NO
+                   , PROC_ID
+                   , PROC_NM
+                   , COL_G020_N
+                   , COL_G020_O
+                   , COL_G030_N
+                   , COL_G030_O
+                   , COL_G040_N
+                   , COL_G040_O
+                   , COL_G050_N
+                   , COL_G050_O
+                   , REG_DATE
+                   , REG_ID
+                   , MOD_DATE
+                   , MOD_ID
+                  )
+            VALUES ( ?                                         -- STR_CD
+                   , TO_CHAR(SYSDATE,'YYYYMMDD')               -- PROC_DATE
+                   , TO_NUMBER(?)                              -- TRAN_NO
+                   , ?                                         -- SALE_DT
+                   , ?                                         -- POS_NO
+                   , ?                                         -- PROC_ID
+                   , ?                                         -- PROC_NM
+                   , 0                                         -- COL_G020_N
+                   , 0                                         -- COL_G020_O
+                   , 0                                         -- COL_G030_N
+                   , 0                                         -- COL_G030_O
+                   , 0                                         -- COL_G040_N
+                   , 0                                         -- COL_G040_O
+                   , 0                                         -- COL_G050_N
+                   , 0                                         -- COL_G050_O
+                   , SYSDATE
+                   , ?
+                   , SYSDATE
+                   , ?
+                   ) 
+             
+        ]]>        
+    </query>       
+
+
+    <!-- 상품권 거래 집계 데이타 수정  -->    
+    <query name="UPT_TRTOTALGIFT">        
+        <![CDATA[        
+            UPDATE DPS.PS_TRTOTALGIFT
+               SET NORM_TRAN_AMT  = ?
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE STR_CD         = ?
+               AND SALE_DT        = ?
+               AND POS_NO         = ?
+               AND TOTAL_FLAG     = ? 
+               AND BALANCE_FLAG   = ?
+        ]]>        
+    </query> 
+    
+    
+    <!-- LOG생성 -->
+    <query name="UPD_TRTOTALGLOG">        
+        <![CDATA[
+            UPDATE DPS.PS_TRTOTALGLOG
+               SET MOD_DATE = SYSDATE
+                 , MOD_ID   = ?
+                 @@upColum1
+                 @@upColum2
+            WHERE STR_CD     = ?
+              AND PROC_DATE  = TO_CHAR(SYSDATE,'YYYYMMDD') 
+              AND TRAN_NO    = TO_NUMBER(?) 
+             
+        ]]>        
+    </query>       
+    
+
+    
+</service>

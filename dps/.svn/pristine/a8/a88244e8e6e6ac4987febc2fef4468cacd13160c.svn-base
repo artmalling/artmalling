@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.13
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  직영운영점 규격단품 장부재고관리한다.
+ -->
+<service name="/pstk601.pt">
+  
+  <gauce name="H_SEL_MASTER">        
+        <column colName="CHK"               colType="TB_STRING"   size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CURRENT_DT"        colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"            colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"         colType="TB_STRING"   size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"       colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"            colType="TB_STRING"   size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"          colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CURRENT_QTY"       colType="TB_DECIMAL"  size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COST_PRC"          colType="TB_DECIMAL"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PRC"          colType="TB_DECIMAL"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"          colType="TB_DECIMAL"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CURRENT_SALE_AMT"  colType="TB_DECIMAL"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_SALE_AMT"      colType="TB_DECIMAL"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+  </gauce> 
+  
+    <!-- 마스터 조회 쿼리  -->    
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT A.CHK
+			     , ?                       AS CURRENT_DT
+			     , A.STR_CD
+			     , A.PUMBUN_CD
+			     , A.PUMBUN_NAME
+			     , A.SKU_CD
+			     , A.SKU_NAME
+			     , A.CURRENT_QTY
+			     , C.SAL_COST_PRC                   AS COST_PRC           -- 단품가격기준 원가단가
+			     , C.SALE_PRC                       AS SALE_PRC           -- 단품가격기준 매가단가
+			     , A.CURRENT_QTY * C.SALE_PRC       AS SALE_AMT           -- 단품가격기준 매가금액     
+			     , A.CURRENT_SALE_AMT                                     -- 재고기준 매가금액
+			     , (A.CURRENT_QTY * C.SALE_PRC)
+			     - A.CURRENT_SALE_AMT               AS GAP_SALE_AMT       -- 매가인상하 대상 매가금액
+			  FROM (
+			        SELECT 'F'                                     AS CHK
+			             , A.STR_CD                                AS STR_CD            /* 점코드             */
+			             , A.PUMBUN_CD                             AS PUMBUN_CD         /* 브랜드코드         */
+			             , (SELECT PUMBUN_NAME
+			                  FROM DPS.PC_PBNMST X
+			                 WHERE A.PUMBUN_CD = X.PUMBUN_CD)      AS PUMBUN_NAME       /* 브랜드명           */
+			             , A.SKU_CD                                AS SKU_CD            /* 단품코드           */                            
+			             , (SELECT SKU_NAME                       
+			                  FROM DPS.PC_SKUMST X
+			                 WHERE A.SKU_CD = X.SKU_CD)            AS SKU_NAME          /* 단품명             */
+			             , SUM(NVL(A.BASE_QTY,0))                  AS BASE_QTY          /* 기초재고 수량      */
+			             , SUM(NVL(A.BASE_SALE_AMT,0))             AS BASE_SALE_AMT     /* 기초재고 매가금액  */
+			             , SUM(NVL(A.BUY_TOT_QTY,0))               AS BUY_TOT_QTY       /* 매입 수량          */
+			             , SUM(NVL(A.BUY_TOT_SALE_AMT,0))          AS BUY_TOT_SALE_AMT  /* 매입 매가금액      */
+			             , SUM(NVL(A.SALE_QTY,0))                  AS SALE_QTY          /* 매출 수량          */
+			             , SUM(NVL(A.SALE_SALE_AMT,0))
+			             - SUM(NVL(A.REDU_AMT,0))                  AS SALE_SALE_AMT     /* 매출 매가금액      */
+			             , SUM(NVL(A.SALE_PRC_UP_BF_QTY,0))        AS SALE_PRC_UP_BF_QTY    /* 인하 수량      */
+			             , SUM(NVL(A.SALE_PRC_UP_BF_AMT,0))        AS SALE_PRC_UP_BF_AMT    /* 인하 매가금액  */
+			             , SUM(NVL(A.SALE_PRC_DOWN_AF_QTY,0))      AS SALE_PRC_DOWN_AF_QTY  /* 인상 수량      */
+			             , SUM(NVL(A.SALE_PRC_DOWN_AF_AMT,0))      AS SALE_PRC_DOWN_AF_AMT  /* 인상 매가금액  */
+			             , SUM(NVL(A.STK_ADJ_QTY,0))               AS STK_ADJ_QTY       /* 재고조정 수량      */
+			             , SUM(NVL(A.STK_ADJ_SALE_AMT,0))          AS STK_ADJ_SALE_AMT  /* 재고조정 매가금액  */  
+			             , SUM(NVL(A.BASE_QTY,0)) 
+			             + SUM(NVL(A.BUY_TOT_QTY,0)) 
+			             - SUM(NVL(A.SALE_QTY,0))
+			             -- - SUM(NVL(A.SALE_PRC_UP_BF_QTY,0))
+			             -- + SUM(NVL(A.SALE_PRC_DOWN_AF_QTY,0))
+			             + SUM(NVL(A.STK_ADJ_QTY,0))               AS CURRENT_QTY       /* 현재시점 재고      */      
+			             , SUM(NVL(A.BASE_SALE_AMT,0)) 
+			             + SUM(NVL(A.BUY_TOT_SALE_AMT,0)) 
+			             - (SUM(NVL(A.SALE_SALE_AMT,0)) 
+			             - SUM(NVL(A.REDU_AMT,0))) 
+			             -- - SUM(NVL(A.SALE_PRC_UP_BF_AMT,0)) 
+			             -- + SUM(NVL(A.SALE_PRC_DOWN_AF_AMT,0)) 
+			             + SUM(NVL(A.STK_ADJ_SALE_AMT,0))          AS CURRENT_SALE_AMT  /* 현재시점 매가금액  */ 
+			          FROM DPS.PC_SKUMST SKU
+			             , DPS.PC_PBNMST PBN
+			             , (
+			                -- 기초재고
+			                SELECT STR_CD
+			                     , PUMBUN_CD
+			                     , SKU_CD
+			                     , SUM(NVL(CAO_QTY,0))         AS BASE_QTY
+			                     , SUM(NVL(CAO_SALE_AMT,0))    AS BASE_SALE_AMT
+			                     , 0                           AS BUY_TOT_QTY
+			                     , 0                           AS BUY_TOT_SALE_AMT
+			                     , 0                           AS SALE_QTY
+			                     , 0                           AS SALE_SALE_AMT
+			                     , 0                           AS SALE_PRC_UP_BF_QTY    -- 인하수량
+			                     , 0                           AS SALE_PRC_UP_BF_AMT    -- 인하금액
+			                     , 0                           AS SALE_PRC_DOWN_AF_QTY  -- 인상수량
+			                     , 0                           AS SALE_PRC_DOWN_AF_AMT  -- 인상금액
+			                     , 0                           AS REDU_AMT
+			                     , 0                           AS STK_ADJ_QTY
+			                     , 0                           AS STK_ADJ_SALE_AMT
+			                  FROM DPS.PT_SKUMONTH
+			                 WHERE STR_CD    = ?
+			                   AND STK_YM    = ?
+			                   AND PUMBUN_CD = ?
+			                   GROUP BY STR_CD
+			                          , PUMBUN_CD
+			                          , SKU_CD
+			                          
+			                 UNION ALL
+			                -- 매입, 매출, 재고조정
+			                SELECT STR_CD
+			                     , PUMBUN_CD
+			                     , SKU_CD
+			                     , 0                           AS BASE_QTY
+			                     , 0                           AS BASE_SALE_AMT
+			                     , SUM(BUY_TOT_QTY)            AS BUY_TOT_QTY
+			                     , SUM(BUY_TOT_SALE_AMT)       AS BUY_TOT_SALE_AMT
+			                     , SUM(SALE_QTY)               AS SALE_QTY
+			                     , SUM(SALE_SALE_AMT)          AS SALE_SALE_AMT
+			                     , SUM(SALE_PRC_UP_BF_QTY)     AS SALE_PRC_UP_BF_QTY    -- 인하수량
+			                     , SUM(SALE_PRC_UP_BF_AMT)     AS SALE_PRC_UP_BF_AMT    -- 인하금액
+			                     , SUM(SALE_PRC_DOWN_AF_QTY)   AS SALE_PRC_DOWN_AF_QTY  -- 인상수량
+			                     , SUM(SALE_PRC_DOWN_AF_AMT)   AS SALE_PRC_DOWN_AF_AMT  -- 인상금액
+			                     , SUM(REDU_AMT)               AS REDU_AMT
+			                     , SUM(STK_ADJ_QTY)            AS STK_ADJ_QTY
+			                     , SUM(STK_ADJ_SALE_AMT)       AS STK_ADJ_SALE_AMT
+			                  FROM DPS.PT_SKUDAY
+			                 WHERE STR_CD       = ?
+			                   AND STK_DT BETWEEN ? AND ?
+			                   AND PUMBUN_CD    = ?
+			                 GROUP BY STR_CD
+			                        , PUMBUN_CD
+			                        , SKU_CD
+			                  ) A
+			         WHERE SKU.SKU_CD      = A.SKU_CD
+			           AND PBN.PUMBUN_CD   = A.PUMBUN_CD
+			           AND PBN.PUMBUN_FLAG = '0'            -- 정상
+			           AND PBN.PUMBUN_TYPE = '0'            -- 정상(일반상품)
+			           AND PBN.SKU_FLAG    = '1'            -- 단품
+			           AND PBN.SKU_TYPE    = '1'            -- 규격단품
+			           AND A.PUMBUN_CD     = ?
+			         GROUP BY A.STR_CD
+			                , A.PUMBUN_CD
+			                , A.SKU_CD
+			       ) A
+			     , DPS.PC_STRSKUMST    B
+			     , DPS.PC_STRSKUPRCMST C
+			 WHERE A.STR_CD    = B.STR_CD
+			   AND A.SKU_CD    = B.SKU_CD
+			   AND A.PUMBUN_CD = B.PUMBUN_CD
+			   AND A.STR_CD    = C.STR_CD
+			   AND A.SKU_CD    = C.SKU_CD
+			   AND C.EVENT_CD  = '00000000000'
+			   AND ? BETWEEN C.APP_S_DT AND C.APP_E_DT
+			 ORDER BY A.STR_CD
+			     , A.PUMBUN_CD
+			     , A.SKU_CD
+        ]]>    
+    </query>
+    
+    <!-- 직영운영 장부재고매가관리 SEQ 발번  -->
+    <query name="SEL_SEQ">
+        <![CDATA[
+			SELECT NVL(MAX(SEQ), 0) + 1 AS SEQ 
+			  FROM DPS.PO_STRSKUGAP_HIS
+			 WHERE CURRENT_DT = ?
+			   AND STR_CD     = ?
+			   AND PUMBUN_CD  = ?
+			   AND SKU_CD     = ?
+        ]]>    
+    </query>
+    
+    <!-- 직영운영 장부재고매가관리 -->
+    <query name="INS_MASTER">
+        <![CDATA[
+            INSERT
+              INTO DPS.PO_STRSKUGAP_HIS
+                 ( CURRENT_DT
+				 , STR_CD
+				 , PUMBUN_CD
+				 , SKU_CD
+				 , SEQ
+				 , CURRENT_QTY
+				 , COST_PRC
+				 , SALE_PRC
+				 , SALE_AMT
+				 , CURRENT_SALE_AMT
+				 , GAP_SALE_AMT
+				 , PROC_YN
+				 , AUTO_SLIP_NO
+				 , REG_DATE
+				 , REG_ID
+                 )
+            VALUES
+                 ( ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , SYSDATE
+                 , ?
+                 )
+        ]]>    
+    </query>
+    
+</service>

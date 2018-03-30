@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae303.mc">
+<!-- 상품권 입고/반품조회 -MASTER -->   
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"          colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"        colType="TB_STRING"  size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"      colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"      colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_DT"        colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POUT_FLAG"       colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_DT"         colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_SLIP_NO"    colType="TB_STRING"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_SLIP_NO2"    colType="TB_STRING"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_QTY"        colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_AMT"        colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권 입고/반품조회 -DETAIL -->
+    <gauce name="H_DETAIL">   
+        <column colName="GIFT_TYPE_NAME"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISSUE_TYPE"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CONF_QTY"          colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_AMT"          colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권 입고/반품조회 -MASTER -->
+    <query name="SEL_MASTER">
+        <![CDATA[ 
+             SELECT B.STR_CD
+                  , B.EVENT_CD
+                  , D.EVENT_NAME
+                  , D.EVENT_S_DT
+                  , D.EVENT_E_DT
+                  , D.EVENT_S_DT||D.EVENT_E_DT AS EVENT_DT
+                  , B.POUT_FLAG
+                  , B.CONF_DT
+                  , B.CONF_SLIP_NO
+                  , LPAD(TO_CHAR(B.CONF_SLIP_NO),5,'0') AS CONF_SLIP_NO2
+                  , SUM(CASE WHEN B.POUT_FLAG = '2' THEN B.CONF_QTY*-1 ELSE B.CONF_QTY END) AS QTY     -- 입고수량
+                  , SUM(CASE WHEN B.POUT_FLAG = '2' THEN B.CONF_AMT*-1 ELSE B.CONF_AMT END) AS AMT    -- 입고금액
+               FROM MSS.MG_POUTREQCONF B, DPS.PC_STREVT C, DPS.PC_EVTMST D
+              WHERE B.STR_CD = C.STR_CD
+                AND B.EVENT_CD = C.EVENT_CD
+                AND B.EVENT_CD = D.EVENT_CD  
+                AND B.STR_CD = ?
+                AND B.CONF_DT BETWEEN ? AND ?
+                AND B.POUT_FLAG LIKE ?
+                AND B.EVENT_CD LIKE ? || '%'
+                AND B.POUT_TYPE = '3'       
+           GROUP BY B.STR_CD
+                  , B.EVENT_CD
+                  , D.EVENT_NAME
+                  , D.EVENT_S_DT
+                  , D.EVENT_E_DT 
+                  , B.POUT_FLAG
+                  , B.CONF_DT
+                  , B.CONF_SLIP_NO
+           ORDER BY B.STR_CD
+                  , B.EVENT_CD      
+        ]]>
+    </query>   
+    
+    <!-- 상품권 입고/반품조회 -DETAIL -->
+    <query name="SEL_DETAIL">
+        <![CDATA[ 
+             SELECT C.GIFT_TYPE_NAME
+                  , D.GIFT_AMT_NAME
+                  , D.ISSUE_TYPE
+                  , D.GIFTCERT_AMT
+                  , SUM(CASE WHEN B.POUT_FLAG = '2' THEN B.CONF_QTY*-1 ELSE B.CONF_QTY END) AS QTY     -- 입고수량
+                  , SUM(CASE WHEN B.POUT_FLAG = '2' THEN B.CONF_AMT*-1 ELSE B.CONF_AMT END) AS AMT    -- 입고금액 
+               FROM MSS.MG_POUTREQ A, MSS.MG_POUTREQCONF B, MSS.MG_GIFTTPMST C, MSS.MG_GIFTAMTMST D
+              WHERE A.POUT_REQ_DT = B.POUT_REQ_DT
+                AND A.POUT_REQ_SLIP_NO = B.POUT_REQ_SLIP_NO
+                AND A.POUT_REQ_SEQ_NO = B.POUT_REQ_SEQ_NO
+                AND A.STR_CD = B.STR_CD 
+                AND B.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+                AND B.GIFT_TYPE_CD = D.GIFT_TYPE_CD
+                AND B.ISSUE_TYPE = D.ISSUE_TYPE
+                AND B.GIFT_AMT_TYPE = D.GIFT_AMT_TYPE
+                AND A.STR_CD = ?
+                AND A.EVENT_CD = ?
+                AND B.CONF_DT = ?
+                AND B.CONF_SLIP_NO = ?
+           GROUP BY C.GIFT_TYPE_NAME
+                  , D.GIFT_AMT_NAME
+                  , D.ISSUE_TYPE
+                  , D.GIFTCERT_AMT
+           ORDER BY C.GIFT_TYPE_NAME
+                  --, D.GIFT_AMT_NAME
+                  , D.ISSUE_TYPE
+                  , D.GIFTCERT_AMT
+        ]]>
+    </query>   
+    
+</service>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.09
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/dmbo633.do">
+     <gauce name="H_MASTER"> 
+    <column colName="ENTR_DT"             colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="CUST_ID"             colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="CUST_NAME"            colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="SALE_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="ENTR_SALE_AMT"               colType="TB_DECIMAL" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+   
+    
+    <!--  기간별가입회원List조회 리스트  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+       
+       SELECT ENTR_DT,
+        CUST_ID,
+        CUST_NAME,
+        SUM(SALE_AMT) AS SALE_AMT,
+        SUM(ENTR_SALE_AMT) AS ENTR_SALE_AMT
+        FROM(
+       SELECT A.ENTR_DT AS ENTR_DT
+        	,A.CUST_ID AS CUST_ID
+        	,A.CUST_NAME AS CUST_NAME
+        	,CASE WHEN B.SALE_DT BETWEEN ? AND ? THEN SUM(NVL(TOT_SALE_AMT,0)) ELSE SUM(0) END AS SALE_AMT
+        	,SUM(DECODE(B.SALE_DT,A.ENTR_DT,TOT_SALE_AMT,0)) AS ENTR_SALE_AMT
+		FROM 
+    		(SELECT ENTR_DT,CUST_ID,CUST_NAME FROM DCS.DM_CUSTOMER
+    		WHERE CUST_ID LIKE 'D%'
+    		AND CUST_STAT_FLAG = '0'
+    		AND ENTR_DT BETWEEN ? AND ?) A LEFT JOIN DPS.PS_DAYCUST B
+		ON 
+			B.CUST_NO = A.CUST_ID
+			AND ((B.SALE_DT BETWEEN ? AND ?) OR (B.SALE_DT =  A.ENTR_DT))
+			GROUP BY A.ENTR_DT,A.CUST_ID,A.CUST_NAME,B.SALE_DT
+			ORDER BY CUST_ID)
+			GROUP BY ENTR_DT,CUST_ID,CUST_NAME
+			ORDER BY CUST_ID
+        ]]>
+    </query> 
+    
+    
+    
+ </service>

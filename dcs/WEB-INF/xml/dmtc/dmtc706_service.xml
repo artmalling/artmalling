@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작   성  자 : 김영진
+ * 회   사  명 : 한국후지쯔
+ * 작   성  일 : 2010.06.17
+ * 변   경  일 : 
+ * 변경내용 : 
+ * 개          요 :  기부세금공제대상조회
+ -->
+<service name="/dmtc706.dc">
+
+    <!-- 기부세금공제대상 -->
+    <gauce name="H_MASTER"> 
+        <column colName="DON_ID"        colType="TB_STRING"   size="9"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />   
+        <column colName="DON_NAME"      colType="TB_STRING"   size="40"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="CUST_ID"       colType="TB_STRING"   size="9"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />     
+        <column colName="CUST_NAME"     colType="TB_STRING"   size="40"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+        <column colName="DON_POINT"     colType="TB_DECIMAL"  size="12"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />          
+        <column colName="HOME_ZIP_CD"   colType="TB_STRING"   size="7"    dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />        
+        <column colName="HOME_ADDR1"    colType="TB_STRING"   size="200"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="HOME_ADDR2"    colType="TB_STRING"   size="200"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+    </gauce>   
+    
+    <!-- 기부세금공제대상 -->
+    <query name="SEL_DON_PLAN">        
+        <![CDATA[
+           	SELECT A.DON_ID
+                 , B.DON_NAME
+                 , A.CUST_ID
+                 , C.CUST_NAME
+                 , A.DON_POINT
+                 , C.HOME_ZIP_CD1 || '-' || C.HOME_ZIP_CD2 HOME_ZIP_CD
+                 , C.HOME_ADDR1
+                 , C.HOME_ADDR2
+              FROM (
+                     SELECT M.DON_ID
+                          , M.CUST_ID
+                          , SUM(M.DON_POINT) DON_POINT
+                       FROM DCS.DC_DON_CUST M
+                      WHERE M.TRG_DON_DT BETWEEN ? AND ? 
+                        AND TRG_DON_DT IS NOT NULL
+                      GROUP BY M.DON_ID, M.CUST_ID  
+                    ) A
+                  , DCS.DC_DON_PLAN B
+                  , DCS.DM_CUSTOMER C  
+              WHERE A.CUST_ID = C.CUST_ID
+                AND A.DON_ID  = B.DON_ID
+                AND A.DON_ID LIKE  ? || '%'
+                AND A.DON_POINT >= ?
+              ORDER BY A.DON_ID, C.CUST_NAME
+        ]]>        
+    </query>            
+</service>

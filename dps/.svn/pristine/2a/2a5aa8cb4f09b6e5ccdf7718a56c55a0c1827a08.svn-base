@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal523.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="SALE_DT"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"                  colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"                 colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_VAN_ID"              colType="TB_STRING"      size="20"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_MODE"               colType="TB_STRING"      size="20"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_FLAG"               colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CASH_RECP_ID"            colType="TB_STRING"      size="20"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CASH_RECP_AMT"           colType="TB_DECIMAL"     size="9"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CASH_RECP_APPR_NO"       colType="TB_STRING"      size="12"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CASH_CANCEL_TYPE"        colType="TB_STRING"      size="20"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"                  colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TIME"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_POS_NO"                colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_SALE_DT"               colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_TRAN_NO"               colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+          
+    <gauce name="H_SEL_POSNO"> 
+        <column colName="POSNO"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNOMM"> 
+        <column colName="POSNO_MIN"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSNO_MAX"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <query name="SEL_SALE_POS_M">        
+        <![CDATA[
+			        SELECT C.SALE_DT
+			             , C.POS_NO
+			             , C.TRAN_NO
+			             , T.CASH_APPROVE_VAN_ID || ' ' ||
+                          (SELECT E.COMM_NAME1
+                             FROM COM.TC_COMMCODE  E
+                            WHERE E.COMM_PART = 'P195'
+                              AND E.COMM_CODE =  T.CASH_APPROVE_VAN_ID
+                           ) AS APP_VAN_ID
+			             , E.COMM_NAME1                                                                                      AS TRAN_MODE
+			             , (CASE WHEN C.TRAN_FLAG = '0' THEN '정상' WHEN C.TRAN_FLAG = '1' THEN '반품' ELSE '오타' END)       AS TRAN_FLAG
+                         , T.CASH_RECP_ID      -- 현금영수증 식별번호
+                         , T.CASH_RECP_AMT     -- 현금영수증 금액
+                         , T.CASH_RECP_APPR_NO -- 현금영수증승인번호
+			             , T.CASH_CANCEL_TYPE || ' ' ||
+	                      (SELECT E.COMM_NAME1
+	                         FROM COM.TC_COMMCODE  E
+	                        WHERE E.COMM_PART = 'P612'
+	                          AND E.COMM_CODE =  T.CASH_CANCEL_TYPE -- 현금영수증취소사유
+	                       ) AS CASH_CANCEL_TYPE
+			             , C.STR_CD
+                         , C.SALE_TIME
+                         , C.O_POS_NO   -- 원거래POS번호
+                         , C.O_SALE_DT	-- 원거래매출일자
+                         , C.O_TRAN_NO	-- 원거래거래번호
+			          FROM DPS.PS_DISHEADER C
+			             , DPS.PC_POSMST    D
+			             , COM.TC_COMMCODE  E
+			             , DPS.PS_TRHEADER  T
+			         WHERE C.STR_CD        = D.STR_CD
+			           AND C.POS_NO        = D.POS_NO
+			           AND E.COMM_PART     = 'P611'
+			           AND E.COMM_CODE     = C.TRAN_MODE
+                       AND T.STR_CD        = C.STR_CD
+                       AND T.SALE_DT       = C.SALE_DT
+                       AND T.POS_NO        = C.POS_NO
+                       AND T.TRAN_NO       = C.TRAN_NO
+			           AND C.STR_CD              = ?
+			           AND D.FLOR_CD             LIKE ? || '%'
+			           AND D.POS_FLAG            LIKE ? || '%'
+			           AND NVL(T.CASH_APPROVE_VAN_ID, ' ') LIKE ? || '%'
+			           AND C.POS_NO              >= ?
+			           AND C.POS_NO              <= ?
+			           AND C.TRAN_NO             LIKE ? || '%'
+			           AND C.SALE_DT             >= ?
+			           AND C.SALE_DT             <= ?
+			           --AND C.TRAN_MODE     <> '92'
+                       --AND A.REJCT_FLAG     = '0'
+                       AND T.CASH_RECP_ID > ' '
+			       ]]>     
+    </query> 
+    <query name="SEL_AND_SKU_CD">
+        <![CDATA[
+               AND A.SKU_CD     = ?
+        ]]>
+    </query>                     
+			   
+	<query name="SEL_AND_PUMBUN_CD">
+        <![CDATA[
+               AND A.PUMBUN_CD     = ?
+        ]]>
+    </query>  
+    
+    <query name="SEL_AND_SALE_AMT_FROM">
+        <![CDATA[
+               AND T.CASH_RECP_AMT     >= ?
+        ]]>
+    </query>  
+    
+    <query name="SEL_AND_SALE_AMT_TO">
+        <![CDATA[
+               AND T.CASH_RECP_AMT     <= ?
+        ]]>
+    </query>  	
+    
+     <query name="SEL_AND_SALE_TIME_FROM">
+        <![CDATA[
+              AND C.SALE_TIME >= ?||'00'
+              
+        ]]>
+    </query>  
+    
+    <query name="SEL_AND_SALE_TIME_TO">
+        <![CDATA[
+              AND C.SALE_TIME <= ?||'59'
+        ]]>
+    </query> 
+    	          
+    	          
+    <query name="SEL_CASH_CARD_NO">
+        <![CDATA[
+               AND T.CASH_RECP_ID LIKE ? || '%'
+        ]]>
+    </query> 
+    
+	<query name="SEL_APP_VAN_ID">
+        <![CDATA[
+               AND T.CASH_APPROVE_VAN_ID LIKE ? || '%'
+        ]]>
+    </query>  
+                   
+	<query name="SEL_GROUP_BY">
+        <![CDATA[		                      
+			         ORDER BY
+                           C.SALE_DT
+                         , C.POS_NO
+                         , C.TRAN_NO
+                         , C.SALE_TIME
+
+        ]]>        
+    </query>
+    
+    
+     
+     
+    <query name="SEL_POSNO">        
+        <![CDATA[
+            SELECT A.POS_NO
+              FROM DPS.PC_POSMST A
+             WHERE A.POS_NO = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSNOMM">        
+        <![CDATA[
+            SELECT MAX(A.POSNO_MIN) AS POSNO_MIN
+                 , MAX(A.POSNO_MAX) AS POSNO_MAX
+              FROM (
+		            SELECT MIN(A.POS_NO) AS POSNO_MIN
+		                 , ''            AS POSNO_MAX
+		              FROM DPS.PC_POSMST A
+		              
+		            UNION ALL
+		              
+		            SELECT ''            AS POSNO_MIN
+		                 , MAX(A.POS_NO) AS POSNO_MAX
+		              FROM DPS.PC_POSMST A
+		           ) A
+        ]]>        
+    </query>
+    
+    
+</service>

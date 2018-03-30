@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 윤지영
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2016.11.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 컴플레인 관리
+ -->
+ 
+<service name="/dvoc011.dv"> 
+    <!-- 컴플레인 관리 -->
+    <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"        colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="REC_DT"        colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="REC_SEQ"       colType="TB_DECIMAL" size="5"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" /> 
+		<column colName="REC_TITLE"     colType="TB_STRING"  size="100"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" /> 
+		<column colName="REC_CONT"      colType="TB_STRING"  size="1000"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="REC_SUMMARY"   colType="TB_STRING"  size="1000"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="CLM_KIND"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="CLM_GRADE"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="REC_TYPE"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="MBR_GBN"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="CUST_ID"       colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="CUST_NAME"     colType="TB_STRING"  size="50"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="MOBILE_PH"    colType="TB_STRING"  size="96"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="MOBILE_PH1"    colType="TB_STRING"  size="96"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="MOBILE_PH2"    colType="TB_STRING"  size="96"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="MOBILE_PH3"    colType="TB_STRING"  size="96"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="SALE_ORG_CD"   colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="SALE_ORG_NM"   colType="TB_STRING"  size="30"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="BRAND_CD"      colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="PUMBUN_NAME"   colType="TB_STRING"  size="30"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="REC_ID"        colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="REC_NM"        colType="TB_STRING"  size="20"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="PROC_GBN"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="PROC_DEPT"     colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />   
+		<column colName="PROC_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" /> 
+		<column colName="PROC_ID"       colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+		<column colName="PROC_CONT"     colType="TB_STRING"  size="1000"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" /> 
+    </gauce>  
+    
+    <!-- 컴플레인 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.STR_CD                           
+                  , A.REC_DT                            
+                  , A.REC_SEQ                           
+                  , A.REC_TITLE                         
+                  , A.REC_CONT                          
+                  , A.REC_SUMMARY                       
+                  , A.CLM_KIND                          
+                  , A.CLM_GRADE                         
+                  , A.REC_TYPE                          
+                  , A.MBR_GBN                           
+                  , A.CUST_ID                           
+                  , A.CUST_NAME              
+                  , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1)||'-'||DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2)||'-'|| DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3) AS MOBILE_PH           
+     			  , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1)  AS MOBILE_PH1
+                  , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2)  AS MOBILE_PH2
+                  , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3)  AS MOBILE_PH3                       
+                  , A.SALE_ORG_CD   
+                  , DPS.FN_GET_ORG_NAME(SUBSTR(SALE_ORG_CD,1,2), SUBSTR(SALE_ORG_CD,3,2), SUBSTR(SALE_ORG_CD,5,2), SUBSTR(SALE_ORG_CD,7,2), SUBSTR(SALE_ORG_CD,9,2)) AS SALE_ORG_NM                     
+                  , A.BRAND_CD 
+                  , B.PUMBUN_NAME                         
+                  , A.REC_ID     
+                  , COM.FN_GET_USER_NAME(A.REC_ID) AS REC_NM                       
+                  , A.PROC_GBN                          
+                  , A.PROC_DEPT                              
+              FROM DCS.DV_VOCMST A --컴플레인
+                 , DPS.PC_PBNMST B --품번마스터
+             WHERE A.BRAND_CD = B.PUMBUN_CD(+)
+               AND A.STR_CD = ?
+               AND A.REC_DT BETWEEN ? AND ? 
+               AND A.CLM_KIND LIKE ? || '%'
+               AND A.PROC_GBN LIKE ? || '%'
+               AND NVL(A.CUST_ID,' ') LIKE ? || '%' 
+               AND NVL(A.REC_TITLE,' ') LIKE ? || '%'
+        ]]>        
+    </query>  
+    
+    <!-- 컴플레인 처리구분 체크  -->
+    <query name="SEL_DV_VOCMST_CHK">
+        <![CDATA[    
+            SELECT COUNT(REC_SEQ) AS CNT 
+              FROM DCS.DV_VOCMST 
+             WHERE STR_CD = ?
+               AND REC_DT = ?
+               AND REC_SEQ = ? 
+               AND PROC_GBN != '0' 
+         ]]>
+    </query>
+
+    <!-- 컴플레인 등록 -->
+    <query name="INS_DV_VOCMST">
+        <![CDATA[     
+			INSERT INTO DCS.DV_VOCMST 
+                    ( STR_CD
+                    , REC_DT
+                    , REC_SEQ
+                    , REC_TITLE
+                    , REC_CONT
+                    , REC_SUMMARY
+                    , CLM_KIND
+                    , CLM_GRADE
+                    , REC_TYPE
+                    , MBR_GBN
+                    , CUST_ID
+                    , CUST_NAME
+                    , MOBILE_PH1
+                    , MOBILE_PH2
+                    , MOBILE_PH3
+                    , SALE_ORG_CD
+                    , BRAND_CD
+                    , REC_ID  
+                    , PROC_GBN
+                    , PROC_DEPT)
+             VALUES ( ?
+                    , ?
+                    , (SELECT NVL(MAX(REC_SEQ),0)+1 AS REC_SEQ
+                        FROM DCS.DV_VOCMST
+                       WHERE STR_CD = ?
+                         AND REC_DT = ?) 
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , DCS.SC_Crypto_FUN('ENC',?)
+                    , DCS.SC_Crypto_FUN('ENC',?)
+                    , DCS.SC_Crypto_FUN('ENC',?)
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?)
+                    
+            
+         ]]>
+    </query> 
+
+    <!-- 컴플레인 수정 -->
+    <query name="UPD_DV_VOCMST">
+        <![CDATA[    
+			UPDATE DCS.DV_VOCMST
+               SET REC_TITLE = ? 
+                 , REC_CONT = ?
+                 , REC_SUMMARY = ?
+                 , CLM_KIND = ?
+                 , CLM_GRADE= ?
+                 , REC_TYPE = ?
+                 , MBR_GBN  = ?
+                 , CUST_ID  = ?
+                 , CUST_NAME= ?
+                 , MOBILE_PH1 = DCS.SC_Crypto_FUN('ENC',?)
+                 , MOBILE_PH2 = DCS.SC_Crypto_FUN('ENC',?)
+                 , MOBILE_PH3 = DCS.SC_Crypto_FUN('ENC',?)
+                 , SALE_ORG_CD = ?
+                 , BRAND_CD = ?
+                 , REC_ID  = ? 
+                 , PROC_DEPT = ?
+             WHERE STR_CD = ? 
+               AND REC_DT = ?
+               AND REC_SEQ = ?
+         ]]>
+    </query> 
+    
+    <!-- 캄플레인 삭제 -->
+    <query name="DEL_DV_VOCMST">
+        <![CDATA[    
+		  	DELETE DCS.DV_VOCMST 
+             WHERE STR_CD = ? 
+               AND REC_DT = ?
+               AND REC_SEQ = ?
+         ]]>
+    </query> 
+    
+    <!-- 컴플레인 조치결과(POPUP) 조회 -->
+    <query name="SEL_MASTER_POP">        
+        <![CDATA[
+            SELECT A.STR_CD                           
+                 , A.REC_DT                            
+                 , A.REC_SEQ
+                 , A.REC_TITLE                         
+                 , A.REC_CONT                          
+                 , A.REC_SUMMARY                       
+                 , A.CLM_KIND                          
+                 , A.CLM_GRADE                         
+                 , A.REC_TYPE                          
+                 , A.MBR_GBN                           
+                 , A.CUST_ID                           
+                 , A.CUST_NAME              
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1)||'-'||DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2)||'-'|| DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3) AS MOBILE_PH           
+    			 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1)  AS MOBILE_PH1
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2)  AS MOBILE_PH2
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3)  AS MOBILE_PH3                       
+                 , A.SALE_ORG_CD   
+                 , DPS.FN_GET_ORG_NAME(SUBSTR(A.SALE_ORG_CD,1,2), SUBSTR(A.SALE_ORG_CD,3,2), SUBSTR(A.SALE_ORG_CD,5,2), SUBSTR(A.SALE_ORG_CD,7,2), SUBSTR(A.SALE_ORG_CD,9,2)) AS SALE_ORG_NM                     
+                 , A.BRAND_CD 
+                 , '' AS PUMBUN_NAME                         
+                 , A.REC_ID     
+                 , COM.FN_GET_USER_NAME(A.REC_ID) AS REC_NM                       
+                 , A.PROC_GBN  
+			     , A.PROC_DEPT
+			     , A.PROC_DT 
+			     , A.PROC_ID  
+			     , A.PROC_CONT                           
+			 FROM DCS.DV_VOCMST A --컴플레인 
+			WHERE A.STR_CD = ?
+			  AND A.REC_DT = ?
+			  AND A.REC_SEQ = ?
+        ]]>        
+    </query>  
+    
+    <!-- 컴플레인 조치결과(POPUP) 저장 -->
+    <query name="UPD_DV_VOCMST_POP">
+    	<![CDATA[
+    		  UPDATE DCS.DV_VOCMST
+                 SET PROC_DEPT = ?
+                   , PROC_GBN = ?
+                   , PROC_DT = ?
+                   , PROC_ID = ?
+                   , PROC_CONT = ?
+               WHERE STR_CD = ?
+                 AND REC_DT = ?
+                 AND REC_SEQ = ?
+    	]]>
+    </query>
+</service>

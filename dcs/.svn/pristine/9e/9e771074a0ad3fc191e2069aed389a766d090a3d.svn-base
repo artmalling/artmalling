@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 조형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  클럽별로 가입 회원을 조회한다.
+ -->
+<service name="/dctm133.dc">
+    <!-- 클럽회원조회 - 전체 -->
+    <gauce name="H_MASTER"> 
+		<column colName="CLUB_ID"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CLUB_NAME"           colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CLUB_INFO"           colType="TB_STRING"  size="200" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_TCNT"           colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_ICNT"           colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_OCNT"           colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 클럽회원조회 - 상세 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="CLUB_ID"             colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CLUB_NAME"           colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_ID"             colType="TB_STRING"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_NAME"           colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="HOUSE_TYPE"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="HOUSE_NAME"          colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="HOLD_CAR_YN"         colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="FAVOR_DEPT1_YN"      colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="FAVOR_DEPT2_YN"      colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="FAVOR_DEPT3_YN"      colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="FAVOR_DEPT4_YN"      colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="FAVOR_DEPT5_YN"      colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="INCOME_AMT"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="INCOME_NAME"         colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="POINT"               colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CONF_DATE"           colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 클럽회원조회 - 전체 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			-- 1. 상단 GRID 조회 SQL   2010.06.14 보유회원수, 기간중가입회원수로 분리
+			SELECT A.CLUB_ID
+			     , A.CLUB_NAME
+			     , A.CLUB_INFO
+			     , NVL(B.CUST_CNT1, 0) CUST_TCNT  -- 전체보유회원
+			     , NVL(C.CUST_CNT2, 0) CUST_ICNT  -- 기간중 가입회원
+			     , NVL(D.CUST_CNT3, 0) CUST_OCNT  -- 기간중 탈퇴회원
+			  FROM DCS.DM_CLUB A
+			     , ( SELECT CLUB_ID, COUNT(*) CUST_CNT1 -- 전체보유회원
+			           FROM DCS.DM_CLUB_CUST M
+			              , DCS.DM_CUSTOMER N
+			          WHERE M.CUST_ID       =   N.CUST_ID
+			            AND M.CONF_DATE     IS  NOT NULL
+			            AND M.SCED_DATE     IS  NULL
+			            AND N.SCED_PROC_DT  IS  NULL
+			            AND N.CUST_NAME   LIKE '%' 
+			          GROUP BY CLUB_ID
+			       ) B
+			     , ( SELECT CLUB_ID, COUNT(*) CUST_CNT2 -- 기간중 가입회원
+			           FROM DCS.DM_CLUB_CUST M
+			              , DCS.DM_CUSTOMER N
+			          WHERE M.CUST_ID       =   N.CUST_ID
+			            AND N.SCED_PROC_DT  IS  NULL
+			            AND N.CUST_NAME   LIKE '%' 
+			            AND M.CONF_DATE BETWEEN TO_DATE(? || '000001', 'YYYYMMDDHH24MISS')
+			                                AND TO_DATE(? || '235959', 'YYYYMMDDHH24MISS')
+			          GROUP BY CLUB_ID
+			       ) C
+			     , ( SELECT CLUB_ID, COUNT(*) CUST_CNT3 -- 기간중 탈퇴회원
+			           FROM DCS.DM_CLUB_CUST M
+			              , DCS.DM_CUSTOMER N
+			          WHERE M.CUST_ID       =   N.CUST_ID
+			            AND N.SCED_PROC_DT  IS  NULL
+			            AND N.CUST_NAME   LIKE '%' 
+			            AND M.SCED_DATE BETWEEN TO_DATE(? || '000001', 'YYYYMMDDHH24MISS')
+			                                AND TO_DATE(? || '235959', 'YYYYMMDDHH24MISS')
+			          GROUP BY CLUB_ID
+			       ) D
+			 WHERE A.CLUB_ID = B.CLUB_ID(+)
+			   AND A.CLUB_ID = C.CLUB_ID(+)
+			   AND A.CLUB_ID = D.CLUB_ID(+)
+			 ORDER BY A.CLUB_ID
+        ]]>        
+    </query>
+    
+    <!-- 클럽회원조회 - 상세 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT A.CLUB_ID
+		     , B.CLUB_NAME
+		     , A.CUST_ID
+		     , C.CUST_NAME
+		     , C.HOUSE_TYPE
+		     , COM.FN_GET_COMM_NAME('D', 'D043', C.HOUSE_TYPE) HOUSE_NAME
+		     , C.HOLD_CAR_YN
+		     , C.FAVOR_DEPT1_YN
+		     , C.FAVOR_DEPT2_YN
+		     , C.FAVOR_DEPT3_YN
+		     , C.FAVOR_DEPT4_YN
+		     , C.FAVOR_DEPT5_YN
+		     , C.INCOME_AMT
+		     , COM.FN_GET_COMM_NAME('D', 'D049', C.INCOME_AMT) INCOME_NAME
+		     , D.POINT  
+		     , TO_CHAR(A.CONF_DATE, 'YYYY/MM/DD HH24:MI:SS') CONF_DATE
+		  FROM DCS.DM_CLUB_CUST A
+		     , DCS.DM_CLUB B
+		     , DCS.DM_CUSTOMER C
+		     , DCS.DO_CUST_TPOINT D
+		 WHERE A.CLUB_ID     =    B.CLUB_ID
+		   AND A.CUST_ID     =    C.CUST_ID
+		   AND A.CUST_ID     =    D.CUST_ID
+		   AND C.SCED_PROC_DT  IS  NULL
+		   AND C.CUST_NAME   LIKE ? || '%'
+		   AND A.CLUB_ID     LIKE ? || '%'
+		   AND A.CONF_DATE   BETWEEN TO_DATE(? || '000001', 'YYYYMMDDHH24MISS')
+		                         AND TO_DATE(? || '235959', 'YYYYMMDDHH24MISS')
+		 ORDER BY A.CLUB_ID, A.CUST_ID
+        ]]>        
+    </query>
+    
+</service>

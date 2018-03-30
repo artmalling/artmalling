@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.17
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  점별품목별목표이익율을 조회한다.
+ -->
+<service name="/pcod403.pc">
+
+  <gauce name="H_SEL_MASTER">   
+        <column colName="PUMMOK_CD"       colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PUMMOK_NAME"     colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMMOK_SRT_CD"   colType="TB_STRING" size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_CD"          colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOAL_PROF_RATE"  colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="APP_S_DT"        colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"        colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_STRPMKPRFRT">
+        <![CDATA[
+            SELECT FRT.PUMMOK_CD    , PMK.PUMMOK_NAME    , PMK.PUMMOK_SRT_CD    , FRT.STR_CD    , FRT.GOAL_PROF_RATE
+                 , FRT.APP_S_DT     , FRT.APP_E_DT
+              FROM DPS.PC_STRPMKPRFRT FRT
+                 , DPS.PC_PMKMST PMK
+             WHERE FRT.PUMMOK_CD = PMK.PUMMOK_CD
+        ]]>      
+    </query> 
+    <query name="SEL_STRPMKPRFRT_WHERE_STR_CD">
+        <![CDATA[
+               AND FRT.STR_CD          = ?
+        ]]>
+    </query> 
+    <query name="SEL_STRPMKPRFRT_WHERE_L_CD">
+        <![CDATA[
+               AND PMK.L_CD            = ?
+        ]]> 
+    </query>
+    <query name="SEL_STRPMKPRFRT_WHERE_M_CD">
+        <![CDATA[
+               AND PMK.M_CD            = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPMKPRFRT_WHERE_S_CD">
+        <![CDATA[
+               AND PMK.S_CD            = ?
+        ]]>
+    </query>    
+    <query name="SEL_STRPMKPRFRT_WHERE_LIKE_PUMMOK_CD">
+        <![CDATA[
+               AND FRT.PUMMOK_CD       LIKE  ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_STRPMKPRFRT_WHERE_LIKE_PUMMOK_NAME">
+        <![CDATA[
+               AND PMK.PUMMOK_NAME     LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_STRPMKPRFRT_WHERE_APP_DT">
+        <![CDATA[
+               AND ? BETWEEN FRT.APP_S_DT  AND FRT.APP_E_DT
+        ]]>
+    </query>
+    <query name="SEL_STRPMKPRFRT_ORDER">
+        <![CDATA[
+            ORDER BY FRT.PUMMOK_CD
+                   , FRT.STR_CD
+               , FRT.APP_S_DT DESC
+        ]]>
+    </query>
+    
+</service>

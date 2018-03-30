@@ -1,0 +1,254 @@
+﻿/*
+ * BoardListAction.java
+ *
+ * Version 1.0
+ *
+ * Created on 2005. 9. 15.
+ *
+ * Copyright(C) 2005 FUJITSU KOREA LTD.
+ * All rights reserved.
+ */
+
+package old.jsp.gauce;
+
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import kr.fujitsu.ffw.base.Configure;
+import kr.fujitsu.ffw.control.Action;
+import kr.fujitsu.ffw.control.ActionForm;
+import kr.fujitsu.ffw.control.ActionForward;
+import kr.fujitsu.ffw.control.ActionMapping;
+import kr.fujitsu.ffw.control.cfg.svc.shift.GauceHelper;
+import kr.fujitsu.ffw.control.cfg.svc.shift.GauceHelperException;
+import kr.fujitsu.ffw.control.cfg.svc.shift.MultiInput;
+import kr.fujitsu.ffw.control.cfg.svc.shift.Service;
+import kr.fujitsu.ffw.util.FileHandler;
+import kr.fujitsu.ffw.util.String2;
+
+import com.gauce.GauceDataRow;
+import com.gauce.GauceDataSet;
+
+public class BoardListAction extends Action {
+	public ActionForward execute(ActionMapping mapping, ActionForm form,
+			HttpServletRequest request, HttpServletResponse response)
+			throws ServletException {
+        
+        String goTo = "";
+        GauceHelper helper = null;
+        try {
+            GauceHelper.setGauceHeader(form, request);
+        } catch (GauceHelperException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        
+		if (form.getParam("goTo").equals("gauce_tr")) {
+			goTo = "gauce_tr";
+		} else if (form.getParam("goTo").equals("gauce_tr_ok")) {
+           
+			goTo = "blank";
+			if (form.getParam("action").equals("select")) {
+				List list = null;
+
+
+				GauceDataSet dSet[] = new GauceDataSet[2];
+                
+				BoardDAO board = null;
+
+				try {
+					helper = new GauceHelper(request, response);
+					dSet[0]  = helper.getDataSet("BOARD");
+					dSet[1]  = helper.getDataSet("BOARD2");
+                    
+					helper.setDataSetHeader(dSet[0], form, "SEL_BOARD");
+                    helper.setDataSetHeader(dSet[1], form, "SEL_BOARD2");
+                    
+					board = new BoardDAO();
+					list = board.getList((Service)form.getService());
+					helper.setDataSet(dSet[0], list);
+                    helper.setDataSet(dSet[1], list); 
+                    
+				} catch (GauceHelperException e) {
+					e.printStackTrace();
+					helper.writeException(
+							"GAUCE", 
+							"001", 
+							"가우스처리를 못했습니다.");
+				} catch (Exception e) {
+					e.printStackTrace();
+					helper.writeException(
+							"GAUCE", 
+							"002",
+							e.getMessage());
+				} finally {
+					helper.close(dSet);
+				}
+			} else {
+                goTo = "blank";
+				GauceDataSet dSet  = null;
+				BoardDAO     board = null;
+				int ret =0;
+                
+				try {
+					helper = new GauceHelper(request, response);
+					dSet = helper.getDataSet("BOARD");
+
+					helper.setDataSetHeader(dSet, form, "SEL_BOARD");
+					MultiInput mi = helper.getMutiInput(dSet, (Service)form.getService());
+					board = new BoardDAO();
+					ret = board.insertBoardData(mi);
+					
+				} catch (GauceHelperException e) {
+					e.printStackTrace();
+					helper.writeException(
+							"GAUCE", 
+							"001", 
+							"가우스처리를 못했습니다.");
+				} catch (Exception e) {
+					e.printStackTrace();
+					helper.writeException(
+							"GAUCE", 
+							"002",
+							e.getMessage());
+				} finally {
+					helper.close(dSet, ret + "건 입력되었습니다.");
+				}
+			}
+		} else {
+            
+            if (form.getParam("action").equals("view")) {
+                Service svc = (Service)form.getService();
+                
+                goTo = "gauceupload";
+                
+            } else if (form.getParam("action").equals("save")) {
+
+                goTo = "blank";
+                GauceDataSet fSet = null;   //File Data Set
+                InputStream in = null;
+                OutputStream fout = null;
+                
+                GauceDataRow row   = null;
+                String fileName[]  = null;
+                String doc_title_1 = "";
+                String doc_title_2 = "";
+                String doc_title_3 = "";
+
+                int file_flag = 1;
+                Configure configure = Configure.getInstance();
+                
+                try {
+                    helper = new GauceHelper(request, response);
+                    fSet = helper.getDataSet("MYFILE");
+                    String dir = configure.getPropertyValue("upload.dir");
+                   
+                    String file_rename = "";
+                    
+                    for (int i=0; i< fSet.getDataRowCnt(); i++) {
+                        row = fSet.getDataRow(i);
+                        if(row.getJobType() == GauceDataRow.TB_JOB_INSERT) {   
+                            in = row.getInputStream(fSet.indexOfColumn("FILE"));                                    
+                            fileName = String2.split(row.getString(fSet.indexOfColumn("FILE_NAME")), "\\");
+                            
+                            if (i == 0) {
+                                doc_title_1 = rename(dir, String2.nvl(fileName[fileName.length-1]));
+                                file_rename = doc_title_1;
+                            } else if (i == 1) {
+                                doc_title_2 = rename(dir, String2.nvl(fileName[fileName.length-1]));
+                                file_rename = doc_title_2;
+                            } else if (i == 2) {
+                                doc_title_3 = rename(dir, String2.nvl(fileName[fileName.length-1]));
+                                file_rename = doc_title_3;
+                            }
+                            
+                            fout = new FileOutputStream(dir + file_rename);
+                            long size = 0;
+                            int read;
+                            byte[] buf = new byte[100];
+                            while ((read = in.read(buf)) != -1) {
+                                fout.write( buf, 0,  read);
+                                size += read;
+                                if (size >= 1024 * 1024 * 20) {
+                                    file_flag = 4;
+                                    throw new Exception();
+                                }
+                            }
+                            file_flag = 2;
+                        }
+                    }
+                }catch (GauceHelperException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (helper != null) {
+                        if (file_flag == 4) {
+                            helper.writeException("GAUCE", "1001", "등록되는 파일은 20M를 넘을 수 없습니다.");
+                        } else {
+                            file_flag = 3;
+                            helper.writeException("GAUCE", "1001", "파일 등록에 실패했습니다.");
+                        }
+                    } 
+                } finally {
+                    if (fout != null)
+                        try{
+                            fout.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    if (in != null) 
+                        try {
+                            in.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    fout = null;
+                    in = null;
+                }
+            }     
+        }
+        return mapping.findForward(goTo);
+	}   
+   public String rename(String dir, String fileName) {
+       FileHandler fh = new FileHandler();
+       
+       boolean bExist = true;
+       int countFileName = 0;
+               
+       while(bExist) {
+           if (fh.existFile(dir, fileName)) {
+               countFileName++;
+               fileName = getName(1, fileName) + countFileName + getName(2, fileName);
+           } else 
+               bExist = false;
+       }
+       
+       return fileName;
+   }
+   
+   public String getName(int kind, String f) {
+       String fileName = "";
+       String name = f;
+       String body = null;
+       String ext = null;
+   
+       int dot = name.lastIndexOf(".");
+       if (dot != -1) {
+           body = name.substring(0, dot);
+           ext = name.substring(dot); // includes "."
+       } else {
+           body = name;
+           ext = "";
+       }
+       if (kind == 1) 
+           return body;
+       else
+           return ext;
+   }
+}

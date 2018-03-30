@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : 
+ * 작 성 일 : 2010.07.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  SMS발송
+ -->
+<service name="/tcom005.tc"> 
+ 	<gauce name="H_SEL_MASTER">   
+        <column colName="USER_ID"       colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />     
+        <column colName="HP_NO"         colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="CONTENT"       colType="TB_STRING" size="1000"  dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="FLAG"          colType="TB_STRING" size="5"     dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="BROADCAST"     colType="TB_STRING" size="5"     dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="SEND_DATE"     colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+ 	</gauce>
+    <!-- 받는사람 추가 POP TCOM4021 : 조회  -->
+    <gauce name="H_SEL_USER">
+        <column colName="CHK"       	colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" />  
+        <column colName="USER_ID"       colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" roundMode="" />       
+        <column colName="USER_NAME"     colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" roundMode="" /> 
+        <column colName="HP_NO"         colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL" roundMode="" />     
+        <column colName="GBN_FLAG"      colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" roundMode="" />      
+    </gauce>  
+    <query name="SEL_USER_LIST">
+        <![CDATA[  
+            SELECT 'F' 					AS CHK							-- 체크박스
+                 , USER_ID                                                  					-- 사용자아이디
+                 , USER_NAME                                                					-- 사용자이름 
+                 , DECODE(HP1_NO, '','', HP1_NO || '-' || HP2_NO || '-' || HP3_NO ) AS HP_NO 	-- 핸드폰 
+                 , USER_ID				AS GBN_FLAG
+             FROM COM.TC_USRMST A 
+            WHERE 1=1
+        ]]>        
+    </query>
+    
+    <query name="SEL_USER_WHERE_ORG_FLAG">
+        <![CDATA[ 
+               AND A.ORG_FLAG    = ?
+        ]]>    
+    </query> 
+    <query name="SEL_USER_WHERE_STR_CD">
+        <![CDATA[ 
+               AND A.STR_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_DEPT_CD">
+        <![CDATA[
+               AND A.DEPT_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_TEAM_CD">
+        <![CDATA[
+               AND A.TEAM_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_PC_CD">
+        <![CDATA[
+               AND A.PC_CD      = ?
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_GROUP_CD">
+        <![CDATA[ 
+               AND A.GROUP_CD  = ? 
+        ]]>    
+    </query>
+    <query name="SEL_USER_WHERE_USER_CD">
+        <![CDATA[ 
+             -- AND ( A.USER_ID LIKE  || '%' OR A.USER_NAME LIKE '%' ||  || '%') 
+              AND A.USER_NAME LIKE '%' || ? || '%'
+        ]]>    
+    </query>
+    
+    <query name="SEL_USER_ORDER">
+        <![CDATA[
+            ORDER BY A.USER_ID           
+        ]]>    
+    </query>
+    
+    
+    <query name="SEL_USER_VEN_LIST">
+        <![CDATA[  
+			SELECT DISTINCT 
+			       'F'                                  AS CHK
+			     , DPS.FN_GET_VENDOR_NAME(A.VEN_CD)     AS USER_ID
+			     , CHAR_NAME                            AS USER_NAME
+			     , HP_NO                                AS HP_NO
+			     , A.VEN_CD || CHAR_NAME                AS GBN_FLAG
+			  FROM (
+			             SELECT A.PUMBUN_CD
+			                  , A.VEN_CD 
+			                  , B.CHAR_NAME
+                 			  , DECODE(HP1_NO, '','', HP1_NO || '-' || HP2_NO || '-' || HP3_NO ) AS HP_NO 
+			              FROM DPS.PC_PBNMST A
+			                 , DPS.PC_VENEMP B
+			             WHERE A.VEN_CD = B.VEN_CD
+			             UNION 
+			            SELECT A.PUMBUN_CD, A.VEN_CD
+			                 , B.CHAR_NAME
+                 			 , DECODE(HP1_NO, '','', HP1_NO || '-' || HP2_NO || '-' || HP3_NO ) AS HP_NO 
+			              FROM DPS.PC_PBNMST    A
+			                 , DPS.PC_PBNVENEMP B
+			            WHERE A.PUMBUN_CD = B.PUMBUN_CD
+			         )A
+			       , DPS.PC_STRPBN B  
+               WHERE A.PUMBUN_CD = B.PUMBUN_CD 
+        ]]>        
+    </query>
+     
+    <query name="SEL_USER_VEN_WHERE1_1">
+        <![CDATA[    
+     			 AND DECODE(?, '1', B.SALE_ORG_CD, B.BUY_ORG_CD) IS NOT NULL
+        ]]>        
+    </query>
+    <query name="SEL_USER_VEN_WHERE1_2">
+        <![CDATA[    
+     			 AND (B.SALE_ORG_CD LIKE ? || '%' OR B.BUY_ORG_CD LIKE ? || '%')
+        ]]>        
+    </query>
+    <query name="SEL_USER_VEN_WHERE1_3">
+        <![CDATA[    
+     			 AND DECODE(?, '1', B.SALE_ORG_CD, B.BUY_ORG_CD)  LIKE ? || '%'
+        ]]>        
+    </query>
+    <query name="SEL_USER_VEN_WHERE2">
+        <![CDATA[ 
+               -- AND ( CHAR_NAME LIKE || '%' OR DPS.FN_GET_VENDOR_NAME(A.VEN_CD) LIKE '%' || || '%') 
+               AND CHAR_NAME LIKE '%' || ? || '%'
+        ]]>    
+    </query>
+    
+    <query name="SEL_USER_VEN_ORDER">
+        <![CDATA[  
+  			   ORDER BY A.VEN_CD || CHAR_NAME
+        ]]>        
+    </query>
+    
+    <!-- 문자SEQ조회 : SMS -->
+    <query name="SEL_SMS_SEQ">
+        <![CDATA[ 
+			SELECT EMSUSER.SQ_EM_SMT_TRAN_01.NEXTVAL@SMS_LINK AS SEQ
+			  FROM DUAL
+        ]]>    
+    </query>
+    
+    <!-- 문자SEQ조회 : LMS -->
+    <query name="SEL_LMS_SEQ">
+        <![CDATA[ 
+			SELECT EMSUSER.SQ_EM_MMT_TRAN_01.NEXTVAL@SMS_LINK AS SEQ
+			  FROM DUAL
+        ]]>    
+    </query>
+    
+    
+    <!-- SMS 단일건 저장1 -->
+    <query name="INS_SMS_MASTER">
+        <![CDATA[ 
+			INSERT INTO EMSUSER.EM_SMT_TRAN@SMS_LINK 
+			(
+			      MT_PR             -- 메세지 고유ID_SEQ
+			    , DATE_CLIENT_REQ   -- 전송예약시간(클라이언트 전송요청시간)
+			    , CONTENT           -- 전송메세지
+			    , CALLBACK          -- 발신자전화번호
+			    , SERVICE_TYPE      -- 서비스메세지 전송타입(0:SMS MT/1:CALLBACK URL)
+			    , BROADCAST_YN      -- 동봉발송유무(N:단일/Y:동봉)
+			    , MSG_STATUS        -- 메세지 상태(DEFAULT : 1 전송대기)
+			    , RECIPIENT_NUM     -- 수신자전화번호(단일일경우) 
+			) 
+			VALUES 
+			(
+			     ?
+			   , DECODE(?,'',SYSDATE,TO_DATE(?, 'YYYY/MM/DD HH24:MI:SS'))
+			   , ?
+			   , ? 
+			   , '0'
+			   , ? 
+			   , '1'
+			   , DECODE(?,'Y','',?) 
+			)
+
+        ]]>    
+    </query>
+    
+    <!-- SMS 동봉건 저장1 -->
+    <query name="INS_SMS_DETAIL">
+        <![CDATA[ 
+			INSERT INTO EMSUSER.EM_SMT_CLIENT@SMS_LINK 
+			(
+			      MT_PR             -- 메세지 고유ID_SEQ
+			    , MT_SEQ            -- 순번 : MT_PR의 동보메세지 순번 
+			    , MSG_STATUS        -- 메세지 상태(DEFAULT : 1 전송대기)
+			    , RECIPIENT_NUM     -- 수신자전화번호  
+			) 
+			VALUES 
+			(
+			     ?
+			   , (SELECT COUNT(*)+1 FROM EMSUSER.EM_SMT_CLIENT@SMS_LINK WHERE MT_PR = ?)
+			   , '1'
+			   , ?   
+			)
+        ]]>    
+    </query>
+    
+	<!-- LMS 단일건 저장1 -->
+    <query name="INS_LMS_MASTER">
+        <![CDATA[ 
+			INSERT INTO EMSUSER.EM_MMT_TRAN@SMS_LINK 
+			(
+			      MT_PR             -- 메세지 고유ID_SEQ
+			    , DATE_CLIENT_REQ   -- 전송예약시간(클라이언트 전송요청시간)
+                , SUBJECT           -- 메세지 제목
+			    , CONTENT           -- 전송메세지
+			    , CALLBACK          -- 발신자전화번호
+			    , SERVICE_TYPE      -- 서비스메세지 전송타입(2:MMS MT/3:LMS)
+			    , BROADCAST_YN      -- 동봉발송유무(N:단일/Y:동봉)
+			    , MSG_STATUS        -- 메세지 상태(DEFAULT : 1 전송대기)
+			    , RECIPIENT_NUM     -- 수신자전화번호(단일일경우) 
+			) 
+			VALUES 
+			(
+			      ?                 -- 메세지 고유ID_SEQ
+			    , DECODE(?,'',SYSDATE,TO_DATE(?, 'YYYY/MM/DD HH24:MI:SS'))  -- 전송예약시간(클라이언트 전송요청시간) 
+                , SUBSTR(?,1,10)    -- 메세지 제목
+			    , ?                 -- 전송메세지
+			    , ?                 -- 발신자전화번호
+			    , '3'               -- 서비스메세지 전송타입(2:MMS MT/3:LMS)
+			    , ?                 -- 동봉발송유무(N:단일/Y:동봉)
+			    , '1'               -- 메세지 상태(DEFAULT : 1 전송대기) 
+			    , DECODE(?,'Y','',?) 
+			) 
+        ]]>    
+    </query>
+    
+    <!-- LMS 동봉건 저장2 -->
+    <query name="INS_LMS_DETAIL">
+        <![CDATA[ 
+			INSERT INTO EMSUSER.EM_MMT_CLIENT@SMS_LINK 
+			(
+			      MT_PR             -- 메세지 고유ID_SEQ
+			    , MT_SEQ            -- 순번 : MT_PR의 동보메세지 순번 
+			    , MSG_STATUS        -- 메세지 상태(DEFAULT : 1 전송대기)
+			    , RECIPIENT_NUM     -- 수신자전화번호  
+			) 
+			VALUES 
+			(
+			     ?
+			   , (SELECT COUNT(*)+1 FROM EMSUSER.EM_MMT_CLIENT@SMS_LINK WHERE MT_PR = ?)
+			   , '1'
+			   , ?   
+			)
+        ]]>    
+    </query>
+    
+</service>

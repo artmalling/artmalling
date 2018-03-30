@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal321.ps">
+
+    <gauce name="H_SEL_MASTER">
+    	<column colName="TITLE"                  	colType="TB_STRING"      size="50"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"                	colType="TB_STRING"      size="50"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_NAME" 	            colType="TB_STRING"      size="50"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"        		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAY_AVG"        			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WEEK_AVG"        			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WEEKEND_AVG"        		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MON_EXP"        			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WEEK"        				colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WEEK_AMT"        			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WEEKEND"        			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WEEKEND_AMT"        		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INQR_ORDER"        		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+   
+    <query name="SEL_MASTER">        
+        <![CDATA[
+	      SELECT (SELECT RESERVED1 FROM COM.TC_COMMCODE WHERE COMM_PART = 'P321' AND USE_YN ='Y' AND COMM_CODE = PUMBUN_CD) TITTLE, 
+			            DECODE(PUMBUN_NAME,'소계','',PUMBUN_CD) PUMBUN_CD,PUMBUN_NAME,TOT_SALE_AMT,DAY_AVG,WEEK_AVG,WEEKEND_AVG,MON_EXP,WEEK,WEEK_AMT,WEEKEND,WEEKEND_AMT,INQR_ORDER
+			FROM
+			    (SELECT DECODE(GROUPING(PUMBUN_CD),'1',MAX(PUMBUN_CD),PUMBUN_CD) PUMBUN_CD,
+			                DECODE(GROUPING(PUMBUN_CD),'1','소계',MAX(PUMBUN_NAME)) PUMBUN_NAME,
+			                SUM(TOT_SALE_AMT) TOT_SALE_AMT,SUM(DAY_AVG) DAY_AVG,SUM(WEEK_AVG) WEEK_AVG,
+			                SUM(WEEKEND_AVG) WEEKEND_AVG,SUM(MON_EXP) MON_EXP,SUM(WEEK) WEEK,SUM(WEEK_AMT) WEEK_AMT,SUM(WEEKEND) WEEKEND,SUM(WEEKEND_AMT) WEEKEND_AMT,  MAX(INQR_ORDER) INQR_ORDER 
+			    FROM 
+			    (SELECT PUMBUN_CD,PUMBUN_NAME,
+			                ROUND(SUM(TOT_SALE_AMT)/?) TOT_SALE_AMT,
+			                ROUND((SUM(TOT_SALE_AMT)/(SUM(WEEK)+SUM(WEEKEND)))/?,0) DAY_AVG,
+			                DECODE(SUM(WEEK),0,0,ROUND((SUM(WEEK_AMT)/SUM(WEEK))/?,0)) WEEK_AVG,
+			                DECODE(SUM(WEEKEND),0,0,ROUND((SUM(WEEKEND_AMT)/SUM(WEEKEND))/?,0)) WEEKEND_AVG,
+			                ROUND(((SUM(TOT_SALE_AMT)/(SUM(WEEK)+SUM(WEEKEND)))*31)/?,0) MON_EXP,
+			                SUM(WEEK) WEEK, ROUND(SUM(WEEK_AMT)/?,0) WEEK_AMT,
+			                SUM(WEEKEND) WEEKEND, ROUND(SUM(WEEKEND_AMT)/?,0) WEEKEND_AMT,
+			                (SELECT INQR_ORDER FROM COM.TC_COMMCODE WHERE COMM_PART = 'P321' AND USE_YN ='Y' AND COMM_CODE = PUMBUN_CD) INQR_ORDER
+			    FROM
+			        (SELECT PUMBUN_CD,PUMBUN_NAME,SUM(TOT_SALE_AMT) TOT_SALE_AMT,
+			                    SUM(WEEK) WEEK,
+			                    CASE WHEN WEEK = '1' THEN SUM(TOT_SALE_AMT) ELSE 0 END WEEK_AMT,
+			                    SUM(WEEKEND) WEEKEND,
+			                    CASE WHEN WEEKEND = '1' THEN SUM(TOT_SALE_AMT) ELSE 0 END WEEKEND_AMT
+			        FROM
+			            (SELECT SALE_DT,
+			                        CASE WHEN TO_CHAR(TO_DATE(SALE_DT),'D') IN ('2','3','4','5','6') THEN '1' ELSE '0' END WEEK,
+			                        CASE WHEN TO_CHAR(TO_DATE(SALE_DT),'D') IN ('1','7') THEN '1' ELSE '0' END WEEKEND,            
+			                        PUMBUN_CD, (SELECT M.PUMBUN_NAME FROM DPS.PC_PBNMST M WHERE M.PUMBUN_CD = A.PUMBUN_CD) PUMBUN_NAME,  
+			                        SUM(TOT_SALE_AMT) TOT_SALE_AMT 
+			            FROM DPS.PS_DAYMGPBN A
+			            WHERE PUMBUN_CD IN (SELECT COMM_CODE FROM COM.TC_COMMCODE WHERE COMM_PART = 'P321' AND USE_YN ='Y')
+			            AND SALE_DT BETWEEN ? AND ?
+			            GROUP BY SALE_DT,PUMBUN_CD)
+			        GROUP BY PUMBUN_CD,PUMBUN_NAME,WEEK,WEEKEND)
+			    GROUP BY (PUMBUN_CD,PUMBUN_NAME)
+			    ORDER BY (SELECT INQR_ORDER FROM COM.TC_COMMCODE WHERE COMM_PART = 'P321' AND USE_YN ='Y' AND COMM_CODE = PUMBUN_CD)
+			    )
+			    GROUP BY ROLLUP(PUMBUN_CD),(SUBSTR(INQR_ORDER,1,1)))
+			ORDER BY INQR_ORDER,PUMBUN_CD NULLS LAST
+			  
+        ]]>        
+    </query>
+    
+    
+</service>

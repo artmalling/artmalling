@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  품번이동을 관리한다.
+ -->
+<service name="/pcod205.pc">
+    <!-- 품번이동관리 마스터 그리드 -->
+    <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"           colType="TB_STRING" size="2"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_DT"           colType="TB_STRING" size="8"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="ORG_FLAG"         colType="TB_STRING" size="1"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_BF_ORG_CD"    colType="TB_STRING" size="10" dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="MOD_BF_ORG_NM"    colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_BF_BUYER_NM"  colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_BF_KOSTL_CD"  colType="TB_STRING" size="10" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_AFT_ORG_CD"   colType="TB_STRING" size="10" dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="MOD_AFT_ORG_NM"   colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_AFT_BUYER_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_AFT_KOSTL_CD" colType="TB_STRING" size="10" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="PROC_YN"          colType="TB_STRING" size="1"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 품번이동관리 디테일 그리드 -->
+    <gauce name="H_SEL_DETAIL">
+        <column colName="SEL"              colType="TB_STRING" size="1"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"        colType="TB_STRING" size="6"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"      colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"         colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_BF_ORG_CD"    colType="TB_STRING" size="10" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_BF_ORG_NAME"  colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_AFT_ORG_CD"   colType="TB_STRING" size="10" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="MOD_AFT_ORG_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+        <column colName="PROC_YN"          colType="TB_STRING" size="1"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 변경일 -->
+    <gauce name="H_SEL_MOD_DT">
+        <column colName="MOD_DT"           colType="TB_STRING" size="8"  dec="0" keyType="TB_MORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 품번 이동마스터 조회 -->
+    <query name="SEL_PBNTRNSMST">
+        <![CDATA[
+            SELECT PTM.STR_CD
+                 , PTM.MOD_DT
+                 , PTM.ORG_FLAG
+                 , PTM.MOD_BF_ORG_CD
+                 , BFORG.ORG_NAME    AS MOD_BF_ORG_NM 
+                 , BFBYM.BUYER_NAME  AS MOD_BF_BUYER_NM                 
+                 , CASE WHEN BFORG.ORG_LEVEL = '5' THEN (SELECT KOSTLORG.KOSTL_CD FROM DPS.PC_ORGMST KOSTLORG WHERE KOSTLORG.ORG_CD = SUBSTR(BFORG.ORG_CD,0,8)||'00')
+                        WHEN BFORG.ORG_LEVEL = '4' THEN BFORG.KOSTL_CD
+                   END       AS BF_KOSTL_CD
+                 , PTM.MOD_AFT_ORG_CD
+                 , AFORG.ORG_NAME    AS MOD_AFT_ORG_NM 
+                 , AFBYM.BUYER_NAME  AS MOD_AFT_BUYER_NM               
+                 , CASE WHEN AFORG.ORG_LEVEL = '5' THEN (SELECT KOSTLORG.KOSTL_CD FROM DPS.PC_ORGMST KOSTLORG WHERE KOSTLORG.ORG_CD = SUBSTR(AFORG.ORG_CD,0,8)||'00')
+                        WHEN AFORG.ORG_LEVEL = '4' THEN AFORG.KOSTL_CD
+                   END       AS AF_KOSTL_CD
+                 , PTM.PROC_YN
+              FROM DPS.PC_PBNTRNSMST PTM
+                 , DPS.PC_ORGMST     BFORG
+                 , DPS.PC_BUYERMST   BFBYM
+                 , DPS.PC_ORGMST     AFORG
+                 , DPS.PC_BUYERMST   AFBYM
+             WHERE PTM.MOD_BF_ORG_CD          = BFORG.ORG_CD
+               AND PTM.MOD_AFT_ORG_CD         = AFORG.ORG_CD
+               AND DECODE(BFORG.ORG_FLAG,'1',BFORG.P_ORG_CD,'2',BFORG.ORG_CD) = BFBYM.PC_ORG_CD(+)
+               AND DECODE(AFORG.ORG_FLAG,'1',AFORG.P_ORG_CD,'2',AFORG.ORG_CD) = AFBYM.PC_ORG_CD(+)
+               AND BFBYM.MAIN_FLAG(+)         = '1'
+               AND AFBYM.MAIN_FLAG(+)         = '1'
+               AND PTM.STR_CD                 = ?
+               AND PTM.MOD_DT                 = ?
+               AND BFORG.ORG_FLAG             = ?
+               AND AFORG.ORG_FLAG             = ?
+             ORDER BY PTM.MOD_BF_ORG_CD, PTM.MOD_AFT_ORG_CD
+        ]]> 
+    </query>
+    
+    <!-- 품번 이동상세 조회 -->
+    <query name="SEL_PBNTRNSDTL">
+        <![CDATA[
+            SELECT CASE WHEN PTD.PUMBUN_CD IS NULL
+                        THEN 'F'
+                        ELSE 'T'
+                   END                  AS SEL
+                 , STR.PUMBUN_CD
+                 , STR.PUMBUN_NAME
+                 , VEN.VEN_NAME
+                 , BFORG.ORG_CD         AS MOD_BF_ORG_CD
+                 , BFORG.ORG_NAME       AS MOD_BF_ORG_NAME
+                 , AFORG.ORG_CD         AS MOD_AFT_ORG_CD
+                 , AFORG.ORG_NAME       AS MOD_AFT_ORG_NAME
+                 , NVL(PTD.PROC_YN,'N') AS PROC_YN
+              FROM DPS.PC_STRPBN     STR
+                 , (SELECT PUMBUN_CD
+                         , MOD_BF_ORG_CD
+                         , MOD_AFT_ORG_CD
+                         , PROC_YN
+                      FROM DPS.PC_PBNTRNSDTL 
+                     WHERE STR_CD    = ?
+                       AND MOD_DT    = ?
+                   ) PTD
+                 , DPS.PC_ORGMST     BFORG
+                 , DPS.PC_ORGMST     AFORG
+                 , DPS.PC_VENMST     VEN
+             WHERE DECODE( ? , '1', STR.SALE_ORG_CD, '2', STR.BUY_ORG_CD) = PTD.MOD_BF_ORG_CD (+)
+               AND STR.PUMBUN_CD               = PTD.PUMBUN_CD(+)
+               AND NVL( PTD.MOD_BF_ORG_CD, ?)  = BFORG.ORG_CD
+               AND NVL( PTD.MOD_AFT_ORG_CD, ?) = AFORG.ORG_CD
+               AND ?                           = DECODE( ? , '1', STR.SALE_ORG_CD, '2', STR.BUY_ORG_CD)
+               AND STR.VEN_CD                  = VEN.VEN_CD
+               AND STR.STR_CD                  = ?
+               AND NOT EXISTS ( SELECT PUMBUN_CD 
+                                  FROM DPS.PC_PBNTRNSDTL EXPTD
+                                 WHERE EXPTD.STR_CD         = STR.STR_CD
+                                   AND EXPTD.PUMBUN_CD      = STR.PUMBUN_CD
+                                   AND EXPTD.MOD_BF_ORG_CD  =  ?
+                                   AND EXPTD.MOD_DT         =  ?
+                                   AND EXPTD.MOD_AFT_ORG_CD <> ?
+                              )
+             ORDER BY SEL DESC, PUMBUN_CD
+        ]]> 
+    </query>
+    <!-- 품번 이동마스터에서 오늘 이후 변경일자를 조회 -->
+    <query name="SEL_TODAY_AF_MOD_DT">
+        <![CDATA[
+            SELECT MOD_DT 
+              FROM DPS.PC_PBNTRNSMST 
+             WHERE MOD_DT > TO_CHAR(SYSDATE,'YYYYMMDD') 
+               AND STR_CD = ?
+             GROUP BY MOD_DT
+        ]]>
+    </query>
+    <!-- 품번 이동마스터에서 중복체크 -->
+    <query name="SEL_PBNTRNSMST_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT 
+              FROM DPS.PC_PBNTRNSMST 
+             WHERE STR_CD         = ?
+               AND MOD_DT         = ?
+               AND MOD_BF_ORG_CD  = ?
+               AND MOD_AFT_ORG_CD = ?
+        ]]>
+    </query>
+    <!-- 품번 이동마스터 신규 저장 -->
+    <query name="INS_PBNTRNSMST">
+        <![CDATA[
+            INSERT INTO DPS.PC_PBNTRNSMST(STR_CD
+                                        , ORG_FLAG
+                                        , MOD_DT
+                                        , MOD_BF_ORG_CD
+                                        , MOD_AFT_ORG_CD
+                                        , PROC_YN
+                                        , PROC_DATE
+                                        , REG_DATE
+                                        , REG_ID
+                                        , MOD_DATE  
+                                        , MOD_ID  
+                                         )  
+                                  VALUES (?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , NULL
+                                        , SYSDATE
+                                        , ?
+                                        , SYSDATE  
+                                        , ?  
+                                         )
+        ]]>
+    </query>
+    
+    <!-- 품번 이동마스터 삭제-->
+    <query name="DEL_PBNTRNSMST">
+        <![CDATA[
+            DELETE
+              FROM DPS.PC_PBNTRNSMST
+             WHERE STR_CD         = ?
+               AND MOD_DT         = ?
+               AND MOD_BF_ORG_CD  = ?
+               AND MOD_AFT_ORG_CD = ?
+               AND PROC_YN        <> 'Y'
+        ]]>
+    </query>
+    
+    <!-- 품번 이동상세 신규 저장 -->
+    <query name="INS_PBNTRNSDTL">
+        <![CDATA[
+            INSERT INTO DPS.PC_PBNTRNSDTL(STR_CD        
+                                        , MOD_DT        
+                                        , MOD_BF_ORG_CD 
+                                        , MOD_AFT_ORG_CD  
+                                        , PUMBUN_CD           
+                                        , PROC_YN       
+                                        , PROC_DATE     
+                                        , REG_DATE      
+                                        , REG_ID        
+                                        , MOD_DATE      
+                                        , MOD_ID        
+                                         )  
+                                  VALUES (?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , ?
+                                        , NULL
+                                        , SYSDATE
+                                        , ?
+                                        , SYSDATE  
+                                        , ?  
+                                         )
+        ]]>
+    </query>
+    <!-- 품번 이동상세 삭제-->
+    <query name="DEL_PBNTRNSDTL">
+        <![CDATA[
+            DELETE
+              FROM DPS.PC_PBNTRNSDTL
+             WHERE STR_CD         = ?
+               AND MOD_DT         = ?
+               AND MOD_BF_ORG_CD  = ?
+               AND MOD_AFT_ORG_CD = ?
+               AND PROC_YN        <> 'Y'
+        ]]>
+    </query>
+    <query name="DEL_PBNTRNSDTL_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND PUMBUN_CD      = ?
+        ]]>
+    </query>
+</service>

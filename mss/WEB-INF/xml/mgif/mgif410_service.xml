@@ -1,0 +1,955 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif410.mg">
+    <!-- 자사상품권 회수 비교표 마스터  조회  -->
+    <gauce name="H_MASTER"> 
+       <column colName="STAT_FLAG"         colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="GIFT_AMT_NAME"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="STAT_FLAG_NM"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="QTY"         colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="AMT"         colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SUM_QTY"         colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SUM_AMT"         colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+     <!-- 지자사상품권 회수 비교표  디테일  조회  -->
+    <gauce name="H_DETAIL"> 
+       <column colName="STAT_FLAG"         colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="GIFT_AMT_NAME"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="STAT_FLAG_NM"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="POUT_FLAG_NM"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="POUT_TYPE_NM"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_FLAG_NM"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="DRAWL_FLAG_NM"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="DRAWL_STR"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="QTY"         colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="AMT"         colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 지자사상품권 회수 비교표  팝업  조회  -->
+    <gauce name="H_POPUP"> 
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME"    colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY_1"             colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_1"             colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY_2"             colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_2"             colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY_3"             colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_3"             colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY_4"             colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_4"             colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY_5"             colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_5"             colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY_A"             colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT_A"             colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 자사상품권 회수 비교표  마스터  조회 -->
+	<query name="SEL_GIFTDRAWL_MASTER">
+	    <![CDATA[
+			SELECT STAT_FLAG
+					--, GIFT_TYPE_CD
+					--, ISSUE_TYPE
+					--, GIFT_AMT_TYPE
+					, (SELECT GIFT_AMT_NAME FROM MSS.MG_GIFTAMTMST WHERE GIFT_TYPE_CD = A.GIFT_TYPE_CD AND GIFT_AMT_TYPE = A.GIFT_AMT_TYPE ) AS GIFT_AMT_NAME
+					, GIFTCERT_AMT
+					, STAT_FLAG_NM
+			        , QTY
+			        , AMT
+			        , SUM_QTY
+			        , SUM_AMT
+			FROM
+			(
+				SELECT STAT_FLAG
+						, GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, GIFTCERT_AMT
+						, STAT_FLAG_NM
+				        , SUM(QTY) AS QTY
+				        , SUM(AMT) AS AMT
+				        , SUM(SUM_QTY) AS SUM_QTY
+				        , SUM(SUM_AMT) AS SUM_AMT
+				FROM
+				(
+					SELECT STAT_FLAG
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG_NM
+					        , CASE WHEN STAT_FLAG1 = '0' THEN SUM(QTY) ELSE 0 END AS QTY
+					        , CASE WHEN STAT_FLAG1 = '0' THEN SUM(AMT) ELSE 0 END AS AMT
+					        , CASE WHEN STAT_FLAG1 >= '0' THEN SUM(QTY) ELSE 0 END AS SUM_QTY
+					        , CASE WHEN STAT_FLAG1 >= '0' THEN SUM(AMT) ELSE 0 END AS SUM_AMT
+			
+					FROM
+						(
+						SELECT
+						      CASE WHEN STAT_FLAG >= '03' THEN '03' ELSE STAT_FLAG END STAT_FLAG
+						    , CASE WHEN STAT_FLAG > '03' THEN '1' WHEN STAT_FLAG = '03' THEN '0' END STAT_FLAG1
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+							, MIN(GIFTCARD_NO)
+							, MAX(GIFTCARD_NO)
+							,''
+							, GIFTCERT_AMT
+							, IN_DT
+							, POUT_DT
+							, SALE_DT
+							, DRAWL_DT
+							, COM.FN_GET_COMM_NAME('D','M074',CASE WHEN STAT_FLAG >= '03' THEN '03' ELSE STAT_FLAG END) AS STAT_FLAG_NM
+			
+							, COUNT(*) QTY
+							, COUNT(*) * GIFTCERT_AMT AMT
+						FROM MSS.MG_GIFTMST TA
+						WHERE STAT_FLAG >= '03'
+						GROUP BY
+						      CASE WHEN STAT_FLAG >= '03' THEN '03' ELSE STAT_FLAG END
+							, CASE WHEN STAT_FLAG > '03' THEN '1' WHEN STAT_FLAG = '03' THEN '0' END
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_DT
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_DT
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_DT
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_DT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+						ORDER BY GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG
+							, IN_DT
+							, POUT_DT
+							, SALE_DT
+							, DRAWL_DT
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+						)
+						GROUP BY STAT_FLAG
+							, STAT_FLAG1
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG_NM
+						ORDER BY GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG
+				)
+				GROUP BY STAT_FLAG
+					, GIFT_TYPE_CD
+					, ISSUE_TYPE
+					, GIFT_AMT_TYPE
+					, GIFTCERT_AMT
+					, STAT_FLAG_NM
+				UNION
+				SELECT STAT_FLAG
+						, GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, GIFTCERT_AMT
+						, STAT_FLAG_NM
+				        , SUM(QTY) AS QTY
+				        , SUM(AMT) AS AMT
+				        , SUM(SUM_QTY) AS SUM_QTY
+				        , SUM(SUM_AMT) AS SUM_AMT
+				FROM
+				(
+					SELECT STAT_FLAG
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG_NM
+					        , CASE WHEN STAT_FLAG1 = '0' THEN SUM(QTY) ELSE 0 END AS QTY
+					        , CASE WHEN STAT_FLAG1 = '0' THEN SUM(AMT) ELSE 0 END AS AMT
+					        , CASE WHEN STAT_FLAG1 >= '0' THEN SUM(QTY) ELSE 0 END AS SUM_QTY
+					        , CASE WHEN STAT_FLAG1 >= '0' THEN SUM(AMT) ELSE 0 END AS SUM_AMT
+			
+					FROM
+						(
+						SELECT
+						      CASE WHEN STAT_FLAG = '04' OR ( STAT_FLAG >= '06' AND POUT_TYPE IN ('1','4') ) THEN '04' ELSE STAT_FLAG END STAT_FLAG
+						    , CASE WHEN STAT_FLAG > '04' THEN '1' WHEN STAT_FLAG = '04' THEN '0' END STAT_FLAG1
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							--, IN_DT
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+							, MIN(GIFTCARD_NO)
+							, MAX(GIFTCARD_NO)
+							,''
+							, GIFTCERT_AMT
+							, IN_DT
+							, POUT_DT
+							, SALE_DT
+							, DRAWL_DT
+							, COM.FN_GET_COMM_NAME('D','M074',CASE WHEN STAT_FLAG = '04' OR (STAT_FLAG >= '06' AND POUT_TYPE IN ('1','4')) THEN '04' ELSE STAT_FLAG END) AS STAT_FLAG_NM
+			
+							, COUNT(*) QTY
+							, COUNT(*) * GIFTCERT_AMT AMT
+						FROM MSS.MG_GIFTMST TA
+						WHERE STAT_FLAG = '04' OR (STAT_FLAG >= '06' AND POUT_TYPE IN ('1','4'))
+						GROUP BY
+						      CASE WHEN STAT_FLAG = '04' OR (STAT_FLAG >= '06' AND POUT_TYPE IN ('1','4')) THEN '04' ELSE STAT_FLAG END
+							, CASE WHEN STAT_FLAG > '04' THEN '1' WHEN STAT_FLAG = '04' THEN '0' END
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_DT
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_DT
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_DT
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_DT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+						ORDER BY GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG
+							, IN_DT
+							, POUT_DT
+							, SALE_DT
+							, DRAWL_DT
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+						)
+						GROUP BY STAT_FLAG
+							, STAT_FLAG1
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG_NM
+						ORDER BY GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG
+				)
+				GROUP BY STAT_FLAG
+					, GIFT_TYPE_CD
+					, ISSUE_TYPE
+					, GIFT_AMT_TYPE
+					, GIFTCERT_AMT
+					, STAT_FLAG_NM
+				UNION
+				SELECT STAT_FLAG
+						, GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, GIFTCERT_AMT
+						, STAT_FLAG_NM
+				        , SUM(QTY) AS QTY
+				        , SUM(AMT) AS AMT
+				        , SUM(SUM_QTY) AS SUM_QTY
+				        , SUM(SUM_AMT) AS SUM_AMT
+				FROM
+				(
+					SELECT STAT_FLAG
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG_NM
+					        , CASE WHEN STAT_FLAG1 = '0' THEN SUM(QTY) ELSE 0 END AS QTY
+					        , CASE WHEN STAT_FLAG1 = '0' THEN SUM(AMT) ELSE 0 END AS AMT
+					        , CASE WHEN STAT_FLAG1 >= '0' THEN SUM(QTY) ELSE 0 END AS SUM_QTY
+					        , CASE WHEN STAT_FLAG1 >= '0' THEN SUM(AMT) ELSE 0 END AS SUM_AMT
+			
+					FROM
+						(
+						SELECT
+						      CASE WHEN STAT_FLAG = '05' OR ( STAT_FLAG >= '06' AND POUT_TYPE IN ('2','3','5') ) THEN '05' ELSE STAT_FLAG END STAT_FLAG
+						    , CASE WHEN STAT_FLAG > '05' THEN '1' WHEN STAT_FLAG = '05' THEN '0' END STAT_FLAG1
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+							, MIN(GIFTCARD_NO)
+							, MAX(GIFTCARD_NO)
+							,''
+							, GIFTCERT_AMT
+							, IN_DT
+							, POUT_DT
+							, SALE_DT
+							, DRAWL_DT
+							, COM.FN_GET_COMM_NAME('D','M074',CASE WHEN STAT_FLAG = '05' OR (STAT_FLAG >= '06' AND POUT_TYPE IN ('2','3','5')) THEN '05' ELSE STAT_FLAG END) AS STAT_FLAG_NM
+			
+							, COUNT(*) QTY
+							, COUNT(*) * GIFTCERT_AMT AMT
+						FROM MSS.MG_GIFTMST TA
+						WHERE STAT_FLAG = '05' OR (STAT_FLAG >= '06' AND POUT_TYPE IN ('2','3','5'))
+						GROUP BY
+						      CASE WHEN STAT_FLAG = '05' OR (STAT_FLAG >= '06' AND POUT_TYPE IN ('2','3','5')) THEN '05' ELSE STAT_FLAG END
+							, CASE WHEN STAT_FLAG > '05' THEN '1' WHEN STAT_FLAG = '05' THEN '0' END
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_DT
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_DT
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_DT
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_DT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+						ORDER BY GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG
+							, IN_DT
+							, POUT_DT
+							, SALE_DT
+							, DRAWL_DT
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+						)
+						GROUP BY STAT_FLAG
+							, STAT_FLAG1
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG_NM
+						ORDER BY GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG
+				)
+				GROUP BY STAT_FLAG
+					, GIFT_TYPE_CD
+					, ISSUE_TYPE
+					, GIFT_AMT_TYPE
+					, GIFTCERT_AMT
+					, STAT_FLAG_NM
+				UNION
+				SELECT STAT_FLAG
+						, GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, GIFTCERT_AMT
+						, STAT_FLAG_NM
+				        , SUM(QTY) AS QTY
+				        , SUM(AMT) AS AMT
+				        , SUM(SUM_QTY) AS SUM_QTY
+				        , SUM(SUM_AMT) AS SUM_AMT
+				FROM
+				(
+					SELECT STAT_FLAG
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							--, IN_DT
+							, STAT_FLAG_NM
+					        , CASE WHEN STAT_FLAG1 = '0' THEN SUM(QTY) ELSE 0 END AS QTY
+					        , CASE WHEN STAT_FLAG1 = '0' THEN SUM(AMT) ELSE 0 END AS AMT
+					        , CASE WHEN STAT_FLAG1 >= '0' THEN SUM(QTY) ELSE 0 END AS SUM_QTY
+					        , CASE WHEN STAT_FLAG1 >= '0' THEN SUM(AMT) ELSE 0 END AS SUM_AMT
+			
+					FROM
+						(
+						SELECT
+						      CASE WHEN STAT_FLAG = '06' OR ( STAT_FLAG >= '06' AND POUT_TYPE IN ('1','4') ) THEN '06' ELSE STAT_FLAG END STAT_FLAG
+						    , CASE WHEN STAT_FLAG > '06' THEN '1' WHEN STAT_FLAG = '06' THEN '0' END STAT_FLAG1
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+							, MIN(GIFTCARD_NO)
+							, MAX(GIFTCARD_NO)
+							,''
+							, GIFTCERT_AMT
+							, IN_DT
+							, POUT_DT
+							, SALE_DT
+							, DRAWL_DT
+							, COM.FN_GET_COMM_NAME('D','M074',CASE WHEN STAT_FLAG = '06' OR (STAT_FLAG >= '06' AND POUT_TYPE IN ('1','4')) THEN '06' ELSE STAT_FLAG END) AS STAT_FLAG_NM
+			
+							, COUNT(*) QTY
+							, COUNT(*) * GIFTCERT_AMT AMT
+						FROM MSS.MG_GIFTMST TA
+						WHERE STAT_FLAG = '06' OR (STAT_FLAG >= '06' AND POUT_TYPE IN ('1','4'))
+						GROUP BY
+						      CASE WHEN STAT_FLAG = '06' OR (STAT_FLAG >= '06' AND POUT_TYPE IN ('1','4')) THEN '06' ELSE STAT_FLAG END
+							, CASE WHEN STAT_FLAG > '06' THEN '1' WHEN STAT_FLAG = '06' THEN '0' END
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_DT
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_DT
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_DT
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_DT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+						ORDER BY GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG
+							, IN_DT
+							, POUT_DT
+							, SALE_DT
+							, DRAWL_DT
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+						)
+						GROUP BY STAT_FLAG
+							, STAT_FLAG1
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG_NM
+						ORDER BY GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG
+				)
+				GROUP BY STAT_FLAG
+					, GIFT_TYPE_CD
+					, ISSUE_TYPE
+					, GIFT_AMT_TYPE
+					, GIFTCERT_AMT
+					, STAT_FLAG_NM
+				UNION
+				SELECT STAT_FLAG
+						, GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, GIFTCERT_AMT
+						, STAT_FLAG_NM
+				        , SUM(QTY) AS QTY
+				        , SUM(AMT) AS AMT
+				        , SUM(SUM_QTY) AS SUM_QTY
+				        , SUM(SUM_AMT) AS SUM_AMT
+				FROM
+				(
+					SELECT STAT_FLAG
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG_NM
+					        , CASE WHEN STAT_FLAG1 = '0' THEN SUM(QTY) ELSE 0 END AS QTY
+					        , CASE WHEN STAT_FLAG1 = '0' THEN SUM(AMT) ELSE 0 END AS AMT
+					        , CASE WHEN STAT_FLAG1 >= '0' THEN SUM(QTY) ELSE 0 END AS SUM_QTY
+					        , CASE WHEN STAT_FLAG1 >= '0' THEN SUM(AMT) ELSE 0 END AS SUM_AMT
+			
+					FROM
+						(
+						SELECT
+						      CASE WHEN STAT_FLAG >= '07' THEN '07' ELSE STAT_FLAG END STAT_FLAG
+						    , CASE WHEN STAT_FLAG > '07' THEN '1' WHEN STAT_FLAG = '07' THEN '0' END STAT_FLAG1
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+							, MIN(GIFTCARD_NO)
+							, MAX(GIFTCARD_NO)
+							,''
+							, GIFTCERT_AMT
+							, IN_DT
+							, POUT_DT
+							, SALE_DT
+							, DRAWL_DT
+							, COM.FN_GET_COMM_NAME('D','M074',CASE WHEN STAT_FLAG >= '07' THEN '07' ELSE STAT_FLAG END) AS STAT_FLAG_NM
+							, COUNT(*) QTY
+							, COUNT(*) * GIFTCERT_AMT AMT
+						FROM MSS.MG_GIFTMST TA
+						WHERE STAT_FLAG >= '07'
+						GROUP BY
+						      CASE WHEN STAT_FLAG >= '07' THEN '07' ELSE STAT_FLAG END
+							, CASE WHEN STAT_FLAG > '07' THEN '1' WHEN STAT_FLAG = '07' THEN '0' END
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_DT
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_DT
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_DT
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_DT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+						ORDER BY GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG
+							, IN_DT
+							, POUT_DT
+							, SALE_DT
+							, DRAWL_DT
+							, ISSUE_IN_STR
+							, ISSUE_IN_DT
+							, ISSUE_IN_EMP_ID
+							, IN_STR
+							, IN_EMP_ID
+							, POUT_FLAG
+							, POUT_TYPE
+						    , SALE_STR
+							, SALE_FLAG
+							, SALE_PART_CD
+							, SALE_EMP_ID
+							, SALE_AMT
+							, DRAWL_STR
+							, DRAWL_FLAG
+							, DRAWL_REG_EMP_ID
+						)
+						GROUP BY STAT_FLAG
+							, STAT_FLAG1
+							, GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG_NM
+						ORDER BY GIFT_TYPE_CD
+							, ISSUE_TYPE
+							, GIFT_AMT_TYPE
+							, GIFTCERT_AMT
+							, STAT_FLAG
+				)
+				GROUP BY STAT_FLAG
+					, GIFT_TYPE_CD
+					, ISSUE_TYPE
+					, GIFT_AMT_TYPE
+					, GIFTCERT_AMT
+					, STAT_FLAG_NM
+				ORDER BY GIFT_TYPE_CD
+					, ISSUE_TYPE
+					, GIFT_AMT_TYPE
+					, GIFTCERT_AMT
+					, STAT_FLAG
+			) A
+			ORDER BY GIFT_TYPE_CD
+					, ISSUE_TYPE
+					, GIFT_AMT_TYPE
+					, GIFTCERT_AMT
+					, STAT_FLAG
+					, STAT_FLAG_NM
+	    ]]>
+	</query>  
+
+	  
+    <!-- 자사상품권 회수 비교표  디테일  조회 -->
+	<query name="SEL_GIFTDRAWL_DETAIL">
+	    <![CDATA[
+			SELECT STAT_FLAG
+					--, GIFT_TYPE_CD
+					--, ISSUE_TYPE
+					--, GIFT_AMT_TYPE
+					, (SELECT GIFT_AMT_NAME FROM MSS.MG_GIFTAMTMST WHERE GIFT_TYPE_CD = A.GIFT_TYPE_CD AND GIFT_AMT_TYPE = A.GIFT_AMT_TYPE ) AS GIFT_AMT_NAME
+					, GIFTCERT_AMT
+					, STAT_FLAG_NM
+					, POUT_TYPE_NM
+					, POUT_FLAG_NM
+					, SALE_FLAG_NM
+					, DRAWL_FLAG_NM
+					, DRAWL_STR
+			        , QTY AS QTY
+			        , AMT AS AMT
+			FROM
+			(
+				SELECT STAT_FLAG
+						, GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, GIFTCERT_AMT
+						, STAT_FLAG_NM
+						, POUT_TYPE_NM
+						, POUT_FLAG_NM
+						, SALE_FLAG_NM
+						, DRAWL_FLAG_NM
+						, DRAWL_STR
+				        , SUM(QTY) AS QTY
+				        , SUM(AMT) AS AMT
+			
+				FROM
+					(
+					SELECT
+					      STAT_FLAG
+						, GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, ISSUE_IN_STR
+						, ISSUE_IN_DT
+						, ISSUE_IN_EMP_ID
+						, IN_STR
+						, IN_EMP_ID
+						, POUT_FLAG
+						, POUT_TYPE
+					    , SALE_STR
+						, SALE_FLAG
+						, SALE_PART_CD
+						, SALE_EMP_ID
+						, SALE_AMT
+						, DRAWL_STR
+						, DRAWL_FLAG
+						, DRAWL_REG_EMP_ID
+						, MIN(GIFTCARD_NO)
+						, MAX(GIFTCARD_NO)
+						,''
+						, GIFTCERT_AMT
+						, IN_DT
+						, POUT_DT
+						, SALE_DT
+						, DRAWL_DT
+						, COM.FN_GET_COMM_NAME('D','M074',STAT_FLAG) AS STAT_FLAG_NM
+						, COM.FN_GET_COMM_NAME('D','M014',TA.POUT_TYPE) AS POUT_TYPE_NM
+						, COM.FN_GET_COMM_NAME('D','M007',TA.POUT_FLAG) AS POUT_FLAG_NM
+						, COM.FN_GET_COMM_NAME('D','M067',TA.SALE_FLAG) AS SALE_FLAG_NM
+						, COM.FN_GET_COMM_NAME('D','M076',TA.DRAWL_FLAG) AS DRAWL_FLAG_NM
+			
+						, COUNT(*) QTY
+						, COUNT(*) * GIFTCERT_AMT AMT
+					FROM MSS.MG_GIFTMST TA
+					WHERE STAT_FLAG >= '03'
+					GROUP BY
+						  STAT_FLAG
+						, GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, GIFTCERT_AMT
+						, ISSUE_IN_STR
+						, ISSUE_IN_DT
+						, ISSUE_IN_EMP_ID
+						, IN_DT
+						, IN_STR
+						, IN_EMP_ID
+						, POUT_DT
+						, POUT_FLAG
+						, POUT_TYPE
+					    , SALE_STR
+						, SALE_DT
+						, SALE_FLAG
+						, SALE_PART_CD
+						, SALE_EMP_ID
+						, SALE_AMT
+						, DRAWL_DT
+						, DRAWL_STR
+						, DRAWL_FLAG
+						, DRAWL_REG_EMP_ID
+					ORDER BY GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, GIFTCERT_AMT
+						, STAT_FLAG
+						, IN_DT
+						, POUT_DT
+						, SALE_DT
+						, DRAWL_DT
+						, ISSUE_IN_STR
+						, ISSUE_IN_DT
+						, ISSUE_IN_EMP_ID
+						, IN_STR
+						, IN_EMP_ID
+						, POUT_FLAG
+						, POUT_TYPE
+					    , SALE_STR
+						, SALE_FLAG
+						, SALE_PART_CD
+						, SALE_EMP_ID
+						, SALE_AMT
+						, DRAWL_STR
+						, DRAWL_FLAG
+						, DRAWL_REG_EMP_ID
+					)
+					GROUP BY STAT_FLAG
+						, GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, GIFTCERT_AMT
+						, POUT_TYPE
+						, STAT_FLAG_NM
+						, POUT_TYPE_NM
+						, POUT_FLAG_NM
+						, SALE_FLAG_NM
+						, DRAWL_FLAG_NM
+						, DRAWL_STR
+					ORDER BY GIFT_TYPE_CD
+						, ISSUE_TYPE
+						, GIFT_AMT_TYPE
+						, GIFTCERT_AMT
+						, STAT_FLAG
+						, POUT_TYPE
+						, STAT_FLAG_NM
+						, DRAWL_FLAG_NM
+						, DRAWL_STR
+			) A
+			ORDER BY GIFT_TYPE_CD
+				, ISSUE_TYPE
+				, GIFT_AMT_TYPE
+				, GIFTCERT_AMT
+				, STAT_FLAG
+				, STAT_FLAG_NM
+				, POUT_TYPE_NM
+				, POUT_FLAG_NM
+				, SALE_FLAG_NM
+				, DRAWL_FLAG_NM
+				, DRAWL_STR
+	      ]]>
+	</query>  
+          
+    <!-- 자사상품권 회수 비교표  팝업  조회 -->
+	<query name="SEL_GIFTDRAWL_POP">
+	    <![CDATA[
+		SELECT A.GIFT_TYPE_CD
+             , GIFT_TYPE_NAME
+             , A.GIFT_AMT_TYPE
+             , GIFT_AMT_NAME
+             , SUM(QTY_1) AS QTY_1
+             , SUM(AMT_1) AS QTY_1
+             , SUM(QTY_2) AS QTY_2
+             , SUM(AMT_2) AS AMT_2
+             , SUM(QTY_3) AS QTY_3
+             , SUM(AMT_3) AS AMT_3
+             , SUM(QTY_4) AS QTY_4
+             , SUM(AMT_4) AS AMT_4
+             , SUM(QTY_5) AS QTY_5
+             , SUM(AMT_5) AS AMT_5
+             , COUNT(1)     AS QTY_A
+             , SUM(DRAWL_AMT)   AS AMT_A
+          FROM (SELECT GIFT_TYPE_CD
+                     , GIFT_AMT_TYPE
+                     , ISSUE_TYPE
+                     , CASE WHEN DRAWL_FLAG = '1' THEN 1 ELSE 0 END         AS QTY_1
+                     , CASE WHEN DRAWL_FLAG = '1' THEN DRAWL_AMT ELSE 0 END AS AMT_1
+                     , CASE WHEN DRAWL_FLAG = '5' THEN 1 ELSE 0 END         AS QTY_2
+                     , CASE WHEN DRAWL_FLAG = '5' THEN DRAWL_AMT ELSE 0 END AS AMT_2
+                     , CASE WHEN DRAWL_FLAG = '2' THEN 1 ELSE 0 END         AS QTY_3
+                     , CASE WHEN DRAWL_FLAG = '2' THEN DRAWL_AMT ELSE 0 END AS AMT_3
+                     , CASE WHEN DRAWL_FLAG = '3' THEN 1 ELSE 0 END         AS QTY_4
+                     , CASE WHEN DRAWL_FLAG = '3' THEN DRAWL_AMT ELSE 0 END AS AMT_4
+                     , CASE WHEN DRAWL_FLAG = '4' THEN 1 ELSE 0 END         AS QTY_5
+                     , CASE WHEN DRAWL_FLAG = '4' THEN DRAWL_AMT ELSE 0 END AS AMT_5
+                     , DRAWL_AMT
+                  FROM MSS.MG_GIFTDRAWL GDRA
+                     , COM.TC_COMMCODE COMM
+                 WHERE GDRA.DRAWL_FLAG = COMM.COMM_CODE
+                   AND COMM.COMM_PART = 'M076'
+                   AND GDRA.DRAWL_STR = ?
+                   AND GDRA.DRAWL_DT = ?
+                   ) A
+                 , MSS.MG_GIFTTPMST B
+                 , MSS.MG_GIFTAMTMST C
+             WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD 
+               AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+               AND A.ISSUE_TYPE = C.ISSUE_TYPE
+               AND A.GIFT_AMT_TYPE = C.GIFT_AMT_TYPE
+        GROUP BY A.GIFT_TYPE_CD, A.GIFT_AMT_TYPE, GIFT_TYPE_NAME, GIFT_AMT_NAME
+	    ]]>
+	</query>  
+</service>

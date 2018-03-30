@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  청구대비입금액조회
+ -->
+<service name="/psal937.ps">
+    <gauce name="H_MASTER"> 
+        <column colName="PAY_DT"        colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_NM"      colType="TB_STRING"    size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JBRCH_ID"      colType="TB_STRING"    size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JBRCH_TYPE_NM" colType="TB_STRING"    size="43"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHRG_DT"       colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_DT"         colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_TCNT"     colType="TB_DECIMAL"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_TAMT"     colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECV_CNT"      colType="TB_DECIMAL"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECV_AMT"      colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RTN_CNT"       colType="TB_DECIMAL"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RTN_AMT"       colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEFER_CNT"     colType="TB_DECIMAL"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEFER_AMT"     colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLEAR_CNT"     colType="TB_DECIMAL"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLEAR_AMT"     colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_CNT"       colType="TB_DECIMAL"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"       colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMIS_AMT"     colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PEXPT_DT"      colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PEXPT_AMT"     colType="TB_DECIMAL"   size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                
+    </gauce>
+
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT B.PAY_DT
+                 , A.BCOMP_NM
+                 , A.JBRCH_ID
+                 , ( SELECT COM.FN_GET_COMM_NAME('D', 'D070', JBRCH_TYPE)
+                       FROM DPS.PD_BRANCH
+                      WHERE JBRCH_ID  =  A.JBRCH_ID
+                   ) JBRCH_TYPE_NM 
+                 , A.CHRG_DT
+                 , A.IN_DT
+                 , A.APPR_TCNT
+                 , A.APPR_TAMT
+                 , B.RECV_CNT
+                 , RECV_AMT
+                 , RTN_CNT
+                 , RTN_AMT
+                 , DEFER_CNT
+                 , DEFER_AMT
+                 , CLEAR_CNT
+                 , CLEAR_AMT
+                 , TOT_CNT
+                 , TOT_AMT
+                 , COMIS_AMT
+                 , PEXPT_DT
+                 , PEXPT_AMT
+              FROM (
+                     SELECT DPS.FN_GET_CCOMP_NM(M.BCOMP_CD) BCOMP_NM   
+                          , M.JBRCH_ID
+                          , M.CHRG_DT
+                          , COUNT(*)        APPR_TCNT
+                          , SUM(DECODE(M.WORK_FLAG, '12', M.APPR_AMT * -1, M.APPR_AMT)) APPR_TAMT
+                          , N.PAY_DAY
+                          , DPS.FN_GET_INPAYDAY(N.STR_CD, M.BCOMP_CD, M.JBRCH_ID, M.CHRG_DT) IN_DT  
+                       FROM DPS.PD_BUYREQD M
+                          , DPS.PD_BRANCH N
+                      WHERE M.BCOMP_CD   = N.BCOMP_CD
+                        AND M.JBRCH_ID   = N.JBRCH_ID
+                        AND N.STR_CD     = ?
+                        AND M.CHRG_DT    BETWEEN ?  AND ?
+                        AND M.BCOMP_CD   LIKE  ? || '%'
+                        AND M.JBRCH_ID   LIKE  ? || '%'
+                      GROUP BY N.STR_CD, M.BCOMP_CD, M.JBRCH_ID, M.CHRG_DT, N.PAY_DAY
+                   ) A
+                 , DPS.PD_PAYD B
+             WHERE A.JBRCH_ID  =  B.JBRCH_ID(+)
+               AND A.CHRG_DT   =  '20' || B.SEND_DT
+             ORDER BY BCOMP_NM
+        ]]>        
+    </query>
+</service>

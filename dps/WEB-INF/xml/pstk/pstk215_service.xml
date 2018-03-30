@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.04.29
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  실사재고현황(단품)을 관리한다.
+ -->
+<service name="/pstk215.pt">
+  
+  <gauce name="H_SEL_MASTER">        
+        <column colName="PUMBUN_CD"        colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"           colType="TB_STRING"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"           colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />          
+        <column colName="STK_YM"           colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_FLAG"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MG_RATE"          colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />           
+        <column colName="SRVY_QTY"         colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SRVY_AMT"         colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_TOT_QTY"      colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="BUY_TOT_SALE_AMT" colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"         colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_SALE_AMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JB_QTY"           colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="JB_AMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SRVY_SUM_QTY"     colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SRVY_SUM_AMT"     colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOSS_QTY"         colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="LOSS_COST_AMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="LOSS_RATE"        colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />  
+  </gauce> 
+  
+
+    <!-- 재고스케쥴에 있는 정보 쿼리  -->
+  <gauce name="H_SEL_PBNSTK">
+        <column colName="SRVY_DT"         colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG"        colType="TB_STRING"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG_NAME"   colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SRVY_S_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_E_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_CD"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_YM"          colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+  </gauce>
+   
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+
+            SELECT A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.PUMMOK_CD
+                 , A.PUMMOK_NAME
+                 , A.SKU_CD                 
+                 , A.SKU_NAME   
+                 , A.STR_CD                 
+                 , A.STK_YM   
+                 , A.EVENT_FLAG
+                 , A.EVENT_RATE
+                 , A.MG_RATE
+                 , A.SRVY_QTY
+                 , A.SRVY_AMT
+                 , A.BUY_TOT_QTY
+                 , A.BUY_TOT_SALE_AMT
+                 , A.SALE_QTY
+                 , A.SALE_SALE_AMT
+                 , A.JB_QTY
+                 , A.JB_AMT
+                 , A.SRVY_SUM_QTY
+                 , A.SRVY_SALE_AMT
+                 , A.LOSS_QTY
+                 , A.LOSS_AMT
+                 , A.LOSS_RATE    
+              FROM (
+                    SELECT A.PUMBUN_CD
+                         , A.PUMBUN_NAME
+                         , A.PUMMOK_CD
+                         , A.PUMMOK_NAME
+                         , ''            AS SKU_CD                 
+                         , ''            AS SKU_NAME   
+                         , A.STR_CD                 
+                         , A.STK_YM   
+                         , A.EVENT_FLAG
+                         , A.EVENT_RATE
+                         , A.MG_RATE
+                         , A.SRVY_QTY
+                         , A.SRVY_AMT
+                         , A.BUY_TOT_QTY
+                         , A.BUY_TOT_SALE_AMT
+                         , A.SALE_QTY
+                         , A.SALE_SALE_AMT
+                         , A.JB_QTY
+                         , A.JB_AMT
+                         , A.SRVY_SUM_QTY
+                         , A.SRVY_SALE_AMT
+                         , A.SRVY_SUM_QTY - A.JB_QTY   LOSS_QTY
+                         , A.SRVY_SALE_AMT - A.JB_AMT  LOSS_AMT
+                         , CASE 
+                           WHEN A.JB_AMT <> 0 THEN
+                                ROUND((A.SRVY_SALE_AMT - A.JB_AMT) / A.JB_AMT * 100,2)
+                           ELSE
+                                0
+                           END  LOSS_RATE    
+                      FROM (   
+                             SELECT A.PUMBUN_CD
+                                  , D.PUMBUN_NAME
+                                  , A.PUMMOK_CD                          
+                                  , A.STR_CD
+                                  , A.STK_YM
+                                  , A.EVENT_FLAG
+                                  , A.EVENT_RATE
+                                  , A.MG_RATE
+                                  , DPS.FN_GET_PUMMOK_NAME(A.PUMMOK_CD)                                          AS PUMMOK_NAME
+                                  , SUM(A.CAO_QTY)                                                               AS SRVY_QTY
+                                  , SUM(A.CAO_SALE_AMT)                                                          AS SRVY_AMT
+                                  , SUM(A.BUY_TOT_QTY)                                                           AS BUY_TOT_QTY
+                                  , SUM(A.BUY_TOT_SALE_AMT)                                                      AS BUY_TOT_SALE_AMT
+                                  , SUM(A.SALE_QTY)                                                              AS SALE_QTY
+                                  , SUM(A.SALE_SALE_AMT) - SUM(A.REDU_AMT)                                       AS SALE_SALE_AMT
+                                  , SUM(B.JB_QTY)                                                                AS JB_QTY
+                                  , SUM(B.JB_AMT)                                                                AS JB_AMT
+                                  , SUM(NVL(B.SRVY_SUM_QTY,0))                                                   AS SRVY_SUM_QTY
+                                  , SUM(NVL(B.SRVY_SALE_AMT,0))                                                  AS SRVY_SALE_AMT
+                               FROM DPS.PT_PBNMONTH A                      
+                                  , (SELECT STR_CD
+                                        , STK_YM
+                                        , PUMBUN_CD
+                                        , EVENT_FLAG
+                                        , EVENT_RATE
+                                        , MG_RATE
+                                        , PUMMOK_CD
+                                        , DPS.FN_GET_SRVY_QTY(STR_CD, STK_YM, ? , PUMBUN_CD, EVENT_FLAG, EVENT_RATE, MG_RATE, PUMMOK_CD) AS JB_QTY
+                                        , DPS.FN_GET_SRVY_AMT(STR_CD, STK_YM, ? , PUMBUN_CD, EVENT_FLAG, EVENT_RATE, MG_RATE, PUMMOK_CD) AS JB_AMT
+                                        , NVL(SRVY_QTY,0)       AS SRVY_SUM_QTY
+                                        , NVL(SRVY_SALE_AMT,0)  AS SRVY_SALE_AMT
+                                     FROM DPS.PT_STKPBN
+                                    WHERE STR_CD    = ?
+                                      AND STK_YM    = ?
+                                      AND PUMBUN_CD LIKE  ? || '%'
+                                  ) B
+                                 , DPS.PC_ORGMST   C
+                                 , DPS.PC_STRPBN   D
+                             WHERE A.STR_CD      = B.STR_CD
+                               AND A.STK_YM      = B.STK_YM
+                               AND A.PUMBUN_CD   = B.PUMBUN_CD
+                               AND A.EVENT_FLAG  = B.EVENT_FLAG
+                               AND A.EVENT_RATE  = B.EVENT_RATE
+                               AND A.MG_RATE     = B.MG_RATE
+                               AND A.PUMMOK_CD   = B.PUMMOK_CD
+                               AND A.STR_CD      = D.STR_CD
+                               AND A.PUMBUN_CD   = D.PUMBUN_CD
+                               AND D.SALE_ORG_CD = C.ORG_CD
+                               AND C.STR_CD      = ?
+                               AND C.DEPT_CD     LIKE ? || '%'
+                               AND C.TEAM_CD     LIKE ? || '%'
+                               AND C.PC_CD       LIKE ? || '%'
+                               AND A.STK_YM      = ?
+                               AND A.PUMBUN_CD   LIKE  ? || '%'
+                             GROUP BY 
+                                   A.PUMBUN_CD
+                                 , D.PUMBUN_NAME
+                                 , A.PUMMOK_CD
+                                 , A.STR_CD
+                                 , A.STK_YM
+                                 , A.EVENT_FLAG
+                                 , A.EVENT_RATE
+                                 , A.MG_RATE
+                           )  A
+                    
+                    
+                    UNION ALL
+                           
+                           
+                           
+                    SELECT C.PUMBUN_CD
+                         , D.PUMBUN_NAME
+                         , C.PUMMOK_CD                   
+                         , C.PUMMOK_NAME 
+                         , C.SKU_CD                 
+                         , C.SKU_NAME  
+                         , C.STR_CD                 
+                         , C.STK_YM  
+                         , '0'                         AS EVENT_FLAG
+                         , '0'                         AS EVENT_RATE
+                         , 0                           AS MG_RATE   
+                         , C.SRVY_QTY 
+                         , C.SRVY_AMT 
+                         , C.BUY_TOT_QTY 
+                         , C.BUY_TOT_SALE_AMT 
+                         , C.SALE_QTY 
+                         , C.SALE_SALE_AMT 
+                         , C.JB_QTY 
+                         , C.JB_AMT
+                         , C.SRVY_SUM_QTY
+                         , C.SRVY_SUM_AMT
+                         , C.SRVY_SUM_QTY - C.JB_QTY   AS LOSS_QTY
+                         , C.SRVY_SUM_AMT - C.JB_AMT   AS LOSS_AMT
+                         , CASE 
+                           WHEN C.JB_AMT <> 0 THEN
+                                ROUND((C.SRVY_SUM_AMT - C.JB_AMT) / C.JB_AMT * 100,2)
+                           ELSE
+                                0
+                           END                         AS LOSS_RATE  
+                      FROM (SELECT A.PUMBUN_CD
+                                  , A.PUMMOK_CD
+                                  , DPS.FN_GET_PUMMOK_NAME(A.PUMMOK_CD)                                              AS PUMMOK_NAME
+                                  , A.STR_CD
+                                  , A.STK_YM 
+                                  , A.SKU_CD
+                                  , DPS.FN_GET_SKU_NAME(A.SKU_CD)                                                    AS SKU_NAME
+                                  , SUM(A.CAO_QTY)                                                                   AS SRVY_QTY
+                                  , SUM(A.CAO_SALE_AMT)                                                              AS SRVY_AMT
+                                  , SUM(A.BUY_TOT_QTY)                                                               AS BUY_TOT_QTY
+                                  , SUM(A.BUY_TOT_SALE_AMT)                                                          AS BUY_TOT_SALE_AMT
+                                  , SUM(A.SALE_QTY)                                                                  AS SALE_QTY
+                                  , SUM(A.SALE_SALE_AMT) - SUM(A.REDU_AMT)                                           AS SALE_SALE_AMT
+                                  , SUM(B.SKU_STK_QTY)                                                               AS JB_QTY
+                                  , SUM(B.SKU_STK_AMT)                                                               AS JB_AMT
+                                  , SUM(B.NORM_QTY)                                                                  AS NORM_QTY
+                                  , SUM(B.NORM_AMT)                                                                  AS NORM_AMT
+                                  , SUM(B.INFRR_QTY)                                                                 AS INFRR_QTY
+                                  , SUM(B.INFRR_AMT)                                                                 AS INFRR_AMT
+                                  , SUM(NVL(B.SRVY_SUM_QTY,0))                                                       AS SRVY_SUM_QTY
+                                  , SUM(NVL(B.SRVY_SUM_AMT,0))                                                       AS SRVY_SUM_AMT
+                               FROM DPS.PT_SKUMONTH A,
+                                    (SELECT STR_CD
+                                          , STK_YM
+                                          , PUMBUN_CD
+                                          , SKU_CD
+                                          , DPS.FN_GETSKU_SRVY_QTY(STR_CD, STK_YM, ? , SKU_CD)                         AS SKU_STK_QTY
+                                          , DPS.FN_GETSKU_SRVY_AMT(STR_CD, STK_YM, ? , SKU_CD)                         AS SKU_STK_AMT
+                                          , SUM(NVL(NORM_QTY,0))                                                       AS NORM_QTY
+                                          , SUM(NVL(NORM_AMT,0))                                                       AS NORM_AMT
+                                          , SUM(NVL(INFRR_QTY,0))                                                      AS INFRR_QTY
+                                          , SUM(NVL(INFRR_QTY,0))                                                      AS INFRR_AMT
+                                          , SUM(NVL(SRVY_QTY,0))                                                       AS SRVY_SUM_QTY
+                                          , SUM(NVL(SRVY_SALE_AMT,0))                                                  AS SRVY_SUM_AMT
+                                       FROM DPS.PT_STKSKU
+                                      WHERE STR_CD    = ?
+                                        AND STK_YM    = ?
+                                        AND PUMBUN_CD LIKE ? || '%'
+                                      GROUP BY 
+                                            STR_CD
+                                          , STK_YM
+                                          , PUMBUN_CD
+                                          , SKU_CD
+                                    ) B
+                              WHERE A.STR_CD    = B.STR_CD(+)
+                                AND A.STK_YM     = B.STK_YM(+)
+                                AND A.SKU_CD     = B.SKU_CD(+)
+                                AND A.PUMBUN_CD  = B.PUMBUN_CD 
+                              GROUP BY 
+                                    A.PUMBUN_CD
+                                  , A.PUMMOK_CD
+                                  , A.STR_CD
+                                  , A.STK_YM
+                                  , A.SKU_CD ) C
+                         , DPS.PC_STRPBN       D
+                         , DPS.PC_ORGMST       E
+                     WHERE C.STR_CD       = D.STR_CD
+                       AND C.PUMBUN_CD    = D.PUMBUN_CD
+                       AND D.SALE_ORG_CD  = E.ORG_CD
+                       AND E.STR_CD       = ?  
+                       AND E.DEPT_CD      LIKE ? || '%'
+                       AND E.TEAM_CD      LIKE ? || '%'
+                       AND E.PC_CD        LIKE ? || '%'
+                       AND C.STK_YM    = ?
+                       AND C.PUMBUN_CD LIKE ? || '%'
+                   ) A
+             ORDER BY
+                   A.PUMBUN_CD
+                 , A.PUMMOK_CD
+                 , A.PUMMOK_NAME
+                 , A.SKU_CD                 
+                 , A.SKU_NAME   
+                 , A.STR_CD                 
+                 , A.STK_YM   
+                 , A.EVENT_FLAG
+                 , A.EVENT_RATE
+                 , A.MG_RATE
+        ]]>    
+    </query>
+    
+    
+    <!-- 재고실사 조회 쿼리  -->
+    <query name="SEL_PBNSTK">
+        <![CDATA[
+            SELECT SCH.SRVY_DT 
+                 , SCH.STK_FLAG
+                 , (SELECT X.COMM_NAME1
+                     FROM COM.TC_COMMCODE X
+                    WHERE X.SYS_PART = 'D'
+                      AND X.COMM_PART = 'P801'
+                      AND X.COMM_CODE = SCH.STK_FLAG) AS STK_FLAG_NAME
+                 , CASE WHEN NVL(SCH.CLOSE_DT,NULL) IS NULL 
+                     THEN '진행' 
+                     ELSE '마감' 
+                   END                                AS CLOSE_DT
+                 , SCH.SRVY_S_DT
+                 , SCH.SRVY_E_DT
+                 , SCH.STR_CD
+                 , SCH.STK_YM
+              FROM DPS.PT_SCHEDULE SCH
+             WHERE SCH.STR_CD = ?
+               AND SCH.STK_YM = ?
+        ]]>    
+    </query>
+    
+</service>

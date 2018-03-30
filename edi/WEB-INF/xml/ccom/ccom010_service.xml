@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.22
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/ccom010.cc">    
+        
+     <!-- 품목 조회-->
+    <query name="SEL_SKU_SALE_PRC">
+        <![CDATA[
+        SELECT PMK.PUMMOK_CD
+             , PMK.PUMMOK_NAME
+             , PMK.UNIT_CD
+             , PPK.TAG_FLAG
+             , PPK.TAG_PRT_OWN_FLAG
+          FROM DPS.PC_PMKMST PMK
+             , DPS.PC_PBNPMK PPK
+         WHERE PPK.PUMMOK_CD = PMK.PUMMOK_CD
+           AND PPK.PUMBUN_CD = ?
+           AND PPK.PUMMOK_CD = ?
+      ORDER BY PPK.PUMMOK_CD
+        ]]>
+    </query>  
+    
+    <!-- 품목코드조회 SQL -->
+    <query name="SEL_PBNPMK">
+        <![CDATA[                                        
+        SELECT 'F'        AS SEL
+             , PMK.PUMMOK_CD
+             , PMK.PUMMOK_NAME
+             , PMK.RECP_NAME
+             , PMK.PUMMOK_LEVEL
+             , PMK.L_CD
+             , PMK.M_CD
+             , PMK.S_CD
+             , PMK.D_CD
+             , PMK.UNIT_CD
+             , PPK.TAG_FLAG
+             , PPK.TAG_PRT_OWN_FLAG
+          FROM DPS.PC_PMKMST PMK
+             , DPS.PC_PBNPMK PPK
+         WHERE PPK.PUMMOK_CD = PMK.PUMMOK_CD
+           AND PPK.PUMBUN_CD = ?
+        ]]>
+    </query>
+    <query name="SEL_PBNPMK_WHERE_PUMMOK_CD">
+        <![CDATA[
+           AND PMK.PUMMOK_CD   LIKE ? || '%'
+        ]]>
+    </query>
+    <query name="SEL_PBNPMK_ORDER">
+        <![CDATA[
+      ORDER BY PPK.PUMMOK_CD
+        ]]>
+    </query>
+     
+</service>

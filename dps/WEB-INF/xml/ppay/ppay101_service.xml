@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.07
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  세금계산서 발행기간 설정
+ -->
+<service name="/ppay101.pp">
+
+    <!-- 세금계산서 발행기간 리스트 -->
+    <gauce name="H_MASTER"> 
+    <column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_YM"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CYC"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CNT"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="ISSUE_S_DT"     colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="ISSUE_E_DT"     colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="TERM_S_DT"      colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="TERM_E_DT"      colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="KEY"            colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="SEL"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+      
+    <!-- 세금계산서 발행기간  조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+        SELECT STR_CD                                          /* 점 */
+		     , PAY_YM                                          /* 지불년월 */
+		     , PAY_CYC                                         /* 지불주기 */
+		     , PAY_CNT                                         /* 지불회차 */
+		     , ISSUE_S_DT                                      /* 시작일자 */
+		     , ISSUE_E_DT                                      /* 종료일자 */
+		     , TERM_S_DT                                       /* 매출매입기간시작일 */
+		     , TERM_E_DT                                       /* 매출매입기간종료일 */
+		     , STR_CD || PAY_YM || PAY_CYC || PAY_CNT AS KEY   /* 키 */
+		     , 'F' AS SEL
+		 FROM DPS.PP_TAXTERM
+		WHERE STR_CD    = ?
+		  AND PAY_YM    = ?
+		  AND PAY_CYC   LIKE ? || '%'
+		  AND PAY_CNT   LIKE ? || '%'
+
+        ]]>
+    </query> 
+
+    <!-- 세금계산서 발행기간 INSERT -->
+    <query name="INS_MASTER">
+        <![CDATA[
+        INSERT INTO DPS.PP_TAXTERM ( 
+                                     STR_CD                                      /* 점 */
+                                   , PAY_YM                                      /* 기준년월 */                                                   
+                                   , PAY_CYC                                     /* 지불주기 */                          
+                                   , PAY_CNT                                     /* 지불회차 */                         
+                                   , ISSUE_S_DT                                  /* 시작일자 */                        
+                                   , ISSUE_E_DT                                  /* 종료일자 */                         
+                                   , TERM_S_DT                                   /* 매출매입기간 시작일 */                          
+                                   , TERM_E_DT                                   /* 매출매입기간 종료일 */       
+                                   , REG_DATE                                    /* 등록일시 */
+                                   , REG_ID                                      /* 등록자 */
+                                   , MOD_DATE                                    /* 수정일시 */
+                                   , MOD_ID                                      /* 수정자 */                
+                                    )
+                             VALUES (
+                                       ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                     )
+        ]]>
+    </query> 
+    
+    <!-- 세금계산서 발행기간 수정 -->
+    <query name="UPD_MASTER">
+        <![CDATA[
+            UPDATE DPS.PP_TAXTERM
+               SET ISSUE_S_DT = ?                                 /* 시작일자 */                        
+                 , ISSUE_E_DT = ?                                 /* 종료일자 */                         
+                 , TERM_S_DT  = ?                                 /* 매출매입기간 시작일 */                          
+                 , TERM_E_DT  = ?                                 /* 매출매입기간 종료일 */ 
+                 , MOD_DATE   = SYSDATE                           /* 수정일시 */
+                 , MOD_ID     = ?                                 /* 수정자 */  
+             WHERE STR_CD     = ?                              
+               AND PAY_YM     = ?                                                                              
+               AND PAY_CYC    = ?                                                    
+               AND PAY_CNT    = ? 
+        ]]>
+    </query>
+    
+    <!-- 세금계산서 발행기간 삭제 -->
+    <query name="DEL_MASTER">
+        <![CDATA[
+         DELETE FROM DPS.PP_TAXTERM
+          WHERE STR_CD     = ?                              
+            AND PAY_YM     = ?                                                                              
+            AND PAY_CYC    = ?                                                    
+            AND PAY_CNT    = ? 
+        ]]>
+    </query>  
+</service>

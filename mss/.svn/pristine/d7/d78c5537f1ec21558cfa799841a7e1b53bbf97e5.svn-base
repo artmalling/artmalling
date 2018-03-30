@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.26
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  관리비정산조회
+ -->
+<service name="/mren304.mr">
+    <gauce name="H_SEL_MR_CALMST">
+	    <column colName="CAL_YM"           colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_CD"           colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"           colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_TYPE"         colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_TYPE"        colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_NOVAT_AMT"   colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_VAT_AMT"     colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_AMT"         colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_NOVAT_AMT"    colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_VAT_AMT"      colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="NTAX_AMT"         colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="BAL_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ARREAR_AMT"       colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TOT_BAL_AMT"      colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CHRG_AMT"         colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MOD_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REAL_CHAREG_AMT"  colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MR_CALMST">
+        <![CDATA[
+			SELECT CAL.CAL_YM
+			     , CNT.VEN_CD
+			     , VEN.VEN_NAME AS VEN_NM
+                 , CASE WHEN CAL.CAL_TYPE = '1' THEN '정산'
+                        ELSE '해지정산' END AS CAL_TYPE
+			     , CNT.RENT_TYPE
+			     , CAL.RENT_NOVAT_AMT			     
+			     , CAL.RENT_VAT_AMT
+			     , CAL.RENT_AMT
+			     , CAL.TAX_NOVAT_AMT				--과세액 vat제외
+			     , CAL.TAX_VAT_AMT					--과세액 vat
+			     , CAL.TAX_AMT						--과세관리비
+			     , CAL.NTAX_AMT						--면세관리비
+			     , CAL.BAL_AMT						--미수관리비
+			     , CAL.ARREAR_AMT					--미수연체이자
+			     , ( CAL.BAL_AMT + CAL.ARREAR_AMT ) AS TOT_BAL_AMT				--미수합계
+			     --, CAL.TOT_BAL_AMT  											
+			     , (CAL.TAX_AMT + CAL.NTAX_AMT) AS CHRG_AMT  					--관리비부과액
+			     --, CAL.CHRG_AMT
+			     , (NVL(CAL.MOD_ARREAR_AMT, 0) + NVL(CAL.MOD_RENT_ARREAR_AMT,0))  AS MOD_AMT   --조정금액
+			     --, CAL.MOD_AMT
+			     , (CAL.TAX_AMT + CAL.NTAX_AMT + CAL.BAL_AMT + CAL.ARREAR_AMT + NVL(CAL.MOD_ARREAR_AMT, 0) + NVL(CAL.MOD_RENT_ARREAR_AMT,0)) AS REAL_CHAREG_AMT   --실청구액
+			     --, CAL.REAL_CHAREG_AMT
+			  FROM MSS.MR_CALMST    CAL
+			     , MSS.MR_CNTRMST   CNT
+			     , DPS.PC_VENMST    VEN
+			 WHERE CNT.VEN_CD  = VEN.VEN_CD
+			   AND CNT.CNTR_ID = CAL.CNTR_ID
+			   AND CNT.RENT_TYPE LIKE ?||'%'
+			   AND CNT.VEN_CD    LIKE ?||'%'
+			   AND CAL.CAL_YM    BETWEEN ? AND ?
+			   AND CNT.STR_CD    = ?
+			 ORDER BY CAL.CAL_YM, CNT.VEN_CD
+        ]]>
+    </query>
+    
+    <!-- 부과년월조건없음 -->
+    <query name="SEL_MR_CALMST_NONDATE">
+        <![CDATA[
+			SELECT CAL.CAL_YM
+			     , CNT.VEN_CD
+			     , VEN.VEN_NAME AS VEN_NM
+			     , CNT.RENT_TYPE
+			     , CAL.RENT_NOVAT_AMT			     
+			     , CAL.RENT_VAT_AMT
+			     , CAL.RENT_AMT
+			     , CAL.TAX_NOVAT_AMT
+			     , CAL.TAX_VAT_AMT
+			     , CAL.TAX_AMT
+			     , CAL.NTAX_AMT
+			     , CAL.BAL_AMT
+			     , CAL.ARREAR_AMT
+			     , CAL.TOT_BAL_AMT
+			     , CAL.CHRG_AMT
+			     , CAL.MOD_AMT
+			     , CAL.REAL_CHAREG_AMT
+			  FROM MSS.MR_CALMST    CAL
+			     , MSS.MR_CNTRMST   CNT
+			     , DPS.PC_VENMST    VEN
+			 WHERE CNT.VEN_CD  = VEN.VEN_CD
+			   AND CNT.CNTR_ID = CAL.CNTR_ID
+			   AND CNT.RENT_TYPE LIKE ?||'%'
+			   AND CNT.VEN_CD    LIKE ?||'%'
+			   AND CNT.STR_CD    = ?
+			 ORDER BY CAL.CAL_YM, CNT.VEN_CD
+        ]]>
+    </query>
+</service>

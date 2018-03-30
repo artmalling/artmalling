@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 강진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2012.05.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/dctm425.dm">
+	<gauce name="H_MASTER"> 
+	    <column colName="ENTR_DT"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	    <column colName="ENTR_PBN"         	colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	    <column colName="ENTR_PBN_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+	    <column colName="MEM_CNT"     		colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	    <column colName="DUP_CNT"     		colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	    <column colName="ORI_CNT"     		colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+   
+    
+    <!--  브랜드별회원가입현황조회 리스트  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+	     SELECT A.ISSUE_DT
+	          , A.ENTR_PBN
+	          , A.ENTR_PBN_NAME
+	          , SUM(ENTR_CNT) AS MEM_CNT
+	          , SUM(A.ENTR_CNT) - SUM(A.CUST_CNT) AS DUP_CNT
+	          , SUM(A.CUST_CNT) AS ORI_CNT
+	      FROM
+	         (
+	         SELECT ISSUE_DT, ENTR_PBN, DPS.FN_GET_PUMBUN_NAME(ENTR_PBN) AS ENTR_PBN_NAME, COUNT(CUST_ID) AS ENTR_CNT, 0 CUST_CNT
+	          FROM DCS.DM_CARD
+	         WHERE ISSUE_DT      BETWEEN ? AND ?
+	           AND ENTR_PBN	  LIKE ?||'%'
+	          GROUP BY ISSUE_DT, ENTR_PBN
+	         UNION
+	         SELECT ENTR_DT, ENTR_PBN, DPS.FN_GET_PUMBUN_NAME(ENTR_PBN) AS ENTR_PBN_NAME, 0, COUNT(CUST_ID)
+	          FROM DCS.DM_CUSTOMER
+	         WHERE ENTR_DT      BETWEEN ? AND ?
+	           AND ENTR_PBN	  LIKE ?||'%'
+	          GROUP BY ENTR_DT, ENTR_PBN
+	         ) A
+	      GROUP BY A.ISSUE_DT, A.ENTR_PBN, A.ENTR_PBN_NAME
+          ORDER BY A.ISSUE_DT, A.ENTR_PBN, A.ENTR_PBN_NAME
+        ]]>
+    </query> 
+    
+    
+    
+ </service>

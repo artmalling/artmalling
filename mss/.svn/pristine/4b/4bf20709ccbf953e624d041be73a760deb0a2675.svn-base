@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.06.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  행사 Best/Worst Matrix
+ -->
+<service name="/meis082.me">
+    
+    <gauce name="H_SEL_THEM">
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_THME_CD"  colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="THME_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOAL_SALE_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACH_RATIO"      colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LST_SALE_AMT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRO_RATIO"      colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RANK"           colType="TB_DECIMAL" size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <gauce name="H_SEL_EVENT">
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_THME_CD"  colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="THME_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"       colType="TB_STRING"  size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PERIOD"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOAL_SALE_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACH_RATIO"      colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_EXCEL">
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_THME_CD"  colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="THME_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"       colType="TB_STRING"  size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PERIOD"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOAL_SALE_AMT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACH_RATIO"      colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <query name="SEL_THEM">
+        <![CDATA[
+        SELECT STR_CD
+             , DPS.FN_GET_STORE_NAME(STR_CD)                 AS STR_NM
+             , ?                                             AS SALE_DT
+             , EVENT_THME_CD
+             , ( SELECT EVENT_THME_NAME
+                   FROM DPS.PC_EVTTHMEMST THM
+                  WHERE THM.EVENT_THME_CD = X.EVENT_THME_CD) AS THME_NM
+             , SUM(GOAL_SALE_AMT)                            AS GOAL_SALE_AMT 
+             , SUM(TOT_SALE_AMT)                             AS TOT_SALE_AMT
+             , DECODE(SUM(GOAL_SALE_AMT),0,0, ROUND(SUM(TOT_SALE_AMT)/SUM(GOAL_SALE_AMT)*100,2))                  AS ACH_RATIO
+             , SUM(LST_SALE_AMT)                             AS LST_SALE_AMT
+             , DECODE(SUM(LST_SALE_AMT),0,0,ROUND((SUM(TOT_SALE_AMT)-SUM(LST_SALE_AMT))/SUM(LST_SALE_AMT)*100,2)) AS GRO_RATIO
+             , RANK() OVER(ORDER BY SUM(TOT_SALE_AMT))                                                            AS RANK  
+          FROM ( 
+				/* 계획 */
+				SELECT STR.STR_CD
+				       ,EVT.EVENT_THME_CD                           AS EVENT_THME_CD
+				       ,EVT.EVENT_CD
+				       ,NVL(STR.GOAL_SALE_AMT,0)                    AS GOAL_SALE_AMT
+				       ,0                                           AS TOT_SALE_AMT
+				       ,0                                           AS LST_SALE_AMT
+				FROM DPS.PC_EVTMST EVT, DPS.PC_STRPBNEVTMG STR
+				WHERE 1 = 1
+				AND STR.STR_CD LIKE ?||'%'
+				AND ? BETWEEN SUBSTR(EVT.EVENT_S_DT, 1, 6) AND SUBSTR(EVT.EVENT_E_DT, 1, 6)
+				AND EVT.EVENT_CD = STR.EVENT_CD(+)
+				
+				UNION ALL
+				/* 실적 */
+				SELECT DAY.STR_CD
+				       ,EVT.EVENT_THME_CD                           AS EVENT_THME_CD
+				       ,EVT.EVENT_CD
+				       ,0                                           AS GOAL_SALE_AMT
+				       ,NVL(DAY.EVT_SALE_AMT,0)                     AS TOT_SALE_AMT
+				       ,0                                           AS LST_SALE_AMT
+				FROM DPS.PC_EVTMST EVT , DPS.PS_DAYNOREVT DAY
+				WHERE 1 = 1
+				AND DAY.STR_CD LIKE ?||'%'
+				AND ? BETWEEN SUBSTR(EVT.EVENT_S_DT, 0,6) AND SUBSTR(EVT.EVENT_E_DT, 0,6)
+				AND EVT.EVENT_CD = DAY.EVENT_CD(+)
+				AND DAY.EVENT_CD != '00000000000'
+				UNION ALL
+				/* 전년실적 */
+				SELECT DAY.STR_CD
+				       ,EVT.EVENT_THME_CD                           AS EVENT_THME_CD
+				       ,EVT.EVENT_CD
+				       ,0                                           AS GOAL_SALE_AMT
+				       ,0                                           AS TOT_SALE_AMT
+				       ,NVL(DAY.EVT_SALE_AMT,0)                     AS LST_SALE_AMT
+				FROM DPS.PC_EVTMST EVT , DPS.PS_DAYNOREVT DAY
+				WHERE 1 = 1
+				AND DAY.STR_CD LIKE ?||'%'
+				AND TO_CHAR(TO_DATE(?, 'YYYYMM') +  + NUMTOYMINTERVAL (-1, 'year'), 'YYYYMM') BETWEEN SUBSTR(EVT.EVENT_S_DT, 0,6) AND SUBSTR(EVT.EVENT_E_DT, 0,6)
+				AND EVT.EVENT_CD = DAY.EVENT_CD(+)
+				AND DAY.EVENT_CD != '00000000000'          
+               ) X
+         GROUP BY 
+               STR_CD
+             , EVENT_THME_CD
+         ORDER BY 
+               EVENT_THME_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_EVENT">
+        <![CDATA[
+		SELECT XA.STR_CD
+		       ,DPS.FN_GET_STORE_NAME(XA.STR_CD)                 AS STR_NM
+		       ,XA.EVENT_THME_CD
+		       ,THEM.EVENT_THME_NAME                             AS THME_NM
+		       ,XA.EVENT_CD
+		       ,EVT.EVENT_NAME
+		       ,TO_CHAR(TO_DATE(EVT.EVENT_S_DT), 'YYYY/MM/DD') || ' ~ ' || TO_CHAR(TO_DATE(EVT.EVENT_E_DT), 'YYYY/MM/DD') AS PERIOD
+		       ,XA.GOAL_SALE_AMT
+		       ,XA.TOT_SALE_AMT
+		       ,XA.ACH_RATIO
+		FROM (
+		      SELECT X.STR_CD
+		             --,DPS.FN_GET_STORE_NAME(STR_CD)                 AS STR_NM
+		             ,X.EVENT_THME_CD
+		             ,X.EVENT_CD
+		             ,SUM(X.GOAL_SALE_AMT)                            AS GOAL_SALE_AMT 
+		             ,SUM(X.TOT_SALE_AMT)                             AS TOT_SALE_AMT
+		             ,DECODE(SUM(GOAL_SALE_AMT),0,0, ROUND(SUM(TOT_SALE_AMT)/SUM(GOAL_SALE_AMT)*100,2))                  AS ACH_RATIO
+		      FROM ( 
+		      				/* 계획 */
+		      				SELECT STR.STR_CD
+		      				       ,EVT.EVENT_THME_CD                           AS EVENT_THME_CD
+		      				       ,EVT.EVENT_CD
+		      				       ,NVL(STR.GOAL_SALE_AMT,0)                    AS GOAL_SALE_AMT
+		      				       ,0                                           AS TOT_SALE_AMT
+		      				FROM DPS.PC_EVTMST EVT, DPS.PC_STRPBNEVTMG STR
+		      				WHERE 1 = 1
+		      				AND STR.STR_CD LIKE ?||'%'
+		      				AND ? BETWEEN SUBSTR(EVT.EVENT_S_DT, 1, 6) AND SUBSTR(EVT.EVENT_E_DT, 1, 6)
+		      				AND EVT.EVENT_CD = STR.EVENT_CD(+)
+		      				
+		      				UNION ALL
+		      				/* 실적 */
+		      				SELECT DAY.STR_CD
+		      				       ,EVT.EVENT_THME_CD                           AS EVENT_THME_CD
+		      				       ,EVT.EVENT_CD
+		      				       ,0                                           AS GOAL_SALE_AMT
+		      				       ,NVL(DAY.EVT_SALE_AMT,0)                     AS TOT_SALE_AMT
+		      				FROM DPS.PC_EVTMST EVT , DPS.PS_DAYNOREVT DAY
+		      				WHERE 1 = 1
+		      				AND DAY.STR_CD LIKE ?||'%'
+		      				AND ? BETWEEN SUBSTR(EVT.EVENT_S_DT, 0,6) AND SUBSTR(EVT.EVENT_E_DT, 0,6)
+		      				AND EVT.EVENT_CD = DAY.EVENT_CD(+)
+		      				AND DAY.EVENT_CD != '00000000000'          
+		           ) X
+		      GROUP BY STR_CD, EVENT_THME_CD, EVENT_CD
+		      HAVING EVENT_THME_CD LIKE ?||'%'
+		     ) XA, DPS.PC_EVTMST EVT, DPS.PC_EVTTHMEMST THEM
+		WHERE 1 = 1
+		AND XA.EVENT_CD = EVT.EVENT_CD
+		AND XA.EVENT_THME_CD = THEM.EVENT_THME_CD
+		ORDER BY XA.EVENT_THME_CD, XA.EVENT_THME_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_EXCEL">
+        <![CDATA[
+		SELECT XA.STR_CD
+		       ,DPS.FN_GET_STORE_NAME(XA.STR_CD)                 AS STR_NM
+		       ,XA.EVENT_THME_CD
+		       ,THEM.EVENT_THME_NAME                             AS THME_NM
+		       ,XA.EVENT_CD
+		       ,EVT.EVENT_NAME
+		       ,TO_CHAR(TO_DATE(EVT.EVENT_S_DT), 'YYYY/MM/DD') || ' ~ ' || TO_CHAR(TO_DATE(EVT.EVENT_E_DT), 'YYYY/MM/DD') AS PERIOD
+		       ,XA.GOAL_SALE_AMT
+		       ,XA.TOT_SALE_AMT
+		       ,XA.ACH_RATIO
+		FROM (
+		      SELECT X.STR_CD
+		             --,DPS.FN_GET_STORE_NAME(STR_CD)                 AS STR_NM
+		             ,X.EVENT_THME_CD
+		             ,X.EVENT_CD
+		             ,SUM(X.GOAL_SALE_AMT)                            AS GOAL_SALE_AMT 
+		             ,SUM(X.TOT_SALE_AMT)                             AS TOT_SALE_AMT
+		             ,DECODE(SUM(GOAL_SALE_AMT),0,0, ROUND(SUM(TOT_SALE_AMT)/SUM(GOAL_SALE_AMT)*100,2))                  AS ACH_RATIO
+		      FROM ( 
+		      				/* 계획 */
+		      				SELECT STR.STR_CD
+		      				       ,EVT.EVENT_THME_CD                           AS EVENT_THME_CD
+		      				       ,EVT.EVENT_CD
+		      				       ,NVL(STR.GOAL_SALE_AMT,0)                    AS GOAL_SALE_AMT
+		      				       ,0                                           AS TOT_SALE_AMT
+		      				FROM DPS.PC_EVTMST EVT, DPS.PC_STRPBNEVTMG STR
+		      				WHERE 1 = 1
+		      				AND STR.STR_CD LIKE ?||'%'
+		      				AND ? BETWEEN SUBSTR(EVT.EVENT_S_DT, 1, 6) AND SUBSTR(EVT.EVENT_E_DT, 1, 6)
+		      				AND EVT.EVENT_CD = STR.EVENT_CD(+)
+		      				
+		      				UNION ALL
+		      				/* 실적 */
+		      				SELECT DAY.STR_CD
+		      				       ,EVT.EVENT_THME_CD                           AS EVENT_THME_CD
+		      				       ,EVT.EVENT_CD
+		      				       ,0                               
+		      				                   AS GOAL_SALE_AMT
+		      				       ,NVL(DAY.EVT_SALE_AMT,0)                     AS TOT_SALE_AMT
+		      				FROM DPS.PC_EVTMST EVT , DPS.PS_DAYNOREVT DAY
+		      				WHERE 1 = 1
+		      				AND DAY.STR_CD LIKE ?||'%'
+		      				AND ? BETWEEN SUBSTR(EVT.EVENT_S_DT, 0,6) AND SUBSTR(EVT.EVENT_E_DT, 0,6)
+		      				AND EVT.EVENT_CD = DAY.EVENT_CD(+)
+		      				AND DAY.EVENT_CD != '00000000000'          
+		           ) X
+		      GROUP BY STR_CD, EVENT_THME_CD, EVENT_CD
+		      HAVING EVENT_THME_CD LIKE ?||'%'
+		     ) XA, DPS.PC_EVTMST EVT, DPS.PC_EVTTHMEMST THEM
+		WHERE 1 = 1
+		AND XA.EVENT_CD = EVT.EVENT_CD
+		AND XA.EVENT_THME_CD = THEM.EVENT_THME_CD
+		ORDER BY XA.EVENT_THME_CD, XA.EVENT_THME_CD
+        ]]>
+    </query>
+    
+</service>

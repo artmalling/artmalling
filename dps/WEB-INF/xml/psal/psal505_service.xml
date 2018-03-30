@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2010.04.06
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상품권매출현황조회
+ -->
+<service name="/psal505.ps">
+    <!-- 마스터 헤더  -->
+    <gauce name="H_SEL_VOU_SAL_LIST">
+        <column colName="SALE_DT"      colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SP_FLAG_NM"   colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TYPE_CD"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TYPE_NM"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="GIFT_AMT_NM"  colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CNT"          colType="TB_DECIMAL" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_AMT"      colType="TB_DECIMAL" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CASH_CHANGE"  colType="TB_DECIMAL" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="RE_AMT"       colType="TB_DECIMAL" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_AMT_R"    colType="TB_DECIMAL" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 상품권매출현황 조회쿼리  -->
+    <query name="SEL_VOU_SAL_LIST_OLD">
+        <![CDATA[
+        SELECT SALE_DT
+             , COM.FN_GET_COMM_NAME('D','P601',SP_FLAG)        AS SP_FLAG_NM
+             , TYPE_CD
+             , GIFT_TYPE_NAME                                  AS TYPE_NM
+             , ( SELECT GIFT_AMT_NAME 
+                   FROM MSS.MG_GIFTAMTMST 
+                  WHERE GIFT_TYPE_CD  = DIS.TYPE_CD
+                    AND ISSUE_TYPE    = NVL(DIS.ISSUE_TYPE,'1')
+                    AND GIFT_AMT_TYPE = DIS.GIFT_AMT_CD)        AS GIFT_AMT_NM
+             , COUNT(1)                                         AS CNT
+             , SUM(PAY_AMT)+SUM(CASH_CHANGE)+SUM(GIFT_CHANGE)   AS PAY_AMT
+             , SUM(CASH_CHANGE)                                 AS CASH_CHANGE
+             , SUM(GIFT_CHANGE)                                 AS RE_AMT
+             , SUM(PAY_AMT)                                     AS PAY_AMT_R
+          FROM DPS.PS_DISGIFT   DIS
+             , MSS.MG_GIFTTPMST GIFT 
+         WHERE TYPE_CD = GIFT_TYPE_CD
+           AND STR_CD LIKE ? || '%'
+           AND SALE_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+ 
+     <query name="SEL_VOU_SAL_LIST">
+        <![CDATA[
+        SELECT SALE_DT
+             , COM.FN_GET_COMM_NAME('D','P601',SP_FLAG)        AS SP_FLAG_NM
+             , TYPE_CD
+             , GIFT_TYPE_NAME                                  AS TYPE_NM
+             --, GIFT_AMT
+             , NVL(( SELECT GIFT_AMT_NAME
+                   FROM MSS.MG_GIFTAMTMST
+                  WHERE GIFT_TYPE_CD  = DIS.TYPE_CD
+                    AND ISSUE_TYPE    = NVL(DIS.ISSUE_TYPE,'1')
+                    AND GIFT_AMT_TYPE = DIS.GIFT_AMT_CD),GIFT_AMT)        AS GIFT_AMT_NM
+             , CASE WHEN MIN(GIFT_CNT) = 0 THEN -1 * COUNT(1)
+                    ELSE COUNT(1) END AS CNT
+             , CASE WHEN MIN(GIFT_CNT) = 0 THEN -1 * SUM(PAY_AMT)+SUM(CASH_CHANGE)+SUM(GIFT_CHANGE)
+                    ELSE SUM(PAY_AMT)+SUM(CASH_CHANGE)+SUM(GIFT_CHANGE) END  AS PAY_AMT
+             , CASE WHEN MIN(GIFT_CNT) = 0 THEN -1 * SUM(CASH_CHANGE)
+                    ELSE SUM(CASH_CHANGE)  END  AS CASH_CHANGE
+             , CASE WHEN MIN(GIFT_CNT) = 0 THEN -1 * SUM(GIFT_CHANGE)
+                    ELSE SUM(GIFT_CHANGE)  END  AS RE_AMT
+             , CASE WHEN MIN(GIFT_CNT) = 0 THEN -1 * SUM(PAY_AMT)
+                    ELSE SUM(PAY_AMT) END AS PAY_AMT_R
+          FROM DPS.PS_DISGIFT   DIS
+             , MSS.MG_GIFTTPMST GIFT 
+         WHERE TYPE_CD = GIFT_TYPE_CD
+           AND STR_CD LIKE ? || '%'
+           AND SALE_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+       
+    <query name="SEL_VOU_SAL_LIST_WHERE_TYPE">
+        <![CDATA[
+           AND SP_FLAG = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_VOU_SAL_LIST_GROUP_OLD">
+        <![CDATA[
+        GROUP BY 
+              SALE_DT
+            , SP_FLAG
+            , TYPE_CD
+            , GIFT_TYPE_NAME
+            , ISSUE_TYPE
+            , GIFT_TYPE
+            , GIFT_AMT_CD
+        ORDER BY 
+              SALE_DT
+            , TYPE_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_VOU_SAL_LIST_GROUP">
+        <![CDATA[
+        GROUP BY 
+              SALE_DT
+            , SP_FLAG
+            , TYPE_CD
+            , GIFT_TYPE_NAME
+            , ISSUE_TYPE
+            , GIFT_TYPE
+            , GIFT_AMT_CD
+            , GIFT_AMT
+        ORDER BY 
+              SALE_DT
+            , TYPE_CD
+        ]]>
+    </query>
+    
+</service>

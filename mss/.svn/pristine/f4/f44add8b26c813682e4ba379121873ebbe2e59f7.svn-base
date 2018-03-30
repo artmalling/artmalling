@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 감성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.08.29
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  사은품 예외지급 현황 조회
+ -->
+<service name="/mcae411.mc">
+
+<!-- 사은행사 MASTER 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"          colType="TB_STRING"     size="11"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_S_DT"        colType="TB_STRING"     size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_E_DT"        colType="TB_STRING"     size="10"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_DT"          colType="TB_STRING"     size="30"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLU_FLAG"    colType="TB_STRING"     size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="USR_NAME"          colType="TB_STRING"     size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="IN_QTY"            colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RFD_QTY"           colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PRSNT_QTY"         colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EXCP_PRSNT_QTY"    colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RECOVERY_QTY"      colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="POS_NDRAWL_CAN_QTY"    colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ETC_PRSNT"         colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NQTY"              colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY"               colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+    
+    <gauce name="H_DETAIL">  
+        <column colName="STR_CD"                colType="TB_STRING"     size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_CD"              colType="TB_STRING"     size="11"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_NM"              colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_CD"              colType="TB_STRING"     size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_NM"              colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="AMT1"              colType="TB_DECIMAL"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="AMT2"          colType="TB_DECIMAL"    size="12"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="AMT3"                colType="TB_DECIMAL"    size="12"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="AMT4"             colType="TB_DECIMAL"    size="12"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="TOT_AMT"        colType="TB_DECIMAL"    size="12"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+    
+    <query name="SEL_MASTER">
+        <![CDATA[   
+        SELECT A.STR_CD
+             , A.EVENT_CD
+             , B.EVENT_NAME
+             , C.EVENT_S_DT
+             , C.EVENT_E_DT
+             , (C.EVENT_S_DT||C.EVENT_E_DT) AS EVENT_DT
+             , COM.FN_GET_COMM_NAME('D','M002',A.EVENT_TYPE) AS EVENT_PLU_FLAG
+             , COM.FN_GET_USER_NAME(A.CHAR_ID) AS USR_NAME
+             , SUM(IN_QTY) AS IN_QTY
+             , SUM(RFD_QTY) AS RFD_QTY
+             , SUM(PRSNT_QTY) AS PRSNT_QTY
+             , SUM(EXCP_PRSNT_QTY) AS EXCP_PRSNT_QTY
+             , SUM(RECOVERY_QTY) AS RECOVERY_QTY
+             , SUM(POS_NDRAWL_CAN_QTY) AS POS_NDRAWL_CAN_QTY
+             , SUM(ETC_PRSNT) AS ETC_PRSNT
+             , SUM(NQTY) AS NQTY
+             , SUM(QTY) AS QTY
+          FROM MSS.MC_EVTMST A, DPS.PC_EVTMST B, DPS.PC_STREVT C
+             , (   SELECT A.STR_CD
+                        , A.EVENT_CD 
+                        , B.BUY_COST_PRC AS SAL_COST_PRC
+                        , SUM(IN_QTY) * BUY_COST_PRC AS IN_QTY
+                        , SUM(RFD_QTY) * BUY_COST_PRC AS RFD_QTY
+                        , SUM(A.PRSNT_QTY) * BUY_COST_PRC AS PRSNT_QTY-- 정상
+                        , SUM(EXCP_PRSNT_QTY) * BUY_COST_PRC  AS EXCP_PRSNT_QTY -- 예외
+                        , SUM(CPRSNT_QTY+CEXCP_PRSNT_QTY) * BUY_COST_PRC  AS RECOVERY_QTY -- 취소
+                        , SUM(POS_NDRAWL_CAN_QTY) * BUY_COST_PRC AS POS_NDRAWL_CAN_QTY-- 미회수
+                        , SUM(ETC_PRSNT)  * BUY_COST_PRC AS ETC_PRSNT-- 기타
+                        , SUM(A.PRSNT_QTY + EXCP_PRSNT_QTY - CPRSNT_QTY - CEXCP_PRSNT_QTY + ETC_PRSNT ) * BUY_COST_PRC AS NQTY  -- 정상지급+예외지급-지급취소+기타지급
+                        , SUM(IN_QTY - RFD_QTY - (A.PRSNT_QTY + EXCP_PRSNT_QTY - CPRSNT_QTY - CEXCP_PRSNT_QTY + ETC_PRSNT)) * BUY_COST_PRC  AS QTY  --입고 - 반품 - 누적지급
+                     FROM MSS.MC_EVTSKUSTOCK  A, MSS.MC_EVTSKUMST B
+                     WHERE A.STR_CD = B.STR_CD
+                       AND A.EVENT_CD = B.EVENT_CD
+                       AND A.SKU_CD = B.SKU_CD
+                 GROUP BY A.STR_CD, A.EVENT_CD, B.BUY_COST_PRC) D
+         WHERE A.EVENT_CD = B.EVENT_CD
+           AND A.STR_CD   = C.STR_CD
+           AND A.EVENT_CD = C.EVENT_CD
+           AND A.EVENT_CD = D.EVENT_CD(+)
+           AND A.STR_CD = D.STR_CD(+)
+           AND A.STR_CD = ?
+           AND ((? >= C.EVENT_S_DT AND ? <= C.EVENT_E_DT) OR
+                (? >= C.EVENT_S_DT AND ? <= C.EVENT_E_DT) OR
+                (C.EVENT_S_DT >= ? AND C.EVENT_S_DT <= ?) OR
+                (C.EVENT_E_DT >= ? AND C.EVENT_E_DT <= ?))
+           AND A.EVENT_CD LIKE ? || '%'
+      GROUP BY A.STR_CD, A.EVENT_CD, B.EVENT_NAME, C.EVENT_S_DT, C.EVENT_E_DT, A.EVENT_TYPE, A.CHAR_ID
+      ORDER BY A.STR_CD, B.EVENT_NAME
+        ]]>        
+    </query>
+    
+    <query name="SEL_DETAIL">
+        <![CDATA[   
+        SELECT A.STR_CD
+             , B.EVENT_CD
+             , DPS.FN_GET_EVENT_NAME(B.EVENT_CD) AS EVENT_NM
+             , PUMBUN_CD
+             , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NM
+             , NVL(SUM(CASE WHEN PRSNT_FLAG = '1' AND B.CANCEL_GB = '1' THEN POSSALE_AMT END),0) AS AMT1 -- 정상지급
+             , NVL(SUM(CASE WHEN PRSNT_FLAG = '2' AND B.CANCEL_GB = '1' THEN POSSALE_AMT END),0) AS AMT2-- 정상지급
+             , NVL(SUM(CASE WHEN PRSNT_FLAG = '1' AND B.CANCEL_GB = '2' THEN POSSALE_AMT END),0) AS AMT3-- 정상지급취소
+             , NVL(SUM(CASE WHEN PRSNT_FLAG = '2' AND B.CANCEL_GB = '2' THEN POSSALE_AMT END),0) AS AMT4-- 정상지급취소
+             , NVL(SUM(CASE WHEN PRSNT_FLAG = '1' AND B.CANCEL_GB = '1' THEN POSSALE_AMT END),0)
+              + NVL(SUM(CASE WHEN PRSNT_FLAG = '2' AND B.CANCEL_GB = '1' THEN POSSALE_AMT END),0)
+              - NVL(SUM(CASE WHEN PRSNT_FLAG = '1' AND B.CANCEL_GB = '2' THEN POSSALE_AMT END),0)
+              - NVL(SUM(CASE WHEN PRSNT_FLAG = '2' AND B.CANCEL_GB = '2' THEN POSSALE_AMT END),0) AS TOT_AMT
+           FROM MSS.MC_PRSNTPBN A
+           , ( SELECT B.EVENT_CD
+                     , B.STR_CD
+                     , B.PRSNT_DT
+                     , B.PRSNT_NO
+                     , PRSNT_FLAG
+                     , CANCEL_GB
+                  FROM MSS.MC_PRSNTRECP A, MSS.MC_EVTSKUPRSNT B
+                 WHERE A.STR_CD = B.STR_CD
+                   AND A.PRSNT_DT = B.PRSNT_DT
+                   AND A.PRSNT_NO = B.PRSNT_NO) B
+         WHERE A.PRSNT_DT = B.PRSNT_DT
+           AND A.STR_CD = B.STR_CD
+           AND A.PRSNT_NO  = B.PRSNT_NO
+           AND A.STR_CD = ?
+           AND B.EVENT_CD = ?
+      GROUP BY A.STR_CD, B.EVENT_CD, PUMBUN_CD
+      ORDER BY PUMBUN_CD
+        ]]>        
+    </query>
+</service>

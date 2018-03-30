@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.08.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상품권판매결재내역조회
+ -->
+<service name="/mgif323.mg">
+    <!-- 일자별 판매내역 조회  -->
+    <gauce name="H_MASTER"> 
+        <column colName="SALE_DT"         colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"          colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT1"       colType="TB_DECIMAL" size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REFUND_AMT1"     colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT2"       colType="TB_DECIMAL" size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REFUND_AMT2"     colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT3"       colType="TB_DECIMAL" size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REFUND_AMT3"     colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT5"       colType="TB_DECIMAL" size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REFUND_AMT5"     colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_TOT"       colType="TB_DECIMAL" size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REFUND_TOT"     colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT"     colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT4"       colType="TB_DECIMAL" size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REFUND_AMT4"     colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"       colType="TB_DECIMAL" size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_REFUND_AMT"     colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"         colType="TB_DECIMAL" size="14"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 지자사상품권 회수 비교표  디테일  조회  -->
+    <gauce name="H_DETAIL"> 
+        <column colName="SALE_DT"      colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CASH_AMT"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SPS_SALE_AMT"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT_AMT"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DCARD_AMT"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SHINHAN"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="KOOKMIN"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BC"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SAMSUNG"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EXCHAGE"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HYUNDAI"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOTTE"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HANA"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NONGHYUB"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETCCARD_AMT"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"         colType="TB_DECIMAL" size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 일자별 판매내역 조회  -->
+	<query name="SEL_MASTER">
+	    <![CDATA[
+        SELECT SALE_DT  
+             , STR_CD
+             , SUM(SALE_AMT1) AS SALE_AMT1
+             , SUM(REFUND_AMT1) AS REFUND_AMT1
+             , SUM(SALE_AMT2) AS SALE_AMT2
+             , SUM(REFUND_AMT2) AS REFUND_AMT2
+             , SUM(SALE_AMT3) AS SALE_AMT3
+             , SUM(REFUND_AMT3) AS REFUND_AMT3
+             , SUM(SALE_AMT5) AS SALE_AMT5
+             , SUM(REFUND_AMT5) AS REFUND_AMT5
+             , SUM(SALE_AMT1) + SUM(SALE_AMT2) + SUM(SALE_AMT3) + SUM(SALE_AMT5) AS SALE_TOT
+             , SUM(REFUND_AMT1) + SUM(REFUND_AMT2) + SUM(REFUND_AMT3) + SUM(REFUND_AMT5) AS REFUND_TOT
+             , SUM(SALE_AMT1) + SUM(SALE_AMT2) + SUM(SALE_AMT3) + SUM(SALE_AMT5) 
+               - SUM(REFUND_AMT1) + SUM(REFUND_AMT2) + SUM(REFUND_AMT3) + SUM(REFUND_AMT5) AS TOT
+             , SUM(SALE_AMT4) AS SALE_AMT4
+             , SUM(REFUND_AMT4) AS REFUND_AMT4
+             , SUM(SALE_AMT1) + SUM(SALE_AMT2) + SUM(SALE_AMT3) + SUM(SALE_AMT4) + SUM(SALE_AMT5) - SUM(REFUND_AMT4) AS TOT_SALE_AMT
+             , SUM(REFUND_AMT1) + SUM(REFUND_AMT2) + SUM(REFUND_AMT3) + SUM(REFUND_AMT4) + SUM(REFUND_AMT5) AS TOT_REFUND_AMT
+             , SUM(SALE_AMT1) - SUM(REFUND_AMT1) +
+               SUM(SALE_AMT2) - SUM(REFUND_AMT2) +
+               SUM(SALE_AMT3) - SUM(REFUND_AMT3) +
+               SUM(SALE_AMT4) - SUM(REFUND_AMT4) +
+               SUM(SALE_AMT5) - SUM(REFUND_AMT5) AS TOT_AMT
+         FROM (         
+            SELECT A.SALE_DT
+                 , A.STR_CD
+                 , DECODE(SALE_FLAG, '01', B.SALE_AMT,0) AS SALE_AMT1 -- 정상판매금액
+                 , DECODE(SALE_FLAG, '10', B.SALE_AMT,0) AS REFUND_AMT1 -- 정상반품금액
+                 , DECODE(SALE_FLAG, '02', B.SALE_AMT,0) AS SALE_AMT2 -- 특판판매금액
+                 , DECODE(SALE_FLAG, '11', B.SALE_AMT,0) AS REFUND_AMT2 -- 특판반품금액
+                 , DECODE(SALE_FLAG, '04', B.SALE_AMT,0) AS SALE_AMT3 -- 포인트판매금액
+                 , DECODE(SALE_FLAG, '14', B.SALE_AMT,0) AS REFUND_AMT3 -- 포인트반품금액
+                 , DECODE(SALE_FLAG, '03', B.SALE_AMT,0) AS SALE_AMT4 -- 교환판매금액
+                 , DECODE(SALE_FLAG, '13', B.SALE_AMT,0) AS REFUND_AMT4 -- 교환반품금액
+                 , DECODE(SALE_FLAG, '05', B.SALE_AMT,0) AS SALE_AMT5 -- OCB판매금액
+                 , DECODE(SALE_FLAG, '15', B.SALE_AMT,0) AS REFUND_AMT5 -- OCB반품금액
+            FROM MSS.MG_SALEMST A
+               , MSS.MG_SALEDTL B
+            WHERE A.STR_CD = B.STR_CD
+              AND A.SALE_DT = B.SALE_DT
+              AND A.SALE_SLIP_NO = B.SALE_SLIP_NO 
+              AND B.STR_CD = ?
+              AND B.SALE_DT BETWEEN ? AND ?
+            )
+    GROUP BY   SALE_DT, STR_CD    
+    ORDER BY STR_CD, SALE_DT
+	    ]]>
+	</query>  
+     
+    <!-- 세부결제 내역 조회 -->
+	<query name="SEL_DETAIL">
+	    <![CDATA[
+		SELECT A.SALE_DT
+		     , SUM(A.CASH_AMT)              AS CASH_AMT         -- 현금
+		     , SUM(A.SPS_SALE_AMT)          AS SPS_SALE_AMT     -- 특판외상
+		     , SUM(A.POINT_AMT)             AS POINT_AMT        -- 포인트
+		     , SUM(A.DCARD_AMT)             AS DCARD_AMT        -- 직불카드
+		     , SUM(SHINHAN)                 AS SHINHAN
+		     , SUM(KOOKMIN)                 AS KOOKMIN
+		     , SUM(BC)                      AS BC
+		     , SUM(SAMSUNG)                 AS SAMSUNG
+		     , SUM(EXCHAGE)                 AS EXCHAGE
+		     , SUM(HYUNDAI)                 AS HYUNDAI
+		     , SUM(LOTTE)                   AS LOTTE
+		     , SUM(HANA)                    AS HANA
+		     , SUM(NONGHYUB)                AS NONGHYUB
+		     , SUM(ETCCARD_AMT)             AS ETCCARD_AMT 
+		     , SUM(A.CASH_AMT) + SUM(A.SPS_SALE_AMT) + SUM(A.POINT_AMT) + SUM(A.DCARD_AMT) + 
+		       SUM(SHINHAN) + SUM(KOOKMIN) + SUM(BC) + SUM(SAMSUNG) + SUM(EXCHAGE) + SUM(HYUNDAI) +
+		       SUM(LOTTE) + SUM(HANA) + SUM(NONGHYUB) + SUM(ETCCARD_AMT)        AS TOT_AMT
+		  FROM (
+		  		--
+		        SELECT A.SALE_DT
+		             , A.CASH_AMT         -- 현금
+		             , A.SPS_SALE_AMT     -- 특판외상
+		             , A.POINT_AMT        -- 포인트
+		             , A.DCARD_AMT        -- 직불카드
+		             , A.SHINHAN
+		             , A.KOOKMIN
+		             , A.BC
+		             , A.SAMSUNG
+		             , A.EXCHAGE
+		             , A.HYUNDAI
+		             , A.LOTTE
+		             , A.HANA
+		             , A.NONGHYUB
+		             , A.ETCCARD_AMT                                     
+		          FROM MSS.MG_DAYAPPRTYPE A
+		         WHERE A.STR_CD = ?
+		           AND A.SALE_DT BETWEEN ? AND ?	
+		        UNION ALL	  		
+		  		--
+		        SELECT A.SALE_DT
+		             , A.CASH_AMT                                   AS CASH_AMT         -- 현금
+		             , A.SPS_SALE_AMT - A.SPS_CAN_AMT               AS SPS_SALE_AMT     -- 특판외상
+		             , A.POINT_AMT                                  AS POINT_AMT        -- 포인트
+		             , A.DCARD_AMT                                  AS DCARD_AMT        -- 직불카드
+		             , 0 AS SHINHAN
+		             , 0 AS KOOKMIN
+		             , 0 AS BC
+		             , 0 AS SAMSUNG
+		             , 0 AS EXCHAGE
+		             , 0 AS HYUNDAI
+		             , 0 AS LOTTE
+		             , 0 AS HANA
+		             , 0 AS NONGHYUB
+		             , 0 AS ETCCARD_AMT                                     
+		          FROM DPS.PS_DAYAPPRTYPE A
+		             , DPS.PC_POSMST B
+		         WHERE A.STR_CD = B.STR_CD
+		           AND A.POS_NO = B.POS_NO
+		           AND A.STR_CD = ?
+		           AND A.SALE_DT BETWEEN ? AND ?
+		           AND B.POS_FLAG = '08'    
+		        UNION ALL
+		        SELECT SALE_DT
+		           , 0 AS CASH_AMT                 
+		           , 0 AS SPS_SALE_AMT              
+		           , 0 AS POINT_AMT                 
+		           , 0 AS DCARD_AMT                 
+		           , NVL(SHINHAN,   0) AS SHINHAN   -- 신한
+		           , NVL(KOOKMIN,   0) AS KOOKMIN   -- 국민
+		           , NVL(BC,        0) AS BC        -- BC
+		           , NVL(SAMSUNG,   0) AS SAMSUNG   -- 삼성
+		           , NVL(EXCHAGE,   0) AS EXCHAGE   -- 외환
+		           , NVL(HYUNDAI,   0) AS HYUNDAI   -- 현대
+		           , NVL(LOTTE,     0) AS LOTTE     -- 롯데
+		           , NVL(HANA,      0) AS HANA      -- 하나
+		           , NVL(NONGHYUB,  0) AS NONGHYUB  -- 농협
+		           , 0 AS ETCCARD_AMT               -- 기타
+		        FROM 
+		            (
+		            SELECT A.SALE_DT
+		                 , A.CARD_PURCHASE
+		                 , NVL(SUM(CASE WHEN B.TRAN_FLAG = '1' THEN A.PAY_AMT*-1 ELSE A.PAY_AMT END), 0) AS CARD_AMT
+		              FROM DPS.PS_DISCARD A
+		                 , DPS.PS_TRHEADER B
+		                 , DPS.PC_POSMST C
+		             WHERE A.STR_CD = B.STR_CD
+		               AND A.SALE_DT = B.SALE_DT
+		               AND A.POS_NO = B.POS_NO 
+		               AND A.TRAN_NO = B.TRAN_NO
+		               AND A.POS_NO = C.POS_NO
+		               AND A.STR_CD = ? 
+		               AND A.SALE_DT BETWEEN ? AND ?
+		               AND C.POS_FLAG = '08'
+		               AND A.CARD_PURCHASE IN ('01', '02', '03', '04', '05', '08', '09', '15', '24')
+		             GROUP BY A.SALE_DT, A.CARD_PURCHASE
+		            ) 
+		        PIVOT 
+		            (
+		             SUM(CARD_AMT)
+		             FOR CARD_PURCHASE IN ('05' AS "SHINHAN", '02' AS "KOOKMIN", '01' AS "BC"  , '04' AS "SAMSUNG", '03' AS "EXCHAGE", 
+		                                   '08' AS "HYUNDAI", '09' AS "LOTTE", '24' AS "HANA", '15' AS "NONGHYUB")
+		            )
+		        UNION ALL
+		        SELECT A.SALE_DT
+		             , 0 AS CASH_AMT                 
+		             , 0 AS SPS_SALE_AMT              
+		             , 0 AS POINT_AMT                 
+		             , 0 AS DCARD_AMT                 
+		             , 0 AS SHINHAN   -- 신한
+		             , 0 AS KOOKMIN   -- 국민
+		             , 0 AS BC        -- BC
+		             , 0 AS SAMSUNG   -- 삼성
+		             , 0 AS EXCHAGE   -- 외환
+		             , 0 AS HYUNDAI   -- 현대
+		             , 0 AS LOTTE     -- 롯데
+		             , 0 AS HANA      -- 하나
+		             , 0 AS NONGHYUB  -- 농협
+		             , NVL(SUM(CASE WHEN B.TRAN_FLAG = '1' THEN A.PAY_AMT*-1 ELSE A.PAY_AMT END), 0) AS ETCCARD_AMT
+		          FROM DPS.PS_DISCARD A
+		             , DPS.PS_TRHEADER B
+		             , DPS.PC_POSMST C
+		             , (
+		                SELECT BCOMP_CD 
+		                  FROM DPS.PD_CARDCOMP
+		                 WHERE BCOMP_YN = 'Y'
+		                   AND BCOMP_CD NOT IN ('01', '02', '03', '04', '05', '08', '09', '15', '24')
+		               ) D
+		         WHERE A.STR_CD = B.STR_CD
+		           AND A.SALE_DT = B.SALE_DT
+		           AND A.POS_NO = B.POS_NO 
+		           AND A.TRAN_NO = B.TRAN_NO
+		           AND A.POS_NO = C.POS_NO
+		           AND A.CARD_PURCHASE = D.BCOMP_CD
+		           AND A.STR_CD = ? 
+		           AND A.SALE_DT BETWEEN ? AND ?
+		           AND C.POS_FLAG = '08'
+		         GROUP BY A.SALE_DT, A.CARD_PURCHASE
+		     ) A
+		GROUP BY A.SALE_DT
+		ORDER BY A.SALE_DT
+	      ]]>
+	</query>  
+     
+</service>

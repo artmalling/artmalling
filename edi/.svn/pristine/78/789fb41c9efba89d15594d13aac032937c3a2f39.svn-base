@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.06.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  SMS발송관리
+ -->
+<service name="/epro103.ep">
+    <!-- 약속대장 조회 쿼리  -->
+    <!-- 접수일자 기준 -->
+    <query name="SEL_PROMISE_TAKE_DT">        
+        <![CDATA[
+            SELECT PMC.STR_CD
+                 , STR.STR_NAME
+                 , PMC.TAKE_DT
+                 , PMC.TAKE_SEQ
+                 , PMC.IN_DELI_DT
+                 , PMC.FRST_PROM_DT
+                 , PMC.CUST_NM
+                 , '' AS MOBILE_PH
+                 , COM.FN_GET_COMM_NAME('D','M021',PMC.PROM_TYPE) AS PROM_TYPE /*약속유형*/
+                 , COM.FN_GET_COMM_NAME('D','M024',PMC.PROC_STAT) AS PROC_STAT /*약속상태*/ 
+                 , REPLACE(PMC.PROM_DTL, CHR(13)||CHR(10),' ') AS PROM_DTL
+                 , PMC.MOBILE_PH1
+                 , PMC.MOBILE_PH2
+                 , PMC.MOBILE_PH3
+                 , DECODE(PMC.SMS_YN, NULL, 'F', 'F', 'F', 'T') AS SMS_YN
+              FROM MSS.MP_PROMISECERT PMC
+                 , DPS.PC_STRMST      STR
+                 , DPS.PC_PBNMST      PBM
+             WHERE PMC.STR_CD       = STR.STR_CD
+               AND PMC.PUMBUN_CD    = PBM.PUMBUN_CD
+               AND PBM.PUMBUN_TYPE      IN ('0', '4', 'B')
+               AND PBM.VEN_CD       = ?
+               AND PMC.PUMBUN_CD    LIKE ? || '%' 
+               AND PMC.PROM_TYPE    LIKE ? || '%'
+               AND PMC.CUST_NM      LIKE '%' || ? || '%'
+               AND PMC.STR_CD       = ?
+               AND PMC.TAKE_DT      >= ?
+               AND PMC.TAKE_DT      <= ?
+             ORDER BY PMC.STR_CD, PMC.TAKE_DT, PMC.TAKE_SEQ 
+        ]]>        
+    </query>
+    
+    <!-- 입고예정일 기준 -->
+    <query name="SEL_PROMISE_IN_DELI_DT">        
+        <![CDATA[
+            SELECT PMC.STR_CD
+                 , STR.STR_NAME
+                 , PMC.TAKE_DT
+                 , PMC.TAKE_SEQ
+                 , PMC.IN_DELI_DT
+                 , PMC.FRST_PROM_DT
+                 , PMC.CUST_NM
+                 , '' AS MOBILE_PH
+                 , COM.FN_GET_COMM_NAME('D','M021',PMC.PROM_TYPE) AS PROM_TYPE 
+                 , COM.FN_GET_COMM_NAME('D','M024',PMC.PROC_STAT) AS PROC_STAT 
+               --  , PMC.PROM_DTL
+                 , REPLACE(PMC.PROM_DTL, chr(4000),'') AS PROM_DTL
+                 , PMC.MOBILE_PH1
+                 , PMC.MOBILE_PH2
+                 , PMC.MOBILE_PH3
+                 , DECODE(PMC.SMS_YN, NULL, 'F', 'F', 'F', 'T') AS SMS_YN
+              FROM MSS.MP_PROMISECERT PMC
+                 , DPS.PC_STRMST      STR
+                 , DPS.PC_PBNMST      PBM
+             WHERE PMC.STR_CD       = STR.STR_CD
+               AND PMC.PUMBUN_CD    = PBM.PUMBUN_CD
+               AND PBM.VEN_CD       = ?
+               AND PBM.PUMBUN_TYPE      IN ('0', '4', 'B')
+               AND PMC.PUMBUN_CD    LIKE ? || '%' 
+               AND PMC.PROM_TYPE    LIKE ? || '%'
+               AND PMC.CUST_NM      LIKE '%' || ? || '%'
+               AND PMC.STR_CD       = ?
+               AND PMC.IN_DELI_DT   >= ?
+               AND PMC.IN_DELI_DT   <= ?
+             ORDER BY PMC.STR_CD, PMC.TAKE_DT, PMC.TAKE_SEQ 
+        ]]>        
+    </query>
+    
+    <!-- 약속예정일 기준 -->
+    <query name="SEL_PROMISE_FIRST_PROM_DT">        
+        <![CDATA[
+            SELECT PMC.STR_CD
+                 , STR.STR_NAME
+                 , PMC.TAKE_DT
+                 , PMC.TAKE_SEQ
+                 , PMC.IN_DELI_DT
+                 , PMC.FRST_PROM_DT
+                 , PMC.CUST_NM
+                 , '' AS MOBILE_PH
+                 , COM.FN_GET_COMM_NAME('D','M021',PMC.PROM_TYPE) AS PROM_TYPE 
+                 , COM.FN_GET_COMM_NAME('D','M024',PMC.PROC_STAT) AS PROC_STAT 
+               --  , PMC.PROM_DTL
+                 , REPLACE(PMC.PROM_DTL, chr(4000),'') AS PROM_DTL
+                 , PMC.MOBILE_PH1
+                 , PMC.MOBILE_PH2
+                 , PMC.MOBILE_PH3
+                 , DECODE(PMC.SMS_YN, NULL, 'F', 'F', 'F', 'T') AS SMS_YN
+              FROM MSS.MP_PROMISECERT PMC
+                 , DPS.PC_STRMST      STR
+                 , DPS.PC_PBNMST      PBM
+             WHERE PMC.STR_CD       = STR.STR_CD
+               AND PMC.PUMBUN_CD    = PBM.PUMBUN_CD
+               AND PBM.VEN_CD       = ?
+               AND PBM.PUMBUN_TYPE      IN ('0', '4', 'B')
+               AND PMC.PUMBUN_CD    LIKE ? || '%' 
+               AND PMC.PROM_TYPE    LIKE ? || '%'
+               AND PMC.CUST_NM      LIKE '%' || ? || '%'
+               AND PMC.STR_CD       = ?
+               AND PMC.FRST_PROM_DT >= ?
+               AND PMC.FRST_PROM_DT <= ?
+             ORDER BY PMC.STR_CD, PMC.TAKE_DT, PMC.TAKE_SEQ 
+        ]]>        
+    </query>
+
+    <!-- SMS리스트 조회 쿼리  -->            
+    <query name="SEL_SMSSENDMGR">
+        <![CDATA[
+            SELECT SMG.SEND_DT
+                 , SMG.SEQ_NO
+                 , COM.FN_GET_COMM_NAME('D','M025',SMG.SEND_TYPE) AS SEND_TYPE_NM
+                 , SMG.SEND_CONTENT
+                 , SMG.RECV_PH1
+                 , SMG.RECV_PH2
+                 , SMG.RECV_PH3
+                 , SMG.SEND_PH1
+                 , SMG.SEND_PH2
+                 , SMG.SEND_PH3
+                 , SMG.SEND_TYPE
+              FROM MSS.MP_PROMISECERT   PRS
+                 , MSS.MP_SMSSENDMGR    SMG
+             WHERE SMG.TAKE_DT     = PRS.TAKE_DT
+               AND SMG.STR_CD      = PRS.STR_CD
+               AND SMG.TAKE_SEQ    = PRS.TAKE_SEQ
+               AND SMG.TAKE_SEQ    = ?
+               AND SMG.STR_CD      = ?
+               AND SMG.TAKE_DT     = ?
+               --AND SMG.SEQ_NO = '1'
+             ORDER BY SMG.SEND_DT, SMG.SEQ_NO    
+        ]]>
+    </query>
+    
+    
+    <!-- SMS 전송관리 신규 입력  -->
+    <query name="INS_SMSSENDMGR">        
+        <![CDATA[
+            INSERT INTO MSS.MP_SMSSENDMGR( SEND_DT
+                                         , SEQ_NO
+                                         , TAKE_DT
+                                         , STR_CD
+                                         , TAKE_SEQ
+                                         , SEND_TYPE
+                                         , SEND_CONTENT
+                                         , RECV_PH1
+                                         , RECV_PH2
+                                         , RECV_PH3
+                                         , SEND_PH1
+                                         , SEND_PH2
+                                         , SEND_PH3
+                                         , REG_DATE
+                                         , REG_ID
+                                         , MOD_DATE
+                                         , MOD_ID
+                                         )
+                                  VALUES ( TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                         , (SELECT NVL(MAX(SEQ_NO)+1, 1) FROM MSS.MP_SMSSENDMGR WHERE SEND_DT=TO_CHAR(SYSDATE, 'YYYYMMDD'))
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                         )
+            
+        ]]>        
+    </query>
+
+    
+    <!-- SMS 전송관리 수정  -->
+    <query name="UPD_VENMST">
+        <![CDATA[
+            UPDATE MSS.MP_SMSSENDMGR
+               SET SEND_TYPE        = ? 
+                 , RECV_PH1         = ? 
+                 , RECV_PH2         = ? 
+                 , RECV_PH3         = ?
+                 , SEND_PH1         = ?
+                 , SEND_PH2         = ?
+                 , SEND_PH3         = ?
+                 , SEND_CONTENT     = ?
+                 , MOD_DATE         = SYSDATE
+                 , MOD_ID           = ?
+             WHERE SEND_DT          = ? 
+               AND SEQ_NO           = ?
+        ]]>
+    </query>
+    
+    
+</service>

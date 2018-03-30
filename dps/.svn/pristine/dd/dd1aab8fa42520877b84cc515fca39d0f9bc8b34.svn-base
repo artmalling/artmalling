@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 박래형
+ * 회 사 명    : FKSS
+ * 작 성 일    : 2010.04.08
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  기간별매입현황집계표
+ --> 
+<service name="/pord404.po">
+    <!-- 매입현황표  리스트 --> 
+    <gauce name="H_LIST"> 
+        <column colName="VENDOR_NAME"        colType="TB_STRING"      size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_CD"          colType="TB_STRING"      size="8"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="PUMBUN_NAME"        colType="TB_STRING"      size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_CD"             colType="TB_STRING"      size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_NAME"           colType="TB_STRING"      size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BUY_QTY"            colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BUY_COST_AMT"       colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BUY_SALE_AMT"       colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="RFD_QTY"            colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RFD_COST_AMT"       colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="RFD_SALE_AMT"       colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BORROW_QTY"         colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BORROW_COST_AMT"    colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BORROW_SALE_AMT"    colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LEND_QTY"           colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LEND_COST_AMT"      colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LEND_SALE_AMT"      colType="TB_DECIMAL"     size="13"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       
+    </gauce>
+    
+    <!-- 품목 매입현황표조회  리스트 조회(판매) -->
+    <query name="SEL_LIST">
+        <![CDATA[
+        SELECT  DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VENDOR_NAME,
+				PUMBUN_CD,
+				DPS.FN_GET_PUMBUN_NAME (PUMBUN_CD) AS PUMBUN_NAME,
+				SKU_CD,
+				DPS.FN_GET_SKU_NAME(SKU_CD)  AS SKU_NAME,
+				SUM(BUY_QTY) AS BUY_QTY ,
+				SUM(BUY_COST_AMT) AS BUY_COST_AMT,
+				SUM(BUY_SALE_AMT) AS BUY_SALE_AMT,
+				SUM(RFD_QTY) AS RFD_QTY,
+				SUM(RFD_COST_AMT) AS RFD_COST_AMT,
+				SUM(RFD_SALE_AMT) AS RFD_SALE_AMT,
+				SUM(BORROW_QTY) AS BORROW_QTY,
+				SUM(BORROW_COST_AMT) AS BORROW_COST_AMT,
+				SUM(BORROW_SALE_AMT) AS BORROW_SALE_AMT,
+				SUM(LEND_QTY) AS LEND_QTY,
+				SUM(LEND_COST_AMT) AS LEND_COST_AMT,
+				SUM(LEND_SALE_AMT) AS LEND_SALE_AMT
+		 FROM DPS.PT_SKUDAY
+		WHERE STR_CD = ?  		   
+		    AND  DEPT_CD LIKE ?||'%'
+		    AND  TEAM_CD LIKE ?||'%'
+		    AND  PC_CD LIKE ?||'%'
+		    AND  STK_DT >= ?
+		    AND  STK_DT <= ?
+		    AND  PUMBUN_CD LIKE ?||'%'
+		GROUP BY  DPS.FN_GET_VENDOR_NAME(VEN_CD),
+		           SKU_CD, PUMBUN_CD
+		ORDER BY  DPS.FN_GET_VENDOR_NAME(VEN_CD),
+		        PUMBUN_CD,  SKU_CD
+		
+            ]]>
+    </query> 
+    
+    
+        
+</service>

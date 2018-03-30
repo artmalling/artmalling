@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal104.es">
+    
+    <!-- 점별브랜드 (콤보) 협력사 -->
+    <query name="SEL_PUMBUNCOMBO">
+        <![CDATA[   
+        SELECT SPN.PUMBUN_CD AS PUMBUN_CD,
+               SPN.PUMBUN_NAME AS PUMBUN_NAME
+          FROM DPS.PC_PBNMST   PBN
+             , DPS.PC_STRPBN   SPN
+         WHERE SPN.PUMBUN_CD  = PBN.PUMBUN_CD
+          -- AND SPN.EDI_YN = 'Y' 
+           AND SPN.STR_CD = ?
+           AND SPN.VEN_CD = ?
+        ]]>        
+    </query>
+    
+    <!-- 브랜드 일 경우 -->
+    <query name="SEL_PUMBUN">
+        <![CDATA[   
+          AND SPN.PUMBUN_CD = ?
+        ]]>        
+    </query>
+    
+    
+    <!-- 조회 -->
+    <query name="SEL_DAYNOREVT">
+        <![CDATA[   
+        SELECT SALE_DT
+             , TO_CHAR(TO_DATE(SALE_DT), 'DD') DAYS 
+             , SUM(NVL(EVT_SALE_AMT, 0)) AS EVT
+             , SUM(NVL(NORM_SALE_AMT, 0)) AS NORM_SALE_AMT
+		  FROM ( 
+	            SELECT A.SALE_DT AS SALE_DT
+                     , A.EVT_SALE_AMT AS EVT_SALE_AMT 
+                     , A.NORM_SALE_AMT AS NORM_SALE_AMT 
+	              FROM DPS.PS_DAYNOREVT A
+	                 , DPS.PC_STRPBN B
+	             WHERE A.STR_CD = B.STR_CD
+	               AND A.PUMBUN_CD = B.PUMBUN_CD 
+                   AND B.PUMBUN_TYPE      IN ('0', '4', 'B')
+	               AND A.STR_CD = ?
+	               AND B.VEN_CD =  ?
+	               AND A.PUMBUN_CD LIKE ? || '%'
+	               AND A.SALE_DT LIKE ? || '%'
+		       ) A
+      GROUP BY SALE_DT
+      ORDER BY SALE_DT ASC     
+        ]]>        
+    </query>
+    
+    
+   
+          
+      
+    
+    
+
+</service>

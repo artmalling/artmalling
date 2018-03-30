@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.06.20
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영실적 조회 및 확정
+ -->
+<service name="/meis071.me">
+
+    <!-- 점별 헤더  -->
+    <gauce name="H_SEL_STORE">
+        <column colName="CHECK_FLAG"  colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_RSLT_YM" colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"      colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_YN"     colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 항목별 헤더  -->
+    <gauce name="H_SEL_BIZ_CD">
+        <column colName="BIZ_RSLT_YM" colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"      colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"      colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"   colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RSLT_AMT"    colType="TB_DECIMAL" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_AMT"     colType="TB_DECIMAL" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 조직별 헤더  -->
+    <gauce name="H_SEL_ORG">
+        <column colName="BIZ_RSLT_YM" colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"      colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"      colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_FLAG"    colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"      colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RSLT_AMT"    colType="TB_DECIMAL" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_AMT"     colType="TB_DECIMAL" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 월별 헤더  -->
+    <gauce name="H_SEL_MONTH">
+        <column colName="MONTH"       colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RSLT_AMT"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 점별 조회-->
+    <query name="SEL_BY_STORE">
+        <![CDATA[
+        SELECT 'F'                           AS CHECK_FLAG
+             , BIZ_RSLT_YM
+             , STR_CD
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+             , CONF_YN
+          FROM MSS.ME_BIZRSLTRPT RPT
+         WHERE BIZ_RSLT_YM = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BY_STORE_WHERE_STR">
+        <![CDATA[
+           AND STR_CD        = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BY_STORE_WHERE_CFM">
+        <![CDATA[
+           AND CONF_YN       = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BY_STORE_GROUP_BY">
+        <![CDATA[
+         GROUP BY
+               BIZ_RSLT_YM
+             , STR_CD    
+             , CONF_YN
+         ORDER BY STR_CD
+        ]]>
+    </query>
+    
+    <!-- 항목별 조회-->
+    <query name="SEL_BY_BIZ_CD">
+        <![CDATA[
+        SELECT X.BIZ_RSLT_YM
+             , X.STR_CD
+             , X.BIZ_CD
+             , MAX(BIZ_CD_NM) AS BIZ_CD_NM
+             , SUM(RSLT_AMT)  AS RSLT_AMT
+             , SUM(SUM_AMT)   AS SUM_AMT
+          FROM ( SELECT BIZ_RSLT_YM
+                      , STR_CD
+                      , RPT.BIZ_CD
+                      , BIZ.BIZ_CD_NM
+                      , SUM(RSLT_AMT) AS RSLT_AMT
+                      , 0             AS SUM_AMT
+                   FROM MSS.ME_BIZRSLTRPT RPT
+                      , MSS.ME_BIZCDMST   BIZ
+                   WHERE RPT.BIZ_CD  = BIZ.BIZ_CD
+                     AND BIZ_RSLT_YM = ?
+                     AND STR_CD      = ?
+                   GROUP BY
+                         BIZ_RSLT_YM
+                       , STR_CD
+                       , RPT.BIZ_CD
+                       , BIZ.BIZ_CD_NM
+                   UNION ALL
+                  SELECT ?           AS BIZ_RSLT_YM
+                       , ?           AS STR_CD
+                       , BIZ_CD
+                       , ''          AS BIZ_CD_NM
+                       , 0           AS RSLT_AMT
+                     , SUM(RSLT_AMT) AS ACC_SUM
+                  FROM MSS.ME_BIZRSLTRPT
+                 WHERE BIZ_RSLT_YM BETWEEN ?||'01' AND ?
+                   AND STR_CD      = ?
+                   GROUP BY 
+                         BIZ_CD ) X
+         GROUP BY 
+               X.BIZ_RSLT_YM
+             , X.STR_CD
+             , X.BIZ_CD
+         HAVING SUM(RSLT_AMT) > 0
+         ORDER BY X.BIZ_CD  
+        ]]>
+    </query>
+    
+    <!-- 조직별 조회-->
+    <query name="SEL_BY_ORG">
+        <![CDATA[
+        SELECT X.BIZ_RSLT_YM
+             , X.STR_CD
+             , X.BIZ_CD
+             , MAX(ORG_FLAG) AS ORG_FLAG
+             , X.ORG_CD
+             , MAX(ORG_NAME) AS ORG_NAME
+             , SUM(RSLT_AMT) AS RSLT_AMT
+             , SUM(SUM_AMT)  AS SUM_AMT
+          FROM ( SELECT BIZ_RSLT_YM
+                      , RPT.STR_CD
+                      , RPT.BIZ_CD
+                      , ORG.ORG_FLAG
+                      , RPT.ORG_CD
+                      , ORG.ORG_NAME
+                      , SUM(RSLT_AMT) AS RSLT_AMT
+                      , 0             AS SUM_AMT
+                   FROM MSS.ME_BIZRSLTRPT RPT
+                      , DPS.PC_ORGMST     ORG
+                  WHERE RPT.ORG_CD  = ORG.ORG_CD
+                    AND BIZ_RSLT_YM = ?
+                    AND RPT.STR_CD  = ?
+                    AND RPT.BIZ_CD  = ?                    
+                  GROUP BY
+                        BIZ_RSLT_YM
+                      , RPT.STR_CD    
+                      , RPT.BIZ_CD
+                      , ORG.ORG_FLAG
+                      , RPT.ORG_CD
+                      , ORG.ORG_NAME
+                  UNION ALL
+                 SELECT ?             AS BIZ_RSLT_YM
+                      , ?             AS STR_CD
+                      , ?             AS BIZ_CD
+                      , ''            AS ORG_FLAG
+                      , ORG_CD
+                      , ''            AS ORG_NAME
+                      , 0             AS RSLT_AMT
+                      , SUM(RSLT_AMT) AS ACC_SUM
+                  FROM MSS.ME_BIZRSLTRPT
+                 WHERE BIZ_RSLT_YM BETWEEN ?||'01' AND ?
+                   AND STR_CD    = ?
+                   AND BIZ_CD    = ?
+                 GROUP BY 
+                       ORG_CD ) X
+         GROUP BY 
+               X.BIZ_RSLT_YM
+             , X.STR_CD
+             , X.BIZ_CD
+             , X.ORG_CD
+         ORDER BY X.ORG_CD
+        ]]>
+    </query>
+    
+    <!-- 월별 조회-->
+    <query name="SEL_BY_MONTH">
+        <![CDATA[
+        SELECT SUBSTR(BIZ_RSLT_YM, 5,2)|| '월' AS MONTH
+             , SUM(RSLT_AMT)                   AS RSLT_AMT
+          FROM MSS.ME_BIZRSLTRPT
+         WHERE BIZ_RSLT_YM BETWEEN ?||'01' AND ?
+           AND STR_CD      = ?
+           AND BIZ_CD      = ?
+           AND ORG_CD      = ?
+         GROUP BY
+               BIZ_RSLT_YM
+             , STR_CD
+             , BIZ_CD
+             , ORG_CD
+             , BIZ_RSLT_YM
+         ORDER BY BIZ_RSLT_YM
+        ]]>
+    </query>
+    
+    <!-- 확정/취소 처리-->
+    <query name="UPD_REPORT">
+        <![CDATA[
+        UPDATE MSS.ME_BIZRSLTRPT
+           SET CONF_YN     = ?
+             , MOD_DATE    = SYSDATE
+             , MOD_ID      = ?
+         WHERE BIZ_RSLT_YM = ?
+           AND STR_CD      = ?
+        ]]>
+    </query>
+    
+</service>

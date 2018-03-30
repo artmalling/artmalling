@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  품번행사를 조회한다.
+ -->
+<service name="/pcod707.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="PUMBUN_CD"          colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"        colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"           colType="TB_STRING"   size="11"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"         colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_FLAG"         colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"         colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"           colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"           colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_MG_RATE"       colType="TB_DECIMAL"  size="5"    dec="2"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_MG_RATE"      colType="TB_DECIMAL"  size="5"    dec="2"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_FLAG"           colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOAL_SALE_AMT"      colType="TB_DECIMAL"  size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GOAL_PROF_AMT"      colType="TB_DECIMAL"  size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LIMIT_SALE_QTY"     colType="TB_INT"      size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_DIV_RATE"        colType="TB_INT"      size="3"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_ISSUE_QTY"      colType="TB_INT"      size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_BARCODE"        colType="TB_STRING"   size="16"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_YN"            colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->    
+    <!-- 점별행사품번 조회 쿼리 -->
+    <query name="SEL_STREVTPBN">
+        <![CDATA[
+            SELECT SPEM.PUMBUN_CD    
+                 , PBN.PUMBUN_NAME
+                 , SPEM.EVENT_CD
+                 , EVT.EVENT_NAME
+                 , SPEM.EVENT_FLAG
+                 , SPEM.EVENT_RATE               
+                 , SPEM.APP_S_DT                 
+                 , SPEM.APP_E_DT                 
+                 , SPEM.NORM_MG_RATE             
+                 , SPEM.EVENT_MG_RATE            
+                 , SPEM.SKU_FLAG                 
+                 , SPEM.GOAL_SALE_AMT            
+                 , SPEM.GOAL_PROF_AMT            
+                 , SPEM.LIMIT_SALE_QTY           
+                 , SPEM.DC_DIV_RATE              
+                 , SPEM.CPN_ISSUE_QTY            
+                 , SPEM.CPN_BARCODE              
+                 , CASE WHEN SPEM.CONF_FLAG = '1' THEN 'N'
+                        ELSE 'Y'
+                   END                 AS CONF_YN
+              FROM DPS.PC_STRPBNEVTMG SPEM
+                 , DPS.PC_PBNMST      PBN
+                 , DPS.PC_EVTMST      EVT
+             WHERE SPEM.PUMBUN_CD     =  PBN.PUMBUN_CD
+               AND SPEM.EVENT_CD      =  EVT.EVENT_CD
+               AND EVT.EVENT_PLU_FLAG IN ('0','1')
+               AND PBN.SKU_FLAG       = '2'   /*비단품만 가능*/
+               AND SPEM.APP_E_DT      >= ?              
+               AND SPEM.APP_S_DT      <= ?  
+               AND SPEM.STR_CD        =  ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.PUMBUN_CD   = SPEM.PUMBUN_CD
+                               AND MYORG.STR_CD      = SPEM.STR_CD
+                               AND MYORG.USER_ID     = ?
+                               AND MYORG.ORG_FLAG    = ?
+                               AND ROWNUM            = 1
+                          )
+        ]]>   
+    </query>
+    <query name="SEL_STREVTPBN_WHERE_EVENT_CD">
+        <![CDATA[
+               AND SPEM.EVENT_CD   = ?
+        ]]>   
+    </query>
+    <query name="SEL_STREVTPBN_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND PBN.PUMBUN_CD   LIKE ?||'%'
+        ]]>   
+    </query>
+    <query name="SEL_STREVTPBN_WHERE_PUMBUN_NAME">
+        <![CDATA[
+               AND PBN.PUMBUN_NAME  LIKE '%'||?||'%'
+        ]]>   
+    </query>
+    <query name="SEL_STREVTPBN_ORDER">
+        <![CDATA[
+             ORDER BY SPEM.EVENT_CD, SPEM.PUMBUN_CD, SPEM.APP_S_DT
+        ]]>   
+    </query>
+</service>

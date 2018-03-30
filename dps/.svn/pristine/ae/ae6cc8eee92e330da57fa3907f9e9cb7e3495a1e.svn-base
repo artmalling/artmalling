@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 
+ * 작 성 일 : 2010.08.04
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 기간의 EOD로그를 조회한다.
+ -->
+<service name="/pcodA02.pc">
+    <gauce name="H_MASTER">
+        <column colName="COMM_NAME1"     colType="TB_STRING"   size="40"   dec="0"  keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="COMM_NAME2"     colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BLD_DT"         colType="TB_STRING"   size="8"    dec="0"  keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="BLD_TIME"       colType="TB_STRING"   size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"         colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WK_FLAG"        colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WK_FLAG_NM"     colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_ID"        colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOG_CD"         colType="TB_STRING"   size="3"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOG_NM"         colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRG_CNT"        colType="TB_INT"      size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKIP_CNT"       colType="TB_INT"      size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EXE_CNT"        colType="TB_INT"      size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ERR_CNT"        colType="TB_INT"      size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPL_CNT"       colType="TB_INT"      size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="LOG_MSG"        colType="TB_STRING"   size="200"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ERR_CD"         colType="TB_STRING"   size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ERR_MSG"        colType="TB_STRING"   size="200"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+  
+    </gauce>
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_PROC_ID">
+      <column colName="CODE"       colType="TB_STRING"  size="40"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"       colType="TB_STRING"  size="40"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SORT"       colType="TB_DECIMAL" size="40"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT CODE.COMM_NAME1
+			     , CODE.COMM_NAME2
+			     , BLD_DT
+			     , BLD_TIME
+			     , STR_CD
+			     , DECODE(STR_CD, '%', '전체', DPS.FN_GET_STORE_NAME(STR_CD)) AS STR_NM  
+			     , WK_FLAG
+			     , COM.FN_GET_COMM_NAME('D', 'P102', WK_FLAG)                 AS WK_FLAG_NM
+			     , PROC_ID
+			     , DECODE(LOG_CD, '', 'ERR', LOG_CD)                          AS LOG_CD
+			     , COM.FN_GET_COMM_NAME('D', 'P103', LOG_CD)                  AS LOG_NM
+			     , TRG_CNT
+			     , SKIP_CNT
+			     , EXE_CNT
+			     , ERR_CNT
+			     , CMPL_CNT
+			     , LOG_MSG
+			     , ERR_CD
+			     , ERR_MSG
+			  FROM (
+			        SELECT BLD_DT
+                         , BLD_TIME
+                         , STR_CD
+                         , WK_FLAG
+                         , PROC_ID
+                         , LOG_CD
+                         , TRG_CNT
+                         , SKIP_CNT
+                         , EXE_CNT
+                         , ERR_CNT
+                         , CMPL_CNT
+                         , LOG_MSG
+                         , ERR_CD
+                         , ERR_MSG
+                      FROM DPS.PC_EODLOG   
+                     WHERE BLD_DT  = ?
+                       AND WK_FLAG = 'CEOD'
+                       
+                     UNION ALL 
+                     
+                     SELECT BLD_DT
+                         , BLD_TIME
+                         , STR_CD
+                         , WK_FLAG
+                         , PROC_ID
+                         , LOG_CD
+                         , TRG_CNT
+                         , SKIP_CNT
+                         , EXE_CNT
+                         , ERR_CNT
+                         , CMPL_CNT
+                         , LOG_MSG
+                         , ERR_CD
+                         , ERR_MSG
+                      FROM DPS.PC_EODLOG   
+                     WHERE BLD_DT  = ? + 1
+                       AND WK_FLAG <> 'CEOD' 
+			        ) EOD
+			     , (
+			        SELECT COMM_NAME1
+			             , COMM_NAME2
+			          FROM COM.TC_COMMCODE
+			         WHERE COMM_PART = 'P104'
+			           AND USE_YN = 'Y'
+			        ) CODE
+			 WHERE EOD.PROC_ID(+) = CODE.COMM_NAME1
+   
+ 
+        ]]>
+    </query>
+    <query name="WHERE_WK_FLAG">
+        <![CDATA[
+               AND EOD.WK_FLAG     LIKE ? || '%'
+        ]]>
+    </query>
+    <query name="WHERE_LOG_CD">
+        <![CDATA[
+               AND EOD.LOG_CD      LIKE ? || '%'
+        ]]>
+    </query>
+    <query name="WHERE_PROC_ID">
+        <![CDATA[
+               AND (CODE.COMM_NAME1    LIKE '%' || ? || '%'
+                    OR CODE.COMM_NAME2 LIKE '%' || ? || '%' )
+        ]]>
+    </query>
+    <query name="SEL_ORDER">
+        <![CDATA[
+             ORDER BY WK_FLAG
+			        , BLD_DT
+			        , BLD_TIME 
+			        , PROC_ID
+        ]]>
+    </query>
+    
+     <!-- 공통코드조회(프로세스:P104) -->
+    <query name="SEL_PROC_ID">
+        <![CDATA[
+            SELECT COMM_NAME1   AS CODE
+                 , COMM_NAME2   AS NAME
+                 , INQR_ORDER   AS SORT
+              FROM COM.TC_COMMCODE
+             WHERE SYS_PART  = 'D'
+               AND COMM_PART = 'P104'
+               AND USE_YN    = 'Y'
+             ORDER BY SORT
+                    , CODE
+        ]]>
+    </query>
+</service>

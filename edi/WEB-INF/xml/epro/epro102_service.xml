@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/epro102.ep">
+    
+     <!--  -->
+    <query name="SEL_MASTER">
+        <![CDATA[ 
+		   SELECT STR_CD
+		        , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+		        , TAKE_DT
+		        , TAKE_SEQ  
+                , COM.FN_GET_COMM_NAME('D','M021', PROM_TYPE ) AS PROM_TYPE
+                , CUST_NM 
+		     FROM MSS.MP_PROMISECERT  
+		    WHERE STR_CD = ?
+		      AND PUMBUN_CD IN  (SELECT SPN.PUMBUN_CD AS PUMBUN_CD 
+                                  FROM DPS.PC_PBNMST   PBN
+                                     , DPS.PC_STRPBN   SPN
+                                 WHERE SPN.PUMBUN_CD  = PBN.PUMBUN_CD
+                                  --AND SPN.EDI_YN          = 'Y' 
+                                   AND SPN.USE_YN           = 'Y'
+                                   AND SPN.STR_CD           = ?
+                                   AND SPN.VEN_CD           = ?
+                                   AND PBN.PUMBUN_TYPE      IN ('0', '4', 'B')
+                                   AND SPN.PUMBUN_CD LIKE ? || '%'
+                                   AND SPN.BIZ_TYPE         = '2' )
+		      AND CUST_NM LIKE ?|| '%'
+		      AND PROM_TYPE LIKE ? 
+        ]]>
+    </query>   
+    
+    <query name="SEL_MASTER_DT_01">
+        <![CDATA[ 
+           AND TAKE_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+              
+    <query name="SEL_MASTER_DT_02">
+        <![CDATA[ 
+           AND IN_DELI_DT BETWEEN ? AND ?
+        ]]>
+    </query>   
+    
+    <query name="SEL_MASTER_DT_03">
+        <![CDATA[ 
+           AND LAST_PROM_DT BETWEEN ? AND ?
+        ]]>
+    </query>
+    
+    <query name="SEL_ORDERBY">
+        <![CDATA[ 
+           ORDER BY TAKE_DT
+        ]]>
+    </query> 
+     
+    <query name="SEL_DETAIL">
+        <![CDATA[
+            SELECT COM.FN_GET_COMM_NAME('D','M063', B.MOD_LIST) MOD_LIST,
+                   ( CASE  MOD_LIST WHEN '01' THEN TO_CHAR(TO_DATE(B.ORG_PROM_DT), 'YYYY/MM/DD') 
+                                    WHEN '02' THEN TO_CHAR(TO_DATE(B.ORG_IN_DELI_DT), 'YYYY/MM/DD')
+                                    WHEN '03' THEN DPS.FN_GET_STORE_NAME(B.ORG_DELI_STR ) 
+                                    WHEN '04' THEN COM.FN_GET_COMM_NAME('D','M022', B.ORG_DELI_TYPE ) 
+                                    ELSE ' '
+                     END ) ORG_PROM,
+                   ( CASE MOD_LIST WHEN '01' THEN TO_CHAR(TO_DATE(B.MOD_PROM_DT), 'YYYY/MM/DD')
+                                   WHEN '02' THEN TO_CHAR(TO_DATE(B.MOD_IN_DELI_DT), 'YYYY/MM/DD')
+                                   WHEN '03' THEN  DPS.FN_GET_STORE_NAME(B.MOD_DELI_STR )
+                                   WHEN '04' THEN  COM.FN_GET_COMM_NAME('D','M022', B.MOD_DELI_TYPE )
+                                   ELSE ' '
+                     END ) MOD_PROM ,
+                   COM.FN_GET_COMM_NAME('D','M023', B.MOD_REASON ) MOD_REASON,
+                   TO_CHAR(B.MOD_TAKE_DT, 'YYYYMMDD') MOD_TAKE_DT,
+                   LPAD(B.SEQ_NO, 3, 0) SEQ_NO
+              FROM MSS.MP_PROMISECERT  A, MSS.MP_PROMISEHIS B
+             WHERE A.TAKE_DT = B.TAKE_DT
+               AND A.TAKE_SEQ = B.TAKE_SEQ
+               AND A.STR_CD = B.STR_CD
+               AND A.STR_CD = ?
+               AND A.TAKE_DT = ? 
+               AND A.TAKE_SEQ = ?
+        ]]>
+    </query>
+
+</service>

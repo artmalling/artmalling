@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  카드분실해제등록
+ -->
+<service name="/dctm210.dm">
+
+    <gauce name="H_MASTER"> 
+        <column colName="SAVE_CHK"       colType="TB_STRING"  size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="FLAG"           colType="TB_STRING"  size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"      colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="CARD_NO"        colType="TB_STRING"  size="64"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="CARD_TYPE_CD"   colType="TB_STRING"  size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="CARD_TYPE_NM"   colType="TB_STRING"  size="30"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ISSUE_DT"       colType="TB_STRING"  size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="LOSS_NOTI_NM"   colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="LOSS_NOTI_DT"   colType="TB_STRING"  size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_ID"         colType="TB_STRING"  size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="USER_NAME"      colType="TB_STRING"  size="20"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+
+    <!-- 기부기획등록 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT 'F' AS SAVE_CHK
+                 , 'Y' FLAG
+                 , D.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', A.CARD_NO) AS CARD_NO
+                 , C.CARD_TYPE_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D005', C.CARD_TYPE_CD) CARD_TYPE_NM
+                 , C.ISSUE_DT
+                 , C.LOSS_NOTI_NM
+                 , C.LOSS_NOTI_DT
+                 , A.REG_ID
+                 , COM.FN_GET_USER_NAME(A.REG_ID) USER_NAME
+              FROM DCS.DM_CARD_LOSS A
+                 , ( SELECT CARD_NO, MAX(REG_DATE) REG_DATE
+                       FROM DCS.DM_CARD_LOSS
+                      WHERE PROC_FLAG IN ('R','C')  
+                      GROUP BY CARD_NO
+                   ) B   
+                 , DCS.DM_CARD C
+                 , DCS.DM_CUSTOMER D
+             WHERE A.CARD_NO      = B.CARD_NO
+               AND A.REG_DATE     = B.REG_DATE
+               AND A.CARD_NO      = C.CARD_NO
+               AND C.CUST_ID      = D.CUST_ID 
+               AND C.CARD_STAT_CD = '1'
+               --AND A.REG_DATE     > X
+               --AND A.REG_DATE     < X
+               AND C.CUST_ID IN ( SELECT M.CUST_ID 
+                                    FROM DCS.DM_CARD M
+                                       , DCS.DM_CUSTOMER N  
+                                   WHERE M.CUST_ID = N.CUST_ID
+        ]]>        
+    </query> 
+    
+    <query name="SEL_MASTER_CARD_NO">   
+        <![CDATA[
+          							 AND M.CARD_NO    = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_CUST_ID">   
+        <![CDATA[
+          							 AND N.CUST_ID    = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_SS_NO">   
+        <![CDATA[
+          							 AND N.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>  
+    <query name="SEL_MASTER_END">   
+        <![CDATA[
+          						)
+        ]]>        
+    </query>      
+    
+    <!-- 카드분실해제등록 -->
+    <query name="INS_CARDLOSS">   
+        <![CDATA[       
+            INSERT INTO DCS.DM_CARD_LOSS (
+                                         CARD_NO
+                                       , REG_DATE
+                                       , PROC_FLAG
+                                       , LOSS_DT
+                                       , REG_ID
+                                         )
+                                  VALUES (
+                                         DCS.SC_Crypto_FUN('ENC', ?)
+                                       , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+                                       , 'C'
+                                       , TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                       , ?
+                                         )     
+        ]]>        
+    </query>   
+    
+    <!-- 카드분실해제등록  -->
+    <query name="UPD_CARD">   
+        <![CDATA[       
+            UPDATE DCS.DM_CARD
+               SET CARD_STAT_CD = '0'
+                 , LOSS_NOTI_DT = NULL
+                 , LOSS_NOTI_NM = NULL
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE CARD_NO = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>     
+</service>

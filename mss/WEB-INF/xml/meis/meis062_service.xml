@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.08.19
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영실적조정관리
+ -->
+<service name="/meis062.me">
+    
+    <!-- 년별항목별경영실적 조직 헤더  -->
+    <gauce name="H_SEL_ORG">
+        <column colName="STR_CD"      colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_RSLT_YM" colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_CD"      colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_NAME"    colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+    
+    <!-- 년별항목별경영실적 항목 헤더  -->
+    <gauce name="H_SEL_BIZ">
+        <column colName="BIZ_RSLT_YM"    colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_CD"         colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_FLAG"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_LEVEL"      colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DEPT_CD"        colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TEAM_CD"        colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="PC_CD"          colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_CD"         colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_CD_NM"      colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TOT_AMT"        colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="RSLT_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ADJST_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ADJST_RECV_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+    
+    <!-- 배부이력 헤더  -->
+    <gauce name="H_SEL_ADJ">
+        <column colName="BIZ_RSLT_YM" colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="STR_CD"      colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_CD"      colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_CD"      colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_FLAG"    colType="TB_STRING"  size="1"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_LEVEL"   colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DEPT_CD"     colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TEAM_CD"     colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="PC_CD"       colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ADJST_SEQ"   colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="" />       
+        <column colName="TGET_ORG_CD" colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ORG_NAME"    colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="TGET_BIZ_CD" colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="BIZ_CD_NM"   colType="TB_STRING"  size="30"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="ADJST_AMT"   colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="REMARK"      colType="TB_STRING"  size="4000" dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+    
+    <!-- 년별항목별경영실적 조직조회-->
+    <query name="SEL_ORG">
+        <![CDATA[
+        SELECT BIZ.STR_CD
+             , BIZ_RSLT_YM
+             , BIZ.ORG_CD
+             , ORG.ORG_NAME
+          FROM MSS.ME_BIZRSLT BIZ
+             , DPS.PC_ORGMST  ORG
+         WHERE BIZ.ORG_CD       = ORG.ORG_CD
+           AND BIZ.BIZ_RSLT_YM  = ?
+           AND BIZ.STR_CD       = ?
+           AND BIZ.DEPT_CD   LIKE ?
+           AND BIZ.TEAM_CD   LIKE ?
+           AND BIZ.PC_CD     LIKE ?
+           AND BIZ.ORG_LEVEL LIKE ?
+           AND BIZ.ORG_CD      != '9999999999'
+         GROUP BY BIZ.STR_CD, BIZ_RSLT_YM, BIZ.ORG_CD, ORG.ORG_NAME
+         ORDER BY BIZ.ORG_CD
+        ]]>
+    </query>
+    
+    <!-- 년별항목별경영실적 항목조회-->
+    <query name="SEL_BIZ">
+        <![CDATA[
+        SELECT BIZ_RSLT_YM
+             , BIZ.STR_CD
+             , BIZ.ORG_CD
+             , ORG.ORG_FLAG
+             , ORG.ORG_LEVEL
+             , ORG.DEPT_CD
+             , ORG.TEAM_CD
+             , ORG.PC_CD
+             , BIZ.BIZ_CD
+             , MST.BIZ_CD_NM
+             , NVL(RSLT_AMT,0) + NVL(ADJST_RECV_AMT, 0) - NVL(ADJST_AMT,0)  AS TOT_AMT  
+             , NVL(RSLT_AMT, 0)                    AS RSLT_AMT
+             , NVL(ADJST_AMT, 0)                   AS ADJST_AMT
+             , NVL(ADJST_RECV_AMT, 0)              AS ADJST_RECV_AMT
+          FROM MSS.ME_BIZRSLT  BIZ
+             , MSS.ME_BIZCDMST MST
+             , DPS.PC_ORGMST   ORG
+         WHERE BIZ.BIZ_CD  = MST.BIZ_CD
+           AND BIZ.ORG_CD  = ORG.ORG_CD
+           AND BIZ_RSLT_YM = ?
+           AND BIZ.STR_CD  = ?
+           AND BIZ.ORG_CD  = ?
+        ]]>
+    </query>
+    
+    <!-- 조정내역-->
+    <query name="SEL_ADJ">
+        <![CDATA[
+        SELECT ADJ.BIZ_RSLT_YM
+             , ADJ.STR_CD
+             , ADJ.BIZ_CD
+             , ADJ.ORG_CD
+             , ORG.ORG_FLAG
+             , ORG.ORG_LEVEL
+             , ORG.DEPT_CD
+             , ORG.TEAM_CD
+             , ORG.PC_CD
+             , ADJ.ADJST_SEQ
+             , ADJ.TGET_ORG_CD
+             , ORG.ORG_NAME
+             , ADJ.TGET_BIZ_CD
+             , MSS.FN_GET_BIZ_NAME(ADJ.TGET_BIZ_CD) AS BIZ_CD_NM
+             , ADJ.ADJST_AMT
+             , REMARK
+          FROM MSS.ME_BIZRSLTADJSTHIST ADJ
+             , DPS.PC_ORGMST           ORG
+          WHERE ADJ.TGET_ORG_CD = ORG.ORG_CD
+            AND ADJ.BIZ_RSLT_YM = ?
+            AND ADJ.STR_CD      = ?
+            AND ADJ.ORG_CD      = ?
+            AND ADJ.BIZ_CD      = ?
+        ]]>
+    </query>
+    
+    <!-- 조정조직의 조정금액 변경-->
+    <query name="UPD_BIZ_RSLT">
+        <![CDATA[
+        UPDATE MSS.ME_BIZRSLT
+           SET ADJST_AMT   = NVL(ADJST_AMT,0) + ? 
+             , MOD_DATE    = SYSDATE
+             , MOD_ID      = ?
+         WHERE BIZ_RSLT_YM = ?
+           AND STR_CD      = ?
+           AND BIZ_CD      = ?
+           AND ORG_CD      = ?
+        ]]>
+    </query>
+    
+    <!-- 년월별 비용계획 등록/수정-->
+    <query name="UST_BIZ_RSLT">
+        <![CDATA[
+        MERGE INTO MSS.ME_BIZRSLT A
+              USING ( SELECT ? AS BIZ_RSLT_YM
+                           , ? AS STR_CD
+                           , ? AS BIZ_CD
+                           , ? AS ORG_CD
+                           , ? AS ADJST_RECV_AMT
+                           , ? AS USER_ID
+                        FROM DUAL ) B 
+                 ON (        A.BIZ_RSLT_YM    = B.BIZ_RSLT_YM
+                         AND A.STR_CD         = B.STR_CD
+                         AND A.BIZ_CD         = B.BIZ_CD
+                         AND A.ORG_CD         = B.ORG_CD )
+               WHEN MATCHED THEN 
+                    UPDATE SET ADJST_RECV_AMT = NVL(A.ADJST_RECV_AMT,0) + B.ADJST_RECV_AMT
+                             , MOD_ID         = B.USER_ID
+                             , MOD_DATE       = SYSDATE
+               WHEN NOT MATCHED THEN
+                    INSERT ( BIZ_RSLT_YM
+                           , STR_CD
+                           , BIZ_CD
+                           , ORG_CD
+                           , ORG_FLAG
+                           , ORG_LEVEL
+                           , DEPT_CD
+                           , TEAM_CD
+                           , PC_CD
+                           , ADJST_RECV_AMT
+                           , REG_DATE
+                           , REG_ID
+                           , MOD_DATE
+                           , MOD_ID )
+                    VALUES ( B.BIZ_RSLT_YM
+                           , B.STR_CD
+                           , B.BIZ_CD
+                           , B.ORG_CD
+                           , ( SELECT ORG_FLAG FROM DPS.PC_ORGMST  WHERE ORG_CD = ?)
+                           , ( SELECT ORG_LEVEL FROM DPS.PC_ORGMST WHERE ORG_CD = ?)
+                           , SUBSTR(B.ORG_CD, 3, 2)
+                           , SUBSTR(B.ORG_CD, 5, 2)
+                           , SUBSTR(B.ORG_CD, 7, 2)
+                           , B.ADJST_RECV_AMT
+                           , SYSDATE
+                           , B.USER_ID
+                           , SYSDATE
+                           , B.USER_ID )
+        ]]>
+    </query>
+    
+    <!-- 조정내역 저장-->
+    <query name="INS_ADJ_HIS">
+        <![CDATA[
+        INSERT INTO MSS.ME_BIZRSLTADJSTHIST( BIZ_RSLT_YM
+                                           , STR_CD
+                                           , BIZ_CD
+                                           , ORG_CD
+                                           , ADJST_SEQ
+                                           , ORG_FLAG
+                                           , ORG_LEVEL
+                                           , DEPT_CD
+                                           , TEAM_CD
+                                           , PC_CD
+                                           , ADJST_AMT
+                                           , TGET_STR_CD
+                                           , TGET_BIZ_CD
+                                           , TGET_ORG_CD
+                                           , TGET_ORG_FLAG
+                                           , TGET_ORG_LEVEL
+                                           , TGET_DEPT_CD
+                                           , TGET_TEAM_CD
+                                           , TGET_PC_CD
+                                           , REMARK
+                                           , REG_DATE
+                                           , REG_ID
+                                           , MOD_DATE
+                                           , MOD_ID ) 
+                                      SELECT ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ( SELECT NVL(MAX(ADJST_SEQ), 0) + 1
+                                                 FROM MSS.ME_BIZRSLTADJSTHIST
+                                                WHERE BIZ_RSLT_YM = ?
+                                                  AND STR_CD      = ?
+                                                  AND BIZ_CD      = ?
+                                                  AND ORG_CD      = ? )
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , STR_CD
+                                           , ?
+                                           , ORG_CD
+                                           , ORG_FLAG
+                                           , ORG_LEVEL
+                                           , DEPT_CD
+                                           , TEAM_CD
+                                           , PC_CD
+                                           , ?
+                                           , SYSDATE
+                                           , ?
+                                           , SYSDATE 
+                                           , ?
+                                        FROM DPS.PC_ORGMST
+                                       WHERE ORG_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 배부이력 조회쿼리-->
+    <query name="SEL_DIV_HIS">
+        <![CDATA[
+        SELECT HIS.DIV_YM
+          FROM MSS.ME_BIZDIVHIST HIS
+         WHERE HIS.DIV_YM          = ?
+           AND HIS.DIV_STR_CD      = ?
+           AND HIS.DIV_ORG_CD      = ?
+           AND HIS.DIV_BIZ_CD      = ?
+           AND HIS.PLAN_RSLT_FLAG  = '2'	/* 실적 */
+        ]]>
+    </query>
+    
+</service>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.08.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영실적 배부기준항목 관리
+ -->
+<service name="/meis006.me">
+    
+    <!-- 배부기준코드 헤더  -->
+    <gauce name="H_SEL_DIV">
+        <column colName="DIV_CD"     colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="DIV_CD_NM"  colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="" />        
+        <column colName="SORT_NO"    colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL" roundMode="" />
+        <column colName="USE_YN"     colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>
+    
+    <!-- 계정별 비용실적조회쿼리-->
+    <query name="SEL_DIV">
+        <![CDATA[
+        SELECT /*+ INDEX(MST PK_ME_DIVCDMST) */ DIV_CD
+             , DIV_CD_NM
+             , SORT_NO
+             , CASE USE_YN WHEN 'Y' THEN 'T' ELSE 'F' END AS USE_YN
+          FROM MSS.ME_DIVCDMST MST
+         WHERE 1 = 1
+        ]]>
+    </query>
+    
+    <query name="SEL_DIV_WHERE_CD">
+        <![CDATA[
+           AND DIV_CD    = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_DIV_WHERE_NM">
+        <![CDATA[
+           AND DIV_CD_NM LIKE ?||'%'
+        ]]>
+    </query>
+    
+    <!-- 배부기준코드 등록-->
+    <query name="INS_DIV">
+        <![CDATA[
+        INSERT INTO MSS.ME_DIVCDMST( DIV_CD
+                                   , DIV_CD_NM
+                                   , SORT_NO
+                                   , USE_YN
+                                   , REG_DATE
+                                   , REG_ID
+                                   , MOD_DATE
+                                   , MOD_ID ) 
+                            VALUES ( ( SELECT LPAD(NVL(MAX(DIV_CD),0)+1,4,'0')
+                                         FROM MSS.ME_DIVCDMST )
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , SYSDATE
+                                   , ?
+                                   , SYSDATE 
+                                   , ?)
+        ]]>
+    </query>
+    
+    <!-- 배부기준코드 수정-->
+    <query name="UPD_DIV">
+        <![CDATA[
+        UPDATE MSS.ME_DIVCDMST
+           SET DIV_CD_NM = ? 
+             , SORT_NO   = ?
+             , USE_YN    = ?
+             , MOD_DATE  = SYSDATE
+             , MOD_ID    = ?
+         WHERE DIV_CD    = ?
+        ]]>
+    </query>
+    
+    <!-- 배부기준코드 삭제-->
+    <query name="DEL_DIV">
+        <![CDATA[
+        DELETE 
+          FROM MSS.ME_DIVCDMST
+         WHERE DIV_CD    = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_DIV_CD">
+        <![CDATA[
+        SELECT DIV_CD
+          FROM MSS.ME_DIVMST
+         WHERE DIV_CD = ?
+        ]]>
+    </query>
+    
+</service>

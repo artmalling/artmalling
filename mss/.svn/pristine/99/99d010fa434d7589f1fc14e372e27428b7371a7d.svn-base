@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  월간접비 관리 배부 
+ -->
+<service name="/mren307.mr">
+    <!-- 월 간접비관리비 마스터 헤더 -->
+    <gauce name="H_MASTER">
+        <column colName="CAL_YM"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_ITEM_CD"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_AMT"           colType="TB_DECIMAL"  size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHECKGB"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 월 간접비 자동배부 디테일 헤더 -->
+    <gauce name="H_DETAIL">
+        <column colName="CAL_YM"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"       colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_ITEM_CD"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_ITEM_NM"       colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_AMT"           colType="TB_DECIMAL"  size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_RATE"       colType="TB_DECIMAL"  size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_ITEM_CD"            colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 월 간접비관리비 배부 마스터 조회  -->
+    <query name="SEL_MR_DIVAMT"> 
+        <![CDATA[   
+			SELECT TC.CAL_YM,
+			       TA.DIV_ITEM_CD,
+			       TC.MNTN_AMT,
+			       'T' CHECKGB
+			  FROM MSS.MR_DIVMST TA,
+			       MSS.MR_DIVAMT TC
+			 WHERE TA.DIV_ITEM_CD = TC.DIV_ITEM_CD
+			   AND TC.CAL_YM = ?
+			   AND TA.DIV_ITEM_CD LIKE ?||'%'
+        ]]>        
+    </query>
+    
+    
+    
+    <!-- 월 간접비관리비 배부 디테일 조회  -->
+    <query name="SEL_MR_FCLDIVAMT"> 
+        <![CDATA[   
+		    SELECT TA.CAL_YM,
+		           TA.STR_CD,
+			       TC.STR_NAME,
+			       TB.MNTN_ITEM_CD,
+			       TB.MNTN_ITEM_NM,
+			       TA.MNTN_AMT,
+			       TA.DIV_RATE,
+			       TA.DIV_ITEM_CD
+			  FROM MSS.MR_FCLDIVAMT TA,
+			       MSS.MR_MNTNITEM TB,
+			       DPS.PC_STRMST TC
+			 WHERE TA.STR_CD = TB.STR_CD
+			   AND TA.DIV_ITEM_CD = TB.AUTO_DIV_ITEM
+			   AND TA.STR_CD = TC.STR_CD
+			   AND TB.AUTO_DIV_YN = 'Y'
+			   AND TA.CAL_YM = ?
+			   AND TA.DIV_ITEM_CD = ?
+        ]]>        
+    </query>
+    
+    
+    <!-- 월 간접비관리비 배부 마스터  등록  -->
+    <query name="INS_MR_DIVAMT"> 
+        <![CDATA[   
+          INSERT INTO MSS.MR_DIVAMT (
+                            CAL_YM
+                           ,DIV_ITEM_CD
+                           ,MNTN_AMT
+                           ,REG_ID
+                           ,REG_DATE
+                           ,MOD_ID
+                           ,MOD_DATE
+                          )
+		            VALUES (
+		                    ?
+		                   ,?
+		                   ,?
+		                   ,?
+		                   ,SYSDATE
+		                   ,?
+		                   ,SYSDATE
+		                    )
+        ]]>        
+    </query>
+    
+    <!-- 월 간접비관리비 배부 마스터  금액 수정  -->
+    <query name="UPD_MR_DIVAMT"> 
+        <![CDATA[   
+          UPDATE MSS.MR_DIVAMT 
+             SET MNTN_AMT = ?
+                ,MOD_ID = ?
+                ,MOD_DATE = SYSDATE
+           WHERE CAL_YM = ?
+             AND DIV_ITEM_CD = ?
+        ]]>        
+    </query>
+    
+    <!-- 월 간접비관리비 배부 마스터 삭제  -->
+    <query name="DEL_MR_DIVAMT"> 
+        <![CDATA[   
+           DELETE MSS.MR_DIVAMT
+            WHERE CAL_YM = ? 
+            AND DIV_ITEM_CD = ?
+        ]]>        
+    </query>
+    
+     <!-- 월 간접비관리비 시설별 배부 전체 삭제  -->
+    <query name="DEL_MR_FCLDIVAMT_ALL"> 
+        <![CDATA[   
+           DELETE MSS.MR_FCLDIVAMT
+            WHERE CAL_YM = ? 
+              AND DIV_ITEM_CD = ?  
+        ]]>        
+    </query>
+    
+</service>

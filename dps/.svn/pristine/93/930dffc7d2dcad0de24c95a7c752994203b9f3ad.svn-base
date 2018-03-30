@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 이어울림
+ * 작 성 일 : 2015.10.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 행사장 POS관리한다.
+ -->
+<service name="/pcod711.pc">
+    
+    <!-- 행사마스터 HEADER -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"           colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_CD"   colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_NAME" colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_POSITION"   colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />            
+        <column colName="AREA_SIZE"        colType="TB_DECIMAL" size="7"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />            
+        <column colName="FLOR_CD"          colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"           colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 행사마스터 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT A.STR_CD                                  /* VARCHAR2(2)     PK1 점코드     */
+			     , A.EVENT_PLACE_CD                          /* VARCHAR2(4)     PK2 행사장코드 */
+			     , A.EVENT_PLACE_NAME                        /* VARCHAR2(40)        행사장명   */
+			     , A.EVENT_POSITION                          /* VARCHAR2(40)        행사장위치 */
+			     , A.AREA_SIZE                               /* NUMBER(7,2)         면적       */
+			     , A.FLOR_CD                                 /* VARCHAR2(2)         층코드     */
+			     , NVL(A.USE_YN, 'N')              AS USE_YN /* VARCHAR2(1)     'Y' 사용여부   */
+			  FROM DPS.PC_EVTPLACMST A
+			 WHERE A.STR_CD          LIKE ? || '%'
+			   AND A.EVENT_PLACE_CD  LIKE ? || '%'
+			 ORDER BY A.EVENT_PLACE_CD
+        ]]>
+    </query>
+    
+    <!-- 행사장별 POS관리 HEADER -->
+    <gauce name="H_SEL_DETAIL1">
+        <column colName="CHK"            colType="TB_STRING"   size="1"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"   size="2"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_CD" colType="TB_STRING"   size="4"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"   size="4"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NAME"       colType="TB_STRING"   size="50" dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HALL_CD"        colType="TB_STRING"   size="2"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLOR_CD"        colType="TB_STRING"   size="2"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"         colType="TB_STRING"   size="1"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 행사장별 POS관리 조회 -->
+    <query name="SEL_DETAIL1">
+        <![CDATA[
+			SELECT 'F'                             AS CHK      
+			     , A.STR_CD                                    /* VARCHAR2(2) PK1 점코드       */
+			     , A.EVENT_PLACE_CD                            /* VARCHAR2(4) PK2 행사장코드   */
+			     , A.POS_NO                                    /* VARCHAR2(4) PK3 POS번호      */
+			     , B.SHOP_NAME                     AS POS_NAME /* VARCHAR2( )     POS명        */
+			     , B.HALL_CD	                               /* VARCHAR2(2)	  관코드(P197) */
+			     , B.FLOR_CD	                               /* VARCHAR2(2)	  층코드(P061) */
+			     , NVL(A.USE_YN, 'N')              AS USE_YN   /* VARCHAR2(1) 'Y' 사용여부     */
+			  FROM DPS.PC_EVTPLACPOS A
+			     , DPS.PC_POSMST     B
+			 WHERE A.STR_CD         = B.STR_CD
+			   AND A.POS_NO         = B.POS_NO
+			   AND A.STR_CD         = ?
+			   AND A.EVENT_PLACE_CD = ?
+			 ORDER BY A.POS_NO
+        ]]>
+    </query>
+    
+    <!-- 행사장별 POS관리 입력 -->
+    <query name="INS_DETAIL1">
+        <![CDATA[
+			INSERT INTO DPS.PC_EVTPLACPOS 
+			        ( 
+			          STR_CD
+			        , EVENT_PLACE_CD
+			        , POS_NO
+			        , USE_YN
+			        , REG_DATE
+			        , REG_ID
+			        , MOD_DATE
+			        , MOD_ID
+			        )
+			 VALUES ( 
+			          ?
+			        , ?
+			        , ?
+			        , 'Y'
+			        , SYSDATE
+			        , ?
+			        , SYSDATE
+			        , ?           
+			        )
+        ]]>
+    </query>
+    
+    <!-- 행사장별 POS관리 삭제 -->
+    <query name="DEL_DETAIL1">
+        <![CDATA[
+			DELETE FROM DPS.PC_EVTPLACPOS 
+			 WHERE STR_CD         = ?
+			   AND EVENT_PLACE_CD = ?
+			   AND POS_NO         = ?
+        ]]>
+    </query>
+    
+    <!-- 행사장별 POS관리 이력관리 -->
+    <query name="INS_HIS_DTL1">
+        <![CDATA[
+			INSERT INTO DPS.PC_EVTPLACPOS_HIS 
+			        ( 
+			          STR_CD
+			        , EVENT_PLACE_CD
+			        , POS_NO
+			        , CHG_DATE
+			        , CHG_TYPE
+			        , CHG_ID
+			        )
+			 VALUES ( 
+			          ?
+			        , ?
+			        , ?
+			        , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+			        , ?
+			        , ?
+			        )
+        ]]>
+    </query>
+    
+    <!-- 행사장별 POS 중복체크-->
+    <query name="CHK_DUPDTL1">
+        <![CDATA[
+			SELECT COUNT(*) AS CNT
+			  FROM DPS.PC_EVTPLACPOS A
+			 WHERE A.STR_CD          = ?
+			   AND A.EVENT_PLACE_CD  = ?
+			   AND A.POS_NO          = ?
+        ]]>
+    </query>
+    
+    <!-- 제외 브랜드 관리 HEADER -->
+    <gauce name="H_SEL_DETAIL2">
+        <column colName="CHK"            colType="TB_STRING"   size="1"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"   size="2"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_CD" colType="TB_STRING"   size="4"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EX_PUMBUN_CD"   colType="TB_STRING"   size="6"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"    colType="TB_STRING"   size="50" dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"   size="8"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_SALE_DT"    colType="TB_STRING"   size="8"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 제외 브랜드 관리 조회 -->
+    <query name="SEL_DETAIL2">
+        <![CDATA[
+			SELECT 'F'               AS CHK 
+			     , A.STR_CD                           /* VARCHAR2(2) PK1 점코드        */
+			     , A.EVENT_PLACE_CD                   /* VARCHAR2(4) PK2 행사장코드    */
+			     , A.EX_PUMBUN_CD                     /* VARCHAR2(6) PK3 제외브랜드    */
+			     , B.PUMBUN_NAME                      /* VARCHAR2( )     제외브랜드명  */
+			     , A.SALE_DT                          /* VARCHAR2(8) PK4 제외 판매일자 */
+			     , A.SALE_DT         AS ORG_SALE_DT   /* VARCHAR2(8) PK4 제외 판매일자 */
+			  FROM DPS.PC_EVTPLACPOSEXPBN A
+			     , DPS.PC_STRPBN          B
+			 WHERE A.STR_CD         = B.STR_CD 
+			   AND A.EX_PUMBUN_CD   = B.PUMBUN_CD 
+			   AND A.STR_CD         = ?
+			   AND A.EVENT_PLACE_CD = ?
+			 ORDER BY A.EX_PUMBUN_CD
+        ]]>   
+    </query>
+    
+    <!-- 제외 브랜드 관리 입력 -->
+    <query name="INS_DETAIL2">
+        <![CDATA[
+			INSERT INTO DPS.PC_EVTPLACPOSEXPBN 
+			        ( 
+			          STR_CD
+			        , EVENT_PLACE_CD
+			        , EX_PUMBUN_CD
+			        , SALE_DT
+			        , REG_DATE
+			        , REG_ID
+			        , MOD_DATE
+			        , MOD_ID
+			        )
+			 VALUES ( 
+			          ?
+			        , ?
+			        , ?
+			        , ?
+			        , SYSDATE
+			        , ?
+			        , SYSDATE
+			        , ?           
+			        )
+        ]]>
+    </query>
+    
+    <!-- 제외 브랜드 관리 수정 -->
+    <query name="UPD_DETAIL2">
+        <![CDATA[
+			UPDATE DPS.PC_EVTPLACPOSEXPBN 
+			   SET SALE_DT        = ?
+			     , MOD_DATE       = SYSDATE
+			     , MOD_ID         = ?
+			 WHERE STR_CD         = ?
+			   AND EVENT_PLACE_CD = ?
+			   AND EX_PUMBUN_CD   = ?
+			   AND SALE_DT        = ?
+        ]]>
+    </query>
+    
+    <!-- 제외 브랜드 관리 삭제 -->
+    <query name="DEL_DETAIL2">
+        <![CDATA[
+			DELETE FROM DPS.PC_EVTPLACPOSEXPBN 
+			 WHERE STR_CD         = ?
+			   AND EVENT_PLACE_CD = ?
+			   AND EX_PUMBUN_CD   = ?
+			   AND SALE_DT        = ?
+        ]]>
+    </query>
+    
+    <!-- 제외 브랜드 관리 중복체크-->
+    <query name="CHK_DUPDTL2">
+        <![CDATA[
+			SELECT COUNT(*) AS CNT
+			  FROM DPS.PC_EVTPLACPOSEXPBN A
+			 WHERE A.STR_CD          = ?
+			   AND A.EVENT_PLACE_CD  = ?
+			   AND A.EX_PUMBUN_CD    = ?
+			   AND A.SALE_DT         = ?
+        ]]>
+    </query>
+    
+</service>

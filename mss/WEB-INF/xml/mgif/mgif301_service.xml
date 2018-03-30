@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다. -->
+<!-- * 작 성 자 : 김성미 
+     * 회 사 명 : 한국후지쯔
+      * 작 성 일 : 2011.05.09 
+      * 변 경 일 : 
+      * 변경내용 
+	: * 개 요 : 상품권 판매등록 -->
+<service name="/mgif301.mg">
+	<!-- 상품권 판매 목록 -->
+	<gauce name="H_MASTER">
+		<column colName="FLAG" colType="TB_STRING" size="1" dec="0"
+			keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_TYPE_CD" colType="TB_STRING" size="4"
+			dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_TYPE_NAME" colType="TB_STRING" size="40"
+			dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ISSUE_TYPE" colType="TB_STRING" size="1" dec="0"
+			keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ISSUE_TYPE_NAME" colType="TB_STRING" size="40"
+			dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_AMT_TYPE" colType="TB_STRING" size="4"
+			dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_AMT_NAME" colType="TB_STRING" size="40"
+			dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFTCERT_AMT" colType="TB_DECIMAL" size="9"
+			dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFTCARD_NO" colType="TB_STRING" size="18"
+			dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="QTY" colType="TB_DECIMAL" size="7" dec="0"
+			keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="AMT" colType="TB_DECIMAL" size="12" dec="0"
+			keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+
+	<!-- 상품권 상세 정보 조회 -->
+	<gauce name="H_GIFT_INFO">
+		<column colName="GIFT_TYPE_CD" colType="TB_STRING" size="4"
+			dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="ISSUE_TYPE" colType="TB_STRING" size="1" dec="0"
+			keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_AMT_TYPE" colType="TB_STRING" size="4"
+			dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+
+	<!-- 상품권 정보 조회 -->
+	<query name="SEL_SALE_INFO">
+        <![CDATA[
+		SELECT 'F' AS FLAG
+		     , A.GIFT_TYPE_CD
+		     , GIFT_TYPE_NAME
+		     , A.ISSUE_TYPE
+		     , COM.FN_GET_COMM_NAME('D', 'M009', A.ISSUE_TYPE) AS ISSUE_TYPE_NAME
+		     , A.GIFT_AMT_TYPE
+		     , GIFT_AMT_NAME
+		     , A.GIFTCERT_AMT
+		     , GIFTCARD_NO
+		     , 1 AS QTY
+		     , A.GIFTCERT_AMT * 1  AS AMT
+		  FROM MSS.MG_GIFTMST A
+		     , MSS.MG_GIFTAMTMST B
+		     , MSS.MG_GIFTTPMST C
+		 WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+		   AND A.ISSUE_TYPE = B.ISSUE_TYPE
+		   AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+		   AND B.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+		   AND A.STAT_FLAG = '04'
+           AND ACDT_FLAG = 'N'
+           AND GIFTCARD_NO BETWEEN ? AND ?
+           AND IN_STR = ?
+        ]]>
+	</query>
+
+	<!-- 상품권 정보 조회 -->
+	<query name="SEL_GIFT_INFO">
+        <![CDATA[
+	    SELECT GIFT_TYPE_CD
+		     , ISSUE_TYPE
+		     , GIFT_AMT_TYPE 
+		  FROM MSS.MG_GIFTMST
+		 WHERE STAT_FLAG = '04'
+           AND ACDT_FLAG = 'N'
+           AND IN_STR = ?
+           AND GIFTCARD_NO  =  ?
+        ]]>
+	</query>
+
+	<!-- 상품권 정보 조회 -->
+	<query name="SEL_SLIP_NO">
+        <![CDATA[
+        SELECT LPAD(MSS.SQ_MG_SALEMST.NEXTVAL,6,0) AS SALE_SLIP_NO FROM DUAL
+        ]]>
+	</query>
+
+	<!-- 상품권 판매 마스터 등록 -->
+	<query name="INS_SALEMST">
+        <![CDATA[
+		INSERT INTO MSS.MG_SALEMST ( SALE_DT
+		                           , STR_CD
+		                           , SALE_SLIP_NO
+		                           , SALE_PART_CD
+		                           , SALE_FLAG
+		                           , SALE_AMT
+		                           , CANCEL_GB
+		                           , SALE_CD
+		                           , REG_ID
+		                           , REG_DATE
+		                           , MOD_ID
+		                           , MOD_DATE)
+		                    VALUES ( ?
+		                           , ?
+		                           , ?
+		                           , ?
+		                           , '01'
+		                           , ?
+		                           , '0'
+		                           , MSS.FN_GET_SALE_CHECKDIGIT(?,?,?)
+		                           , ?
+		                           , SYSDATE
+		                           , ?
+		                           , SYSDATE )
+        ]]>
+	</query>
+
+	<!-- 상품권 판매 디테일 등록 -->
+	<query name="INS_SALEDTL">
+        <![CDATA[
+		INSERT INTO MSS.MG_SALEDTL ( SALE_DT
+		                           , STR_CD
+		                           , SALE_SLIP_NO
+		                           , SALE_SEQ_NO
+		                           , GIFT_TYPE_CD
+		                           , ISSUE_TYPE
+		                           , GIFT_AMT_TYPE
+		                           , SALE_QTY
+		                           , SALE_AMT
+		                           , GIFTCARD_NO
+		                           , RFD_GB
+		                           , REG_ID
+		                           , REG_DATE
+		                           , MOD_ID
+		                           , MOD_DATE)
+		                    VALUES ( ?
+		                           , ?
+		                           , ?
+		                           , (SELECT NVL(MAX(SALE_SEQ_NO),0) + 1 
+		                                FROM MSS.MG_SALEDTL 
+		                               WHERE SALE_DT = ?
+		                                 AND STR_CD = ?
+		                                 AND SALE_SLIP_NO = ? )                           
+		                           , ?
+		                           , ?
+		                           , ?
+		                           , ?
+		                           , ?
+		                           , ?
+		                           , '0'
+		                           , ?
+		                           , SYSDATE
+		                           , ?
+		                           , SYSDATE )
+        ]]>
+	</query>
+
+	<!-- 상품권 마스터 상품권 판매정보 수정 -->
+	<query name="UPD_GIFTMST">
+        <![CDATA[
+		UPDATE MSS.MG_GIFTMST
+		   SET SALE_STR = ?
+		     , SALE_DT = ?
+		     , SALE_FLAG = '01'   -- 상품권판매정보(M067) 01:정상판매
+		     , SALE_PART_CD =  ?
+		     , SALE_EMP_ID = ?
+		     , SALE_AMT = ?
+		     , STAT_FLAG = '06'   --상품권상태(M074) 06:판매
+		     , MOD_ID = ?
+		     , MOD_DATE = SYSDATE
+		 WHERE STAT_FLAG = '04'   --상품권상태(M074) 04:점내불출
+           AND ACDT_FLAG = 'N'
+           AND GIFTCARD_NO = ?
+        ]]>
+	</query>
+
+    <!-- 상품권 판매 전표조회 -->
+    <query name="SEL_SALE_SLIP_NO">
+        <![CDATA[
+		SELECT STR_CD || SALE_DT || SALE_SLIP_NO || SALE_CD AS SALE_SLIP_NO
+		  FROM MSS.MG_SALEMST
+		 WHERE STR_CD = ?
+		   AND SALE_DT = ?
+		   AND SALE_SLIP_NO = ?
+        ]]>
+    </query>
+</service>

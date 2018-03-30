@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif210.mg">
+<!-- MASTER 조회 -->
+    <gauce name="H_MASTER">  
+        <column colName="STR_CD"            colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POUT_REQ_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POUT_REQ_SLIP_NO"  colType="TB_STRING"  size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="ORG_CD"            colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="ORG_NAME"          colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_FLAG"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="POUT_TYPE"         colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POUT_RSN"          colType="TB_STRING"  size="50"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"          colType="TB_STRING"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_NAME"        colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce> 
+    
+    <!-- DETAIL 조회 -->
+    <gauce name="H_DETAIL">     
+        <column colName="POUT_REQ_SEQ_NO"   colType="TB_DECIMAL"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING"   size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING"   size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="REQ_QTY"           colType="TB_DECIMAL"  size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="REQ_AMT"           colType="TB_DECIMAL"  size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+    
+    <!-- 행사 조직 조회 -->
+    <gauce name="H_ORG_CD">     
+        <column colName="ORG_CD"        colType="TB_STRING"   size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NM"        colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+    </gauce> 
+    
+    <!-- 점내불출신청 -MASTER -->
+    <query name="SEL_POUTREQ">
+        <![CDATA[ 
+	   SELECT DISTINCT POU.STR_CD             
+	                 , POU.POUT_REQ_DT        
+	                 , POU.POUT_REQ_SLIP_NO   
+	                 , DECODE(POU.POUT_TYPE, '3', MEVT.ORG_CD , POU.ORG_CD) AS ORG_CD           
+	                 , ORG.ORG_NAME       
+	                 , CASE WHEN POU.CONF_FLAG='1' THEN '확정' ELSE '신청' END CONF_FLAG
+	                 , POU.POUT_TYPE         
+	                 , POU.POUT_RSN           
+	                 , EVT.EVENT_CD           
+	                 , EVT.EVENT_NAME       
+	              FROM MSS.MG_POUTREQ POU, DPS.PC_ORGMST ORG, DPS.PC_EVTMST EVT, MSS.MC_EVTMST MEVT
+	             WHERE POU.ORG_CD = ORG.ORG_CD
+	               AND POU.EVENT_CD = EVT.EVENT_CD(+)
+	               AND POU.STR_CD = MEVT.STR_CD(+)
+	               AND POU.EVENT_CD = MEVT.EVENT_CD(+)
+	               AND POU.STR_CD = ?
+	               AND POU.POUT_REQ_DT BETWEEN ? AND ?
+	               AND POU.POUT_TYPE LIKE ? || '%'
+	               AND POU.CONF_FLAG LIKE ? || '%'
+        ]]>
+    </query> 
+    
+    <!-- 점내불출신청 -MASTER-행사조건 -->
+    <query name="SEL_EVENT">
+        <![CDATA[ 
+          AND POU.EVENT_CD  LIKE ? || '%'
+        ]]>
+    </query> 
+    
+    <!-- 점내불출신청 -MASTER-ORDER BY -->
+    <query name="SEL_ORDERBY">
+        <![CDATA[ 
+		  ORDER BY POU.POUT_REQ_DT DESC, POU.STR_CD
+        ]]>
+    </query> 
+    
+    <!-- 점내불출신청상세-DETAIL -->
+    <query name="SEL_DETAIL">
+        <![CDATA[ 
+            SELECT POU.POUT_REQ_SEQ_NO
+                 , POU.GIFT_TYPE_CD
+			     , POU.GIFT_TYPE_CD || POU.GIFT_AMT_TYPE
+			     , AMT.GIFTCERT_AMT
+			     , POU.REQ_QTY
+			     , POU.REQ_AMT
+			  FROM MSS.MG_POUTREQ POU, MSS.MG_GIFTTPMST TP, MSS.MG_GIFTAMTMST AMT
+			 WHERE POU.GIFT_TYPE_CD = TP.GIFT_TYPE_CD
+			   AND POU.GIFT_TYPE_CD = AMT.GIFT_TYPE_CD
+			   AND POU.ISSUE_TYPE = AMT.ISSUE_TYPE
+			   AND POU.GIFT_AMT_TYPE = AMT.GIFT_AMT_TYPE
+			   AND POU.STR_CD = ? 
+               AND POU.POUT_REQ_SLIP_NO =?
+			   AND POU.POUT_REQ_DT = ? 
+		  ORDER BY POU.GIFT_TYPE_CD
+        ]]>
+    </query> 
+    
+     <!-- 점내불출신청상세-DETAIL -->
+    <query name="SEL_ORG_CD">
+        <![CDATA[ 
+		SELECT ORG_CD
+		     , DPS.FN_GET_ORG_NAME( SUBSTR(ORG_CD,1,2),SUBSTR(ORG_CD,3,2),SUBSTR(ORG_CD,5,2),SUBSTR(ORG_CD,7,2),'00') AS ORG_NM
+		  FROM MSS.MC_EVTMST
+		 WHERE STR_CD = ?
+		   AND EVENT_CD = ?
+        ]]>
+    </query> 
+    
+    <!-- 신규저장 -->
+    <query name="INS_POUTREQ">
+        <![CDATA[
+            INSERT INTO  MSS.MG_POUTREQ ( 
+                                       STR_CD 
+                                     , ORG_CD
+                                     , POUT_REQ_DT 
+                                     , POUT_REQ_SLIP_NO
+                                     , POUT_REQ_SEQ_NO 
+                                     , POUT_TYPE
+                                     , EVENT_CD 
+                                     , POUT_RSN 
+                                     , GIFT_TYPE_CD 
+                                     , ISSUE_TYPE 
+                                     , GIFT_AMT_TYPE
+                                     , REQ_QTY
+                                     , REQ_AMT 
+                                     , CONF_FLAG
+                                     , CONF_DT
+                                     , REG_ID
+                                     , REG_DATE
+                                     , MOD_ID 
+                                     , MOD_DATE 
+                                       )
+                   VALUES  ( 
+                           ?
+                         , ?
+                         , ?
+                         , ?
+                         , ?
+                         , ?
+                         , ?
+                         , ?
+                         , ?
+                         , '1'
+                         --, SUBSTR(X,5,2)
+                         --, SUBSTR(X,5,4)  -- 금종코드
+                         , SUBSTR(?,2,1)  -- 금종코드
+                         , ? 
+                         , ?
+                         , '9'
+                         , ''
+                         , ?
+                         , SYSDATE
+                         , ?
+                         , SYSDATE 
+                           ) 
+        ]]>
+    </query> 
+    
+      <!-- 마스터 수정 Query  -->
+    <query name="UPD_POUTREQ_M"> 
+        <![CDATA[   
+            UPDATE MSS.MG_POUTREQ
+               SET POUT_RSN         = ?
+                 , MOD_ID           = ?
+                 , MOD_DATE         = SYSDATE
+             WHERE STR_CD           = ?
+               AND POUT_REQ_DT      = ?
+               AND POUT_REQ_SLIP_NO = ?
+        ]]>        
+    </query>
+    
+    
+    <!-- 등록(수정) Query  -->
+    <query name="UPD_POUTREQ"> 
+        <![CDATA[   
+            UPDATE MSS.MG_POUTREQ
+               SET POUT_RSN         = ?
+                 , REQ_QTY          = ? 
+                 , REQ_AMT          = ? 
+                 , MOD_ID           = ?
+                 , MOD_DATE         = SYSDATE
+             WHERE STR_CD           = ?
+               AND POUT_REQ_DT      = ?
+               AND POUT_REQ_SLIP_NO = ?
+               AND POUT_REQ_SEQ_NO  = ?
+        ]]>        
+    </query>
+    
+     <!-- 점내 불출신청 상세 삭제-DETAIL -->
+    <query name="DEL_POUTREQ_SEQ">
+        <![CDATA[            
+             DELETE FROM MSS.MG_POUTREQ
+             WHERE STR_CD           = ?
+               AND POUT_REQ_DT      = ?
+               AND POUT_REQ_SLIP_NO = ?
+               AND POUT_REQ_SEQ_NO  = ? 
+        ]]>
+    </query> 
+    
+    <!--점내 불출신청 삭제-MASTER -->
+    <query name="DEL_POUTREQ_SLIP">
+        <![CDATA[
+            DELETE FROM MSS.MG_POUTREQ
+             WHERE STR_CD           = ?
+               AND POUT_REQ_DT      = ?
+               AND POUT_REQ_SLIP_NO = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_POUTREQ_SEQ">
+        <![CDATA[   
+            SELECT LPAD(TO_CHAR(MSS.SQ_MG_POUTREQ.NEXTVAL),6,'0') AS POUTREQ_SEQ
+            FROM DUAL
+        ]]>        
+    </query>
+    
+     <!-- 반품순번  조회 -->
+    <query name="SEL_SEQNO">
+        <![CDATA[        
+            SELECT NVL(MAX(POUT_REQ_SEQ_NO), 0) + 1 POUT_REQ_SEQ_NO
+              FROM MSS.MG_POUTREQ
+             WHERE STR_CD           = ?
+               AND POUT_REQ_DT      = ?
+               AND POUT_REQ_SLIP_NO = ?
+        ]]> 
+    </query>
+    
+    
+    <!-- 상품권종류&금종 조회 -->
+     <gauce name="H_ETCCODE">
+        <column colName="CODE"      colType="TB_STRING"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TYPE"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     </gauce>
+    <!-- 조회 Query-상품권종류 -->
+    <query name="SEL_ETCCODE_SELECT"> 
+        <![CDATA[   
+            SELECT GIFT_TYPE_CD AS CODE
+                 , GIFT_TYPE_NAME AS NAME  
+                 , '' AS TYPE 
+              FROM MSS.MG_GIFTTPMST
+             WHERE GIFT_TYPE_FLAG = '01'
+          ORDER BY GIFT_TYPE_CD
+        ]]>        
+    </query>
+    <!-- 조회 Query-금종 -->
+    <query name="SEL_ETCCODE_SELECT2"> 
+        <![CDATA[   
+            SELECT GIFT_TYPE_CD || GIFT_AMT_TYPE AS CODE
+                 , GIFT_AMT_NAME AS NAME
+                 , GIFT_TYPE_CD  AS TYPE
+              FROM MSS.MG_GIFTAMTMST 
+             WHERE ISSUE_TYPE = '1'
+               AND USE_YN = 'Y'
+          ORDER BY GIFT_TYPE_CD, GIFT_AMT_TYPE
+        ]]>        
+    </query>
+    
+    <!-- 상품권종류에 대한 금종 조회 -->
+     <gauce name="H_GIFT_AMT">
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+     </gauce>
+    <!-- 조회 Query-상품권종류 -->
+    <query name="SEL_GIFT_AMT"> 
+        <![CDATA[   
+            SELECT GIFTCERT_AMT    
+			  FROM MSS.MG_GIFTAMTMST
+			 WHERE GIFT_TYPE_CD = ? 
+			   AND GIFT_AMT_TYPE = SUBSTR( ?, -1)
+			   --AND GIFT_AMT_TYPE = SUBSTR( X,-4)
+        ]]>        
+    </query>
+
+
+</service>

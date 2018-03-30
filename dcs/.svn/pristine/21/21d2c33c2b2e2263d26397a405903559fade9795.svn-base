@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 한국후지쯔
+ * 작 성 일    : 2010.03.18
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  전자쿠폰사용조회
+ -->
+<service name="/dmbo403.do">
+    <!-- 전자쿠폰사용조회  상단-->
+    <gauce name="H_MASTER"> 
+        <column colName="CUST_ID"        colType="TB_STRING"   size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"      colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"          colType="TB_STRING"   size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_COUNT"      colType="TB_DECIMAL"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_COUNT"      colType="TB_DECIMAL"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REST_COUNT"     colType="TB_DECIMAL"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="REMARK"         colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <!-- 전자쿠폰사용조회  하단-->
+    <gauce name="H_DETAIL"> 
+        <column colName="CUST_ID"        colType="TB_STRING"   size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"      colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"          colType="TB_STRING"   size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_ID"         colType="TB_STRING"   size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_FLAG"       colType="TB_STRING"   size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_DT"         colType="TB_STRING"   size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"         colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 전자쿠폰사용조회  상단 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.CUST_ID
+                 , C.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', C.SS_NO) AS SS_NO
+                 , COUNT(A.CPN_ID) CPN_COUNT
+                 , COUNT(B.USE_DT) USE_COUNT
+                 , COUNT(A.CPN_ID) - COUNT(B.USE_DT) REST_COUNT
+                 , '' REMARK
+                 , A.STR_CD
+              FROM DCS.DO_E_COUPON A
+                 , DCS.DO_E_CPN_USE B
+                 , DCS.DM_CUSTOMER C
+             WHERE A.STR_CD   =  B.STR_CD (+)
+               AND A.CUST_ID  =  B.CUST_ID (+)
+               AND A.CPN_ID   =  B.CPN_ID (+)
+               AND A.CUST_ID  =  C.CUST_ID
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_CUST_ID">        
+        <![CDATA[
+        	AND C.CUST_ID  = ? 
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_SS_NO">        
+        <![CDATA[
+        	AND C.SS_NO    = DCS.SC_Crypto_FUN('ENC', ?) 
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_CARD_NO">        
+        <![CDATA[
+        	AND C.CUST_ID  IN ( 
+                                   SELECT CUST_ID 
+                                     FROM DCS.DM_CARD 
+                                    WHERE CARD_NO = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+                                 )
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_GROUP">        
+        <![CDATA[
+        	GROUP BY A.CUST_ID
+                    , C.CUST_NAME
+                    , C.SS_NO
+                    , A.STR_CD
+             ORDER BY A.CUST_ID
+                    , C.CUST_NAME
+                    , C.SS_NO
+        ]]>        
+    </query>
+    
+    <!-- 전자쿠폰사용조회   하단 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT A.CUST_ID
+                 , C.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', C.SS_NO) AS SS_NO
+                 , A.CPN_ID
+                 , DECODE(B.USE_DT, NULL, 'N', 'Y') USE_FLAG
+                 , TO_CHAR(B.REG_DATE, 'YYYYMMDDHH24MISS') USE_DT
+                 , '' REMARK
+              FROM DCS.DO_E_COUPON A
+                 , DCS.DO_E_CPN_USE B
+                 , DCS.DM_CUSTOMER C
+             WHERE A.STR_CD   =  B.STR_CD (+)
+               AND A.CUST_ID  =  B.CUST_ID (+)
+               AND A.CPN_ID   =  B.CPN_ID (+)
+               AND A.CUST_ID  =  C.CUST_ID
+               AND A.STR_CD   =  ?
+               AND A.CUST_ID  =  ? 
+             ORDER BY A.CUST_ID
+                    , A.CPN_ID
+        ]]>        
+    </query>
+</service>    

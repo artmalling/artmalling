@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.06.21
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 공지사항팝업
+ -->
+<service name="/ccom914.cc">	  
+
+    <gauce name="H_NOTICE">
+        <column colName="NOTI_ID"       colType="TB_STRING" size="12"       dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="NOTI_TITLE"    colType="TB_STRING" size="500"      dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="NOTI_CONTENT"  colType="TB_STRING" size="255"      dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="S_DATE"        colType="TB_STRING" size="13"       dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="E_DATE"        colType="TB_STRING" size="13"       dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="SEND_TO_ALL"   colType="TB_STRING" size="10"        dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="USER_ID"       colType="TB_STRING" size="10"       dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="USER_NAME"     colType="TB_STRING" size="40"       dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEL1"          colType="TB_STRING" size="4"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEL2"          colType="TB_STRING" size="4"        dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="TEL3"          colType="TB_STRING" size="4"        dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+        <column colName="FILE_NM"       colType="TB_STRING" size="100"      dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce> 
+    
+    <!-- 팝업 : 데이터 조회 -->
+    <query name="SEL_NOTICE">
+        <![CDATA[     
+			SELECT NOTI_ID
+			     , NOTI_TITLE
+			     , ? AS NOTI_CONTENT
+			     , TO_CHAR(TO_DATE(S_DATE), 'YYYY/MM/DD') S_DATE
+			     , TO_CHAR(TO_DATE(E_DATE), 'YYYY/MM/DD') E_DATE
+			     , DECODE(SEND_TO_ALL ,'Y', '전체', '팀') 	AS SEND_TO_ALL
+			     , MOD_ID                       			AS USER_ID
+			     , COM.FN_GET_USER_NAME(MOD_ID) 			AS USER_NAME
+			     , TEL1
+			     , TEL2
+			     , TEL3   
+			     , FILE_NM
+			  FROM COM.TC_NOTI
+			 WHERE NOTI_ID = ? 
+        ]]>
+    </query> 
+         
+    <!-- 팝업 : 데이터2-->
+    <gauce name="H_NOTICE_DEPT">
+        <column colName="NOTI_ID"   colType="TB_STRING" size="12"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="ORG_CD"    colType="TB_STRING" size="10"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_CD"    colType="TB_STRING" size="10"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="STR_NAME"  colType="TB_STRING" size="50"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_CD"   colType="TB_STRING" size="10"     dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="DEPT_NAME" colType="TB_STRING" size="50"     dec="0" keyType="TB_NORMAL"  roundMode="" /> 
+    </gauce> 
+    
+    <!-- 부문데이터 조회 -->
+    <query name="SEL_NOTICE_DEPT">
+        <![CDATA[     
+			SELECT A.NOTI_ID 
+			     , A.ORG_CD                                               AS ORG_CD
+			     , SUBSTR(A.ORG_CD, 1, 2)                                 AS STR_CD
+			     , DPS.FN_GET_STORE_NAME(SUBSTR(A.ORG_CD, 1, 2))          AS STR_NAME
+			     , DECODE(B.ORG_LEVEL,'2',SUBSTR(A.ORG_CD, 3, 2),'')      AS DEPT_CD
+			     , DECODE(B.ORG_LEVEL,'2',DPS.FN_GET_ORG_NAME( SUBSTR(A.ORG_CD, 1, 2)
+			                          , SUBSTR(A.ORG_CD, 3, 2)
+			                          , '00','00','00')  ,'')             AS DEPT_NAME 
+			  FROM COM.TC_NOTI_RECV A 
+			     , DPS.PC_ORGMST    B
+			 WHERE A.ORG_CD = B.ORG_CD(+) 
+	           AND A.NOTI_ID = ? 
+        ]]>
+    </query>
+    
+    <!-- 공지사항 조회한 사용자 등록 -->
+    <query name="INS_NOTI_USER_ID">
+        <![CDATA[     
+			INSERT INTO COM.TC_NOTI_USER_ID (NOTI_ID, USER_ID, FIR_READ_DATE)
+					VALUES (?, ?, SYSDATE)
+        ]]>
+    </query>
+    
+    <!-- 공지사항 조회한 사용자 존재여부 확인 -->
+    <query name="SEL_NOTI_USER_ID">
+        <![CDATA[     
+			SELECT COUNT(*) AS CNT
+			  FROM COM.TC_NOTI_USER_ID
+			 WHERE NOTI_ID = ?
+			   AND USER_ID = ?
+        ]]>
+    </query>
+    
+</service>

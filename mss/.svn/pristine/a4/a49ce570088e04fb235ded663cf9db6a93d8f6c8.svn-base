@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.10
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  연료비 조정단가 관리
+ -->
+<service name="/mren113.mr">
+  
+    <!--  연료비 조정단가 헤더 -->
+    <gauce name="H_MASTER">
+        <column colName="CHK"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="YM"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FUELSET_PRC"       colType="TB_DECIMAL"  size="12"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+   
+   <gauce name="H_SEL_DUP_KEYVALUE">
+        <column colName="DUPVALUE"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 연료비 조정단가 조회  -->
+    <query name="SEL_MR_FUELSETPRC"> 
+        <![CDATA[   
+	        SELECT 'F' AS CHK,
+	               YM,
+			       FUELSET_PRC
+			  FROM MSS.MR_FUELSETPRC
+			 WHERE YM LIKE ?||'%'
+		  ORDER BY YM
+
+        ]]>        
+    </query>
+    
+ 
+    <!-- 연료비 조정단가 등록  -->
+    <query name="INS_MR_FUELSETPRC"> 
+        <![CDATA[   
+          INSERT INTO MSS.MR_FUELSETPRC (
+                            YM
+                           ,FUELSET_PRC
+                           ,REG_ID
+                           ,REG_DATE
+                           ,MOD_ID
+                           ,MOD_DATE
+                           )
+                   VALUES (
+                            ?
+                           ,?
+                           ,?
+                           ,SYSDATE
+                           ,?
+                           ,SYSDATE
+                            )
+        ]]>        
+    </query>
+    
+    <!-- 연료비 조정단가  수정 -->
+    <query name="UPD_MR_FUELSETPRC"> 
+        <![CDATA[   
+            UPDATE MSS.MR_FUELSETPRC
+			   SET FUELSET_PRC = ?
+			       ,MOD_ID = ?
+			       ,MOD_DATE = SYSDATE
+			 WHERE YM = ?
+        ]]>        
+    </query>
+    
+    <!-- 연료비 조정단가 삭제  -->
+    <query name="DEL_MR_FUELSETPRC"> 
+        <![CDATA[   
+           DELETE MSS.MR_FUELSETPRC
+            WHERE YM = ?
+        ]]>        
+    </query>
+    
+    <!-- 키값체크 Query  -->
+    <query name="SEL_DUP_KEYVALUE"> 
+        <![CDATA[ 
+        SELECT DISTINCT DUPVALUE
+          FROM (
+        ]]>        
+    </query>
+    <!-- 키값체크 Query  -->
+    <query name="SEL_SUB_DUP_KEYVALUE"> 
+        <![CDATA[ 
+            SELECT YM AS DUPVALUE
+              FROM MSS.MR_FUELSETPRC
+             WHERE YM = ?
+        ]]>        
+    </query>
+    <query name="SEL_DUP_UNIONALL"> 
+                UNION ALL
+    </query>
+    <query name="SEL_DUP_CLOSE"> 
+        )
+    </query>
+    
+</service>

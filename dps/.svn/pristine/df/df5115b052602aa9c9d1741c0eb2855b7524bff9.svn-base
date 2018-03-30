@@ -1,0 +1,1833 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal314.ps">
+
+    <gauce name="H_SEL_MASTER">
+        <column colName="SEQ" 				colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD" 			colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"			colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EXPECT_AMT"		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIME"				colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT1"			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT1" 		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT2"			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT2"			colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="D_SALE_AMT1"		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="D_SALE_AMT2"		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_D_SALE_AMT1"	colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_D_SALE_AMT2"	colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+	<gauce name="H_SEL_MASTER2"> 
+		<column colName="SEQ" 				colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"			colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIME"				colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="D_SALE_AMT1"		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="D_SALE_AMT2" 		colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_D_SALE_AMT1"	colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_D_SALE_AMT2"	colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                
+    </gauce>
+   	
+   	 
+    <gauce name="H_SEL_CMPRDT"> 
+        <column colName="CMPR_DT"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 당초팀별월매출계획 조회 쿼리  -->
+   
+    <query name="SEL_TIMESALEPUMBUN">        
+        <![CDATA[
+		    SELECT 
+		    	   Y.SEQ  AS SEQ
+		    	 , ORG_CD
+		         , (SELECT PUMBUN_NAME FROM DPS.PC_PBNMST WHERE PUMBUN_CD =  Y.ORG_CD) AS ORG_NAME
+		         , EXPECT_AMT
+		         , TIME
+		         , SALE_AMT1
+		         , CUST_CNT1
+		         , SALE_AMT2
+		         , CUST_CNT2
+		         , CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END AS D_SALE_AMT1
+		         , CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END AS D_SALE_AMT2
+			     , SUM(CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT1
+                 , SUM(CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT2		         
+		      FROM (
+		            SELECT X.SEQ  AS SEQ
+		            	 , A0.ORG_CD AS ORG_CD
+		                 , X.EXPECT_AMT          AS EXPECT_AMT
+		                 , A0.TIME               AS TIME
+		                 , SUM(A0.TOT_SALE_AMT1) AS SALE_AMT1
+		                 , SUM(A0.CUST_CNT1    ) AS CUST_CNT1
+		                 , SUM(A0.TOT_SALE_AMT2) AS SALE_AMT2
+		                 , SUM(A0.CUST_CNT2    ) AS CUST_CNT2
+		              FROM (
+		              SELECT ROWNUM AS SEQ,ORG_CD,EXPECT_AMT,TOT_SALE_AMT1,CUST_CNT1 FROM  (
+		              SELECT G.ORG_CD AS ORG_CD
+		                         , CASE WHEN ? = TO_CHAR(SYSDATE, 'YYYYMMDD') THEN CASE WHEN SUM(NVL(G.TOT_SALE_AMT_CMP,0)) = 0 THEN SUM(NVL(G.TOT_SALE_AMT,0)) + SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) ELSE SUM(NVL(G.TOT_SALE_AMT,0)) + (SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) * (SUM(NVL(G.TOT_SALE_AMT,0)) / (SUM(NVL(G.TOT_SALE_AMT_CMP,0))))) END
+		                                ELSE SUM(NVL(G.TOT_SALE_AMT,0)) END AS EXPECT_AMT
+		                         , SUM(TOT_SALE_AMT1) AS TOT_SALE_AMT1
+		                         , SUM(CUST_CNT1) AS CUST_CNT1
+		                      FROM (SELECT A.PUMBUN_CD AS ORG_CD
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1  -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1      -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2  -- 비교일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2      -- 비교일자
+		                              FROM DPS.PS_TIMEPBN A
+		                                     , DPS.PC_ORGMST  B
+		                                     , DPS.PC_STRPBN C
+		                             WHERE B.ORG_CD = C.SALE_ORG_CD
+		                               AND A.STR_CD = C.STR_CD
+		                               AND A.PUMBUN_CD = C.PUMBUN_CD
+		                               AND B.STR_CD    LIKE ? || '%'
+		                               AND B.DEPT_CD   LIKE ? || '%'
+		                               AND B.TEAM_CD   LIKE ? || '%'
+		                               AND B.PC_CD     LIKE ? || '%'
+		                               AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                 AND EXISTS ( SELECT MYORG.USER_ID
+		                                               FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = B.STR_CD
+		                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                               AND MYORG.PC_CD       = B.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = A.STR_CD
+			                                               AND COMM_CODE  = A.PUMBUN_CD
+			                                          )
+		                             GROUP BY
+		                                   A.PUMBUN_CD
+		                           ) A, 
+		                           (SELECT F.PUMBUN_CD  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME >  TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                      , DPS.PC_ORGMST G
+		                                      , DPS.PC_STRPBN H
+		                             WHERE G.ORG_CD    = H.SALE_ORG_CD
+		                               AND F.STR_CD = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS ( SELECT MYORG.USER_ID
+		                                              FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = G.STR_CD
+		                                               AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                               AND MYORG.PC_CD       = G.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? = TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   F.PUMBUN_CD
+		                             UNION ALL
+		                            SELECT F.PUMBUN_CD  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST  G
+		                                     , DPS.PC_STRPBN H
+		                             WHERE G.ORG_CD    = H.SALE_ORG_CD
+		                               AND F.STR_CD = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS (SELECT MYORG.USER_ID
+		                                             FROM COM.V_MYORG MYORG
+		                                            WHERE MYORG.STR_CD      = G.STR_CD
+		                                              AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                              AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                              AND MYORG.PC_CD       = G.PC_CD
+		                                              AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? <> TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   F.PUMBUN_CD
+		                           ) G 
+		                     WHERE A.ORG_CD     = G.ORG_CD(+)
+		                     GROUP BY
+		                           G.ORG_CD
+							 ORDER BY 1
+		                  )) X
+		                 ,(SELECT ORG_CD
+		                        , CASE WHEN TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) = '22' THEN '21'||'시 이후 ~'
+		                               ELSE ' ~' || TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) || '시'
+		                          END TIME
+		                        , TOT_SALE_AMT1
+		                        , CUST_CNT1
+		                        , TOT_SALE_AMT2
+		                        , CUST_CNT2
+		                     FROM (
+		                           SELECT XX.ORG_CD
+		                                , C.COMM_CODE AS TIME
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT1 ELSE 0 END TOT_SALE_AMT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT1     ELSE 0 END CUST_CNT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT2 ELSE 0 END TOT_SALE_AMT2
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT2     ELSE 0 END CUST_CNT2
+		                             FROM (
+		                                   SELECT A.PUMBUN_CD AS ORG_CD
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END AS TIME
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1 -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1     -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2 -- 비교일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2    -- 비교일자
+		                                     FROM DPS.PS_TIMEPBN A
+		                                            , DPS.PC_ORGMST  B
+		                                            , DPS.PC_STRPBN C
+		                                    WHERE B.ORG_CD    = C.SALE_ORG_CD
+		                                      AND A.STR_CD = C.STR_CD
+		                                      AND A.PUMBUN_CD = C.PUMBUN_CD
+		                                      AND B.STR_CD    LIKE ? || '%'
+		                                      AND B.DEPT_CD   LIKE ? || '%'
+		                                      AND B.TEAM_CD   LIKE ? || '%'
+		                                      AND B.PC_CD     LIKE ? || '%'
+		                                      AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                      AND EXISTS ( SELECT MYORG.USER_ID
+		                                                     FROM COM.V_MYORG MYORG
+		                                                    WHERE MYORG.STR_CD      = B.STR_CD
+		                                                      AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                                      AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                                      AND MYORG.PC_CD       = B.PC_CD
+		                                                      AND MYORG.USER_ID     = ?
+		                                                 )
+					                           AND NOT EXISTS (
+					                                            SELECT *
+					                                              FROM COM.TC_COMMCODE
+					                                             WHERE SYS_PART   = 'D'
+					                                               AND COMM_PART  = 'D213'
+					                                               AND USE_YN     = 'Y'
+					                                               AND REFER_CODE = A.STR_CD
+					                                               AND COMM_CODE  = A.PUMBUN_CD
+					                                          )
+		                                    GROUP BY
+		                                          A.PUMBUN_CD
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END
+		                                  ) XX, COM.TC_COMMCODE C
+		                            WHERE C.SYS_PART = 'D' 
+		                              AND C.COMM_PART = 'M059' 
+		                              AND C.COMM_CODE BETWEEN '09' AND '21'
+		                          ) X
+		                   ) A0 
+		             WHERE A0.ORG_CD     = X.ORG_CD(+)
+		             GROUP BY
+		                   A0.ORG_CD
+		                 , A0.TIME
+		                 , X.EXPECT_AMT
+		                 , X.SEQ
+		           ) Y
+		     ORDER BY
+		           Y.ORG_CD
+		         , Y.TIME
+				 , SEQ
+--------------------------------------------------------------------------------1				 
+        ]]>        
+    </query>
+     <query name="SEL_TIMESALEPUMBUN2">        
+        <![CDATA[
+		    SELECT Y.SEQ  AS SEQ
+		    	 , ORG_CD
+		         , (SELECT PUMBUN_NAME FROM DPS.PC_PBNMST WHERE PUMBUN_CD =  Y.ORG_CD) AS ORG_NAME
+		         , EXPECT_AMT
+		         , TIME
+		         , SALE_AMT1
+		         , CUST_CNT1
+		         , SALE_AMT2
+		         , CUST_CNT2
+		         , CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END AS D_SALE_AMT1
+		         , CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END AS D_SALE_AMT2
+			     , SUM(CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT1
+                 , SUM(CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT2		         
+		      FROM (
+		            SELECT X.SEQ  AS SEQ
+						 , A0.ORG_CD AS ORG_CD
+		                 , X.EXPECT_AMT          AS EXPECT_AMT
+		                 , A0.TIME               AS TIME
+		                 , SUM(A0.TOT_SALE_AMT1) AS SALE_AMT1
+		                 , SUM(A0.CUST_CNT1    ) AS CUST_CNT1
+		                 , SUM(A0.TOT_SALE_AMT2) AS SALE_AMT2
+		                 , SUM(A0.CUST_CNT2    ) AS CUST_CNT2
+		              FROM (
+		              SELECT ROWNUM AS SEQ,ORG_CD,EXPECT_AMT,TOT_SALE_AMT1,CUST_CNT1 FROM  (
+		              SELECT G.ORG_CD AS ORG_CD
+		                         , CASE WHEN ? = TO_CHAR(SYSDATE, 'YYYYMMDD') THEN CASE WHEN SUM(NVL(G.TOT_SALE_AMT_CMP,0)) = 0 THEN SUM(NVL(G.TOT_SALE_AMT,0)) + SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) ELSE SUM(NVL(G.TOT_SALE_AMT,0)) + (SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) * (SUM(NVL(G.TOT_SALE_AMT,0)) / (SUM(NVL(G.TOT_SALE_AMT_CMP,0))))) END
+		                                ELSE SUM(NVL(G.TOT_SALE_AMT,0)) END AS EXPECT_AMT
+		                         , SUM(TOT_SALE_AMT1) AS TOT_SALE_AMT1
+		                         , SUM(CUST_CNT1) AS CUST_CNT1
+		                      FROM (SELECT A.PUMBUN_CD AS ORG_CD
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1  -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1      -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2  -- 비교일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2      -- 비교일자
+		                              FROM DPS.PS_TIMEPBN A
+		                                     , DPS.PC_ORGMST  B
+		                                     , DPS.PC_STRPBN C
+		                             WHERE B.ORG_CD = C.BUY_ORG_CD
+		                               AND A.STR_CD = C.STR_CD
+		                               AND A.PUMBUN_CD = C.PUMBUN_CD
+		                               AND B.STR_CD    LIKE ? || '%'
+		                               AND B.DEPT_CD   LIKE ? || '%'
+		                               AND B.TEAM_CD   LIKE ? || '%'
+		                               AND B.PC_CD     LIKE ? || '%'
+		                               AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                 AND EXISTS ( SELECT MYORG.USER_ID
+		                                               FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = B.STR_CD
+		                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                               AND MYORG.PC_CD       = B.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = A.STR_CD
+			                                               AND COMM_CODE  = A.PUMBUN_CD
+			                                          )
+		                             GROUP BY
+		                                   A.PUMBUN_CD
+		                           ) A, 
+		                           (SELECT F.PUMBUN_CD  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME >  TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                      , DPS.PC_ORGMST G
+		                                      , DPS.PC_STRPBN H
+		                             WHERE G.ORG_CD    = H.BUY_ORG_CD
+		                               AND F.STR_CD = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS ( SELECT MYORG.USER_ID
+		                                              FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = G.STR_CD
+		                                               AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                               AND MYORG.PC_CD       = G.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? = TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   F.PUMBUN_CD
+		                             UNION ALL
+		                            SELECT F.PUMBUN_CD  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST  G
+		                                     , DPS.PC_STRPBN H
+		                             WHERE G.ORG_CD    = H.BUY_ORG_CD
+		                               AND F.STR_CD = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS (SELECT MYORG.USER_ID
+		                                             FROM COM.V_MYORG MYORG
+		                                            WHERE MYORG.STR_CD      = G.STR_CD
+		                                              AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                              AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                              AND MYORG.PC_CD       = G.PC_CD
+		                                              AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? <> TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   F.PUMBUN_CD
+		                           ) G 
+		                     WHERE A.ORG_CD     = G.ORG_CD(+)
+		                     GROUP BY
+		                           G.ORG_CD
+		                     ORDER BY 1
+		                  )) X
+		                 ,(SELECT ORG_CD
+		                        , CASE WHEN TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) = '22' THEN '21'||'시 이후 ~'
+		                               ELSE ' ~' || TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) || '시'
+		                          END TIME
+		                        , TOT_SALE_AMT1
+		                        , CUST_CNT1
+		                        , TOT_SALE_AMT2
+		                        , CUST_CNT2
+		                     FROM (
+		                           SELECT XX.ORG_CD
+		                                , C.COMM_CODE AS TIME
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT1 ELSE 0 END TOT_SALE_AMT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT1     ELSE 0 END CUST_CNT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT2 ELSE 0 END TOT_SALE_AMT2
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT2     ELSE 0 END CUST_CNT2
+		                             FROM (
+		                                   SELECT A.PUMBUN_CD AS ORG_CD
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END AS TIME
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1 -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1     -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2 -- 비교일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2    -- 비교일자
+		                                     FROM DPS.PS_TIMEPBN A
+		                                            , DPS.PC_ORGMST  B
+		                                            , DPS.PC_STRPBN C
+		                                    WHERE B.ORG_CD    = C.BUY_ORG_CD
+		                                      AND A.STR_CD = C.STR_CD
+		                                      AND A.PUMBUN_CD = C.PUMBUN_CD
+		                                      AND B.STR_CD    LIKE ? || '%'
+		                                      AND B.DEPT_CD   LIKE ? || '%'
+		                                      AND B.TEAM_CD   LIKE ? || '%'
+		                                      AND B.PC_CD     LIKE ? || '%'
+		                                      AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                      AND EXISTS ( SELECT MYORG.USER_ID
+		                                                     FROM COM.V_MYORG MYORG
+		                                                    WHERE MYORG.STR_CD      = B.STR_CD
+		                                                      AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                                      AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                                      AND MYORG.PC_CD       = B.PC_CD
+		                                                      AND MYORG.USER_ID     = ?
+		                                                 )
+					                           AND NOT EXISTS (
+					                                            SELECT *
+					                                              FROM COM.TC_COMMCODE
+					                                             WHERE SYS_PART   = 'D'
+					                                               AND COMM_PART  = 'D213'
+					                                               AND USE_YN     = 'Y'
+					                                               AND REFER_CODE = A.STR_CD
+					                                               AND COMM_CODE  = A.PUMBUN_CD
+					                                          )
+		                                    GROUP BY
+		                                          A.PUMBUN_CD
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END
+		                                  ) XX, COM.TC_COMMCODE C
+		                            WHERE C.SYS_PART = 'D' 
+		                              AND C.COMM_PART = 'M059' 
+		                              AND C.COMM_CODE BETWEEN '09' AND '21'
+		                          ) X
+		                   ) A0 
+		             WHERE A0.ORG_CD     = X.ORG_CD(+)
+		             GROUP BY
+		                   A0.ORG_CD
+		                 , A0.TIME
+		                 , X.EXPECT_AMT
+		                 , X.SEQ
+		           ) Y
+		     ORDER BY
+		           Y.ORG_CD
+		         , Y.TIME
+		         , SEQ
+--------------------------------------------------------------------------------2		         
+        ]]>        
+    </query>
+    
+    
+    <query name="SEL_TIMESALEPC">        
+        <![CDATA[
+		    SELECT Y.SEQ AS SEQ
+		    	 , ORG_CD
+		         , (SELECT ORG_SHORT_NAME FROM DPS.PC_ORGMST WHERE ORG_CD =  Y.ORG_CD) AS ORG_NAME
+		         , EXPECT_AMT
+		         , TIME
+		         , SALE_AMT1
+		         , CUST_CNT1
+		         , SALE_AMT2
+		         , CUST_CNT2
+		         , CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END AS D_SALE_AMT1
+		         , CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END AS D_SALE_AMT2
+			     , SUM(CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT1
+                 , SUM(CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT2		         
+		      FROM (
+		            SELECT X.SEQ  AS SEQ
+		            	 , A0.ORG_CD AS ORG_CD
+		                 , X.EXPECT_AMT          AS EXPECT_AMT
+		                 , A0.TIME               AS TIME
+		                 , SUM(A0.TOT_SALE_AMT1) AS SALE_AMT1
+		                 , SUM(A0.CUST_CNT1    ) AS CUST_CNT1
+		                 , SUM(A0.TOT_SALE_AMT2) AS SALE_AMT2
+		                 , SUM(A0.CUST_CNT2    ) AS CUST_CNT2
+		              FROM (
+		              SELECT ROWNUM AS SEQ,ORG_CD,EXPECT_AMT,TOT_SALE_AMT1,CUST_CNT1 FROM  (
+		              		SELECT LPAD(G.ORG_CD, 8) || '00' AS ORG_CD
+		                         , CASE WHEN ? = TO_CHAR(SYSDATE, 'YYYYMMDD') THEN CASE WHEN SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) = 0 THEN SUM(NVL(G.TOT_SALE_AMT,0)) + SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) ELSE SUM(NVL(G.TOT_SALE_AMT,0)) + (SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) * (SUM(NVL(G.TOT_SALE_AMT,0)) / (SUM(NVL(G.TOT_SALE_AMT_CMP,0))))) END
+		                                ELSE SUM(NVL(G.TOT_SALE_AMT,0)) END AS EXPECT_AMT
+		                         , SUM(TOT_SALE_AMT1) AS TOT_SALE_AMT1
+		                         , SUM(CUST_CNT1) AS CUST_CNT1
+		                      FROM (SELECT LPAD(C.SALE_ORG_CD,8) || '00' AS ORG_CD
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1  -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1      -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2  -- 비교일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2      -- 비교일자
+		                              FROM DPS.PS_TIMEPBN   A
+		                                      , DPS.PC_ORGMST  B
+		                                      , DPS.PC_STRPBN   C
+		                             WHERE B.ORG_CD = C.SALE_ORG_CD
+		                               AND A.STR_CD = C.STR_CD
+		                               AND A.PUMBUN_CD = C.PUMBUN_CD
+		                               AND B.STR_CD    LIKE ? || '%'
+		                               AND B.DEPT_CD   LIKE ? || '%'
+		                               AND B.TEAM_CD   LIKE ? || '%'
+		                               AND B.PC_CD     LIKE ? || '%'
+		                               AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                 AND EXISTS ( SELECT MYORG.USER_ID
+		                                               FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = B.STR_CD
+		                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                               AND MYORG.PC_CD       = B.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = A.STR_CD
+			                                               AND COMM_CODE  = A.PUMBUN_CD
+			                                          )
+		                             GROUP BY
+		                                   LPAD(C.SALE_ORG_CD,8)
+		                           ) A, 
+		                           (SELECT SUBSTR(H.SALE_ORG_CD,1,8) || '00'  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME >  TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST G
+		                                     , DPS.PC_STRPBN  H
+		                             WHERE G.ORG_CD    = H.SALE_ORG_CD
+		                               AND F.STR_CD    = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS ( SELECT MYORG.USER_ID
+		                                              FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = G.STR_CD
+		                                               AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                               AND MYORG.PC_CD       = G.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? = TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   SUBSTR(H.SALE_ORG_CD,1,8) || '00'
+		                             UNION ALL
+		                            SELECT SUBSTR(H.SALE_ORG_CD,1,8) || '00'  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST  G
+		                                    , DPS.PC_STRPBN  H
+		                             WHERE G.ORG_CD    = H.SALE_ORG_CD
+		                               AND F.STR_CD    = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS (SELECT MYORG.USER_ID
+		                                             FROM COM.V_MYORG MYORG
+		                                            WHERE MYORG.STR_CD      = G.STR_CD
+		                                              AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                              AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                              AND MYORG.PC_CD       = G.PC_CD
+		                                              AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? <> TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   SUBSTR(H.SALE_ORG_CD,1,8) || '00'
+		                           ) G 
+		                     WHERE A.ORG_CD     = G.ORG_CD(+)
+		                     GROUP BY
+		                           LPAD(G.ORG_CD, 8)
+		                     ORDER BY 1
+		                  )) X
+		                 ,(SELECT ORG_CD
+		                        , CASE WHEN TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) = '22' THEN '21'||'시 이후 ~'
+		                               ELSE ' ~' || TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) || '시'
+		                          END TIME
+		                        , TOT_SALE_AMT1
+		                        , CUST_CNT1
+		                        , TOT_SALE_AMT2
+		                        , CUST_CNT2
+		                     FROM (
+		                           SELECT XX.ORG_CD
+		                                , C.COMM_CODE AS TIME
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT1 ELSE 0 END TOT_SALE_AMT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT1     ELSE 0 END CUST_CNT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT2 ELSE 0 END TOT_SALE_AMT2
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT2     ELSE 0 END CUST_CNT2
+		                             FROM (
+		                                   SELECT LPAD(C.SALE_ORG_CD,8) || '00' AS ORG_CD
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END AS TIME
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1 -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1     -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2 -- 비교일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2    -- 비교일자
+		                                     FROM DPS.PS_TIMEPBN A
+		                                            , DPS.PC_ORGMST  B
+		                                            , DPS.PC_STRPBN C
+		                                    WHERE B.ORG_CD    = C.SALE_ORG_CD
+		                                      AND A.STR_CD    = C.STR_CD
+		                                      AND A.PUMBUN_CD = C.PUMBUN_CD
+		                                      AND B.STR_CD    LIKE ? || '%'
+		                                      AND B.DEPT_CD   LIKE ? || '%'
+		                                      AND B.TEAM_CD   LIKE ? || '%'
+		                                      AND B.PC_CD     LIKE ? || '%'
+		                                      AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                      AND EXISTS ( SELECT MYORG.USER_ID
+		                                                     FROM COM.V_MYORG MYORG
+		                                                    WHERE MYORG.STR_CD      = B.STR_CD
+		                                                      AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                                      AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                                      AND MYORG.PC_CD       = B.PC_CD
+		                                                      AND MYORG.USER_ID     = ?
+		                                                 )
+					                           AND NOT EXISTS (
+					                                            SELECT *
+					                                              FROM COM.TC_COMMCODE
+					                                             WHERE SYS_PART   = 'D'
+					                                               AND COMM_PART  = 'D213'
+					                                               AND USE_YN     = 'Y'
+					                                               AND REFER_CODE = A.STR_CD
+					                                               AND COMM_CODE  = A.PUMBUN_CD
+					                                          )
+		                                    GROUP BY
+		                                          LPAD(C.SALE_ORG_CD,8)
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END
+		                                    ORDER BY 1,2
+		                                  ) XX, COM.TC_COMMCODE C
+		                            WHERE C.SYS_PART = 'D' 
+		                              AND C.COMM_PART = 'M059' 
+		                              AND C.COMM_CODE BETWEEN '09' AND '21'
+		                          ) X
+		                   ) A0 
+		             WHERE A0.ORG_CD     = X.ORG_CD(+)
+		             GROUP BY
+		              	   X.SEQ
+		                 , A0.ORG_CD
+		                 , A0.TIME
+		                 , X.EXPECT_AMT
+		           ) Y
+					 ORDER BY 1,5
+--------------------------------------------------------------------------------3		         
+        ]]>        
+    </query>
+    <query name="SEL_TIMESALEPC2">        
+        <![CDATA[
+		    SELECT Y.SEQ  AS SEQ
+		    	 , ORG_CD
+		         , (SELECT ORG_SHORT_NAME FROM DPS.PC_ORGMST WHERE ORG_CD =  Y.ORG_CD) AS ORG_NAME
+		         , EXPECT_AMT
+		         , TIME
+		         , SALE_AMT1
+		         , CUST_CNT1
+		         , SALE_AMT2
+		         , CUST_CNT2
+		         , CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END AS D_SALE_AMT1
+		         , CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END AS D_SALE_AMT2
+			     , SUM(CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT1
+                 , SUM(CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT2		         
+		      FROM (
+		            SELECT X.SEQ  AS SEQ 
+ 			             , A0.ORG_CD AS ORG_CD
+		                 , X.EXPECT_AMT          AS EXPECT_AMT
+		                 , A0.TIME               AS TIME
+		                 , SUM(A0.TOT_SALE_AMT1) AS SALE_AMT1
+		                 , SUM(A0.CUST_CNT1    ) AS CUST_CNT1
+		                 , SUM(A0.TOT_SALE_AMT2) AS SALE_AMT2
+		                 , SUM(A0.CUST_CNT2    ) AS CUST_CNT2
+		              FROM (
+		              SELECT ROWNUM AS SEQ,ORG_CD,EXPECT_AMT,TOT_SALE_AMT1,CUST_CNT1 FROM  (
+		              SELECT LPAD(G.ORG_CD, 8) || '00' AS ORG_CD
+		                         , CASE WHEN ? = TO_CHAR(SYSDATE, 'YYYYMMDD') THEN CASE WHEN SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) = 0 THEN SUM(NVL(G.TOT_SALE_AMT,0)) + SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) ELSE SUM(NVL(G.TOT_SALE_AMT,0)) + (SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) * (SUM(NVL(G.TOT_SALE_AMT,0)) / (SUM(NVL(G.TOT_SALE_AMT_CMP,0))))) END
+		                                ELSE SUM(NVL(G.TOT_SALE_AMT,0)) END AS EXPECT_AMT
+		                         , SUM(TOT_SALE_AMT1) AS TOT_SALE_AMT1
+		                         , SUM(CUST_CNT1) AS CUST_CNT1
+							  FROM (SELECT LPAD(C.BUY_ORG_CD,8) || '00' AS ORG_CD
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1  -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1      -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2  -- 비교일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2      -- 비교일자
+		                              FROM DPS.PS_TIMEPBN   A
+		                                      , DPS.PC_ORGMST  B
+		                                      , DPS.PC_STRPBN   C
+		                             WHERE B.ORG_CD = C.BUY_ORG_CD
+		                               AND A.STR_CD = C.STR_CD
+		                               AND A.PUMBUN_CD = C.PUMBUN_CD
+		                               AND B.STR_CD    LIKE ? || '%'
+		                               AND B.DEPT_CD   LIKE ? || '%'
+		                               AND B.TEAM_CD   LIKE ? || '%'
+		                               AND B.PC_CD     LIKE ? || '%'
+		                               AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                 AND EXISTS ( SELECT MYORG.USER_ID
+		                                               FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = B.STR_CD
+		                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                               AND MYORG.PC_CD       = B.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = A.STR_CD
+			                                               AND COMM_CODE  = A.PUMBUN_CD
+			                                          )
+		                             GROUP BY
+		                                   LPAD(C.BUY_ORG_CD,8)
+		                           ) A, 
+		                           (SELECT SUBSTR(H.BUY_ORG_CD,1,8) || '00'  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME >  TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST G
+		                                     , DPS.PC_STRPBN  H
+		                             WHERE G.ORG_CD    = H.BUY_ORG_CD
+		                               AND F.STR_CD    = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS ( SELECT MYORG.USER_ID
+		                                              FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = G.STR_CD
+		                                               AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                               AND MYORG.PC_CD       = G.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? = TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   SUBSTR(H.BUY_ORG_CD,1,8) || '00'
+		                             UNION ALL
+		                            SELECT SUBSTR(H.BUY_ORG_CD,1,8) || '00'  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST  G
+		                                    , DPS.PC_STRPBN  H
+		                             WHERE G.ORG_CD    = H.BUY_ORG_CD
+		                               AND F.STR_CD    = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS (SELECT MYORG.USER_ID
+		                                             FROM COM.V_MYORG MYORG
+		                                            WHERE MYORG.STR_CD      = G.STR_CD
+		                                              AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                              AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                              AND MYORG.PC_CD       = G.PC_CD
+		                                              AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? <> TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   SUBSTR(H.BUY_ORG_CD,1,8) || '00'
+		                           ) G 
+		                     WHERE A.ORG_CD     = G.ORG_CD(+)
+		                     GROUP BY
+		                           LPAD(G.ORG_CD, 8)
+		                     ORDER BY 1
+		                  )) X
+		                 ,(SELECT ORG_CD
+		                        , CASE WHEN TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) = '22' THEN '21'||'시 이후 ~'
+		                               ELSE ' ~' || TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) || '시'
+		                          END TIME
+		                        , TOT_SALE_AMT1
+		                        , CUST_CNT1
+		                        , TOT_SALE_AMT2
+		                        , CUST_CNT2
+		                     FROM (
+		                           SELECT XX.ORG_CD
+		                                , C.COMM_CODE AS TIME
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT1 ELSE 0 END TOT_SALE_AMT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT1     ELSE 0 END CUST_CNT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT2 ELSE 0 END TOT_SALE_AMT2
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT2     ELSE 0 END CUST_CNT2
+		                             FROM (
+		                                   SELECT LPAD(C.BUY_ORG_CD,8) || '00' AS ORG_CD
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END AS TIME
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1 -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1     -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2 -- 비교일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2    -- 비교일자
+		                                     FROM DPS.PS_TIMEPBN A
+		                                            , DPS.PC_ORGMST  B
+		                                            , DPS.PC_STRPBN C
+		                                    WHERE B.ORG_CD    = C.BUY_ORG_CD
+		                                      AND A.STR_CD    = C.STR_CD
+		                                      AND A.PUMBUN_CD = C.PUMBUN_CD
+		                                      AND B.STR_CD    LIKE ? || '%'
+		                                      AND B.DEPT_CD   LIKE ? || '%'
+		                                      AND B.TEAM_CD   LIKE ? || '%'
+		                                      AND B.PC_CD     LIKE ? || '%'
+		                                      AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                      AND EXISTS ( SELECT MYORG.USER_ID
+		                                                     FROM COM.V_MYORG MYORG
+		                                                    WHERE MYORG.STR_CD      = B.STR_CD
+		                                                      AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                                      AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                                      AND MYORG.PC_CD       = B.PC_CD
+		                                                      AND MYORG.USER_ID     = ?
+		                                                 )
+					                           AND NOT EXISTS (
+					                                            SELECT *
+					                                              FROM COM.TC_COMMCODE
+					                                             WHERE SYS_PART   = 'D'
+					                                               AND COMM_PART  = 'D213'
+					                                               AND USE_YN     = 'Y'
+					                                               AND REFER_CODE = A.STR_CD
+					                                               AND COMM_CODE  = A.PUMBUN_CD
+					                                          )
+		                                    GROUP BY
+		                                          LPAD(C.BUY_ORG_CD,8)
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END
+		                                  ) XX, COM.TC_COMMCODE C
+		                            WHERE C.SYS_PART = 'D' 
+		                              AND C.COMM_PART = 'M059' 
+		                              AND C.COMM_CODE BETWEEN '09' AND '21'
+		                          ) X
+		                   ) A0 
+		             WHERE A0.ORG_CD     = X.ORG_CD(+)
+		             GROUP BY
+		                   A0.ORG_CD
+		                 , A0.TIME
+		                 , X.EXPECT_AMT
+		                 , X.SEQ
+		           ) Y
+		     ORDER BY
+		           Y.ORG_CD
+		         , Y.TIME
+		         , SEQ
+--------------------------------------------------------------------------------4		         
+        ]]>        
+    </query>
+    
+    <query name="SEL_TIMESALETEAM">        
+        <![CDATA[
+		    SELECT Y.SEQ  AS SEQ
+		    	 , ORG_CD
+		         , (SELECT ORG_SHORT_NAME FROM DPS.PC_ORGMST WHERE ORG_CD =  Y.ORG_CD) AS ORG_NAME
+		         , EXPECT_AMT
+		         , TIME
+		         , SALE_AMT1
+		         , CUST_CNT1
+		         , SALE_AMT2
+		         , CUST_CNT2
+		         , CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END AS D_SALE_AMT1
+		         , CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END AS D_SALE_AMT2
+			     , SUM(CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT1
+                 , SUM(CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT2		         
+		      FROM (
+		            SELECT X.SEQ  AS SEQ
+		            	 , A0.ORG_CD AS ORG_CD
+		                 , X.EXPECT_AMT          AS EXPECT_AMT
+		                 , A0.TIME               AS TIME
+		                 , SUM(A0.TOT_SALE_AMT1) AS SALE_AMT1
+		                 , SUM(A0.CUST_CNT1    ) AS CUST_CNT1
+		                 , SUM(A0.TOT_SALE_AMT2) AS SALE_AMT2
+		                 , SUM(A0.CUST_CNT2    ) AS CUST_CNT2
+		              FROM (
+		              SELECT ROWNUM AS SEQ,ORG_CD,EXPECT_AMT,TOT_SALE_AMT1,CUST_CNT1 FROM  (
+		              SELECT LPAD(G.ORG_CD, 6) || '0000' AS ORG_CD
+		                         , CASE WHEN ? = TO_CHAR(SYSDATE, 'YYYYMMDD') THEN CASE WHEN SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) = 0 THEN SUM(NVL(G.TOT_SALE_AMT,0)) + SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) ELSE SUM(NVL(G.TOT_SALE_AMT,0)) + (SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) * (SUM(NVL(G.TOT_SALE_AMT,0)) / (SUM(NVL(G.TOT_SALE_AMT_CMP,0))))) END
+		                                ELSE SUM(NVL(G.TOT_SALE_AMT,0)) END AS EXPECT_AMT
+		                         , SUM(TOT_SALE_AMT1) AS TOT_SALE_AMT1
+		                         , SUM(CUST_CNT1) AS CUST_CNT1
+		                      FROM (SELECT LPAD(C.SALE_ORG_CD,8) || '00' AS ORG_CD
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1  -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1      -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2  -- 비교일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2      -- 비교일자
+		                              FROM DPS.PS_TIMEPBN   A
+		                                      , DPS.PC_ORGMST  B
+		                                      , DPS.PC_STRPBN   C
+		                             WHERE B.ORG_CD = C.SALE_ORG_CD
+		                               AND A.STR_CD = C.STR_CD
+		                               AND A.PUMBUN_CD = C.PUMBUN_CD
+		                               AND B.STR_CD    LIKE ? || '%'
+		                               AND B.DEPT_CD   LIKE ? || '%'
+		                               AND B.TEAM_CD   LIKE ? || '%'
+		                               AND B.PC_CD     LIKE ? || '%'
+		                               AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                 AND EXISTS ( SELECT MYORG.USER_ID
+		                                               FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = B.STR_CD
+		                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                               AND MYORG.PC_CD       = B.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = A.STR_CD
+			                                               AND COMM_CODE  = A.PUMBUN_CD
+			                                          )
+		                             GROUP BY
+		                                   LPAD(C.SALE_ORG_CD,8)
+		                           ) A, 
+		                           (SELECT SUBSTR(H.SALE_ORG_CD,1,8) || '00'  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME >  TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST G
+		                                     , DPS.PC_STRPBN  H
+		                             WHERE G.ORG_CD    = H.SALE_ORG_CD
+		                               AND F.STR_CD    = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS ( SELECT MYORG.USER_ID
+		                                              FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = G.STR_CD
+		                                               AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                               AND MYORG.PC_CD       = G.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? = TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   SUBSTR(H.SALE_ORG_CD,1,8) || '00'
+		                             UNION ALL
+		                            SELECT SUBSTR(H.SALE_ORG_CD,1,8) || '00'  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST  G
+		                                    , DPS.PC_STRPBN  H
+		                             WHERE G.ORG_CD    = H.SALE_ORG_CD
+		                               AND F.STR_CD    = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS (SELECT MYORG.USER_ID
+		                                             FROM COM.V_MYORG MYORG
+		                                            WHERE MYORG.STR_CD      = G.STR_CD
+		                                              AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                              AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                              AND MYORG.PC_CD       = G.PC_CD
+		                                              AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? <> TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   SUBSTR(H.SALE_ORG_CD,1,8) || '00'
+		                           ) G 
+		                     WHERE A.ORG_CD     = G.ORG_CD(+)
+		                     GROUP BY
+		                           LPAD(G.ORG_CD, 6)
+		                     ORDER BY 1
+		                  )) X
+		                 ,(SELECT ORG_CD
+		                        , CASE WHEN TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) = '22' THEN '21'||'시 이후 ~'
+		                               ELSE ' ~' || TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) || '시'
+		                          END TIME
+		                        , TOT_SALE_AMT1
+		                        , CUST_CNT1
+		                        , TOT_SALE_AMT2
+		                        , CUST_CNT2
+		                     FROM (
+		                           SELECT XX.ORG_CD
+		                                , C.COMM_CODE AS TIME
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT1 ELSE 0 END TOT_SALE_AMT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT1     ELSE 0 END CUST_CNT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT2 ELSE 0 END TOT_SALE_AMT2
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT2     ELSE 0 END CUST_CNT2
+		                             FROM (
+		                                   SELECT LPAD(C.SALE_ORG_CD,6) || '0000' AS ORG_CD
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END AS TIME
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1 -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1     -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2 -- 비교일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2    -- 비교일자
+		                                     FROM DPS.PS_TIMEPBN A
+		                                            , DPS.PC_ORGMST  B
+		                                            , DPS.PC_STRPBN C
+		                                    WHERE B.ORG_CD    = C.SALE_ORG_CD
+		                                      AND A.STR_CD    = C.STR_CD
+		                                      AND A.PUMBUN_CD = C.PUMBUN_CD
+		                                      AND B.STR_CD    LIKE ? || '%'
+		                                      AND B.DEPT_CD   LIKE ? || '%'
+		                                      AND B.TEAM_CD   LIKE ? || '%'
+		                                      AND B.PC_CD     LIKE ? || '%'
+		                                      AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                      AND EXISTS ( SELECT MYORG.USER_ID
+		                                                     FROM COM.V_MYORG MYORG
+		                                                    WHERE MYORG.STR_CD      = B.STR_CD
+		                                                      AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                                      AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                                      AND MYORG.PC_CD       = B.PC_CD
+		                                                      AND MYORG.USER_ID     = ?
+		                                                 )
+					                           AND NOT EXISTS (
+					                                            SELECT *
+					                                              FROM COM.TC_COMMCODE
+					                                             WHERE SYS_PART   = 'D'
+					                                               AND COMM_PART  = 'D213'
+					                                               AND USE_YN     = 'Y'
+					                                               AND REFER_CODE = A.STR_CD
+					                                               AND COMM_CODE  = A.PUMBUN_CD
+					                                          )
+		                                    GROUP BY
+		                                          LPAD(C.SALE_ORG_CD,6)
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END
+		                                  ) XX, COM.TC_COMMCODE C
+		                            WHERE C.SYS_PART = 'D' 
+		                              AND C.COMM_PART = 'M059' 
+		                              AND C.COMM_CODE BETWEEN '09' AND '21'
+		                          ) X
+		                   ) A0 
+		             WHERE A0.ORG_CD     = X.ORG_CD(+)
+		             GROUP BY
+		                   A0.ORG_CD
+		                 , A0.TIME
+		                 , X.EXPECT_AMT
+		                 , X.SEQ
+		           ) Y
+		     ORDER BY
+		           Y.ORG_CD
+		         , Y.TIME
+		         , SEQ
+--------------------------------------------------------------------------------5		         
+        ]]>        
+    </query>
+    
+    <query name="SEL_TIMESALETEAM2">        
+        <![CDATA[
+		    SELECT Y.SEQ  AS SEQ
+		    	 , ORG_CD
+		         , (SELECT ORG_SHORT_NAME FROM DPS.PC_ORGMST WHERE ORG_CD =  Y.ORG_CD) AS ORG_NAME
+		         , EXPECT_AMT
+		         , TIME
+		         , SALE_AMT1
+		         , CUST_CNT1
+		         , SALE_AMT2
+		         , CUST_CNT2
+		         , CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END AS D_SALE_AMT1
+		         , CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END AS D_SALE_AMT2
+			     , SUM(CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT1
+                 , SUM(CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT2		         
+		      FROM (
+		            SELECT X.SEQ  AS SEQ
+		            	 , A0.ORG_CD AS ORG_CD
+		                 , X.EXPECT_AMT          AS EXPECT_AMT
+		                 , A0.TIME               AS TIME
+		                 , SUM(A0.TOT_SALE_AMT1) AS SALE_AMT1
+		                 , SUM(A0.CUST_CNT1    ) AS CUST_CNT1
+		                 , SUM(A0.TOT_SALE_AMT2) AS SALE_AMT2
+		                 , SUM(A0.CUST_CNT2    ) AS CUST_CNT2
+		              FROM (
+		              SELECT ROWNUM AS SEQ,ORG_CD,EXPECT_AMT,TOT_SALE_AMT1,CUST_CNT1 FROM  (
+		              SELECT LPAD(G.ORG_CD, 6) || '0000' AS ORG_CD
+		                         , CASE WHEN ? = TO_CHAR(SYSDATE, 'YYYYMMDD') THEN CASE WHEN SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) = 0 THEN SUM(NVL(G.TOT_SALE_AMT,0)) + SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) ELSE SUM(NVL(G.TOT_SALE_AMT,0)) + (SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) * (SUM(NVL(G.TOT_SALE_AMT,0)) / (SUM(NVL(G.TOT_SALE_AMT_CMP,0))))) END
+		                                ELSE SUM(NVL(G.TOT_SALE_AMT,0)) END AS EXPECT_AMT
+		                         , SUM(TOT_SALE_AMT1) AS TOT_SALE_AMT1
+		                         , SUM(CUST_CNT1) AS CUST_CNT1
+		                      FROM (SELECT LPAD(C.BUY_ORG_CD,8) || '00' AS ORG_CD
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1  -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1      -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2  -- 비교일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2      -- 비교일자
+		                              FROM DPS.PS_TIMEPBN   A
+		                                      , DPS.PC_ORGMST  B
+		                                      , DPS.PC_STRPBN   C
+		                             WHERE B.ORG_CD = C.BUY_ORG_CD
+		                               AND A.STR_CD = C.STR_CD
+		                               AND A.PUMBUN_CD = C.PUMBUN_CD
+		                               AND B.STR_CD    LIKE ? || '%'
+		                               AND B.DEPT_CD   LIKE ? || '%'
+		                               AND B.TEAM_CD   LIKE ? || '%'
+		                               AND B.PC_CD     LIKE ? || '%'
+		                               AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                 AND EXISTS ( SELECT MYORG.USER_ID
+		                                               FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = B.STR_CD
+		                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                               AND MYORG.PC_CD       = B.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = A.STR_CD
+			                                               AND COMM_CODE  = A.PUMBUN_CD
+			                                          )
+		                             GROUP BY
+		                                   LPAD(C.BUY_ORG_CD,8)
+		                           ) A, 
+		                           (SELECT SUBSTR(H.BUY_ORG_CD,1,8) || '00'  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME >  TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST G
+		                                     , DPS.PC_STRPBN  H
+		                             WHERE G.ORG_CD    = H.BUY_ORG_CD
+		                               AND F.STR_CD    = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS ( SELECT MYORG.USER_ID
+		                                              FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = G.STR_CD
+		                                               AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                               AND MYORG.PC_CD       = G.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? = TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   SUBSTR(H.BUY_ORG_CD,1,8) || '00'
+		                             UNION ALL
+		                            SELECT SUBSTR(H.BUY_ORG_CD,1,8) || '00'  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST  G
+		                                    , DPS.PC_STRPBN  H
+		                             WHERE G.ORG_CD    = H.BUY_ORG_CD
+		                               AND F.STR_CD    = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS (SELECT MYORG.USER_ID
+		                                             FROM COM.V_MYORG MYORG
+		                                            WHERE MYORG.STR_CD      = G.STR_CD
+		                                              AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                              AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                              AND MYORG.PC_CD       = G.PC_CD
+		                                              AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? <> TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   SUBSTR(H.BUY_ORG_CD,1,8) || '00'
+		                           ) G 
+		                     WHERE A.ORG_CD     = G.ORG_CD(+)
+		                     GROUP BY
+		                           LPAD(G.ORG_CD, 6)
+		                     ORDER BY 1
+		                  )) X
+		                 ,(SELECT ORG_CD
+		                        , CASE WHEN TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) = '22' THEN '21'||'시 이후 ~'
+		                               ELSE ' ~' || TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) || '시'
+		                          END TIME
+		                        , TOT_SALE_AMT1
+		                        , CUST_CNT1
+		                        , TOT_SALE_AMT2
+		                        , CUST_CNT2
+		                     FROM (
+		                           SELECT XX.ORG_CD
+		                                , C.COMM_CODE AS TIME
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT1 ELSE 0 END TOT_SALE_AMT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT1     ELSE 0 END CUST_CNT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT2 ELSE 0 END TOT_SALE_AMT2
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT2     ELSE 0 END CUST_CNT2
+		                             FROM (
+		                                   SELECT LPAD(C.BUY_ORG_CD,6) || '0000' AS ORG_CD
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END AS TIME
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1 -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1     -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2 -- 비교일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2    -- 비교일자
+		                                     FROM DPS.PS_TIMEPBN A
+		                                            , DPS.PC_ORGMST  B
+		                                            , DPS.PC_STRPBN C
+		                                    WHERE B.ORG_CD    = C.BUY_ORG_CD
+		                                      AND A.STR_CD    = C.STR_CD
+		                                      AND A.PUMBUN_CD = C.PUMBUN_CD
+		                                      AND B.STR_CD    LIKE ? || '%'
+		                                      AND B.DEPT_CD   LIKE ? || '%'
+		                                      AND B.TEAM_CD   LIKE ? || '%'
+		                                      AND B.PC_CD     LIKE ? || '%'
+		                                      AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                      AND EXISTS ( SELECT MYORG.USER_ID
+		                                                     FROM COM.V_MYORG MYORG
+		                                                    WHERE MYORG.STR_CD      = B.STR_CD
+		                                                      AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                                      AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                                      AND MYORG.PC_CD       = B.PC_CD
+		                                                      AND MYORG.USER_ID     = ?
+		                                                 )
+					                           AND NOT EXISTS (
+					                                            SELECT *
+					                                              FROM COM.TC_COMMCODE
+					                                             WHERE SYS_PART   = 'D'
+					                                               AND COMM_PART  = 'D213'
+					                                               AND USE_YN     = 'Y'
+					                                               AND REFER_CODE = A.STR_CD
+					                                               AND COMM_CODE  = A.PUMBUN_CD
+					                                          )
+		                                    GROUP BY
+		                                          LPAD(C.BUY_ORG_CD,6)
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END
+		                                  ) XX, COM.TC_COMMCODE C
+		                            WHERE C.SYS_PART = 'D' 
+		                              AND C.COMM_PART = 'M059' 
+		                              AND C.COMM_CODE BETWEEN '09' AND '21'
+		                          ) X
+		                   ) A0 
+		             WHERE A0.ORG_CD     = X.ORG_CD(+)
+		             GROUP BY
+		                   A0.ORG_CD
+		                 , A0.TIME
+		                 , X.EXPECT_AMT
+		                 , X.SEQ
+		           ) Y
+		     ORDER BY
+		           Y.ORG_CD
+		         , Y.TIME
+		         , SEQ
+--------------------------------------------------------------------------------6		         
+        ]]>        
+    </query>
+    
+    <query name="SEL_TIMESALEDEPT">        
+        <![CDATA[
+			    SELECT Y.SEQ  AS SEQ 
+			   		 , ORG_CD
+			         , (SELECT ORG_SHORT_NAME FROM DPS.PC_ORGMST WHERE ORG_CD =  Y.ORG_CD) AS ORG_NAME
+			         , EXPECT_AMT
+			         , TIME
+			         , SALE_AMT1
+			         , CUST_CNT1
+			         , SALE_AMT2
+			         , CUST_CNT2
+			         , CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END AS D_SALE_AMT1
+			         , CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END AS D_SALE_AMT2
+			         , SUM(CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT1
+                     , SUM(CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT2
+			      FROM (
+			            SELECT X.SEQ  AS SEQ
+			            ,A0.ORG_CD AS ORG_CD
+			                 , X.EXPECT_AMT          AS EXPECT_AMT
+			                 , A0.TIME               AS TIME
+			                 , SUM(A0.TOT_SALE_AMT1) AS SALE_AMT1
+			                 , SUM(A0.CUST_CNT1    ) AS CUST_CNT1
+			                 , SUM(A0.TOT_SALE_AMT2) AS SALE_AMT2
+			                 , SUM(A0.CUST_CNT2    ) AS CUST_CNT2
+			              FROM (
+			              SELECT ROWNUM AS SEQ,ORG_CD,EXPECT_AMT,TOT_SALE_AMT1,CUST_CNT1 FROM  (
+			              SELECT LPAD(G.ORG_CD, 4) || '000000' AS ORG_CD
+			                         , CASE WHEN ? = TO_CHAR(SYSDATE, 'YYYYMMDD') THEN CASE WHEN SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) = 0 THEN SUM(NVL(G.TOT_SALE_AMT,0)) + SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) ELSE SUM(NVL(G.TOT_SALE_AMT,0)) + (SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) * (SUM(NVL(G.TOT_SALE_AMT,0)) / (SUM(NVL(G.TOT_SALE_AMT_CMP,0))))) END
+			                                ELSE SUM(NVL(G.TOT_SALE_AMT,0)) END AS EXPECT_AMT
+			                         , SUM(TOT_SALE_AMT1) AS TOT_SALE_AMT1
+			                         , SUM(CUST_CNT1) AS CUST_CNT1
+			                      FROM (SELECT LPAD(C.SALE_ORG_CD,8) || '00' AS ORG_CD
+			                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1  -- 매출일자
+			                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1      -- 매출일자
+			                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2  -- 비교일자
+			                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2      -- 비교일자
+			                              FROM DPS.PS_TIMEPBN   A
+			                                      , DPS.PC_ORGMST  B
+			                                      , DPS.PC_STRPBN   C
+			                             WHERE B.ORG_CD = C.SALE_ORG_CD
+			                               AND A.STR_CD = C.STR_CD
+			                               AND A.PUMBUN_CD = C.PUMBUN_CD
+			                               AND B.STR_CD    LIKE ? || '%'
+			                               AND B.DEPT_CD   LIKE ? || '%'
+			                               AND B.TEAM_CD   LIKE ? || '%'
+			                               AND B.PC_CD     LIKE ? || '%'
+			                               AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+			                                 AND EXISTS ( SELECT MYORG.USER_ID
+			                                               FROM COM.V_MYORG MYORG
+			                                             WHERE MYORG.STR_CD      = B.STR_CD
+			                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+			                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+			                                               AND MYORG.PC_CD       = B.PC_CD
+			                                               AND MYORG.USER_ID     = ?
+			                                          )
+				                           AND NOT EXISTS (
+				                                            SELECT *
+				                                              FROM COM.TC_COMMCODE
+				                                             WHERE SYS_PART   = 'D'
+				                                               AND COMM_PART  = 'D213'
+				                                               AND USE_YN     = 'Y'
+				                                               AND REFER_CODE = A.STR_CD
+				                                               AND COMM_CODE  = A.PUMBUN_CD
+				                                          )
+			                             GROUP BY
+			                                   LPAD(C.SALE_ORG_CD,8)
+			                           ) A, 
+			                           (SELECT SUBSTR(H.SALE_ORG_CD,1,8) || '00'  AS ORG_CD
+			                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+			                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+			                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME >  TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+			                              FROM DPS.PS_TIMEPBN F
+			                                     , DPS.PC_ORGMST G
+			                                     , DPS.PC_STRPBN  H
+			                             WHERE G.ORG_CD    = H.SALE_ORG_CD
+			                               AND F.STR_CD    = H.STR_CD
+			                               AND F.PUMBUN_CD = H.PUMBUN_CD
+			                               AND G.STR_CD    LIKE ? || '%'
+			                               AND G.DEPT_CD   LIKE ? || '%'
+			                               AND G.TEAM_CD   LIKE ? || '%'
+			                               AND G.PC_CD     LIKE ? || '%'
+			                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+			                               AND EXISTS ( SELECT MYORG.USER_ID
+			                                              FROM COM.V_MYORG MYORG
+			                                             WHERE MYORG.STR_CD      = G.STR_CD
+			                                               AND MYORG.DEPT_CD     = G.DEPT_CD
+			                                               AND MYORG.TEAM_CD     = G.TEAM_CD
+			                                               AND MYORG.PC_CD       = G.PC_CD
+			                                               AND MYORG.USER_ID     = ?
+			                                          )
+				                           AND NOT EXISTS (
+				                                            SELECT *
+				                                              FROM COM.TC_COMMCODE
+				                                             WHERE SYS_PART   = 'D'
+				                                               AND COMM_PART  = 'D213'
+				                                               AND USE_YN     = 'Y'
+				                                               AND REFER_CODE = F.STR_CD
+				                                               AND COMM_CODE  = F.PUMBUN_CD
+				                                          )
+			                               AND ? = TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+			                             GROUP BY
+			                                   SUBSTR(H.SALE_ORG_CD,1,8) || '00'
+			                             UNION ALL
+			                            SELECT SUBSTR(H.SALE_ORG_CD,1,8) || '00'  AS ORG_CD
+			                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+			                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+			                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+			                              FROM DPS.PS_TIMEPBN F
+			                                     , DPS.PC_ORGMST  G
+			                                    , DPS.PC_STRPBN  H
+			                             WHERE G.ORG_CD    = H.SALE_ORG_CD
+			                               AND F.STR_CD    = H.STR_CD
+			                               AND F.PUMBUN_CD = H.PUMBUN_CD
+			                               AND G.STR_CD    LIKE ? || '%'
+			                               AND G.DEPT_CD   LIKE ? || '%'
+			                               AND G.TEAM_CD   LIKE ? || '%'
+			                               AND G.PC_CD     LIKE ? || '%'
+			                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+			                               AND EXISTS (SELECT MYORG.USER_ID
+			                                             FROM COM.V_MYORG MYORG
+			                                            WHERE MYORG.STR_CD      = G.STR_CD
+			                                              AND MYORG.DEPT_CD     = G.DEPT_CD
+			                                              AND MYORG.TEAM_CD     = G.TEAM_CD
+			                                              AND MYORG.PC_CD       = G.PC_CD
+			                                              AND MYORG.USER_ID     = ?
+			                                          )
+				                           AND NOT EXISTS (
+				                                            SELECT *
+				                                              FROM COM.TC_COMMCODE
+				                                             WHERE SYS_PART   = 'D'
+				                                               AND COMM_PART  = 'D213'
+				                                               AND USE_YN     = 'Y'
+				                                               AND REFER_CODE = F.STR_CD
+				                                               AND COMM_CODE  = F.PUMBUN_CD
+				                                          )
+			                               AND ? <> TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+			                             GROUP BY
+			                                   SUBSTR(H.SALE_ORG_CD,1,8) || '00'
+			                           ) G 
+			                     WHERE A.ORG_CD     = G.ORG_CD(+)
+			                     GROUP BY
+			                           LPAD(G.ORG_CD, 4)
+			                     ORDER BY 1
+			                  )) X
+			                 ,(SELECT ORG_CD
+			                        , CASE WHEN TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) = '22' THEN '21'||'시 이후 ~'
+			                               ELSE ' ~' || TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) || '시'
+			                          END TIME
+			                        , TOT_SALE_AMT1
+			                        , CUST_CNT1
+			                        , TOT_SALE_AMT2
+			                        , CUST_CNT2
+			                     FROM (
+			                           SELECT XX.ORG_CD
+			                                , C.COMM_CODE AS TIME
+			                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT1 ELSE 0 END TOT_SALE_AMT1
+			                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT1     ELSE 0 END CUST_CNT1
+			                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT2 ELSE 0 END TOT_SALE_AMT2
+			                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT2     ELSE 0 END CUST_CNT2
+			                             FROM (
+			                                   SELECT LPAD(C.SALE_ORG_CD,4) || '000000' AS ORG_CD
+			                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+			                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+			                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END AS TIME
+			                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1 -- 매출일자
+			                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1     -- 매출일자
+			                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2 -- 비교일자
+			                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2    -- 비교일자
+			                                     FROM DPS.PS_TIMEPBN A
+			                                            , DPS.PC_ORGMST  B
+			                                            , DPS.PC_STRPBN C
+			                                    WHERE B.ORG_CD    = C.SALE_ORG_CD
+			                                      AND A.STR_CD    = C.STR_CD
+			                                      AND A.PUMBUN_CD = C.PUMBUN_CD
+			                                      AND B.STR_CD    LIKE ? || '%'
+			                                      AND B.DEPT_CD   LIKE ? || '%'
+			                                      AND B.TEAM_CD   LIKE ? || '%'
+			                                      AND B.PC_CD     LIKE ? || '%'
+			                                      AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+			                                      AND EXISTS ( SELECT MYORG.USER_ID
+			                                                     FROM COM.V_MYORG MYORG
+			                                                    WHERE MYORG.STR_CD      = B.STR_CD
+			                                                      AND MYORG.DEPT_CD     = B.DEPT_CD
+			                                                      AND MYORG.TEAM_CD     = B.TEAM_CD
+			                                                      AND MYORG.PC_CD       = B.PC_CD
+			                                                      AND MYORG.USER_ID     = ?
+			                                                 )
+						                           AND NOT EXISTS (
+						                                            SELECT *
+						                                              FROM COM.TC_COMMCODE
+						                                             WHERE SYS_PART   = 'D'
+						                                               AND COMM_PART  = 'D213'
+						                                               AND USE_YN     = 'Y'
+						                                               AND REFER_CODE = A.STR_CD
+						                                               AND COMM_CODE  = A.PUMBUN_CD
+						                                          )
+			                                    GROUP BY
+			                                          LPAD(C.SALE_ORG_CD,4)
+			                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+			                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+			                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END
+			                                  ) XX, COM.TC_COMMCODE C
+			                            WHERE C.SYS_PART = 'D' 
+			                              AND C.COMM_PART = 'M059' 
+			                              AND C.COMM_CODE BETWEEN '09' AND '21'
+			                          ) X
+			                   ) A0 
+			             WHERE A0.ORG_CD     = X.ORG_CD(+)
+			             GROUP BY
+			                   A0.ORG_CD
+			                 , A0.TIME
+			                 , X.EXPECT_AMT
+			                 , X.SEQ
+			           ) Y
+			     ORDER BY
+			           Y.ORG_CD
+			         , Y.TIME
+			         , SEQ
+--------------------------------------------------------------------------------7			         
+        ]]>        
+    </query>
+    <query name="SEL_TIMESALEDEPT2">        
+        <![CDATA[
+		    SELECT Y.SEQ  AS SEQ
+		    	 , ORG_CD
+		         , (SELECT ORG_SHORT_NAME FROM DPS.PC_ORGMST WHERE ORG_CD =  Y.ORG_CD) AS ORG_NAME
+		         , EXPECT_AMT
+		         , TIME
+		         , SALE_AMT1
+		         , CUST_CNT1
+		         , SALE_AMT2
+		         , CUST_CNT2
+		         , CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END AS D_SALE_AMT1
+		         , CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END AS D_SALE_AMT2
+			     , SUM(CASE WHEN SALE_AMT1 = 0 THEN 0 ELSE ROUND(SALE_AMT1/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT1
+                 , SUM(CASE WHEN SALE_AMT2 = 0 THEN 0 ELSE ROUND(SALE_AMT2/1000) END) OVER (PARTITION BY TIME) AS TOT_D_SALE_AMT2		         
+		      FROM (
+		            SELECT X.SEQ  AS SEQ
+		            	 , A0.ORG_CD AS ORG_CD
+		                 , X.EXPECT_AMT          AS EXPECT_AMT
+		                 , A0.TIME               AS TIME
+		                 , SUM(A0.TOT_SALE_AMT1) AS SALE_AMT1
+		                 , SUM(A0.CUST_CNT1    ) AS CUST_CNT1
+		                 , SUM(A0.TOT_SALE_AMT2) AS SALE_AMT2
+		                 , SUM(A0.CUST_CNT2    ) AS CUST_CNT2
+		              FROM (
+		              SELECT ROWNUM AS SEQ,ORG_CD,EXPECT_AMT,TOT_SALE_AMT1,CUST_CNT1 FROM  (
+		              SELECT LPAD(G.ORG_CD, 4) || '000000' AS ORG_CD
+		                         , CASE WHEN ? = TO_CHAR(SYSDATE, 'YYYYMMDD') THEN CASE WHEN SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) = 0 THEN SUM(NVL(G.TOT_SALE_AMT,0)) + SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) ELSE SUM(NVL(G.TOT_SALE_AMT,0)) + (SUM(NVL(G.TOT_SALE_AMT_CMP2,0)) * (SUM(NVL(G.TOT_SALE_AMT,0)) / (SUM(NVL(G.TOT_SALE_AMT_CMP,0))))) END
+		                                ELSE SUM(NVL(G.TOT_SALE_AMT,0)) END AS EXPECT_AMT
+		                         , SUM(TOT_SALE_AMT1) AS TOT_SALE_AMT1
+		                         , SUM(CUST_CNT1) AS CUST_CNT1
+		                      FROM (SELECT LPAD(C.BUY_ORG_CD,8) || '00' AS ORG_CD
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1  -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1      -- 매출일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2  -- 비교일자
+		                                 , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2      -- 비교일자
+		                              FROM DPS.PS_TIMEPBN   A
+		                                      , DPS.PC_ORGMST  B
+		                                      , DPS.PC_STRPBN   C
+		                             WHERE B.ORG_CD = C.BUY_ORG_CD
+		                               AND A.STR_CD = C.STR_CD
+		                               AND A.PUMBUN_CD = C.PUMBUN_CD
+		                               AND B.STR_CD    LIKE ? || '%'
+		                               AND B.DEPT_CD   LIKE ? || '%'
+		                               AND B.TEAM_CD   LIKE ? || '%'
+		                               AND B.PC_CD     LIKE ? || '%'
+		                               AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                 AND EXISTS ( SELECT MYORG.USER_ID
+		                                               FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = B.STR_CD
+		                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                               AND MYORG.PC_CD       = B.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = A.STR_CD
+			                                               AND COMM_CODE  = A.PUMBUN_CD
+			                                          )
+		                             GROUP BY
+		                                   LPAD(C.BUY_ORG_CD,8)
+		                           ) A, 
+		                           (SELECT SUBSTR(H.BUY_ORG_CD,1,8) || '00'  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME <= TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? AND F.SALE_TIME >  TO_CHAR(SYSDATE, 'HH24MI') THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST G
+		                                     , DPS.PC_STRPBN  H
+		                             WHERE G.ORG_CD    = H.BUY_ORG_CD
+		                               AND F.STR_CD    = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS ( SELECT MYORG.USER_ID
+		                                              FROM COM.V_MYORG MYORG
+		                                             WHERE MYORG.STR_CD      = G.STR_CD
+		                                               AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                               AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                               AND MYORG.PC_CD       = G.PC_CD
+		                                               AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? = TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   SUBSTR(H.BUY_ORG_CD,1,8) || '00'
+		                             UNION ALL
+		                            SELECT SUBSTR(H.BUY_ORG_CD,1,8) || '00'  AS ORG_CD
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT      -- 매출일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP  -- 대비일자
+		                                 , SUM(CASE WHEN F.SALE_DT = ? THEN F.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT_CMP2 -- 대비일자
+		                              FROM DPS.PS_TIMEPBN F
+		                                     , DPS.PC_ORGMST  G
+		                                    , DPS.PC_STRPBN  H
+		                             WHERE G.ORG_CD    = H.BUY_ORG_CD
+		                               AND F.STR_CD    = H.STR_CD
+		                               AND F.PUMBUN_CD = H.PUMBUN_CD
+		                               AND G.STR_CD    LIKE ? || '%'
+		                               AND G.DEPT_CD   LIKE ? || '%'
+		                               AND G.TEAM_CD   LIKE ? || '%'
+		                               AND G.PC_CD     LIKE ? || '%'
+		                               AND F.SALE_DT   IN (?, ?) -- 매출일자, 대비일자
+		                               AND EXISTS (SELECT MYORG.USER_ID
+		                                             FROM COM.V_MYORG MYORG
+		                                            WHERE MYORG.STR_CD      = G.STR_CD
+		                                              AND MYORG.DEPT_CD     = G.DEPT_CD
+		                                              AND MYORG.TEAM_CD     = G.TEAM_CD
+		                                              AND MYORG.PC_CD       = G.PC_CD
+		                                              AND MYORG.USER_ID     = ?
+		                                          )
+			                           AND NOT EXISTS (
+			                                            SELECT *
+			                                              FROM COM.TC_COMMCODE
+			                                             WHERE SYS_PART   = 'D'
+			                                               AND COMM_PART  = 'D213'
+			                                               AND USE_YN     = 'Y'
+			                                               AND REFER_CODE = F.STR_CD
+			                                               AND COMM_CODE  = F.PUMBUN_CD
+			                                          )
+		                               AND ? <> TO_CHAR(SYSDATE, 'YYYMMDD') -- 매출일자
+		                             GROUP BY
+		                                   SUBSTR(H.BUY_ORG_CD,1,8) || '00'
+		                           ) G 
+		                     WHERE A.ORG_CD     = G.ORG_CD(+)
+		                     GROUP BY
+		                           LPAD(G.ORG_CD, 4)
+		                     ORDER BY 1
+		                  )) X
+		                 ,(SELECT ORG_CD
+		                        , CASE WHEN TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) = '22' THEN '21'||'시 이후 ~'
+		                               ELSE ' ~' || TRIM(TO_CHAR(TO_NUMBER(TIME, 99) + 1, '00')) || '시'
+		                          END TIME
+		                        , TOT_SALE_AMT1
+		                        , CUST_CNT1
+		                        , TOT_SALE_AMT2
+		                        , CUST_CNT2
+		                     FROM (
+		                           SELECT XX.ORG_CD
+		                                , C.COMM_CODE AS TIME
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT1 ELSE 0 END TOT_SALE_AMT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT1     ELSE 0 END CUST_CNT1
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.TOT_SALE_AMT2 ELSE 0 END TOT_SALE_AMT2
+		                                , CASE WHEN XX.TIME = C.COMM_CODE THEN XX.CUST_CNT2     ELSE 0 END CUST_CNT2
+		                             FROM (
+		                                   SELECT LPAD(C.BUY_ORG_CD,4) || '000000' AS ORG_CD
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END AS TIME
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT1 -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT1     -- 매출일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.TOT_SALE_AMT ELSE 0 END) AS TOT_SALE_AMT2 -- 비교일자
+		                                        , SUM(CASE WHEN A.SALE_DT = ? THEN A.CUST_CNT     ELSE 0 END) AS CUST_CNT2    -- 비교일자
+		                                     FROM DPS.PS_TIMEPBN A
+		                                            , DPS.PC_ORGMST  B
+		                                            , DPS.PC_STRPBN C
+		                                    WHERE B.ORG_CD    = C.BUY_ORG_CD
+		                                      AND A.STR_CD    = C.STR_CD
+		                                      AND A.PUMBUN_CD = C.PUMBUN_CD
+		                                      AND B.STR_CD    LIKE ? || '%'
+		                                      AND B.DEPT_CD   LIKE ? || '%'
+		                                      AND B.TEAM_CD   LIKE ? || '%'
+		                                      AND B.PC_CD     LIKE ? || '%'
+		                                      AND A.SALE_DT   IN (?, ?) -- 매출일자, 비교일자
+		                                      AND EXISTS ( SELECT MYORG.USER_ID
+		                                                     FROM COM.V_MYORG MYORG
+		                                                    WHERE MYORG.STR_CD      = B.STR_CD
+		                                                      AND MYORG.DEPT_CD     = B.DEPT_CD
+		                                                      AND MYORG.TEAM_CD     = B.TEAM_CD
+		                                                      AND MYORG.PC_CD       = B.PC_CD
+		                                                      AND MYORG.USER_ID     = ?
+		                                                 )
+		                                                                              
+					                           AND NOT EXISTS (
+					                                            SELECT *
+					                                              FROM COM.TC_COMMCODE
+					                                             WHERE SYS_PART   = 'D'
+					                                               AND COMM_PART  = 'D213'
+					                                               AND USE_YN     = 'Y'
+					                                               AND REFER_CODE = A.STR_CD
+					                                               AND COMM_CODE  = A.PUMBUN_CD
+					                                          )
+		                                    GROUP BY
+		                                          LPAD(C.BUY_ORG_CD,4)
+		                                        , CASE WHEN SUBSTR(A.SALE_TIME, 1, 2)  < '10' THEN '09'
+		                                               WHEN SUBSTR(A.SALE_TIME, 1, 2) >= '21' THEN '21'
+		                                               ELSE SUBSTR(A.SALE_TIME, 1, 2) END
+		                                  ) XX, COM.TC_COMMCODE C
+		                            WHERE C.SYS_PART = 'D' 
+		                              AND C.COMM_PART = 'M059' 
+		                              AND C.COMM_CODE BETWEEN '09' AND '21'
+		                          ) X
+		                   ) A0 
+		             WHERE A0.ORG_CD     = X.ORG_CD(+)
+		             GROUP BY
+		                   A0.ORG_CD
+		                 , A0.TIME
+		                 , X.EXPECT_AMT
+		                 , X.SEQ
+		           ) Y
+		     ORDER BY
+		           Y.ORG_CD
+		         , Y.TIME
+		         , SEQ
+--------------------------------------------------------------------------------8		         
+        ]]>        
+    </query>
+    <query name="SEL_CMPRDT">        
+        <![CDATA[
+            SELECT NVL(MAX(CMPR_DT), TO_CHAR(ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'),-12), 'YYYYMMDD'))
+              FROM DPS.PS_SCHEDULE
+             WHERE STR_CD  = ?
+               AND SALE_DT = ?
+        ]]>        
+    </query>
+    
+    
+    
+</service>

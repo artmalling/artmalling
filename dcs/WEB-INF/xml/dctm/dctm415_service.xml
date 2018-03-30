@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 윤지영
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2017.01.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  회원정보변경 이력조회
+ -->
+<service name="/dctm415.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="CUST_ID"   colType="TB_STRING"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"   colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="GBN"   	colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BF_GBN1"   colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BF_GBN2"   colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="AFT_GBN1"  colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="AFT_GBN2"  colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOD_DATE"  colType="TB_STRING"  size="16"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOD_ID"    colType="TB_STRING"  size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="USER_NAME" colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+
+    <!-- 회원명변경이력 리스트 조회 -->
+    <query name="SEL_MASTER_CUST">   
+        <![CDATA[    
+            SELECT A.CUST_ID AS CUST_ID
+			     , A.BF_CUST_NM AS CUST_NAME  
+			     , '' AS GBN
+			     , '' AS BF_GBN1  
+			     , '' AS BF_GBN2 
+			     , '' AS AFT_GBN1
+			     , A.AFT_CUST_NM AS AFT_GBN2 
+			     , TO_CHAR( TO_DATE(A.MOD_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS') AS MOD_DATE
+			     , A.MOD_ID AS MOD_ID
+			     , B.USER_NAME AS USER_NAME
+			  FROM DCS.DM_CUSTNM_UPD A
+			     , COM.TC_USRMST B
+			 WHERE A.MOD_ID = B.USER_ID
+			   AND A.MOD_DATE BETWEEN ? || '000000' AND ? || '240000'
+			   AND A.CUST_ID = ( SELECT UNIQUE A.CUST_ID 
+			                       FROM DCS.DM_CARD A
+			                          , DCS.DM_CUSTOMER B
+			                      WHERE A.CUST_ID = B.CUST_ID          
+        ]]>        
+    </query>  
+    
+    <!-- 주소변경이력 리스트 조회 -->
+    <query name="SEL_MASTER_ADDR">   
+        <![CDATA[    
+            SELECT A.CUST_ID
+			     , (SELECT CUST_NAME 
+			          FROM DCS.DM_CUSTOMER 
+			         WHERE CUST_ID = A.CUST_ID) AS CUST_NAME 
+			     , DECODE(A.ADDR_FLAG,'H','자택','O','직장') AS GBN   
+			     , (A.BF_ZIP_CD1 || A.BF_ZIP_CD2)   AS BF_GBN1 
+			     , (A.BF_ADDR1 || A.BF_ADDR2)       AS BF_GBN2
+			     , (A.AFT_ZIP_CD1 || A.AFT_ZIP_CD2) AS AFT_GBN1
+			     , (A.AFT_ADDR1 || A.AFT_ADDR2)     AS AFT_GBN2
+			     , TO_CHAR( TO_DATE(A.MODI_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS') AS MOD_DATE
+			     , A.REG_ID AS MOD_ID
+			     , B.USER_NAME AS USER_NAME
+			  FROM DCS.DM_ADDR_UPD A
+			     , COM.TC_USRMST B
+			 WHERE A.REG_ID = B.USER_ID 
+			   AND A.MODI_DATE BETWEEN ? || '000000' AND ? || '240000'
+			   AND A.CUST_ID = ( SELECT UNIQUE A.CUST_ID 
+			                       FROM DCS.DM_CARD A
+			                          , DCS.DM_CUSTOMER B
+			                      WHERE A.CUST_ID    =    B.CUST_ID        
+        ]]>        
+    </query>  
+    
+    <!--생년월일변경 리스트 조회 -->
+    <query name="SEL_MASTER_SSNO">   
+        <![CDATA[    
+			 SELECT A.CUST_ID AS CUST_ID 
+			     , C.CUST_NAME AS CUST_NAME 
+			     , '' AS GBN
+			     , '' AS BF_GBN1  
+			     , DCS.SC_CRYPTO_FUN('DEC',A.BF_SS_NO) AS BF_GBN2 
+			     , '' AS AFT_GBN1
+			     , DCS.SC_CRYPTO_FUN('DEC',A.AFT_SS_NO) AS AFT_GBN2 
+			     , TO_CHAR( TO_DATE(A.MOD_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS') AS MOD_DATE
+			     , A.MOD_ID AS MOD_ID
+			     , B.USER_NAME AS USER_NAME
+			  FROM DCS.DM_SSNO_UPD A --주민번호 변경이력 
+			     , COM.TC_USRMST B   --사용자마스터
+			     , DCS.DM_CUSTOMER C --회원정보
+			  WHERE A.MOD_ID = B.USER_ID 
+			   AND A.CUST_ID = C.CUST_ID
+			   AND A.MOD_DATE BETWEEN ? || '000000' AND ? || '240000'
+			   AND A.CUST_ID = ( SELECT UNIQUE A.CUST_ID 
+			                       FROM DCS.DM_CARD A
+			                          , DCS.DM_CUSTOMER B
+			                      WHERE A.CUST_ID    =    B.CUST_ID         
+        ]]>        
+    </query>
+      
+    <!--휴대번호변경 리스트 조회 -->
+	<query name="SEL_MASTER_MOBILE">   
+        <![CDATA[    
+			SELECT A.CUST_ID AS CUST_ID 
+			     , C.CUST_NAME AS CUST_NAME 
+			     , '' AS GBN
+			     , '' AS BF_GBN1  
+			     , DCS.SC_CRYPTO_FUN('DEC',A.BF_MOBILE_PH1)||DCS.SC_CRYPTO_FUN('DEC',A.BF_MOBILE_PH2) || DCS.SC_CRYPTO_FUN('DEC',A.BF_MOBILE_PH3) AS BF_GBN2 
+			     , '' AS AFT_GBN1
+			     , DCS.SC_CRYPTO_FUN('DEC',A.AFT_MOBILE_PH1) || DCS.SC_CRYPTO_FUN('DEC',A.AFT_MOBILE_PH2) || DCS.SC_CRYPTO_FUN('DEC',A.AFT_MOBILE_PH3) AS AFT_GBN2 
+			     , TO_CHAR( TO_DATE(A.MOD_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS') AS MOD_DATE
+			     , A.MOD_ID AS MOD_ID
+			     , B.USER_NAME AS USER_NAME
+			  FROM DCS.DM_MOBILE_UPD A --휴대번호변경이력 
+			     , COM.TC_USRMST B     --사용자마스터
+			     , DCS.DM_CUSTOMER C   --회원정보
+			  WHERE A.MOD_ID = B.USER_ID 
+			   AND A.CUST_ID = C.CUST_ID
+			   AND A.MOD_DATE BETWEEN ? || '000000' AND ? || '240000'
+			   AND A.CUST_ID = ( SELECT UNIQUE A.CUST_ID 
+			                       FROM DCS.DM_CARD A
+			                          , DCS.DM_CUSTOMER B
+			                      WHERE A.CUST_ID    =    B.CUST_ID      
+        ]]>        
+    </query>  
+    
+    <!--카드번호변경 리스트 조회 -->
+	<query name="SEL_MASTER_CARD">   
+        <![CDATA[    
+			SELECT A.CUST_ID AS CUST_ID 
+			     , C.CUST_NAME AS CUST_NAME 
+			     , '' AS GBN
+			     , '' AS BF_GBN1  
+			     , DCS.SC_CRYPTO_FUN('DEC',A.BF_CARD_NO) AS BF_GBN2 
+			     , '' AS AFT_GBN1
+			     , DCS.SC_CRYPTO_FUN('DEC',A.AFT_CARD_NO) AS AFT_GBN2 
+			     , TO_CHAR( TO_DATE(A.MOD_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS') AS MOD_DATE
+			     , A.MOD_ID AS MOD_ID
+			     , B.USER_NAME AS USER_NAME
+			  FROM DCS.DM_CARD_NO_UPD A --카드번호변경이력 
+			     , COM.TC_USRMST B     --사용자마스터
+			     , DCS.DM_CUSTOMER C   --회원정보
+			  WHERE A.MOD_ID = B.USER_ID 
+			   AND A.CUST_ID = C.CUST_ID
+			   AND A.MOD_DATE BETWEEN ? || '000000' AND ? || '240000'
+			   AND A.CUST_ID = ( SELECT UNIQUE A.CUST_ID 
+			                       FROM DCS.DM_CARD A
+			                          , DCS.DM_CUSTOMER B
+			                      WHERE A.CUST_ID    =    B.CUST_ID         
+        ]]>        
+    </query>  
+    <query name="SEL_MASTER_CARD_NO">   
+        <![CDATA[
+                                    AND A.CARD_NO    = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_CUST_ID">   
+        <![CDATA[
+                                    AND A.CUST_ID    = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_SS_NO">   
+        <![CDATA[
+                                    AND B.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>  
+    
+    <query name="SEL_MASTER_ORDER">   
+        <![CDATA[
+                               )
+             ORDER BY 8 DESC
+        ]]>        
+    </query>
+     
+</service>

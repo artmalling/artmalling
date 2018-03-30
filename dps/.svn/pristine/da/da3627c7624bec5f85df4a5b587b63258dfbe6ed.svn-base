@@ -1,0 +1,128 @@
+<?xml version="1.0"	encoding="euc-kr"?>
+<!-- XML 버전 1.0을	사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자	: 정진영
+ * 회 사 명	: FKSS
+ * 작 성 일	: 2010.07.28
+ * 변 경 일	: 
+ * 변경내용	: 
+ * 개	 요	:  
+ -->
+<service name="/psal443.ps">
+
+	<gauce name="H_SEL_FLOOR"> 
+		<column	colName="HALL_CD"			colType="TB_STRING"		size="2"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="HALL_NAME"			colType="TB_STRING"		size="30"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="FLOOR_CD"			colType="TB_STRING"		size="2"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="FLOOR_NAME"		colType="TB_STRING"		size="40"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="NORM_SALE_AMT"		colType="TB_DECIMAL"	size="13"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="CUST_CNT"			colType="TB_INT"		size="7"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="CUST_SALE_AMT"		colType="TB_INT"		size="7"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="HALL_FLOOR_NM"		colType="TB_STRING"		size="40"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="COMP_RATE"			colType="TB_DECIMAL"	size="3"	dec="2"	keyType="TB_NORMAL"	roundMode="ROUND" />
+	</gauce>
+
+	<gauce name="H_SEL_P_TYPE">	
+		<column	colName="PTYPE_CD"			colType="TB_STRING"		size="2"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="PTYPE_NAME"		colType="TB_STRING"		size="40"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="TOTAL_SALE_AMT"	colType="TB_DECIMAL"	size="13"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="CUST_CNT"			colType="TB_INT"		size="7"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="CUST_SALE_AMT"		colType="TB_INT"		size="7"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="COMP_RATE"			colType="TB_DECIMAL"	size="3"	dec="2"	keyType="TB_NORMAL"	roundMode="ROUND" />
+	</gauce>
+	
+	<!-- 쿼리는	전부 대문자	-->
+	<query name="SEL_FLOOR">		
+		<![CDATA[
+			SELECT 
+				   FLOR_AMT.HALL_CD			AS HALL_CD
+				 , FLOR_AMT.HALL_NAME		AS HALL_NAME
+				 , FLOR_AMT.FLOOR_CD		AS FLOOR_CD
+				 , FLOR_AMT.FLOOR_NAME		AS FLOOR_NAME
+				 , FLOR_AMT.NORM_SALE_AMT	AS NORM_SALE_AMT
+				 , FLOR_AMT.CUST_CNT		AS CUST_CNT
+				 , ROUND(FLOR_AMT.NORM_SALE_AMT/DECODE(FLOR_AMT.CUST_CNT,0,1,FLOR_AMT.CUST_CNT)) AS	CUST_SALE_AMT
+				 , FLOR_AMT.HALL_NAME||'-'||FLOR_AMT.FLOOR_NAME	  AS HALL_FLOOR_NM
+				 , CASE	WHEN FLOR_AMT.SUM_NORM_SALE_AMT	= 0	THEN 0 
+				   ELSE	ROUND(FLOR_AMT.NORM_SALE_AMT/FLOR_AMT.SUM_NORM_SALE_AMT*100, 2)
+				   END						AS COMP_RATE
+			  FROM (SELECT DPB.STR_CD
+						 , NVL(SPB.HALL_CD,'99')		AS HALL_CD
+						 , MAX(NVL(HALL.COMM_NM, ' '))	AS HALL_NAME
+						 , MAX(NVL(HALL.SEQ_NO,	0))		AS SEQ_NO1
+						 , NVL(SPB.FLOR_CD,'99')		AS FLOOR_CD
+						 , MAX(NVL(FLOR.COMM_NM,' '))	AS FLOOR_NAME
+						 , MAX(NVL(FLOR.SEQ_NO,	0))		AS SEQ_NO2
+						 , SUM(DPB.NORM_SALE_AMT)		AS NORM_SALE_AMT
+						 , SUM(DPB.CUST_CNT)			AS CUST_CNT
+						 , (SUM(SUM(DPB.NORM_SALE_AMT))	OVER ()) AS	SUM_NORM_SALE_AMT
+					  FROM DPS.PS_DAYPBN	DPB
+						 , DPS.PC_STRPBN	SPB
+						 , (SELECT COMM_CODE   AS COMM_CD
+								 , COMM_NAME1  AS COMM_NM
+								 , INQR_ORDER  AS SEQ_NO
+							  FROM COM.TC_COMMCODE
+							 WHERE SYS_PART	 = 'D'
+							   AND COMM_PART = 'P061'
+							   AND USE_YN	 = 'Y'
+						   ) FLOR
+						 , (SELECT COMM_CODE   AS COMM_CD
+								 , COMM_NAME1  AS COMM_NM
+								 , INQR_ORDER  AS SEQ_NO
+							  FROM COM.TC_COMMCODE
+							 WHERE SYS_PART	 = 'D'
+							   AND COMM_PART = 'P197'
+							   AND USE_YN	 = 'Y'
+						   ) HALL					  
+					 WHERE DPB.STR_CD	 = SPB.STR_CD
+					   AND DPB.PUMBUN_CD = SPB.PUMBUN_CD
+					   AND DPB.STR_CD	 = ?
+					   AND DPB.SALE_DT	 BETWEEN ? AND ?
+					   AND FLOR.COMM_CD	(+)= SPB.FLOR_CD
+					   AND HALL.COMM_CD	(+)= SPB.HALL_CD
+					   AND SPB.HALL_CD LIKE ?||'%'
+					 GROUP BY DPB.STR_CD, NVL(SPB.HALL_CD,'99'), NVL(SPB.FLOR_CD,'99')
+				   ) FLOR_AMT
+			 ORDER BY FLOR_AMT.SEQ_NO1,	FLOR_AMT.SEQ_NO2
+		]]>		   
+	</query>	
+	
+	<query name="SEL_PTYPE">		
+		<![CDATA[
+			SELECT 
+				   PTYP_INFO.COMM_CD	 AS	PTYP_CD
+				 , PTYP_INFO.COMM_NM	 AS	PTYP_NAME
+				 , PTYP_AMT.NORM_SALE_AMT
+				 , PTYP_AMT.CUST_CNT
+				 , ROUND(PTYP_AMT.NORM_SALE_AMT/DECODE(PTYP_AMT.CUST_CNT,0,1,PTYP_AMT.CUST_CNT)) AS	CUST_SALE_AMT
+				 , CASE    WHEN PTYP_AMT.SUM_NORM_SALE_AMT    = 0 THEN 0 
+                   ELSE    ROUND(PTYP_AMT.NORM_SALE_AMT/PTYP_AMT.SUM_NORM_SALE_AMT*100, 2)
+                   END                              AS  COMP_RATE
+			  FROM (SELECT DPB.STR_CD
+						 , SPB.PUMBUN_TYPE
+						 , SUM(DPB.NORM_SALE_AMT) AS NORM_SALE_AMT
+						 , (SUM(SUM(DPB.NORM_SALE_AMT)) OVER()) AS  SUM_NORM_SALE_AMT
+						 , SUM(DPB.CUST_CNT)	 AS	CUST_CNT
+					  FROM DPS.PS_DAYPBN	DPB
+						 , DPS.PC_STRPBN	SPB							
+					 WHERE DPB.STR_CD	 = SPB.STR_CD
+					   AND DPB.PUMBUN_CD = SPB.PUMBUN_CD
+					   AND DPB.STR_CD	 = ?
+					   AND DPB.SALE_DT	 BETWEEN ? AND ?
+					   AND SPB.HALL_CD	 LIKE ?||'%'
+					 GROUP BY DPB.STR_CD, SPB.PUMBUN_TYPE
+				   ) PTYP_AMT
+				 , (SELECT COMM_CODE   AS COMM_CD
+						 , COMM_NAME1  AS COMM_NM
+						 , INQR_ORDER  AS SEQ_NO
+					  FROM COM.TC_COMMCODE
+					 WHERE SYS_PART	 = 'D'
+					   AND COMM_PART = 'P070'
+					   AND USE_YN	 = 'Y'
+				   ) PTYP_INFO
+			 WHERE PTYP_INFO.COMM_CD = PTYP_AMT.PUMBUN_TYPE
+			 ORDER BY PTYP_INFO.SEQ_NO
+		]]>		   
+	</query>	
+	
+</service>

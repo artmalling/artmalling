@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal459.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="BUYER_CD"                colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NAME"              colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALEDTS"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALEDTE"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"                  colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMP_NO"                  colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_DETAIL"> 
+        <column colName="SALE_DT"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+   
+    <!-- 쿼리는 전부 대문자 -->
+    <query name="SEL_SALE_PUMBUN">        
+        <![CDATA[
+             SELECT A.SALE_DT
+                  , A.PUMBUN_CD
+                  , C.PUMBUN_NAME
+                  , SUM(A.SALE_QTY)                                                   AS SALE_QTY
+                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+                  , SUM(NVL(A.SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+               FROM DPS.PS_DAYPBN      A
+                  , DPS.PC_ORGMST      B
+                  , DPS.PC_STRPBN      C
+              WHERE A.ORG_CD                         = B.ORG_CD
+                AND A.STR_CD                         = C.STR_CD
+                AND A.PUMBUN_CD                      = C.PUMBUN_CD
+                AND A.STR_CD                         = ?
+                AND A.BUYER_CD                       LIKE ? || '%'
+                AND A.SALE_DT                        >= ?
+                AND A.SALE_DT                        <= ?
+                AND EXISTS ( SELECT MYORG.USER_ID
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.STR_CD      = B.STR_CD
+                                AND MYORG.DEPT_CD     = B.DEPT_CD
+                                AND MYORG.TEAM_CD     = B.TEAM_CD
+                                AND MYORG.PC_CD       = B.PC_CD
+                                AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                AND MYORG.USER_ID     = ?
+                           )
+              GROUP BY
+                    A.SALE_DT
+                  , A.PUMBUN_CD
+                  , C.PUMBUN_NAME
+              ORDER BY
+                    A.SALE_DT
+                  , A.PUMBUN_CD
+                  , C.PUMBUN_NAME
+  
+            
+        ]]>        
+    </query>
+    
+    
+    <query name="SEL_SALE_BUYER">        
+        <![CDATA[
+             SELECT A.BUYER_CD
+                  , C.BUYER_NAME
+                  , SUM(A.SALE_QTY)                                                         AS SALE_QTY
+                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+                  , SUM(NVL(A.SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+                  , ?                                                                 AS SALEDTS
+                  , ?                                                                 AS SALEDTE
+                  , A.STR_CD
+                  , MIN(D.EMP_NO)													   AS EMP_NO
+               FROM DPS.PS_DAYPBN      A
+                  , DPS.PC_ORGMST      B
+                  , DPS.PC_BUYERMST    C
+                  , DPS.PC_BUYERORG    D
+              WHERE A.ORG_CD                         = B.ORG_CD
+                AND A.STR_CD                         = C.STR_CD
+                AND A.BUYER_CD                       = C.BUYER_CD
+                AND A.BUYER_CD 					     = D.BUYER_CD
+                AND A.STR_CD                         = ?
+                AND D.EMP_NO                        LIKE ? || '%'
+                AND A.SALE_DT                        >= ?
+                AND A.SALE_DT                        <= ?
+                AND EXISTS ( SELECT MYORG.USER_ID
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.STR_CD      = B.STR_CD
+                                AND MYORG.DEPT_CD     = B.DEPT_CD
+                                AND MYORG.TEAM_CD     = B.TEAM_CD
+                                AND MYORG.PC_CD       = B.PC_CD
+                                AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                AND MYORG.USER_ID     = ?
+                           )
+              GROUP BY
+                    A.STR_CD
+                  , A.BUYER_CD
+                  , C.BUYER_NAME
+              ORDER BY
+                    A.STR_CD
+                  , A.BUYER_CD
+                  , C.BUYER_NAME
+  
+            
+        ]]>        
+    </query>
+    
+</service>

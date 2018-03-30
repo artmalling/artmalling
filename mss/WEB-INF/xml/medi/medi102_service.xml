@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 오형규
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.18
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  협력사 EDI 공지사항등록
+ -->
+<service name="/medi102.md">
+
+    <!-- 협력사 EDI 공지사항등록  -->
+    <gauce name="H_MASTER">
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STRNM"         colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SEQ_NO"        colType="TB_STRING" size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DT"        colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIMES"         colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TITLE01"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NAME01"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="READ_CNT"      colType="TB_INT"    size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TITLE02"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NAME02"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AUTH_FLAG"     colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONTEN"        colType="TB_STRING" size="4000" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_CD"      colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AUTH"          colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                
+        <column colName="FILE_PATH"     colType="TB_URL"    size="200"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="FILE_NAME"     colType="TB_STRING" size="200"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="FILE_GB"       colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                              
+        <column colName="OLD_FILE_NAME" colType="TB_STRING" size="200"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                
+    </gauce>
+    
+    <!-- 협력사 EDI 공지사항등록 (바이어코드)  -->
+    <gauce name="H_BUYERCD"> 
+        <column colName="BUYER_CD" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 협력사 EDI 공지사항 COMBO BUYER -->
+    <gauce name="H_COMBOBUYER"> 
+        <column colName="BUYER_CD" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                              
+    </gauce>
+    
+    
+    <!-- 협력사 EDI 공지사항등록 조회   -->
+     <query name="SEL_NOTICE">
+        <![CDATA[
+        SELECT STR_CD
+             , STRNM
+             , SEQ_NO
+             , REG_DT
+             , TIMES
+             , TITLE01                
+             , BUYER_NAME01
+             , READ_CNT
+             , TITLE02
+             , BUYER_NAME02
+             , AUTH_FLAG
+             , CONTEN
+             , BUYER_CD
+             , AUTH         
+             , FILE_PATH         
+             , FILE_NAME         
+             , FILE_GB         
+             , OLD_FILE_NAME         
+          FROM 
+              (  
+                SELECT A.STR_CD AS STR_CD
+                     , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM
+                     , LPAD(A.SEQ_NO, 3, 0) AS SEQ_NO
+                     , A.REG_DT AS REG_DT
+                     , A.TIME AS TIMES
+                     , A.TITLE AS TITLE01                
+                     , B.BUYER_NAME AS BUYER_NAME01
+                     , A.READ_CNT AS READ_CNT
+                     , A.TITLE AS TITLE02
+                     , B.BUYER_NAME AS BUYER_NAME02
+                     , A.AUTH_FLAG AS AUTH_FLAG
+                     , A.CONTENT AS CONTEN
+                     , A.BUYER_CD AS BUYER_CD
+                     , CASE WHEN C.BUYER_CD IS NULL THEN  'F' ELSE 'T' END AS AUTH                                          
+                     , A.FILE_PATH                                
+                     , A.FILE_NAME    
+                     , 'N'          AS FILE_GB                                        
+                     , A.FILE_NAME  AS OLD_FILE_NAME                                         
+                  FROM MSS.ET_EDINOTICE A 
+                     , DPS.PC_BUYERMST B
+                     , ( 
+                        SELECT A.BUYER_CD AS BUYER_CD
+                             , B.BUYER_NAME AS BUYER_NM
+                          FROM DPS.PC_BUYERORG A, DPS.PC_BUYERMST B            
+                         WHERE A.BUYER_CD = B.BUYER_CD
+                           AND A.EMP_NO = ?
+                           AND TO_DATE(A.APP_S_DT) <= sysdate
+                           AND A.APP_E_DT = '99991231'
+                           AND A.USE_YN = 'Y'  
+                       ) C
+                 WHERE A.STR_CD = B.STR_CD
+                   AND A.BUYER_CD = B.BUYER_CD
+                   AND A.BUYER_CD = C.BUYER_CD(+)
+                   AND A.TITLE LIKE '%' || ? || '%'
+                   AND A.STR_CD = ?
+                   AND A.REG_DT >= ? 
+                   AND A.REG_DT <= ?
+              -- ORDER BY A.STR_CD ASC, A.REG_DT DESC, A.SEQ_NO DESC
+              
+              UNION ALL 
+              
+              SELECT A.STR_CD AS STR_CD
+                     , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM
+                     , LPAD(A.SEQ_NO, 3, 0) AS SEQ_NO
+                     , A.REG_DT AS REG_DT
+                     , A.TIME AS TIMES
+                     , A.TITLE AS TITLE01                
+                     , '마리오' AS BUYER_NAME01
+                     , A.READ_CNT AS READ_CNT
+                     , A.TITLE AS TITLE02
+                     , '마리오' AS BUYER_NAME02
+                     , A.AUTH_FLAG AS AUTH_FLAG
+                     , A.CONTENT AS CONTEN
+                     , A.BUYER_CD AS BUYER_CD
+                     , 'T' AS AUTH                                          
+                     , A.FILE_PATH                                
+                     , A.FILE_NAME    
+                     , 'N'          AS FILE_GB                                        
+                     , A.FILE_NAME  AS OLD_FILE_NAME                                         
+                  FROM MSS.ET_EDINOTICE A
+                 WHERE A.BUYER_CD = '000000'
+                   AND A.TITLE LIKE '%' || ? || '%'
+                   AND A.STR_CD = ?
+                   AND A.REG_DT >= ? 
+                   AND A.REG_DT <= ?
+               ) A         
+        ]]>
+    </query>
+    
+    <!-- 협력사 EDI 공지사항등록 조회 (ROWNUM)  -->
+     <query name="SEL_ROWNUM">
+        <![CDATA[
+         WHERE ROWNUM <= ?
+         ORDER BY A.STR_CD ASC, A.REG_DT DESC, A.SEQ_NO DESC
+         
+        ]]>
+    </query>
+    
+     <!-- 협력사 EDI 공지사항등록 조회 (바이어코드)  -->
+     <query name="SEL_BUYERCD">
+        <![CDATA[
+        SELECT A.BUYER_CD AS BUYER_CD
+             , B.BUYER_NAME AS BUYER_NM
+          FROM DPS.PC_BUYERORG A
+             , DPS.PC_BUYERMST B            
+         WHERE A.PC_ORG_CD = B.PC_ORG_CD  
+           AND A.EMP_NO = ?
+           AND ROWNUM = 1
+      ORDER BY BUYER_CD DESC, APP_S_DT DESC   
+        ]]>
+    </query>  
+    
+    <!-- 협력사 EDI 공지사항 콤보바이어 (바이어코드)  -->
+     <query name="SEL_COMBOBUYER">
+        <![CDATA[
+        SELECT A.BUYER_CD AS BUYER_CD
+             , B.BUYER_NAME AS BUYER_NM
+          FROM DPS.PC_BUYERORG A
+             , DPS.PC_BUYERMST B
+             , (
+                SELECT DISTINCT   A.STR_CD     AS STR_CD
+                  FROM COM.V_MYORG A
+                     , DPS.PC_STRMST B
+                 WHERE A.STR_CD = B.STR_CD
+                   AND A.USE_YN = 'Y'
+                   AND A.FCL_FLAG = '1'
+                   AND USER_ID = ?              
+                   AND STR_FLAG LIKE '1' || '%'
+                   AND ORG_FLAG = ?             
+               ) C         
+         WHERE A.BUYER_CD = B.BUYER_CD
+           AND B.STR_CD = C.STR_CD
+           AND A.EMP_NO = ?                    
+           AND TO_DATE(A.APP_S_DT) <= sysdate
+           AND A.APP_E_DT = '99991231'
+           AND A.USE_YN = 'Y'  
+           AND A.STR_CD like ?  ||  '%'  
+        ]]>
+    </query>
+    <!-- 협력사 EDI 공지사항 콤보바이어 (바이어코드) 존재하지 않을 시-->
+     <query name="SEL_COMBOBUYER2">
+        <![CDATA[
+		     SELECT '000000' AS BUYER_CD
+		          , '마리오' AS BUYER_NM
+		     FROM DUAL 
+        ]]>
+    </query>
+    
+    <!-- 협력사 EDI 공지사항 콤보바이어 (바이어코드)  -->
+     <query name="SEL_COMBOBUYER3">
+        <![CDATA[
+	SELECT BUYER_CD, BUYER_NM
+	 FROM (
+	        SELECT B.BUYER_CD AS BUYER_CD
+	             , B.BUYER_NAME AS BUYER_NM
+	          FROM DPS.PC_BUYERMST B
+	         WHERE B.BUYER_CD = ?   
+		UNION ALL
+           SELECT 
+             '000000' AS BUYER_CD
+           , '마리오' AS BUYER_NM
+           FROM DUAL) ORDER BY BUYER_CD DESC
+        ]]>
+    </query>
+    
+    <!-- 협력사 EDI 공지사항등록 수정 -->
+     <query name="UPD_NOTICE">
+        <![CDATA[
+        UPDATE MSS.ET_EDINOTICE
+           SET TITLE  = ?
+             , AUTH_FLAG = ?
+             , CONTENT = ?
+             , FILE_NAME = ?
+             , FILE_PATH = ?
+             , MOD_ID = ?
+             , MOD_DATE = SYSDATE
+		 WHERE STR_CD = ?
+		   AND SEQ_NO = TO_NUMBER(?)
+		   AND REG_DT = ?
+        ]]>
+    </query>  
+    
+    <!-- 협력사 EDI 공지사항등록 수정(첨부파일삭제) -->
+     <query name="UPD_NOTICE_DEL_FILE">
+        <![CDATA[
+        UPDATE MSS.ET_EDINOTICE
+           SET FILE_NAME = ''
+             , FILE_PATH = ''
+             , MOD_ID = ?
+             , MOD_DATE = SYSDATE
+		 WHERE STR_CD = ?
+		   AND SEQ_NO = TO_NUMBER(?)
+		   AND REG_DT = ?
+        ]]>
+    </query>  
+    
+    <!-- 협력사 EDI 신규 SEQ_NO조회 -->
+     <query name="SEL_SEQ_NO">
+        <![CDATA[
+			SELECT LPAD(MSS.SQ_ET_EDINOTICE.NEXTVAL, 3, 0)  AS SEQ_NO
+			  FROM DUAL
+        ]]>
+    </query>  
+    
+    <!-- 협력사 EDI 공지사항등록 등록 -->
+     <query name="INS_NOTICE">
+        <![CDATA[
+        INSERT INTO MSS.ET_EDINOTICE
+                                    (
+                                      STR_CD
+                                     ,REG_DT
+                                     ,SEQ_NO
+                                     ,TITLE
+                                     ,CONTENT
+                                     ,BUYER_CD
+                                     ,AUTH_FLAG
+                                     ,READ_CNT
+                                     ,TIME
+                                     ,FILE_NAME
+                                     ,FILE_PATH
+                                     ,REG_ID
+                                     ,REG_DATE
+                                     ,MOD_ID
+                                     ,MOD_DATE
+                                    ) VALUES 
+                                    (
+                                      ?
+                                     ,TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                     ,TO_NUMBER(?)
+                                     ,?
+                                     ,?
+                                     ,?
+                                     ,?
+                                     ,?
+                                     ,TO_CHAR(SYSDATE, 'HH24MI')
+                                     ,?
+                                     ,?
+                                     ,?
+                                     ,SYSDATE
+                                     ,?
+                                     ,SYSDATE
+                                    )
+        ]]>
+    </query>
+       
+    <!-- 협력사 EDI 공지사항등록 삭제 -->
+     <query name="DEL_NOTICE">
+        <![CDATA[
+        DELETE           
+          FROM MSS.ET_EDINOTICE            
+         WHERE STR_CD = ?
+           AND SEQ_NO = TO_NUMBER(?)
+           AND REG_DT = ?
+        ]]>
+    </query>   
+</service>

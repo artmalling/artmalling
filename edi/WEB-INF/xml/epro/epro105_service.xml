@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/epro105.ep">
+    
+    <!-- 약속분석현황 조회  -->
+    <query name="SEL_PROMISS">
+        <![CDATA[
+        SELECT TO_CHAR(TO_DATE(YYYYMMDD), 'DD') AS DAYS
+             , SUM(AA)||'('||SUM(BB)||'/'||SUM(CC)||')' AS PROMISS
+          FROM (
+                SELECT A.STR_CD, A.PUMBUN_CD, A.LAST_PROM_DT AS YYYYMMDD 
+                     , 0 AS AA
+                     , COUNT(1) AS BB
+                     , SUM(CASE WHEN proc_stat = '4' THEN 1 ELSE 0 END) AS CC
+                  FROM MSS.MP_PROMISECERT A
+                     , DPS.PC_STRPBN B
+                 WHERE A.STR_CD = B.STR_CD
+	               AND A.PUMBUN_CD = B.PUMBUN_CD
+	               AND A.STR_CD = ?
+                   AND B.PUMBUN_TYPE      IN ('0', '4', 'B')
+	               AND A.PUMBUN_CD LIKE ? || '%'
+	               AND B.VEN_CD = ?
+	               AND A.LAST_PROM_DT like ? || '%'
+              GROUP BY A.STR_CD, A.PUMBUN_CD, A.LAST_PROM_DT
+             UNION ALL
+                SELECT A.STR_CD, A.PUMBUN_CD, A.TAKE_DT AS YYYYMMDD
+                     , COUNT(1) AS AA
+                     , 0 AS BB
+                     , 0 AS CC
+                  FROM MSS.MP_PROMISECERT A
+                     , DPS.PC_STRPBN B                            
+                WHERE  A.STR_CD = B.STR_CD
+                  AND  A.PUMBUN_CD = B.PUMBUN_CD
+                   AND B.PUMBUN_TYPE      IN ('0', '4', 'B')
+                  AND  A.STR_CD = ?
+                  AND  A.PUMBUN_CD LIKE ? || '%'
+                  AND  B.VEN_CD = ?
+                  AND  A.TAKE_DT like ? || '%'
+             GROUP BY  A.STR_CD, A.PUMBUN_CD, A.TAKE_DT
+             ) A
+    GROUP BY YYYYMMDD
+    ORDER BY YYYYMMDD
+        ]]>
+    </query> 
+    
+    <!-- 약속분석현황 리스트  -->
+    <query name="SEL_PROMISSPOPUP">
+        <![CDATA[
+        SELECT TAKE_DT                      
+             , A.STR_CD
+             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM                                         /* 점명 */                     
+             , TAKE_SEQ                   
+             , TAKE_USER_ID               
+             , COM.FN_GET_USER_NAME(TAKE_USER_ID) AS TAKE_USER_NM                       
+             , CUST_NM                    
+             , POST_NO                    
+             , CUST_POST_SEQ              
+             , ADDR                       
+             , DTL_ADDR                   
+             , MOBILE_PH1                 
+             , MOBILE_PH2                 
+             , MOBILE_PH3                 
+             , HOME_PH1                   
+             , HOME_PH2                   
+             , HOME_PH3                   
+             , FRST_PROM_DT               
+             , SUBSTR(FRST_PROM_TIME, 0,2) AS FRST_PROM_HH               
+             , SUBSTR(FRST_PROM_TIME, 3,2) AS FRST_PROM_MM               
+             , LAST_PROM_DT                
+             , SUBSTR(LAST_PROM_TIME, 0,2) AS LAST_PROM_HH                
+             , SUBSTR(LAST_PROM_TIME, 3,2) AS LAST_PROM_MM                
+             , PROM_TYPE                  
+             , PROM_DTL                   
+             , DELI_TYPE                  
+             , DELI_STR                   
+             , A.PUMBUN_CD AS PUMBUN_CD
+             , B.VEN_CD AS VEN_CD                      
+             , (SELECT PUMBUN_NAME FROM DPS.PC_PBNMST WHERE PUMBUN_CD = A.PUMBUN_CD) AS PUMBUN_NM                  
+             , COM.FN_GET_ORG_INFO(A.TAKE_USER_ID, 'CODE') AS ORG_CD                     
+             , COM.FN_GET_ORG_INFO(A.TAKE_USER_ID, 'NAME') AS ORG_NM                     
+             , SKU_NM                     
+             , IN_DELI_DT                 
+             , SMS_YN                     
+             , COUR_CUST_NM               
+             , COUR_POST_NO               
+             , COUR_POST_SEQ              
+             , COUR_ADDR                  
+             , COUR_DTL_ADDR              
+             , COUR_MOBILE_PH1            
+             , COUR_MOBILE_PH2            
+             , COUR_MOBILE_PH3            
+             , COUR_HOME_PH1              
+             , COUR_HOME_PH2              
+             , COUR_HOME_PH3              
+             , COUR_COMP_NM               
+             , COUR_SEND_NO               
+             , PROC_STAT   
+             , COM.FN_GET_COMM_NAME('D','M024',PROC_STAT) AS PROC_STAT_NM   
+             , (SELECT COUNT(*) FROM MSS.MP_HAPPYCALLMGR B 
+                WHERE A.TAKE_DT = B.TAKE_DT 
+                AND A.STR_CD = B.STR_CD 
+                AND A.TAKE_SEQ = B.TAKE_SEQ
+               ) AS HAPPY_CALL_YN               
+          FROM MSS.MP_PROMISECERT A
+             , DPS.PC_STRPBN B
+         WHERE A.STR_CD = B.STR_CD 
+           AND A.PUMBUN_CD = B.PUMBUN_CD
+           AND A.STR_CD = ?
+           AND B.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND A.PUMBUN_CD LIKE ? || '%'
+           AND B.VEN_CD = ?          
+           AND (A.TAKE_DT = ? OR A.LAST_PROM_DT = ? )
+      ORDER BY A.TAKE_SEQ DESC
+        ]]>
+    </query>
+    
+    <!-- 약속분석현황 상세보기  -->
+    <query name="SEL_PROMISSDETAIL">
+        <![CDATA[
+        SELECT TAKE_DT                      
+             , STR_CD
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM                                         /* 점명 */                     
+             , TAKE_SEQ                   
+             , TAKE_USER_ID               
+             , COM.FN_GET_USER_NAME(TAKE_USER_ID) AS TAKE_USER_NM                       
+             , CUST_NM                    
+             , POST_NO                    
+             , CUST_POST_SEQ              
+             , ADDR                       
+             , DTL_ADDR                   
+             , MOBILE_PH1                 
+             , MOBILE_PH2                 
+             , MOBILE_PH3                 
+             , HOME_PH1                   
+             , HOME_PH2                   
+             , HOME_PH3                   
+             , FRST_PROM_DT               
+             , SUBSTR(FRST_PROM_TIME, 0,2) AS FRST_PROM_HH               
+             , SUBSTR(FRST_PROM_TIME, 3,2) AS FRST_PROM_MM               
+             , LAST_PROM_DT                
+             , SUBSTR(LAST_PROM_TIME, 0,2) AS LAST_PROM_HH                
+             , SUBSTR(LAST_PROM_TIME, 3,2) AS LAST_PROM_MM                
+             , PROM_TYPE                  
+             , PROM_DTL                   
+             , DELI_TYPE                  
+             , DELI_STR                   
+             , PUMBUN_CD AS PUMBUN_CD
+             , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NM                  
+             , COM.FN_GET_ORG_INFO(TAKE_USER_ID, 'CODE') AS ORG_CD                     
+             , COM.FN_GET_ORG_INFO(TAKE_USER_ID, 'NAME') AS ORG_NM                     
+             , SKU_NM                     
+             , IN_DELI_DT                 
+             , SMS_YN                     
+             , COUR_CUST_NM               
+             , COUR_POST_NO               
+             , COUR_POST_SEQ              
+             , COUR_ADDR                  
+             , COUR_DTL_ADDR              
+             , COUR_MOBILE_PH1            
+             , COUR_MOBILE_PH2            
+             , COUR_MOBILE_PH3            
+             , COUR_HOME_PH1              
+             , COUR_HOME_PH2              
+             , COUR_HOME_PH3              
+             , COUR_COMP_NM               
+             , COUR_SEND_NO               
+             , PROC_STAT   
+             , COM.FN_GET_COMM_NAME('D','M024',PROC_STAT) AS PROC_STAT_NM   
+             , (SELECT COUNT(*) FROM MSS.MP_HAPPYCALLMGR B 
+                WHERE TAKE_DT = B.TAKE_DT 
+                AND STR_CD = B.STR_CD 
+                AND TAKE_SEQ = B.TAKE_SEQ
+               ) AS HAPPY_CALL_YN               
+          FROM MSS.MP_PROMISECERT
+         WHERE STR_CD = ?
+           AND TAKE_DT = ?
+           AND TAKE_SEQ = ?
+        ]]>
+    </query>
+          
+      
+    
+    
+
+</service>

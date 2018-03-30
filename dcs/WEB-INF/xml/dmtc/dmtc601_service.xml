@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.06
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  월별 적립수수료 정산내역
+ -->
+<service name="/dmtc601.dc">
+
+    <gauce name="H_MASTER"> 
+        <column colName="BRCH_ID"       colType="TB_STRING"   size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BRCH_NAME"     colType="TB_STRING"   size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="FINC_CD"       colType="TB_STRING"   size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SUM_YM"        colType="TB_STRING"   size="6"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="ADD_POINT"     colType="TB_DECIMAL"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="ADD_FEE_AMT"   colType="TB_DECIMAL"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CURR_POINT"    colType="TB_DECIMAL"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ACCNT_MIG_DT"  colType="TB_STRING"   size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+     
+    <!-- 월별 적립수수료 정산내역 조회 -->    
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT A.BRCH_ID
+                 , C.BRCH_NAME
+                 , C.FINC_CD 
+                 , A.SUM_YM
+                 , A.ADD_POINT 
+                 , A.ADD_FEE_AMT
+                 , B.CURR_POINT
+                 , A.ACCNT1_MIG_DT ACCNT_MIG_DT
+              FROM DCS.DC_BR_MSUM   A
+                 , DCS.DC_POINT_RAP B
+                 , DCS.DB_BRANCH    C
+             WHERE A.BRCH_ID = B.BRCH_ID
+               AND A.SUM_YM  = B.SUM_YM
+               AND A.BRCH_ID = C.BRCH_ID
+               AND A.SUM_YM BETWEEN ? AND ?
+             ORDER BY A.BRCH_ID, A.SUM_YM
+        ]]>        
+    </query>       
+</service>

@@ -1,0 +1,768 @@
+<!-- 
+/*******************************************************************************
+ * 시스템명 : 영업관리 > 재고수불 > 재고실사> 실사재고조사표출력
+ * 작 성 일 : 2010.04.25
+ * 작 성 자 : 이재득
+ * 수 정 자 : 
+ * 파 일 명 : pstk203.jsp
+ * 버    전 : 1.0 (버전은 1.0부터 시작하며 0.1씩 증가)
+ * 개    요 : 실사재고조사표출력을 한다.
+ * 이    력 :
+ *        2010.04.25 (이재득) 작성
+ ******************************************************************************/
+-->
+<%@ page language="java" contentType="text/html;charset=utf-8" import="common.util.Util, 
+   common.vo.SessionInfo, kr.fujitsu.ffw.base.BaseProperty"   %>
+ <% request.setCharacterEncoding("utf-8"); %> 
+<%@ taglib uri="/WEB-INF/tld/c-rt.tld" prefix="c" %>
+<%@ taglib uri="/WEB-INF/tld/gauce40.tld"         prefix="gauce" %>  
+<%@ taglib uri="/WEB-INF/tld/app.tld"             prefix="loginChk" %>
+<%@ taglib uri="/WEB-INF/tld/button.tld"         prefix="button" %>
+
+<!--*************************************************************************-->
+<!--* A. 로그인 유무, 기본설정                                                *-->
+<!--*************************************************************************-->
+<loginChk:islogin />
+<%
+	String dir = BaseProperty.get("context.common.dir");
+	//PID 확인을 위한
+	String pageName = request.getRequestURI();
+	int nSubStrFr = pageName.lastIndexOf("/") + 1 ;
+	int nSubStrTo = pageName.lastIndexOf(".jsp") - 1 ;
+	pageName = pageName.substring(nSubStrFr, nSubStrTo).toUpperCase();
+
+%>
+<html>
+<head>
+<meta http-equiv="pragma" content="no-cache">
+<link href="/<%=dir%>/css/mds.css" rel="stylesheet" type="text/css">
+<script language="javascript" src="/<%=dir%>/js/common.js"
+	type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/gauce.js"
+	type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/global.js"
+	type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/message.js"
+	type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/popup.js"
+	type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/popup_dps.js"
+	type="text/javascript"></script>
+
+<!--*************************************************************************-->
+<!--* B. 스크립트 시작                                                        *-->
+<!--*************************************************************************-->
+
+
+<script LANGUAGE="JavaScript">
+var strSkuType = "0";
+var strPummokCd ="";
+
+var strStrCd       = "";
+var strStkYm       = "";
+var strPumbunCd    = "";
+
+/*************************************************************************
+ * 1. 초기설정
+ *************************************************************************/
+/**
+ * doInit()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2010.04.04
+ * 개    요 : 해당 페이지 LOAD 시  
+ * return값 : void
+ */
+ var top = 170;		//해당화면의 동적그리드top위치
+ var g_strPid           = "<%=pageName%>";                 // PID
+
+function doInit(){
+	 
+	//Master 그리드 세로크기자동조정  2013-07-17
+	 var obj   = document.getElementById("GD_MASTER"); 
+	 obj.style.height  = (parseInt(window.document.body.clientHeight)-top) + "px";
+
+    // Input Data Set Header 초기화
+
+    // Output Data Set Header 초기화
+    DS_IO_MASTER.setDataHeader('<gauce:dataset name="H_SEL_MASTER"/>');    
+    //그리드 초기화
+    gridCreate1(); //마스터    
+    
+    // EMedit에 초기화( gauce.js )
+    initEmEdit(EM_O_STK_YM,       "THISMN",    PK);     //실사년월
+    initEmEdit(EM_O_PUMBUN_CD,    "CODE^6^0",  PK);     //브랜드코드
+    initEmEdit(EM_O_PUMBUN_NAME,  "GEN^40",    READ); //브랜드명
+    initEmEdit(EM_O_ORG_NAME,     "GEN^40",    READ); //조직명
+    initEmEdit(EM_O_COST_CAL_WAY, "GEN^20",    READ); //재고평가구분
+    initEmEdit(EM_O_STK_DT,       "YYYYMMDD",  READ); //재고조사일
+    initEmEdit(EM_O_STK_FLAG,     "GEN^10",    READ); //재고실사구분
+    initEmEdit(EM_O_STATE,        "GEN^40",    READ); //상태
+    //콤보 초기화
+    initComboStyle(LC_O_STR_CD,DS_O_STR_CD, "CODE^0^30,NAME^0^80", 1, PK);  //점(조회)   
+    
+    //시스템 코드 공통코드에서 가지고 오기( popup.js )
+    getEtcCode("DS_I_COST_CAL_WAY", "D", "P039", "N");    //재고평가구분
+    getEtcCode("DS_I_COLOR_CD", "D", "P062", "N");        //칼라  
+    getEtcCode("DS_I_SIZE_CD", "D", "P026", "N");         //사이즈
+    getEtcCode("DS_I_SALE_UNIT_CD", "D", "P013", "N");    //판매단위
+    getEtcCode("DS_I_CMP_SPEC_UNIT", "D", "P013", "N");   //구성규격단위
+
+    //점콤보 가져오기 ( gauce.js )     
+    getStore("DS_O_STR_CD", "Y", "", "N");    
+    
+    //콤보데이터 기본값 설정( gauce.js )
+    setComboData(LC_O_STR_CD, '<c:out value="${sessionScope.sessionInfo.STR_CD}" />'); 
+    
+    EM_O_PUMBUN_CD.Focus();
+    getPbnStk();
+    
+    //사용되는 데이터셋 등록 ( 종료시 데이터 변경 체크)( common.js )
+    registerUsingDataset("pstk203","DS_IO_MASTER" );
+}
+
+function gridCreate1(){
+    var hdrProperies = '<FC>id={currow}          name="NO"               width=30     align=center    edit=none</FC>'  
+                     + '<FC>id=SKU_CD            name="단품코드"         width=110    align=center  EditStyle=Popup  edit=none</FC>'
+                     + '<FC>id=SKU_NAME          name="단품명"           width=140    align=left  edit=none  </FC>'
+                     + '<FC>id=STR_CD            name="점"               width=110    align=center  edit=none show="false"</FC>'
+                     + '<FC>id=BUY_SALE_PRC      name="단가"             width=80    align=right  edit=none   </FC>'
+                     + '<FC>id=STYLE_CD          name="STYLE코드"        width=90    align=center  edit=none show="false"</FC>'
+                     + '<FC>id=STYLE_NAME        name="STYLE명"          width=100    align=left  edit=none   BgColor={if(ERROR_CHECK = "","white","orange") }</FC>'
+                     + '<FC>id=COLOR_CD          name="칼라명"           width=80    align=left  edit=none  EditStyle=Lookup    Data="DS_I_COLOR_CD:CODE:NAME"  </FC>'
+                     + '<FC>id=SIZE_CD           name="사이즈"           width=80    align=left  edit=none  EditStyle=Lookup    Data="DS_I_SIZE_CD:CODE:NAME"   </FC>'
+                     + '<FC>id=INPUT_PLU_CD      name="소스마킹코드"          width=100    align=left  edit=none   BgColor={if(ERROR_CHECK = "","white","orange") }</FC>'
+                     + '<FC>id=SALE_UNIT_CD      name="판매단위"           width=80    align=left  edit=none  EditStyle=Lookup    Data="DS_I_SALE_UNIT_CD:CODE:NAME"  </FC>'
+                     + '<FC>id=CMP_SPEC_UNIT     name="구성단위"           width=80    align=left  edit=none  EditStyle=Lookup    Data="DS_I_CMP_SPEC_UNIT:CODE:NAME"   </FC>'                     
+                     + '<FC>id=ERROR_CHECK       name="에러체크"         width=100    align=left  edit=none  show="false"</FC>';                      
+    initGridStyle(GD_MASTER, "common", hdrProperies, true);
+}
+
+/*************************************************************************
+  * 2. 공통버튼
+     (1) 조회       - btn_Search(), subQuery()
+     (2) 신규       - btn_New()
+     (3) 삭제       - btn_Delete()
+     (4) 저장       - btn_Save()
+     (5) 엑셀       - btn_Excel()
+     (6) 출력       - btn_Print()
+     (7) 확정       - btn_Conf()
+ *************************************************************************/
+
+/**
+ * btn_Search()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2010.04.04
+ * 개    요 : 조회시 호출
+ * return값 : void
+ */
+function btn_Search() {	
+	 
+	 //저장되지 않은 내용이 있을경우 경고
+	 if (DS_IO_MASTER.IsUpdated ) {
+	     ret = showMessage(QUESTION , YESNO, "USER-1059");
+	     if (ret != "1") {
+	         return false;
+	     } 
+	 } 
+	 if(!checkValidation()){
+	        return;
+	    }
+    DS_IO_MASTER.ClearData();
+    
+    var strStrCd      = LC_O_STR_CD.BindColVal;    
+    var strStkYm      = EM_O_STK_YM.Text;
+    //var strStkYmBf    = strStkYm-"01";    
+    var strPumbunCd   = EM_O_PUMBUN_CD.Text;
+    var strStkEDt     = EM_O_STK_DT.Text;    
+    
+    var strStkSdt = strStkYm;
+    strStkSdt += "01";
+    var strStkYmBf = strStkYm;
+    
+    var goTo       = "searchMaster" ;    
+    var action     = "O";     
+    var parameters = "&strStrCd="+encodeURIComponent(strStrCd)
+                    +"&strStkYm="+encodeURIComponent(strStkYm)
+                    +"&strStkYmBf="+encodeURIComponent(strStkYmBf)
+                    +"&strStkSdt="+encodeURIComponent(strStkSdt)
+                    +"&strStkEDt="+encodeURIComponent(strStkEDt)
+                    +"&strPumbunCd="+encodeURIComponent(strPumbunCd)
+                    +"&strStkEDt="+encodeURIComponent(strStkEDt)
+                    +"&strSkuType="+encodeURIComponent(strSkuType);   
+    
+    TR_MAIN.Action="/dps/pstk203.pt?goTo="+goTo+parameters;  
+    TR_MAIN.KeyValue="SERVLET("+action+":DS_IO_MASTER=DS_IO_MASTER)"; //조회는 O
+    TR_MAIN.Post();
+    
+    //조회후 결과표시
+    setPorcCount("SELECT", GD_MASTER);     
+    
+    if (DS_IO_MASTER.CountRow > 0){
+    	getcolumnSetting(strSkuType);
+    }
+    
+    //stkQtySumAtm();      
+}
+
+/**
+ * btn_New()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2010.04.04
+ * 개    요 : Grid 레코드 추가
+ * return값 : void
+ */
+function btn_New() {
+	 
+ }
+/**
+ * btn_Delete()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2010.04.04
+ * 개    요 : Grid 레코드 삭제
+ * return값 : void
+ */
+function btn_Delete() {	 
+	
+}
+
+/**
+ * btn_Save()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2010.04.04
+ * 개    요 : DB에 저장 / 수정 
+ * return값 : void
+*/
+function btn_Save() {
+    
+ }
+
+/**
+ * btn_Excel()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2010.04.04
+ * 개    요 : 엑셀로 다운로드
+ * return값 : void
+ */
+function btn_Excel() {	
+    var parameters = ""; 
+       
+   //openExcel2(GD_MASTER, "실사재고조사표", parameters, true );
+   openExcel5(GD_MASTER, "실사재고조사표", parameters, true , "",g_strPid );
+
+   GD_MASTER.Focus();
+}
+
+/**
+ * btn_Print()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2010.04.04
+ * 개    요 : 페이지 프린트 인쇄
+ * return값 : void
+ */
+function btn_Print() {
+	 
+	if(!checkValidation()){
+		return;
+	}
+		
+	var strStrCd    = LC_O_STR_CD.BindColVal;
+    var strStkYm    = EM_O_STK_YM.Text;
+    var strPumbunCd = EM_O_PUMBUN_CD.Text;
+    var strPumbunName = EM_O_PUMBUN_NAME.Text;
+    var strStkDt = EM_O_STK_DT.Text;
+    
+    var strOrgName = EM_O_ORG_NAME.Text;
+    var strStkFlag = DS_O_PBNSTK.NameValue(1, "STK_FLAG_NAME");
+    var strStrNm   = DS_O_PBNINF.NameValue(1, "STR_NAME");
+    
+    strStrNm += "/"+strOrgName;
+    
+    strStkFlag += "재고조사";
+    var params   = "&strStrCd="+strStrCd
+                 + "&strStkYm="+strStkYm
+                 + "&strPumbunCd="+strPumbunCd
+                 + "&strPumbunName="+encodeURIComponent(strPumbunName)
+                 + "&strStkDt="+strStkDt
+                 + "&strOrgName="+encodeURIComponent(strStrNm)
+                 + "&strSkuType="+strSkuType
+                 + "&strStkFlag="+encodeURIComponent(strStkFlag);
+    window.open("/dps/pstk203.pt?goTo=print"+params,"OZREPORT", 1000, 700);
+}
+
+/**
+ * btn_Conf()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2010.04.04
+ * 개    요 : 확정 처리
+ * return값 : void
+ */
+function btn_Conf() {
+
+}
+
+/*************************************************************************
+ * 3. 함수
+ *************************************************************************/
+ 
+ /**
+  * checkValidation
+  * 작 성 자 : 
+  * 작 성 일 : 2010-04-17
+  * 개    요 : checkValidation.
+  * return값 : void
+ **/
+ function checkValidation(){
+	 if( LC_O_STR_CD.BindColVal == "" ){
+	        showMessage(EXCLAMATION , Ok,  "GAUCE-1005", "점");            
+	        LC_O_STR_CD.Focus();
+	        return false;
+	    }else if( EM_O_STK_YM.Text == "" ){
+	        showMessage(EXCLAMATION , Ok,  "GAUCE-1005", "실사년월");            
+	        EM_O_STK_YM.Focus();
+	        return false;
+	    }else if( EM_O_PUMBUN_CD.Text == "" ){
+	        showMessage(EXCLAMATION , Ok,  "GAUCE-1005", "브랜드");            
+	        EM_O_PUMBUN_CD.Focus();
+	        return false;
+	    }
+	 if(EM_O_STK_DT.Text == ""){
+		 showMessage(EXCLAMATION , Ok,  "GAUCE-1000", "등록된 재고실사가 없습니다.");            
+		 EM_O_STK_YM.Focus();
+         return false;
+	 }
+	 
+     return true;
+ }
+/**
+  * setPumbunCdCombo()
+  * 작 성 자 : 이재득
+  * 작 성 일 : 2010.03.18
+  * 개    요 : 브랜드POPUP를 조회한다.
+  * return값 : void
+  */
+ function setPumbunCdSkuType(evnflag){
+     var codeObj = EM_O_PUMBUN_CD;
+     var nameObj = EM_O_PUMBUN_NAME;
+     
+     //nameObj.Text = "";
+      
+     if(codeObj.Text == "" && evnflag != "POP" ){
+    	 EM_O_COST_CAL_WAY.Text = "";
+         EM_O_ORG_NAME.Text = "";
+         nameObj.Text = "";
+    	 return;
+     }         
+
+     var result = null;
+
+     if( evnflag == "POP" ){
+         result = strPbnPop(codeObj,nameObj,'Y','','', '','','','','','1','','','','','');
+          
+     }else if( evnflag == "NAME" ){
+         setStrPbnNmWithoutPop("DS_SEARCH_NM",codeObj,nameObj,"Y",1,'','', '','','','','','1','','','','','');
+         if (DS_SEARCH_NM.CountRow > 0){
+             getPbnInf();
+             strSkuType = DS_SEARCH_NM.NameValue(1, "SKU_TYPE");
+         }
+     }
+
+     if( result != null ){         
+    	 getPbnInf();
+    	 strSkuType = result.get("SKU_TYPE");  
+    	 //getcolumnSetting(strSkuType);
+     }     
+ }
+ 
+ /**
+  * getPbnStk()
+  * 작 성 자 : 
+  * 작 성 일 : 
+  * 개     요 : 브랜드에 따른 재고실사 조회
+  * return값 : void
+  */
+ function getPbnStk() {
+	  var strStrCd       = LC_O_STR_CD.BindColVal;
+      var strPumbunCd    = EM_O_PUMBUN_CD.Text;           
+      var strStkYm       = EM_O_STK_YM.Text;              
+      
+      var goTo       = "searchPbnStk" ;    
+      var action     = "O";     
+      var parameters = "&strStrCd="+encodeURIComponent(strStrCd)
+                      +"&strStkYm="+encodeURIComponent(strStkYm);
+      
+      TR_MAIN.Action="/dps/pstk203.pt?goTo="+goTo+parameters;  
+      TR_MAIN.KeyValue="SERVLET("+action+":DS_O_PBNSTK=DS_O_PBNSTK)"; //조회는 O
+      TR_MAIN.Post();     
+      
+      EM_O_STK_DT.Text = DS_O_PBNSTK.NameValue(1, "SRVY_DT");
+      EM_O_STK_FLAG.Text = DS_O_PBNSTK.NameValue(1, "STK_FLAG_NAME"); 
+      EM_O_STATE.Text = DS_O_PBNSTK.NameValue(1, "CLOSE_DT");
+      
+     //return DS_O_MARGIN.NameValue(1, "LOW_MG_RATE");
+ }
+ 
+ /**
+  * getPbnInf()
+  * 작 성 자 : 
+  * 작 성 일 : 
+  * 개     요 : 브랜드정보(조직/재고평가구분) 조회
+  * return값 : void
+  */
+ function getPbnInf() {
+      var strStrCd       = LC_O_STR_CD.BindColVal;
+      var strPumbunCd    = EM_O_PUMBUN_CD.Text;       
+      
+      var goTo       = "searchPbnInf" ;    
+      var action     = "O";     
+      var parameters = "&strStrCd="+encodeURIComponent(strStrCd)
+                      +"&strPumbunCd="+encodeURIComponent(strPumbunCd);
+      
+      TR_MAIN.Action="/dps/pstk203.pt?goTo="+goTo+parameters;  
+      TR_MAIN.KeyValue="SERVLET("+action+":DS_O_PBNINF=DS_O_PBNINF)"; //조회는 O
+      TR_MAIN.Post();     
+      
+      EM_O_ORG_NAME.Text = DS_O_PBNINF.NameValue(1, "ORG_NAME");
+      EM_O_COST_CAL_WAY.Text = DS_O_PBNINF.NameValue(1, "COST_CAL_NAME");          
+     
+ } 
+ 
+ /**
+  * getcolumnSetting()
+  * 작 성 자 : 
+  * 작 성 일 : 
+  * 개     요 : 단품구분에 따라 컬럼 셋팅
+  * return값 : void
+  */
+ function getcolumnSetting(skuType) {
+	  //DS_IO_MASTER.ClearData();
+	  if (skuType == "1"){
+		  GD_MASTER.ColumnProp('STYLE_NAME','show')= "FALSE";
+		  GD_MASTER.ColumnProp('COLOR_CD','show')= "FALSE";
+		  GD_MASTER.ColumnProp('SIZE_CD','show')= "FALSE";
+		  GD_MASTER.ColumnProp('INPUT_PLU_CD','show')= "TRUE";
+          GD_MASTER.ColumnProp('SALE_UNIT_CD','show')= "TRUE";
+          GD_MASTER.ColumnProp('CMP_SPEC_UNIT','show')= "TRUE";          
+          
+	  }else if (skuType == "2"){
+		  GD_MASTER.ColumnProp('STYLE_NAME','show')= "FALSE";
+          GD_MASTER.ColumnProp('COLOR_CD','show')= "FALSE";
+          GD_MASTER.ColumnProp('SIZE_CD','show')= "FALSE";
+          GD_MASTER.ColumnProp('INPUT_PLU_CD','show')= "FALSE";
+          GD_MASTER.ColumnProp('SALE_UNIT_CD','show')= "TRUE";
+          GD_MASTER.ColumnProp('CMP_SPEC_UNIT','show')= "FALSE";
+          
+	  }else if (skuType == "3"){
+		  GD_MASTER.ColumnProp('STYLE_NAME','show')= "TRUE";
+          GD_MASTER.ColumnProp('COLOR_CD','show')= "TRUE";
+          GD_MASTER.ColumnProp('SIZE_CD','show')= "TRUE";
+          GD_MASTER.ColumnProp('INPUT_PLU_CD','show')= "FALSE";
+          GD_MASTER.ColumnProp('SALE_UNIT_CD','show')= "FALSE";
+          GD_MASTER.ColumnProp('CMP_SPEC_UNIT','show')= "FALSE";          
+	  }	 
+ }
+ 
+</script>
+</head>
+
+<!--*************************************************************************-->
+<!--* B. 스크립트 끝                                                     *-->
+<!--*************************************************************************-->
+
+<!--*************************************************************************-->
+<!--* C. 가우스 이벤트 처리                                                 *-->
+<!--*    1. TR Success 메세지 처리
+<!--*    2. TR Fail 메세지 처리
+<!--*    3. DataSet Success 메세지 처리
+<!--*    4. DataSet Fail 메세지 처리
+<!--*    5. DataSet 이벤트 처리
+<!--*************************************************************************-->
+<!--------------------- 1. TR Success 메세지 처리  ---------------------------->
+<script language=JavaScript for=TR_MAIN event=onSuccess>
+    for(i=0;i<TR_MAIN.SrvErrCount('UserMsg');i++) {
+        showMessage(INFORMATION, OK, "USER-1000", TR_MAIN.SrvErrMsg('UserMsg',i));
+    }
+</script>
+
+<!--------------------- 2. TR Fail 메세지 처리  ------------------------------->
+<script language=JavaScript for=TR_MAIN event=onFail>
+    trFailed(TR_MAIN.ErrorMsg);
+</script>
+<!--------------------- 3. Excelupload  --------------------------------------->
+<comment id="_NSID_">
+<object id=INF_EXCELUPLOAD classid=<%=Util.CLSID_INPUTFILE%>
+   style="position: absolute; left: 355px; top: 55px; width: 110px; height: 23px; visibility: hidden;">
+   <param name="Text" value='FileOpen'>
+   <param name="Enable" value="true">
+</object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<!--------------------- 3. DataSet Success 메세지 처리  ----------------------->
+<!--------------------- 4. DataSet Fail 메세지 처리  -------------------------->
+<!--------------------- 5. DataSet 이벤트 처리  ------------------------------->
+<script language=JavaScript for=DS_IO_MASTER
+	event=OnDataError(row,colid)>
+var colName = GD_MASTER.GetHdrDispName(-3, colid);
+if( this.ErrorCode == "50018" ) {
+    showMessage(STOPSIGN, OK, "GAUCE-1005", colName);
+} else if ( this.ErrorCode == "50019") {
+    showMessage(STOPSIGN, OK, "GAUCE-1007", row);
+} else {
+    showMessage(STOPSIGN, OK, "USER-1000", this.ErrorMsg);
+}
+</script>
+<!--------------------- 6. 컴포넌트 이벤트 처리  ------------------------------>
+<!-- 적용기준일 -->
+<script language=JavaScript for=EM_O_STK_YM event=onKillFocus()>
+    if(!checkDateTypeYM(this))
+        return;
+    getPbnStk();
+</script>
+
+<!-- 브랜드코드 변경시 -->
+<script language=JavaScript for=EM_O_PUMBUN_CD event=OnKillFocus()>   
+    if(!this.Modified)
+        return;    
+    setPumbunCdSkuType("NAME");
+</script>
+
+<!-- Grid Master oneClick event 처리 -->
+<script language=JavaScript for=GD_MASTER event=OnClick(row,colid)>
+    sortColId( eval(this.DataID), row, colid);
+</script>
+
+<!--*************************************************************************-->
+<!--* C. 가우스 이벤트 처리 끝                                               *-->
+<!--*************************************************************************-->
+
+<!--*************************************************************************-->
+<!--* D. 가우스 DataSet & Transaction 정의                                   *-->
+<!--*    1. DataSet
+<!--*    2. Transaction
+<!--*************************************************************************-->
+
+<!--------------------- 1. DataSet  ------------------------------------------->
+
+<!-- =============== Input용 -->
+<!-- 검색용 -->
+<comment id="_NSID_">
+<object id="DS_O_STR_CD" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_O_PUMBUN_CD" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_O_PBNSTK" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_O_PBNINF" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_IO_SKUCD" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_IO_CLOSE" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+
+<!-- 서브 시스템 값 가져오기  -->
+<comment id="_NSID_">
+<object id="DS_I_COMMON" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_I_CONDITION" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+
+<!-- ===============- Output용 -->
+<comment id="_NSID_">
+<object id="DS_IO_MASTER" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_I_COST_CAL_WAY" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_I_COLOR_CD" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_I_SIZE_CD" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_I_SALE_UNIT_CD" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_I_CMP_SPEC_UNIT" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_SEARCH_NM" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<comment id="_NSID_">
+<object id="DS_SEARCH_SKU" classid=<%= Util.CLSID_DATASET %>></object>
+</comment>
+<script>_ws_(_NSID_);</script>
+<!--------------------- 2. Transaction  --------------------------------------->
+<comment id="_NSID_">
+<object id="TR_MAIN" classid=<%=Util.CLSID_TRANSACTION%>>
+	<param name="KeyName" value="Toinb_dataid4">
+</object>
+</comment>
+<script>_ws_(_NSID_);</script>
+
+<!--*************************************************************************-->
+<!--* D. 가우스 DataSet & Transaction 정의 끝                                                                                        *-->
+<!--*************************************************************************-->
+
+<script language='javascript'>
+window.onresize = function(){
+	
+    var obj   = document.getElementById("GD_MASTER");
+    
+    var grd_height = 0;
+    
+    
+    if((parseInt(window.document.body.clientHeight)) <= top+150) {
+    	grd_height = top;    	
+    } else {
+    	grd_height = (parseInt(window.document.body.clientHeight)-top);
+    }
+    obj.style.height  = grd_height + "px";
+    
+	
+    
+}
+</script>
+
+
+<!--*************************************************************************-->
+<!--* E. 본문시작                                                                                                                                                               *-->
+<!--*************************************************************************-->
+<body onLoad="doInit();" class="PL10 PT15">
+<!--공통 타이틀/버튼 -->
+<%@ include file="/jsp/common/titleButton.jsp"%>
+<!--공통 타이틀/버튼 // -->
+<div id="testdiv" class="testdiv">
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+
+	<tr>
+		<td class="PT01 PB03">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0"
+			class="o_table">
+			<tr>
+        <td><table width="100%" border="0" cellpadding="0" cellspacing="0" class="s_table">
+          <tr>
+            <th class="point" width="80">점</th>
+            <td width="165">
+                 <comment id="_NSID_">
+                    <object id=LC_O_STR_CD classid=<%= Util.CLSID_LUXECOMBO %> width=165 tabindex=1 align="absmiddle">
+                    </object>
+                </comment><script>_ws_(_NSID_);</script>
+            </td>
+            <th class="point" width="80">실사년월</th>
+            <td width="105">
+                <comment id="_NSID_">
+                      <object id=EM_O_STK_YM classid=<%=Util.CLSID_EMEDIT%>  width=78 tabindex=1>
+                      </object>
+                </comment><script> _ws_(_NSID_);</script>
+                <img src="/<%=dir%>/imgs/btn/date.gif" class="PR03" onclick="javascript:openCal('M',EM_O_STK_YM)" align="absmiddle" /></td>
+            </td>
+            <th class="point" width="80">브랜드</th>
+            <td>
+                <comment id="_NSID_">
+                      <object id=EM_O_PUMBUN_CD classid=<%=Util.CLSID_EMEDIT%>  width=60 tabindex=1>
+                      </object>
+                </comment><script> _ws_(_NSID_);</script>
+                <img src="/<%=dir%>/imgs/btn/detail_search_s.gif" class="PR03" onclick="javascript: setPumbunCdSkuType('POP')" align="absmiddle" />
+                <comment id="_NSID_">
+                      <object id=EM_O_PUMBUN_NAME classid=<%=Util.CLSID_EMEDIT%>  width=145 tabindex=1>
+                      </object>
+                </comment><script> _ws_(_NSID_);</script>                
+            </td>
+          </tr>
+          <tr>
+            <th width="80">조직명</th>
+            <td colspan="3">
+                <comment id="_NSID_">
+                      <object id=EM_O_ORG_NAME classid=<%=Util.CLSID_EMEDIT%>  width=365 tabindex=1>
+                      </object>
+                </comment><script> _ws_(_NSID_);</script>
+            </td>
+            <th width="80">재고평가구분</th>
+            <td colspan="3">
+                <comment id="_NSID_">
+                      <object id=EM_O_COST_CAL_WAY classid=<%=Util.CLSID_EMEDIT%>  width=230 tabindex=1>
+                      </object>
+                </comment><script> _ws_(_NSID_);</script>
+            </td>
+          </tr>
+        </table></td>
+      </tr>
+    </table></td>
+  </tr>
+  <tr>
+    <td class="dot"></td>
+  </tr>
+  <tr>
+      <td><table width="100%" border="0" cellpadding="0" cellspacing="0" class="s_table">
+        <tr>
+          <th width="84">재고조사일</th>
+          <td width="164">
+              <comment id="_NSID_">
+                    <object id=EM_O_STK_DT classid=<%=Util.CLSID_EMEDIT%>  width=164 tabindex=1>
+                    </object>
+              </comment><script> _ws_(_NSID_);</script>
+          </td>
+          <th width="80">재고실사구분</th>
+          <td width="104">
+              <comment id="_NSID_">
+                    <object id=EM_O_STK_FLAG classid=<%=Util.CLSID_EMEDIT%>  width=97 tabindex=1>
+                    </object>
+              </comment><script> _ws_(_NSID_);</script>
+          </td>
+          <th width="80">상태</th>
+          <td>
+              <comment id="_NSID_">
+                    <object id=EM_O_STATE classid=<%=Util.CLSID_EMEDIT%>  width=230 tabindex=1>
+                    </object>
+              </comment><script> _ws_(_NSID_);</script>
+          </td>
+        </tr>
+      </table></td>
+    </tr>
+  <tr>
+      <td class="dot"></td>
+  </tr>   
+	<tr>
+		<td class="PT05" >
+		<table width="100%" border="0" cellspacing="0" cellpadding="0"
+			class="BD4A">
+			<tr>
+				<td><comment id="_NSID_"><object id=GD_MASTER
+					width="100%" height=427 classid=<%=Util.CLSID_GRID%>>
+					<param name="DataID" value="DS_IO_MASTER">
+				</object></comment><script>_ws_(_NSID_);</script></td>				
+			</tr>
+		</table>
+		</td>
+	</tr>
+</table>
+</div>
+<!-----------------------------------------------------------------------------
+  Gauce Bind Component Declaration
+------------------------------------------------------------------------------>
+
+</body>
+</html>
+

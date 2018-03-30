@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 :
+ * 변경내용 :
+ * 개    요 :  로그인 체크
+ -->
+<service name="/ecom002.ec">
+    <!-- 매출정보조회 -->
+    <query name="SEL_SALE">
+        <![CDATA[
+                SELECT SUBSTR(A.SALE_DT,0,6) AS SALE_DT                   -- 년월
+                     , A.STR_CD                                           -- 점코드
+                     , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM          -- 점명
+                     , A.PUMBUN_CD                                        -- 브랜드코드
+                     , DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD) AS PUMBUN_NM   -- 브랜드명
+                     , SUM(A.TOT_SALE_AMT) AS TOT_SALE_AMT                -- 총매출액
+                     , SUM(A.NET_SALE_AMT) AS NET_SALE_AMT                -- 순매출액
+                  FROM DPS.PS_DAYPBN A, DPS.PC_STRPBN B
+                 WHERE A.STR_CD = ?
+                   AND A.VEN_CD = ?
+                   AND A.STR_CD = B.STR_CD
+                   AND A.PUMBUN_CD = B.PUMBUN_CD
+                   AND B.PUMBUN_TYPE IN ('0', '4', 'B')
+                   AND A.SALE_DT LIKE SUBSTR(?,0,6)||'%'
+              GROUP BY SUBSTR(A.SALE_DT,0,6), A.STR_CD, A.PUMBUN_CD
+              ORDER BY PUMBUN_NM
+        ]]>
+    </query>
+
+     <!-- 대금정보조회 -->
+    <query name="SEL_BILL">
+        <![CDATA[
+                    SELECT A.PAY_YM               -- 지불년월
+                         , A.PAY_CYC              -- 지불주기(P052)
+                         , COM.FN_GET_COMM_NAME('D', 'P052', A.PAY_CYC) AS PAY_CYC_NM
+                         , A.PAY_CNT              -- 지불회차(P053)
+                         , COM.FN_GET_COMM_NAME('D', 'P053', A.PAY_CNT) AS PAY_CNT_NM
+                         , A.NTIME_PAY_AMT        -- 당회_지불대상액
+                         , A.NTIME_HOLD_AMT       -- 당회_지불보류액
+                         , A.NTIME_DED_AMT        -- 당회_지불공제액
+                         , A.NTIME_BFPAY_AMT      -- 당회_선급금액
+                         , A.NTIME_RLPAY_AMT      -- 당회_실지불액
+                      FROM DPS.PP_BILLMST A
+                         , ( SELECT STR_CD, CLOSE_YM, (CASE CLOSE_UNIT_FLAG WHEN '52' then '1'
+                                               WHEN '53' then '2'
+                                               WHEN '54' then '2'
+                                               WHEN '55' then '3'
+                                               WHEN '56' then '3'
+                                               WHEN '57' then '3'  END) PAY_CYC,
+                                    (CASE CLOSE_UNIT_FLAG WHEN '52' then '1'
+                                                          WHEN '53' then '1'
+                                                          WHEN '54' then '2'
+                                                          WHEN '55' then '1'
+                                                          WHEN '56' then '2'
+                                                          WHEN '57' then '3'  END) PAY_CNT
+                               FROM DPS.PC_MCLOSE
+                              WHERE CLOSE_TASK_FLAG = 'PPAY'
+                                AND CLOSE_YN = 'Y'
+                                AND CLOSE_UNIT_FLAG IN ('52','53', '54', '55', '56', '57') ) B
+                     WHERE A.STR_CD = B.STR_CD
+                       AND A.PAY_YM = B.CLOSE_YM
+                       AND A.PAY_CYC = B.PAY_CYC
+                       AND A.PAY_CNT = B.PAY_CNT
+                       AND A.STR_CD = ?
+                       AND A.VEN_CD = ?
+                       AND A.PAY_YM >= SUBSTR(TO_CHAR(ADD_MONTHS(?,-2), 'YYYYMMDD'),0,6)
+                       AND A.PAY_YM <= SUBSTR(?,0,6)
+                  ORDER BY A.PAY_YM
+        ]]>
+    </query>
+</service>

@@ -1,0 +1,1030 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/pstk502.pt">
+  
+  <gauce name="H_SEL_MASTER">        
+        <column colName="ORG_CD"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NM"         colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TEAM_NM"         colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NM"           colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JIK_TOT_SALE_AMT"           colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JIK_NET_SALE_AMT_EXP_VAT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JIK_SALE_PROF_AMT_EXP_VAT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JIK_RATE"                   colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TUK_TOT_SALE_AMT"           colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TUK_NET_SALE_AMT_EXP_VAT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TUK_SALE_PROF_AMT_EXP_VAT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TUK_RATE"                   colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SU_TOT_SALE_AMT"           colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SU_NET_SALE_AMT_EXP_VAT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SU_SALE_PROF_AMT_EXP_VAT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SU_RATE"                   colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_TOT_SALE_AMT"           colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_NET_SALE_AMT_EXP_VAT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_SALE_PROF_AMT_EXP_VAT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_RATE"                   colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+  
+  		<column colName="PUMMOK_CD"         colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"           colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce> 
+  
+  	<gauce name="H_SEL_MONTH">        
+  	    <column colName="SALE_YM"         colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"          colType="TB_STRING"  size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NM"         colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TEAM_NM"         colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NM"           colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"          colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"           colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT_EXP_VAT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT_EXP_VAT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RATE"                   colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>  
+      
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <!-- 조직 PC별  -->  
+    <query name="SEL_MASTER1">
+        <![CDATA[
+            SELECT Y.ORG_CD       
+			     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, '00', '00', '00')            AS DEPT_NM
+			     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, Y.TEAM_CD, '00', '00')       AS TEAM_NM
+			     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, Y.TEAM_CD, Y.PC_CD, '00')    AS PC_NM
+			     , Y.JIK_TOT_SALE_AMT
+			     , Y.JIK_NET_SALE_AMT_EXP_VAT
+			     , Y.JIK_SALE_PROF_AMT_EXP_VAT
+			     , CASE WHEN Y.JIK_NET_SALE_AMT_EXP_VAT = 0 
+			            THEN 0 
+			            ELSE ROUND(Y.JIK_SALE_PROF_AMT_EXP_VAT /  Y.JIK_NET_SALE_AMT_EXP_VAT * 100, 2) 
+			       END AS JIK_RATE
+			     , Y.TUK_TOT_SALE_AMT
+			     , Y.TUK_NET_SALE_AMT_EXP_VAT
+			     , Y.TUK_SALE_PROF_AMT_EXP_VAT
+			     , CASE WHEN Y.TUK_NET_SALE_AMT_EXP_VAT = 0 
+			            THEN 0 
+			            ELSE ROUND(Y.TUK_SALE_PROF_AMT_EXP_VAT /  Y.TUK_NET_SALE_AMT_EXP_VAT * 100, 2) 
+			       END AS TUK_RATE
+			     , Y.SU_TOT_SALE_AMT
+			     , Y.SU_NET_SALE_AMT_EXP_VAT
+			     , Y.SU_SALE_PROF_AMT_EXP_VAT
+			     , CASE WHEN Y.SU_NET_SALE_AMT_EXP_VAT = 0 
+			            THEN 0 
+			            ELSE ROUND(Y.SU_SALE_PROF_AMT_EXP_VAT /  Y.SU_NET_SALE_AMT_EXP_VAT * 100, 2) 
+			       END AS SU_RATE
+			     , Y.SUM_TOT_SALE_AMT
+			     , Y.SUM_NET_SALE_AMT_EXP_VAT
+			     , Y.SUM_SALE_PROF_AMT_EXP_VAT
+			     , CASE WHEN Y.SUM_NET_SALE_AMT_EXP_VAT = 0 
+			            THEN 0 
+			            ELSE ROUND(Y.SUM_SALE_PROF_AMT_EXP_VAT /  Y.SUM_NET_SALE_AMT_EXP_VAT * 100, 2) 
+			       END AS SUM_RATE
+			 FROM (               
+			       SELECT X.ORG_CD
+			            , X.STR_CD
+			            , X.DEPT_CD
+			            , X.TEAM_CD
+			            , X.PC_CD 
+			            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN TOT_SALE_AMT ELSE          0 END) AS JIK_TOT_SALE_AMT
+			            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS JIK_NET_SALE_AMT_EXP_VAT
+			            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS JIK_SALE_PROF_AMT_EXP_VAT
+			            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN TOT_SALE_AMT ELSE          0 END) AS TUK_TOT_SALE_AMT
+			            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS TUK_NET_SALE_AMT_EXP_VAT
+			            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS TUK_SALE_PROF_AMT_EXP_VAT
+			            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN TOT_SALE_AMT ELSE          0 END) AS SU_TOT_SALE_AMT
+			            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SU_NET_SALE_AMT_EXP_VAT
+			            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SU_SALE_PROF_AMT_EXP_VAT
+			            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN TOT_SALE_AMT ELSE          0 END) AS SUM_TOT_SALE_AMT
+			            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SUM_NET_SALE_AMT_EXP_VAT
+			            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SUM_SALE_PROF_AMT_EXP_VAT
+			       FROM (         
+			             SELECT A.PUMBUN_CD
+			                  , B.BIZ_TYPE
+			                  , SUBSTR(A.ORG_CD, 1, 8)||'00' AS ORG_CD
+			                  , C.STR_CD
+			                  , C.DEPT_CD
+			                  , C.TEAM_CD
+			                  , C.PC_CD
+			                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+			                  , SUM(A.VAT_AMT)                 VAT_AMT
+			                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+			                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+			                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+			                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+			               FROM DPS.PS_MONTHPBN A
+			                  , DPS.PC_STRPBN  B
+			                  , DPS.PC_ORGMST C
+			             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+			               AND A.PUMBUN_CD = B.PUMBUN_CD
+			               AND A.STR_CD = B.STR_CD
+			               AND A.ORG_CD = C.ORG_CD
+			               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+			               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+			               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+			               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+			               AND EXISTS ( SELECT MYORG.USER_ID
+			                                                    FROM COM.V_MYORG MYORG
+			                                                   WHERE MYORG.STR_CD      = C.STR_CD
+			                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+			                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+			                                                     AND MYORG.PC_CD       = C.PC_CD
+			                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+			                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+			                                                )
+			             GROUP BY 
+			                   A.PUMBUN_CD
+			                 , B.BIZ_TYPE
+			                 , SUBSTR(A.ORG_CD, 1, 8)||'00'
+			                 , C.STR_CD
+			                 , C.DEPT_CD
+			                 , C.TEAM_CD
+			                 , C.PC_CD
+			            ) X       
+			        GROUP BY X.ORG_CD
+			            , X.STR_CD
+			            , X.DEPT_CD
+			            , X.TEAM_CD
+			            , X.PC_CD 
+			      ) Y             
+			  ORDER BY Y.ORG_CD  
+        ]]>    
+    </query>
+    
+    <!-- 조직 팀별  -->
+    <query name="SEL_MASTER2">
+        <![CDATA[
+        SELECT Y.ORG_CD       
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, '00', '00', '00')            AS DETP_NM
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, Y.TEAM_CD, '00', '00')       AS TEAM_NM
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, Y.TEAM_CD, '00', '00')       AS PC_NM
+		     , Y.JIK_TOT_SALE_AMT
+		     , Y.JIK_NET_SALE_AMT_EXP_VAT
+		     , Y.JIK_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.JIK_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.JIK_SALE_PROF_AMT_EXP_VAT /  Y.JIK_NET_SALE_AMT_EXP_VAT * 100, 2) END AS JIK_RATE
+		     , Y.TUK_TOT_SALE_AMT
+		     , Y.TUK_NET_SALE_AMT_EXP_VAT
+		     , Y.TUK_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.TUK_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.TUK_SALE_PROF_AMT_EXP_VAT /  Y.TUK_NET_SALE_AMT_EXP_VAT * 100, 2) END AS TUK_RATE
+		                      
+		     , Y.SU_TOT_SALE_AMT
+		     , Y.SU_NET_SALE_AMT_EXP_VAT
+		     , Y.SU_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.SU_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.SU_SALE_PROF_AMT_EXP_VAT /  Y.SU_NET_SALE_AMT_EXP_VAT * 100, 2) END AS SU_RATE
+		     
+		     , Y.SUM_TOT_SALE_AMT
+		     , Y.SUM_NET_SALE_AMT_EXP_VAT
+		     , Y.SUM_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.SUM_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.SUM_SALE_PROF_AMT_EXP_VAT /  Y.SUM_NET_SALE_AMT_EXP_VAT * 100, 2) END AS SUM_RATE
+		 FROM (               
+		       SELECT X.ORG_CD
+		            , X.STR_CD
+		            , X.DEPT_CD
+		            , X.TEAM_CD
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN TOT_SALE_AMT ELSE          0 END) AS JIK_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS JIK_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS JIK_SALE_PROF_AMT_EXP_VAT
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN TOT_SALE_AMT ELSE          0 END) AS TUK_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS TUK_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS TUK_SALE_PROF_AMT_EXP_VAT
+		                      
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN TOT_SALE_AMT ELSE          0 END) AS SU_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SU_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SU_SALE_PROF_AMT_EXP_VAT
+		              
+		              
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN TOT_SALE_AMT ELSE          0 END) AS SUM_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SUM_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SUM_SALE_PROF_AMT_EXP_VAT        
+		       FROM (         
+		             SELECT A.PUMBUN_CD
+		                  , B.BIZ_TYPE
+		                  , SUBSTR(A.ORG_CD, 1, 6)||'0000' AS ORG_CD
+		                  , C.STR_CD
+		                  , C.DEPT_CD
+		                  , C.TEAM_CD
+		                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+		                  , SUM(A.VAT_AMT)                 VAT_AMT
+		                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+		                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+		                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+		                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+		               FROM DPS.PS_MONTHPBN A
+		                  , DPS.PC_STRPBN  B
+		                  , DPS.PC_ORGMST C
+		             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+		               AND A.PUMBUN_CD = B.PUMBUN_CD
+		               AND A.STR_CD = B.STR_CD
+		               AND A.ORG_CD = C.ORG_CD
+		               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+		               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+		               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+		               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                                                    FROM COM.V_MYORG MYORG
+		                                                   WHERE MYORG.STR_CD      = C.STR_CD
+		                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+		                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+		                                                     AND MYORG.PC_CD       = C.PC_CD
+		                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+		                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+		                                                )
+		             GROUP BY 
+		                   A.PUMBUN_CD
+		                 , B.BIZ_TYPE
+		                 , SUBSTR(A.ORG_CD, 1, 6)||'0000'
+		                 , C.STR_CD
+		                 , C.DEPT_CD
+		                 , C.TEAM_CD
+		            ) X       
+		        GROUP BY X.ORG_CD
+		             , X.STR_CD
+		            , X.DEPT_CD
+		            , X.TEAM_CD
+		      ) Y             
+		  ORDER BY Y.ORG_CD 
+        ]]>    
+    </query>
+    
+    <!-- 조직 부문별  -->
+    <query name="SEL_MASTER3">
+        <![CDATA[
+        SELECT Y.ORG_CD       
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, '00', '00', '00')            AS DETP_NM
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, '00', '00', '00')            AS TEAM_NM
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, '00', '00', '00')            AS PC_NM
+		     , Y.JIK_TOT_SALE_AMT
+		     , Y.JIK_NET_SALE_AMT_EXP_VAT
+		     , Y.JIK_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.JIK_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.JIK_SALE_PROF_AMT_EXP_VAT /  Y.JIK_NET_SALE_AMT_EXP_VAT * 100, 2) END AS JIK_RATE
+		     , Y.TUK_TOT_SALE_AMT
+		     , Y.TUK_NET_SALE_AMT_EXP_VAT
+		     , Y.TUK_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.TUK_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.TUK_SALE_PROF_AMT_EXP_VAT /  Y.TUK_NET_SALE_AMT_EXP_VAT * 100, 2) END AS TUK_RATE
+		                      
+		     , Y.SU_TOT_SALE_AMT
+		     , Y.SU_NET_SALE_AMT_EXP_VAT
+		     , Y.SU_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.SU_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.SU_SALE_PROF_AMT_EXP_VAT /  Y.SU_NET_SALE_AMT_EXP_VAT * 100, 2) END AS SU_RATE
+		     
+		     , Y.SUM_TOT_SALE_AMT
+		     , Y.SUM_NET_SALE_AMT_EXP_VAT
+		     , Y.SUM_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.SUM_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.SUM_SALE_PROF_AMT_EXP_VAT /  Y.SUM_NET_SALE_AMT_EXP_VAT * 100, 2) END AS SUM_RATE
+		 FROM (               
+		       SELECT X.ORG_CD
+		            , X.STR_CD
+		            , X.DEPT_CD
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN TOT_SALE_AMT ELSE          0 END) AS JIK_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS JIK_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS JIK_SALE_PROF_AMT_EXP_VAT
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN TOT_SALE_AMT ELSE          0 END) AS TUK_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS TUK_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS TUK_SALE_PROF_AMT_EXP_VAT
+		                      
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN TOT_SALE_AMT ELSE          0 END) AS SU_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SU_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SU_SALE_PROF_AMT_EXP_VAT
+		                      
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN TOT_SALE_AMT ELSE          0 END) AS SUM_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SUM_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SUM_SALE_PROF_AMT_EXP_VAT
+		       FROM (         
+		             SELECT A.PUMBUN_CD
+		                  , B.BIZ_TYPE
+		                  , SUBSTR(A.ORG_CD, 1, 4)||'000000' AS ORG_CD
+		                  , C.STR_CD
+		                  , C.DEPT_CD
+		                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+		                  , SUM(A.VAT_AMT)                 VAT_AMT
+		                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+		                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+		                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+		                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+		               FROM DPS.PS_MONTHPBN A
+		                  , DPS.PC_STRPBN  B
+		                  , DPS.PC_ORGMST C
+		             WHERE A.SALE_YM BETWEEN  ? AND ?
+		               AND A.PUMBUN_CD = B.PUMBUN_CD
+		               AND A.STR_CD = B.STR_CD
+		               AND A.ORG_CD = C.ORG_CD
+		               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+		               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+		               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+		               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                                                    FROM COM.V_MYORG MYORG
+		                                                   WHERE MYORG.STR_CD      = C.STR_CD
+		                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+		                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+		                                                     AND MYORG.PC_CD       = C.PC_CD
+		                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+		                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+		                                                )
+		             GROUP BY 
+		                   A.PUMBUN_CD
+		                 , B.BIZ_TYPE
+		                 , SUBSTR(A.ORG_CD, 1, 4)||'000000'
+		                 , C.STR_CD
+		                 , C.DEPT_CD
+		            ) X       
+		        GROUP BY X.ORG_CD
+		             , X.STR_CD
+		            , X.DEPT_CD
+		      ) Y             
+		  ORDER BY Y.ORG_CD  
+        ]]>    
+    </query>
+    <!-- 품목별 대 -->
+    <query name="SEL_MASTER4">
+        <![CDATA[
+     	SELECT Y.ORG_CD       
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, '00', '00', '00')            AS DETP_NM
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, Y.TEAM_CD, '00', '00')       AS TEAM_NM
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, Y.TEAM_CD, Y.PC_CD, '00')    AS PC_NM
+		     
+		     , Y.JIK_TOT_SALE_AMT
+		     , Y.JIK_NET_SALE_AMT_EXP_VAT
+		     , Y.JIK_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.JIK_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.JIK_SALE_PROF_AMT_EXP_VAT /  Y.JIK_NET_SALE_AMT_EXP_VAT * 100, 2) END AS JIK_RATE
+		     , Y.TUK_TOT_SALE_AMT
+		     , Y.TUK_NET_SALE_AMT_EXP_VAT
+		     , Y.TUK_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.TUK_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.TUK_SALE_PROF_AMT_EXP_VAT /  Y.TUK_NET_SALE_AMT_EXP_VAT * 100, 2) END AS TUK_RATE
+		                      
+		     , Y.SU_TOT_SALE_AMT
+		     , Y.SU_NET_SALE_AMT_EXP_VAT
+		     , Y.SU_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.SU_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.SU_SALE_PROF_AMT_EXP_VAT /  Y.SU_NET_SALE_AMT_EXP_VAT * 100, 2) END AS SU_RATE
+		     
+		     , Y.SUM_TOT_SALE_AMT
+		     , Y.SUM_NET_SALE_AMT_EXP_VAT
+		     , Y.SUM_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.SUM_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.SUM_SALE_PROF_AMT_EXP_VAT /  Y.SUM_NET_SALE_AMT_EXP_VAT * 100, 2) END AS SUM_RATE
+		     , Y.PUMMOK_CD
+		     , PMK.PUMMOK_NAME
+		 FROM (               
+		       SELECT X.ORG_CD
+		            , X.STR_CD
+		            , X.DEPT_CD
+		            , X.TEAM_CD
+		            , X.PC_CD 
+		            , X.PUMMOK_CD
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN TOT_SALE_AMT ELSE          0 END) AS JIK_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS JIK_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS JIK_SALE_PROF_AMT_EXP_VAT
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN TOT_SALE_AMT ELSE          0 END) AS TUK_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS TUK_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS TUK_SALE_PROF_AMT_EXP_VAT
+		                      
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN TOT_SALE_AMT ELSE          0 END) AS SU_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SU_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SU_SALE_PROF_AMT_EXP_VAT
+		            
+		            
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN TOT_SALE_AMT ELSE          0 END) AS SUM_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SUM_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SUM_SALE_PROF_AMT_EXP_VAT
+		                      
+		       FROM (         
+		             SELECT A.PUMBUN_CD
+		                  , SUBSTR(A.PUMMOK_CD, 1, 2)||'000000' AS PUMMOK_CD
+		                  , B.BIZ_TYPE
+		                  , SUBSTR(A.ORG_CD, 1, 8)||'00' AS ORG_CD
+		                  , C.STR_CD
+		                  , C.DEPT_CD
+		                  , C.TEAM_CD
+		                  , C.PC_CD
+		                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+		                  , SUM(A.VAT_AMT)                 VAT_AMT
+		                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+		                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+		                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+		                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+		               FROM DPS.PS_MONTHPBN A
+		                  , DPS.PC_STRPBN  B
+		                  , DPS.PC_ORGMST C
+		             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+		               AND A.PUMBUN_CD = B.PUMBUN_CD
+		               AND A.STR_CD = B.STR_CD
+		               AND A.ORG_CD = C.ORG_CD
+		               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+		               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+		               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+		               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                                                    FROM COM.V_MYORG MYORG
+		                                                   WHERE MYORG.STR_CD      = C.STR_CD
+		                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+		                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+		                                                     AND MYORG.PC_CD       = C.PC_CD
+		                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+		                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+		                                                )
+		             GROUP BY 
+		                   A.PUMBUN_CD
+		                 , SUBSTR(A.PUMMOK_CD, 1, 2)||'000000'
+		                 , B.BIZ_TYPE
+		                 , SUBSTR(A.ORG_CD, 1, 8)||'00'
+		                 , C.STR_CD
+		                 , C.DEPT_CD
+		                 , C.TEAM_CD
+		                 , C.PC_CD
+		            ) X       
+		        GROUP BY X.ORG_CD
+		            , X.PUMMOK_CD
+		            , X.STR_CD
+		            , X.DEPT_CD
+		            , X.TEAM_CD
+		            , X.PC_CD 
+		      ) Y        
+		      , DPS.PC_PMKMST PMK
+		   WHERE Y.PUMMOK_CD = PMK.PUMMOK_CD   
+		  ORDER BY Y.ORG_CD   
+		         , Y.PUMMOK_CD
+     	]]>    
+    </query>
+    
+    <!-- 품목별 중 -->
+    <query name="SEL_MASTER5">
+        <![CDATA[
+        SELECT Y.ORG_CD       
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, '00', '00', '00')            AS DETP_NM
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, Y.TEAM_CD, '00', '00')       AS TEAM_NM
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, Y.TEAM_CD, Y.PC_CD, '00')    AS PC_NM
+		     
+		     , Y.JIK_TOT_SALE_AMT
+		     , Y.JIK_NET_SALE_AMT_EXP_VAT
+		     , Y.JIK_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.JIK_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.JIK_SALE_PROF_AMT_EXP_VAT /  Y.JIK_NET_SALE_AMT_EXP_VAT * 100, 2) END AS JIK_RATE
+		     , Y.TUK_TOT_SALE_AMT
+		     , Y.TUK_NET_SALE_AMT_EXP_VAT
+		     , Y.TUK_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.TUK_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.TUK_SALE_PROF_AMT_EXP_VAT /  Y.TUK_NET_SALE_AMT_EXP_VAT * 100, 2) END AS TUK_RATE
+		                      
+		     , Y.SU_TOT_SALE_AMT
+		     , Y.SU_NET_SALE_AMT_EXP_VAT
+		     , Y.SU_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.SU_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.SU_SALE_PROF_AMT_EXP_VAT /  Y.SU_NET_SALE_AMT_EXP_VAT * 100, 2) END AS SU_RATE
+		     
+		     , Y.SUM_TOT_SALE_AMT
+		     , Y.SUM_NET_SALE_AMT_EXP_VAT
+		     , Y.SUM_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.SUM_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.SUM_SALE_PROF_AMT_EXP_VAT /  Y.SUM_NET_SALE_AMT_EXP_VAT * 100, 2) END AS SUM_RATE
+		     , Y.PUMMOK_CD
+		     , PMK.PUMMOK_NAME
+		 FROM (               
+		       SELECT X.ORG_CD
+		            , X.STR_CD
+		            , X.DEPT_CD
+		            , X.TEAM_CD
+		            , X.PC_CD 
+		            , X.PUMMOK_CD
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN TOT_SALE_AMT ELSE          0 END) AS JIK_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS JIK_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS JIK_SALE_PROF_AMT_EXP_VAT
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN TOT_SALE_AMT ELSE          0 END) AS TUK_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS TUK_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS TUK_SALE_PROF_AMT_EXP_VAT
+		                      
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN TOT_SALE_AMT ELSE          0 END) AS SU_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SU_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SU_SALE_PROF_AMT_EXP_VAT
+		            
+		            
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN TOT_SALE_AMT ELSE          0 END) AS SUM_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SUM_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SUM_SALE_PROF_AMT_EXP_VAT
+		                      
+		       FROM (         
+		             SELECT A.PUMBUN_CD
+		                  , SUBSTR(A.PUMMOK_CD, 1, 4)||'0000' AS PUMMOK_CD
+		                  , B.BIZ_TYPE
+		                  , SUBSTR(A.ORG_CD, 1, 8)||'00' AS ORG_CD
+		                  , C.STR_CD
+		                  , C.DEPT_CD
+		                  , C.TEAM_CD
+		                  , C.PC_CD
+		                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+		                  , SUM(A.VAT_AMT)                 VAT_AMT
+		                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+		                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+		                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+		                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+		               FROM DPS.PS_MONTHPBN A
+		                  , DPS.PC_STRPBN  B
+		                  , DPS.PC_ORGMST C
+		             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+		               AND A.PUMBUN_CD = B.PUMBUN_CD
+		               AND A.STR_CD = B.STR_CD
+		               AND A.ORG_CD = C.ORG_CD
+		               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+		               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+		               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+		               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                                                    FROM COM.V_MYORG MYORG
+		                                                   WHERE MYORG.STR_CD      = C.STR_CD
+		                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+		                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+		                                                     AND MYORG.PC_CD       = C.PC_CD
+		                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+		                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+		                                                )
+		             GROUP BY 
+		                   A.PUMBUN_CD
+		                 , SUBSTR(A.PUMMOK_CD, 1, 4)||'0000'
+		                 , B.BIZ_TYPE
+		                 , SUBSTR(A.ORG_CD, 1, 8)||'00'
+		                 , C.STR_CD
+		                 , C.DEPT_CD
+		                 , C.TEAM_CD
+		                 , C.PC_CD
+		            ) X       
+		        GROUP BY X.ORG_CD
+		            , X.PUMMOK_CD
+		            , X.STR_CD
+		            , X.DEPT_CD
+		            , X.TEAM_CD
+		            , X.PC_CD 
+		      ) Y        
+		      , DPS.PC_PMKMST PMK
+		   WHERE Y.PUMMOK_CD = PMK.PUMMOK_CD   
+		  ORDER BY Y.ORG_CD   
+		         , Y.PUMMOK_CD
+        ]]>    
+    </query>
+    <!-- 품목별 소 -->
+    <query name="SEL_MASTER6">
+        <![CDATA[
+        SELECT Y.ORG_CD       
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, '00', '00', '00')            AS DETP_NM
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, Y.TEAM_CD, '00', '00')       AS TEAM_NM
+		     , DPS.FN_GET_ORG_NAME(Y.STR_CD, Y.DEPT_CD, Y.TEAM_CD, Y.PC_CD, '00')    AS PC_NM
+		     
+		     , Y.JIK_TOT_SALE_AMT
+		     , Y.JIK_NET_SALE_AMT_EXP_VAT
+		     , Y.JIK_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.JIK_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.JIK_SALE_PROF_AMT_EXP_VAT /  Y.JIK_NET_SALE_AMT_EXP_VAT * 100, 2) END AS JIK_RATE
+		     , Y.TUK_TOT_SALE_AMT
+		     , Y.TUK_NET_SALE_AMT_EXP_VAT
+		     , Y.TUK_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.TUK_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.TUK_SALE_PROF_AMT_EXP_VAT /  Y.TUK_NET_SALE_AMT_EXP_VAT * 100, 2) END AS TUK_RATE
+		                      
+		     , Y.SU_TOT_SALE_AMT
+		     , Y.SU_NET_SALE_AMT_EXP_VAT
+		     , Y.SU_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.SU_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.SU_SALE_PROF_AMT_EXP_VAT /  Y.SU_NET_SALE_AMT_EXP_VAT * 100, 2) END AS SU_RATE
+		     
+		     , Y.SUM_TOT_SALE_AMT
+		     , Y.SUM_NET_SALE_AMT_EXP_VAT
+		     , Y.SUM_SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN Y.SUM_NET_SALE_AMT_EXP_VAT = 0 
+		            THEN 0 
+		            ELSE ROUND(Y.SUM_SALE_PROF_AMT_EXP_VAT /  Y.SUM_NET_SALE_AMT_EXP_VAT * 100, 2) END AS SUM_RATE
+		     , Y.PUMMOK_CD
+		     , PMK.PUMMOK_NAME
+		 FROM (               
+		       SELECT X.ORG_CD
+		            , X.STR_CD
+		            , X.DEPT_CD
+		            , X.TEAM_CD
+		            , X.PC_CD 
+		            , X.PUMMOK_CD
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN TOT_SALE_AMT ELSE          0 END) AS JIK_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS JIK_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '1' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS JIK_SALE_PROF_AMT_EXP_VAT
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN TOT_SALE_AMT ELSE          0 END) AS TUK_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS TUK_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '2' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS TUK_SALE_PROF_AMT_EXP_VAT
+		                      
+		                      
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN TOT_SALE_AMT ELSE          0 END) AS SU_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SU_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE = '3' THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SU_SALE_PROF_AMT_EXP_VAT
+		            
+		            
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN TOT_SALE_AMT ELSE          0 END) AS SUM_TOT_SALE_AMT
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN NET_SALE_AMT_EXP_VAT  ELSE 0 END) AS SUM_NET_SALE_AMT_EXP_VAT
+		            , SUM(CASE WHEN X.BIZ_TYPE IN ('1', '2', '3') THEN SALE_PROF_AMT_EXP_VAT ELSE 0 END) AS SUM_SALE_PROF_AMT_EXP_VAT
+		                      
+		       FROM (         
+		             SELECT A.PUMBUN_CD
+		                  , SUBSTR(A.PUMMOK_CD, 1, 6)||'00' AS PUMMOK_CD
+		                  , B.BIZ_TYPE
+		                  , SUBSTR(A.ORG_CD, 1, 8)||'00' AS ORG_CD
+		                  , C.STR_CD
+		                  , C.DEPT_CD
+		                  , C.TEAM_CD
+		                  , C.PC_CD
+		                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+		                  , SUM(A.VAT_AMT)                 VAT_AMT
+		                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+		                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+		                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+		                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+		               FROM DPS.PS_MONTHPBN A
+		                  , DPS.PC_STRPBN  B
+		                  , DPS.PC_ORGMST C
+		             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+		               AND A.PUMBUN_CD = B.PUMBUN_CD
+		               AND A.STR_CD = B.STR_CD
+		               AND A.ORG_CD = C.ORG_CD
+		               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+		               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+		               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+		               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                                                    FROM COM.V_MYORG MYORG
+		                                                   WHERE MYORG.STR_CD      = C.STR_CD
+		                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+		                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+		                                                     AND MYORG.PC_CD       = C.PC_CD
+		                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+		                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+		                                                )
+		             GROUP BY 
+		                   A.PUMBUN_CD
+		                 , SUBSTR(A.PUMMOK_CD, 1, 6)||'00'
+		                 , B.BIZ_TYPE
+		                 , SUBSTR(A.ORG_CD, 1, 8)||'00'
+		                 , C.STR_CD
+		                 , C.DEPT_CD
+		                 , C.TEAM_CD
+		                 , C.PC_CD
+		            ) X       
+		        GROUP BY X.ORG_CD
+		            , X.PUMMOK_CD
+		            , X.STR_CD
+		            , X.DEPT_CD
+		            , X.TEAM_CD
+		            , X.PC_CD 
+		      ) Y        
+		      , DPS.PC_PMKMST PMK
+		   WHERE Y.PUMMOK_CD = PMK.PUMMOK_CD   
+		  ORDER BY Y.ORG_CD   
+		         , Y.PUMMOK_CD
+        ]]>    
+    </query>
+    
+   <!-- 월 PC별 -->
+   <query name="SEL_MASTER7">
+        <![CDATA[
+          SELECT X.SALE_YM
+			     , X.ORG_CD
+			     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, X.TEAM_CD, X.PC_CD, '00') AS ORG_NAME
+			     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, '00', '00', '00')            AS DETP_NM
+			     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, X.TEAM_CD, '00', '00')       AS TEAM_NM
+			     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, X.TEAM_CD, X.PC_CD, '00')    AS PC_NM
+			     , X.STR_CD
+			     , X.TOT_SALE_AMT
+			     , X.NET_SALE_AMT_EXP_VAT
+			     , X.SALE_PROF_AMT_EXP_VAT
+			     , CASE WHEN X.NET_SALE_AMT_EXP_VAT = 0 THEN 0 ELSE ROUND(X.SALE_PROF_AMT_EXP_VAT / X.NET_SALE_AMT_EXP_VAT * 100, 2) END AS RATE
+			FROM 
+			(
+			             SELECT TO_CHAR(TO_DATE(A.SALE_YM,'YYYYMM'),'YYYY/MM') AS SALE_YM
+			                  , SUBSTR(A.ORG_CD, 1, 8)||'00' AS ORG_CD
+			                  , C.STR_CD
+			                  , C.DEPT_CD
+			                  , C.TEAM_CD
+			                  , C.PC_CD
+			                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+			                  , SUM(A.VAT_AMT)                 VAT_AMT
+			                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+			                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+			                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+			                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+			               FROM DPS.PS_MONTHPBN A
+			                  , DPS.PC_STRPBN  B
+			                  , DPS.PC_ORGMST C
+			             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+			               AND A.PUMBUN_CD = B.PUMBUN_CD
+			               AND A.STR_CD = B.STR_CD
+			               AND A.ORG_CD = C.ORG_CD
+			               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+			               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+			               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+			               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+			               AND EXISTS ( SELECT MYORG.USER_ID
+			                                                    FROM COM.V_MYORG MYORG
+			                                                   WHERE MYORG.STR_CD      = C.STR_CD
+			                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+			                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+			                                                     AND MYORG.PC_CD       = C.PC_CD
+			                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+			                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+			                                                )
+			               AND B.BIZ_TYPE IN (?, ?, ?)
+			             GROUP BY 
+			                   A.SALE_YM
+			                 , SUBSTR(A.ORG_CD, 1, 8)||'00'
+			                 , C.STR_CD
+			                 , C.DEPT_CD
+			                 , C.TEAM_CD
+			                 , C.PC_CD
+			      
+			      UNION ALL
+		             SELECT 'TOTAL' SALE_YM
+		                  , SUBSTR(A.ORG_CD, 1, 8)||'00' AS ORG_CD
+		                  , C.STR_CD
+		                  , C.DEPT_CD
+		                  , C.TEAM_CD
+		                  , C.PC_CD
+		                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+		                  , SUM(A.VAT_AMT)                 VAT_AMT
+		                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+		                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+		                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+		                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+		               FROM DPS.PS_MONTHPBN A
+		                  , DPS.PC_STRPBN  B
+		                  , DPS.PC_ORGMST C
+		             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+		               AND A.PUMBUN_CD = B.PUMBUN_CD
+		               AND A.STR_CD = B.STR_CD
+		               AND A.ORG_CD = C.ORG_CD
+		               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+		               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+		               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+		               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                                                    FROM COM.V_MYORG MYORG
+		                                                   WHERE MYORG.STR_CD      = C.STR_CD
+		                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+		                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+		                                                     AND MYORG.PC_CD       = C.PC_CD
+		                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+		                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+		                                                )
+		               AND B.BIZ_TYPE IN (?, ?, ?)
+		             GROUP BY 
+		                   SUBSTR(A.ORG_CD, 1, 8)||'00'
+		                 , C.STR_CD
+		                 , C.DEPT_CD
+		                 , C.TEAM_CD
+		                 , C.PC_CD      
+		                 
+			 ) X
+			 ORDER BY
+			 X.ORG_CD,
+			 SALE_YM
+         ]]>    
+   </query>
+   
+   <!-- 월 팀별 -->
+   <query name="SEL_MASTER8">
+        <![CDATA[
+          SELECT X.SALE_YM
+		     , X.ORG_CD
+		     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, X.TEAM_CD, '00', '00') AS ORG_NAME
+		     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, '00', '00', '00')            AS DETP_NM
+		     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, X.TEAM_CD, '00', '00')       AS TEAM_NM
+		     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, X.TEAM_CD, '00', '00')       AS PC_NM
+		     , X.STR_CD
+		     , X.TOT_SALE_AMT
+		     , X.NET_SALE_AMT_EXP_VAT
+		     , X.SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN X.NET_SALE_AMT_EXP_VAT = 0 THEN 0 ELSE ROUND(X.SALE_PROF_AMT_EXP_VAT / X.NET_SALE_AMT_EXP_VAT * 100, 2) END AS RATE
+		FROM 
+		(
+		             SELECT TO_CHAR(TO_DATE(A.SALE_YM,'YYYYMM'),'YYYY/MM') AS SALE_YM
+		                  , SUBSTR(A.ORG_CD, 1, 6)||'0000' AS ORG_CD
+		                  , C.STR_CD
+		                  , C.DEPT_CD
+		                  , C.TEAM_CD
+		                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+		                  , SUM(A.VAT_AMT)                 VAT_AMT
+		                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+		                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+		                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+		                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+		               FROM DPS.PS_MONTHPBN A
+		                  , DPS.PC_STRPBN  B
+		                  , DPS.PC_ORGMST C
+		             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+		               AND A.PUMBUN_CD = B.PUMBUN_CD
+		               AND A.STR_CD = B.STR_CD
+		               AND A.ORG_CD = C.ORG_CD
+		               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+		               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+		               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+		               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                                                    FROM COM.V_MYORG MYORG
+		                                                   WHERE MYORG.STR_CD      = C.STR_CD
+		                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+		                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+		                                                     AND MYORG.PC_CD       = C.PC_CD
+		                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+		                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+		                                                )
+		               AND B.BIZ_TYPE IN (?, ?, ?)
+		             GROUP BY 
+		                   A.SALE_YM
+		                 , SUBSTR(A.ORG_CD, 1, 6)||'0000'
+		                 , C.STR_CD
+		                 , C.DEPT_CD
+		                 , C.TEAM_CD
+		                 
+		          UNION ALL
+		             SELECT 'TOTAL' SALE_YM
+		                  , SUBSTR(A.ORG_CD, 1, 6)||'0000' AS ORG_CD
+		                  , C.STR_CD
+		                  , C.DEPT_CD
+		                  , C.TEAM_CD
+		                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+		                  , SUM(A.VAT_AMT)                 VAT_AMT
+		                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+		                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+		                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+		                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+		               FROM DPS.PS_MONTHPBN A
+		                  , DPS.PC_STRPBN  B
+		                  , DPS.PC_ORGMST C
+		             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+		               AND A.PUMBUN_CD = B.PUMBUN_CD
+		               AND A.STR_CD = B.STR_CD
+		               AND A.ORG_CD = C.ORG_CD
+		               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+		               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+		               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+		               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                                                    FROM COM.V_MYORG MYORG
+		                                                   WHERE MYORG.STR_CD      = C.STR_CD
+		                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+		                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+		                                                     AND MYORG.PC_CD       = C.PC_CD
+		                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+		                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+		                                                )
+		               AND B.BIZ_TYPE IN (?, ?, ?)
+		             GROUP BY 
+		                   SUBSTR(A.ORG_CD, 1, 6)||'0000'
+		                 , C.STR_CD
+		                 , C.DEPT_CD
+		                 , C.TEAM_CD
+		                        
+		 ) X
+		 ORDER BY
+		 X.ORG_CD,
+		 SALE_YM
+         ]]>    
+   </query>
+   
+   <!-- 월 부문별 -->
+   <query name="SEL_MASTER9">
+        <![CDATA[
+          SELECT X.SALE_YM
+		     , X.ORG_CD
+		     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, '00', '00', '00')   AS ORG_NAME
+		     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, '00', '00', '00')       AS DETP_NM
+		     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, '00', '00', '00')       AS TEAM_NM
+		     , DPS.FN_GET_ORG_NAME(X.STR_CD, X.DEPT_CD, '00', '00', '00')       AS PC_NM
+		     , X.STR_CD
+		     , X.TOT_SALE_AMT
+		     , X.NET_SALE_AMT_EXP_VAT
+		     , X.SALE_PROF_AMT_EXP_VAT
+		     , CASE WHEN X.NET_SALE_AMT_EXP_VAT = 0 THEN 0 ELSE ROUND(X.SALE_PROF_AMT_EXP_VAT / X.NET_SALE_AMT_EXP_VAT * 100, 2) END AS RATE
+		FROM 
+		(
+		             SELECT TO_CHAR(TO_DATE(A.SALE_YM,'YYYYMM'),'YYYY/MM') AS SALE_YM
+		                  , SUBSTR(A.ORG_CD, 1, 4)||'000000' AS ORG_CD
+		                  , C.STR_CD
+		                  , C.DEPT_CD
+		                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+		                  , SUM(A.VAT_AMT)                 VAT_AMT
+		                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+		                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+		                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+		                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+		               FROM DPS.PS_MONTHPBN A
+		                  , DPS.PC_STRPBN  B
+		                  , DPS.PC_ORGMST C
+		             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+		               AND A.PUMBUN_CD = B.PUMBUN_CD
+		               AND A.STR_CD = B.STR_CD
+		               AND A.ORG_CD = C.ORG_CD
+		               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+		               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+		               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+		               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+		               AND EXISTS ( SELECT MYORG.USER_ID
+		                                                    FROM COM.V_MYORG MYORG
+		                                                   WHERE MYORG.STR_CD      = C.STR_CD
+		                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+		                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+		                                                     AND MYORG.PC_CD       = C.PC_CD
+		                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+		                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+		                                                )
+		               AND B.BIZ_TYPE IN (?, ?, ?)
+		             GROUP BY 
+		                   A.SALE_YM
+		                 , SUBSTR(A.ORG_CD, 1, 4)||'000000'
+		                 , C.STR_CD
+		                 , C.DEPT_CD
+		                 
+		              UNION ALL
+			             SELECT 'TOTAL' SALE_YM
+			                  , SUBSTR(A.ORG_CD, 1, 4)||'000000' AS ORG_CD
+			                  , C.STR_CD
+			                  , C.DEPT_CD
+			                  , SUM(A.TOT_SALE_AMT)            TOT_SALE_AMT
+			                  , SUM(A.VAT_AMT)                 VAT_AMT
+			                  , SUM(A.NET_SALE_AMT)            NET_SALE_AMT
+			                  , SUM(A.NET_SALE_AMT-A.VAT_AMT)  NET_SALE_AMT_EXP_VAT
+			                  , SUM(A.SALE_PROF_AMT)           SALE_PROF_AMT
+			                  , SUM(A.SALE_PROF_AMT-A.VAT_AMT) SALE_PROF_AMT_EXP_VAT
+			               FROM DPS.PS_MONTHPBN A
+			                  , DPS.PC_STRPBN  B
+			                  , DPS.PC_ORGMST C
+			             WHERE A.SALE_YM BETWEEN  ? AND ?  -- 조회조건 년월 FROM, TO
+			               AND A.PUMBUN_CD = B.PUMBUN_CD
+			               AND A.STR_CD = B.STR_CD
+			               AND A.ORG_CD = C.ORG_CD
+			               AND C.STR_CD = ?         --STR_CD         -- 조회조건 점코드
+			               AND C.DEPT_CD LIKE ?||'%'  --DEPT_CD        -- 조회조건 부문코드
+			               AND C.TEAM_CD LIKE ?||'%'  --TEAM_CD        -- 조회조건 팀코드
+			               AND C.PC_CD   LIKE ?||'%' -- PC_CD          -- 조회조건 PC코드
+			               AND EXISTS ( SELECT MYORG.USER_ID
+			                                                    FROM COM.V_MYORG MYORG
+			                                                   WHERE MYORG.STR_CD      = C.STR_CD
+			                                                     AND MYORG.DEPT_CD     = C.DEPT_CD
+			                                                     AND MYORG.TEAM_CD     = C.TEAM_CD
+			                                                     AND MYORG.PC_CD       = C.PC_CD
+			                                                     AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+			                                                     AND MYORG.USER_ID     = ?  -- 조회조건 사용자ID
+			                                                )
+			               AND B.BIZ_TYPE IN (?, ?, ?)
+			             GROUP BY 
+			                   SUBSTR(A.ORG_CD, 1, 4)||'000000'
+			                 , C.STR_CD
+			                 , C.DEPT_CD
+			
+			                 
+		 ) X
+		 ORDER BY
+		 X.ORG_CD,
+		 SALE_YM
+         ]]>    
+   </query>
+    
+    
+</service>

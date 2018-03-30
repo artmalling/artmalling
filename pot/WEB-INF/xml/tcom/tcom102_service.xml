@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!-- 
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 코드 등록 조회
+ -->
+<service name="/tcom102.tc">
+	<!-- 서브 시스템 코드 -->
+	<gauce name="H_SUB_SYSTEM">
+		<column colName="SUB_SYSTEM" 	colType="TB_STRING" size="3" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+	
+	<!-- 대분류 메뉴 -->
+	<gauce name="H_SEL_LMENU">
+		<column colName="LCODE" 		colType="TB_STRING" size="4" 	dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+		<column colName="LNAME" 		colType="TB_STRING" size="50"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SUB_SYSTEM" 	colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SEQ" 			colType="TB_STRING" size="2" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+	
+	<!-- 중분류 메뉴 -->
+	<gauce name="H_SEL_MMENU">
+		<column colName="LCODE" 	colType="TB_STRING" size="4" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="MCODE" 	colType="TB_STRING" size="4" 	dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+		<column colName="MNAME" 	colType="TB_STRING" size="50" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IS_USE" 	colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SEQ"   	colType="TB_STRING" size="2" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+	
+	<!-- 소분류 메뉴 -->
+	<gauce name="H_SEL_SMENU">
+		<column colName="SCODE" 	colType="TB_STRING" size="7" 	dec="0" keyType="TB_KEY" roundMode="ROUND" />
+		<column colName="MCODE" 	colType="TB_STRING" size="4" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="LCODE" 	colType="TB_STRING" size="4" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SNAME" 	colType="TB_STRING" size="50" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IS_USE" 	colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="SEQ" 		colType="TB_STRING" size="2" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+		
+	<!-- 프로그램(COM.TC_PGMMST) -->
+	<gauce name="H_SEL_PROGRAM">
+		<column colName="PID" 			colType="TB_STRING" size="10" 	dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+		<column colName="SCODE" 		colType="TB_STRING" size="7" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PNAME1" 		colType="TB_STRING" size="50" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PNAME2" 		colType="TB_STRING" size="100" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="URL" 			colType="TB_STRING" size="100" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IS_RET" 		colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IS_NEW" 		colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IS_DEL" 		colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IS_SAVE" 		colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IS_EXCEL" 		colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IS_PRINT" 		colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IS_CONFIRM" 	colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+		
+	<!-- 프로그램(COM.TC_PGMMST) -->
+	<gauce name="H_SEL_PROGRAM_ID">
+		<column colName="PID" 	colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+			
+	<!-- 트리뷰 -->
+	<gauce name="H_TREE_MAIN">
+		<column colName="LVL" 	colType="TB_STRING" size="1" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="TXT" 	colType="TB_STRING" size="50" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CODE" 	colType="TB_STRING" size="13" 	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+
+    <!-- 트리뷰를 위한 쿼리  -->
+    <query name="SEL_TREE_VIEW">
+        <![CDATA[  
+            SELECT LVL
+                 , LNAME AS TXT
+                 , CODE
+              FROM (
+                        SELECT '2'                          LVL
+                             , LCODE                        CD1
+                             , '99'                         CD2
+                             , ''                           CD3
+                             , LNAME                        LNAME
+                             , SUB_SYSTEM                   SUB_SYSTEM
+                             , LCODE                        CODE
+                             , SEQ                          LSEQ
+                             , 0                            MSEQ
+                             , 0                            SSEQ
+                             , LPAD(NVL(SEQ ,0), 2,0 ) || LCODE  LVSEQ 
+                          FROM COM.TC_PGMLMENU      
+                         UNION
+                        SELECT '3'                          LVL
+                             , M.LCODE                      CD1
+                             , M.LCODE||M.MCODE             CD2
+                             , ''                           CD3
+                             , M.MNAME                      LNAME
+                             , L.SUB_SYSTEM                 SUB_SYSTEM
+                             , L.LCODE||M.MCODE             CODE
+                             , L.SEQ                        LSEQ
+                             , M.SEQ                        MSEQ
+                             , 0                            SSEQ
+                             ,    LPAD(NVL(L.SEQ,0), 2, 0 ) || L.LCODE 
+                              ||  LPAD(NVL(M.SEQ,0), 2, 0 ) || M.MCODE LVSEQ 
+                          FROM COM.TC_PGMMMENU M
+                             , COM.TC_PGMLMENU L
+                         WHERE L.LCODE = M.LCODE
+                         UNION
+                        SELECT '4'                          LVL
+                             , S.LCODE                      CD1 
+                             , S.LCODE||S.MCODE             CD2
+                             , S.SCODE                      CD3
+                             , S.SNAME                      LNAME
+                             , L.SUB_SYSTEM                 SUB_SYSTEM
+                             , S.LCODE||S.MCODE||S.SCODE    CODE
+                             , L.SEQ                        LSEQ
+                             , M.SEQ                        MSEQ
+                             , S.SEQ                        SSEQ 
+                             ,    LPAD(NVL(L.SEQ,0), 2, 0 ) || L.LCODE 
+                               || LPAD(NVL(M.SEQ,0), 2, 0 ) || M.MCODE   
+                               || LPAD(NVL(S.SEQ,0), 2, 0 ) LVESEQ   
+                          FROM COM.TC_PGMSMENU S
+                             , COM.TC_PGMLMENU L
+                             , COM.TC_PGMMMENU M
+                         WHERE S.LCODE = L.LCODE
+                           AND S.LCODE = M.LCODE
+                           AND S.MCODE = M.MCODE
+                   ) M
+             WHERE SUB_SYSTEM     =  ?
+             START WITH LVL       >= 2
+           CONNECT BY PRIOR CD2   = CD1
+             ORDER BY LVSEQ
+           --  ORDER BY LSEQ, MSEQ, SSEQ
+        ]]>        
+    </query>		
+     
+    <!-- 모든 프로그램 ID 조회 -->
+    <query name="SEL_PROGRAM_ID">
+        <![CDATA[
+            SELECT PID
+              FROM COM.TC_PGMMST
+        ]]>        
+    </query>
+    
+    <!-- 대분류 조회 -->
+    <query name="SEL_LMENU">        
+        <![CDATA[
+            SELECT LCODE, LNAME, SUB_SYSTEM, SEQ
+              FROM COM.TC_PGMLMENU
+             WHERE SUB_SYSTEM = ?
+             ORDER BY NVL(SEQ,0) 
+        ]]>        
+    </query>
+    
+    <!-- 중분류 조회 -->
+    <query name="SEL_MMENU">        
+        <![CDATA[
+            SELECT LCODE
+                 , MCODE
+                 , MNAME
+                 , IS_USE
+                 , SEQ
+              FROM COM.TC_PGMMMENU
+             WHERE LCODE = ?
+             ORDER BY NVL(SEQ,0)
+        ]]>        
+    </query>
+    
+    <!-- 소분류 조회 -->
+    <query name="SEL_SMENU">        
+        <![CDATA[
+            SELECT SCODE
+                 , MCODE
+                 , LCODE
+                 , SNAME
+                 , IS_USE
+                 , SEQ
+              FROM COM.TC_PGMSMENU
+             WHERE LCODE = ?
+               AND MCODE = ?
+             ORDER BY NVL(SEQ,0)      
+        ]]>        
+    </query>
+ 
+    <!-- 프로그램  조회: LCODE만을 조건으로(대분류 메뉴만 선택한후) 조회  -->
+    <query name="SEL_PROGRAM_L">
+        <![CDATA[
+            SELECT P.PID
+                 , P.SCODE
+                 , P.PNAME1
+                 , P.PNAME2
+                 , P.URL
+                 , REPLACE(REPLACE(P.IS_RET,'Y','T'),'N','F')       AS IS_RET
+                 , REPLACE(REPLACE(P.IS_NEW,'Y','T'),'N','F')       AS IS_NEW
+                 , REPLACE(REPLACE(P.IS_DEL,'Y','T'),'N','F')       AS IS_DEL
+                 , REPLACE(REPLACE(P.IS_SAVE,'Y','T'),'N','F')      AS IS_SAVE
+                 , REPLACE(REPLACE(P.IS_EXCEL,'Y','T'),'N','F')     AS IS_EXCEL
+                 , REPLACE(REPLACE(P.IS_PRINT,'Y','T'),'N','F')     AS IS_PRINT
+                 , REPLACE(REPLACE(P.IS_CONFIRM,'Y','T'),'N','F')   AS IS_CONFIRM
+                 , REPLACE(REPLACE(P.USE_YN,'Y','T'),'N','F')       AS USE_YN
+              FROM COM.TC_PGMMST   P
+                 , COM.TC_PGMSMENU S
+             WHERE P.SCODE = S.SCODE
+               AND S.LCODE = ?
+              ORDER BY LCODE, MCODE, SCODE, PID 
+         
+        ]]>        
+    </query>
+
+    <!-- 프로그램  조회 : LCODE와 MCODE를 조건으로(중분류 메뉴 선택한후) 조회 -->
+    <query name="SEL_PROGRAM_LM">
+        <![CDATA[
+            SELECT P.PID
+                 , P.SCODE
+                 , P.PNAME1
+                 , P.PNAME2 
+                 , P.URL
+                 , REPLACE(REPLACE(P.IS_RET,'Y','T'),'N','F')       AS IS_RET
+                 , REPLACE(REPLACE(P.IS_NEW,'Y','T'),'N','F')       AS IS_NEW
+                 , REPLACE(REPLACE(P.IS_DEL,'Y','T'),'N','F')       AS IS_DEL
+                 , REPLACE(REPLACE(P.IS_SAVE,'Y','T'),'N','F')      AS IS_SAVE
+                 , REPLACE(REPLACE(P.IS_EXCEL,'Y','T'),'N','F')     AS IS_EXCEL
+                 , REPLACE(REPLACE(P.IS_PRINT,'Y','T'),'N','F')     AS IS_PRINT
+                 , REPLACE(REPLACE(P.IS_CONFIRM,'Y','T'),'N','F')   AS IS_CONFIRM
+                 , REPLACE(REPLACE(P.USE_YN,'Y','T'),'N','F')       AS USE_YN
+             FROM COM.TC_PGMMST     P
+                , COM.TC_PGMSMENU   S
+            WHERE P.SCODE = S.SCODE
+              AND S.LCODE = ?
+              AND S.MCODE = ?
+           ORDER BY LCODE, MCODE, SCODE, PID 
+        ]]>        
+    </query>
+    
+    <!-- 프로그램  조회 : LCODE, MCODE, SCODE를 조건으로(소분류 메뉴 선택한후) 조회  -->
+    <query name="SEL_PROGRAM">
+        <![CDATA[
+            SELECT PID
+                 , SCODE
+                 , PNAME1
+                 , PNAME2
+                 , URL
+                 , REPLACE(REPLACE(IS_RET,'Y','T'),'N','F')         AS IS_RET
+                 , REPLACE(REPLACE(IS_NEW,'Y','T'),'N','F')         AS IS_NEW
+                 , REPLACE(REPLACE(IS_DEL,'Y','T'),'N','F')         AS IS_DEL
+                 , REPLACE(REPLACE(IS_SAVE,'Y','T'),'N','F')        AS IS_SAVE
+                 , REPLACE(REPLACE(IS_EXCEL,'Y','T'),'N','F')       AS IS_EXCEL
+                 , REPLACE(REPLACE(IS_PRINT,'Y','T'),'N','F')       AS IS_PRINT
+                 , REPLACE(REPLACE(IS_CONFIRM,'Y','T'),'N','F')     AS IS_CONFIRM
+                 , REPLACE(REPLACE(USE_YN,'Y','T'),'N','F')         AS USE_YN 
+              FROM COM.TC_PGMMST
+             WHERE SCODE = ?
+            ORDER BY PID 
+        ]]>        
+    </query>
+
+    <!-- 대분류 중복체크 -->
+    <query name="SEL_LMENU_CNT">        
+        <![CDATA[
+        SELECT COUNT(*) AS CNT 
+          FROM COM.TC_PGMLMENU
+         WHERE LCODE =  ? 
+        ]]>        
+    </query>
+    
+    <!-- 대분류 새로운 메뉴 레코드 등록하기 -->
+    <query name="INS_LMENU">
+        <![CDATA[
+            INSERT INTO COM.TC_PGMLMENU 
+            (
+			     LCODE
+			   , LNAME
+			   , SUB_SYSTEM
+			   , SEQ
+			   , REG_DATE
+			   , REG_ID 
+			 )
+            VALUES 
+            (
+			     ?
+			   , ?
+			   , ?
+			   , ?
+               , SYSDATE
+               , ?
+            )
+        ]]>        
+    </query>
+
+    <!-- 대분류의 대분류명 수정하기 -->
+    <query name="UPD_LMENU">
+        <![CDATA[
+            UPDATE COM.TC_PGMLMENU
+               SET LNAME        = ?
+                 , SEQ          = ?
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE LCODE        = ?
+               AND SUB_SYSTEM   = ?
+        ]]>        
+    </query>
+    
+    <!-- 대분류의 레코드 삭제하기 -->
+    <query name="DEL_LMENU">
+        <![CDATA[
+            DELETE COM.TC_PGMLMENU
+             WHERE LCODE        = ?
+               AND SUB_SYSTEM   = ?
+        ]]>        
+    </query>
+
+    <!-- 중분류 중복체크 -->
+    <query name="SEL_MMENU_CNT">        
+        <![CDATA[
+        SELECT COUNT(*) AS CNT 
+          FROM COM.TC_PGMSMENU
+         WHERE LCODE = ? 
+           AND MCODE = ?
+        ]]>        
+    </query>
+    
+    <!-- 중분류 새로운 메뉴 레코드 등록하기 -->
+    <query name="INS_MMENU">
+        <![CDATA[
+            INSERT INTO COM.TC_PGMMMENU 
+            (
+                LCODE
+              , MCODE
+              , MNAME
+              , IS_USE
+              , SEQ
+              , REG_DATE
+              , REG_ID 
+            )
+            VALUES 
+            (
+                ?
+              , ?
+              , ?
+              , ?
+              , ?
+              , SYSDATE
+              , ?
+            )
+        ]]>        
+    </query>
+    
+    <!-- 중분류의 중분류명 수정하기 -->
+    <query name="UPD_MMENU">
+        <![CDATA[
+            UPDATE COM.TC_PGMMMENU
+               SET MNAME    = ?
+                 , SEQ      = ?
+                 , MOD_DATE = SYSDATE
+                 , MOD_ID   = ?
+             WHERE LCODE    = ?
+               AND MCODE    = ?
+        ]]>        
+    </query>
+
+    <!-- 중분류의 레코드 삭제하기 -->
+    <query name="DEL_MMENU">
+        <![CDATA[
+            DELETE COM.TC_PGMMMENU
+             WHERE LCODE = ?
+               AND MCODE = ?
+        ]]>        
+    </query>
+
+    <!-- 소분류 중복체크 -->
+    <query name="SEL_SMENU_CNT">        
+        <![CDATA[
+        SELECT COUNT(*) AS CNT 
+          FROM COM.TC_PGMSMENU
+         WHERE SCODE = ?
+        ]]>        
+    </query>
+    
+    <!-- 소분류 새로운 메뉴 레코드 등록하기 -->
+    <query name="INS_SMENU">
+        <![CDATA[
+            INSERT INTO COM.TC_PGMSMENU 
+            (
+                SCODE
+              , MCODE
+              , LCODE
+              , SNAME
+              , IS_USE
+              , SEQ
+              , REG_DATE
+              , REG_ID 
+            )
+            VALUES (
+                ?
+              , ?
+              , ?
+              , ?
+              , ?
+              , ?
+              , SYSDATE
+              , ?
+            )
+        ]]>        
+    </query>
+
+    <!-- 소분류의 소분류명 수정하기 -->
+    <query name="UPD_SMENU">
+        <![CDATA[
+            UPDATE COM.TC_PGMSMENU
+               SET SNAME    = ?
+                 , SEQ      = ?
+                 , MOD_DATE = SYSDATE
+                 , MOD_ID   = ?
+             WHERE SCODE    = ?
+               AND MCODE    = ?
+               AND LCODE    = ?
+        ]]>        
+    </query>
+    
+    <!-- 소분류의 레코드 삭제하기 -->
+    <query name="DEL_SMENU">
+        <![CDATA[
+            DELETE COM.TC_PGMSMENU
+             WHERE SCODE = ?
+               AND MCODE = ?
+               AND LCODE = ?
+        ]]>        
+    </query>
+
+
+    <!-- 프로그램 중복체크 -->
+    <query name="SEL_PROGRAM_CNT">        
+        <![CDATA[
+        SELECT COUNT(*) AS CNT 
+          FROM COM.TC_PGMMST
+         WHERE PID = ?  
+        ]]>        
+    </query>
+
+    <!-- 프로그램  새로운 메뉴 레코드 등록하기 -->
+    <query name="INS_PROGRAM">
+        <![CDATA[
+            INSERT INTO COM.TC_PGMMST 
+			(
+                    PID
+                  , SCODE
+                  , PNAME1
+                  , PNAME2
+                  , URL
+                  , IS_RET
+                  , IS_NEW
+                  , IS_DEL
+                  , IS_SAVE
+                  , IS_EXCEL
+                  , IS_PRINT
+                  , IS_CONFIRM
+                  , USE_YN
+                  , REG_DATE
+                  , REG_ID
+            )
+            VALUES 
+            (
+                    ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , ?
+                  , SYSDATE
+                  , ?
+            )
+        ]]>        
+    </query> 
+    
+    <!-- 프로그램 수정하기 -->
+    <query name="UPD_PROGRAM">
+        <![CDATA[
+            UPDATE COM.TC_PGMMST
+			   SET PNAME1 	  = ?
+			     , PNAME2 	  = ?
+			     , URL 	  	  = ?
+			     , IS_RET 	  = ?
+			     , IS_NEW 	  = ?
+			     , IS_DEL 	  = ?
+			     , IS_SAVE 	  = ?
+			     , IS_EXCEL   = ?
+			     , IS_PRINT   = ?
+			     , IS_CONFIRM = ?
+			     , USE_YN     = ?
+                 , MOD_DATE   = SYSDATE
+                 , MOD_ID     = ?
+			 WHERE PID 		  = ?
+        ]]>        
+    </query>
+
+    <!-- 프로그램의 레코드 삭제하기 -->
+    <query name="DEL_PROGRAM">
+        <![CDATA[
+            DELETE 
+              FROM COM.TC_PGMMST
+             WHERE PID = ?
+        ]]>        
+    </query> 
+    
+    <!-- 프로그램 등록 여부 확인하기 -->
+    <query name="IS_PROGRAM">
+        <![CDATA[
+			SELECT COUNT(*)
+			  FROM COM.TC_PGMMST
+			 WHERE PID = ?
+        ]]>        
+    </query>
+    
+    <!-- 사용자별 프로그램 권한 수정하기  -->
+    <query name="UPD_USRPGM">
+        <![CDATA[
+            UPDATE COM.TC_USRPGM
+               SET IS_RET       = DECODE(IS_RET		,'Y',?, IS_RET)
+                 , IS_NEW       = DECODE(IS_NEW		,'Y',?, IS_NEW)
+                 , IS_DEL       = DECODE(IS_DEL		,'Y',?, IS_DEL)
+                 , IS_SAVE      = DECODE(IS_SAVE	,'Y',?, IS_SAVE)
+                 , IS_EXCEL     = DECODE(IS_EXCEL	,'Y',?, IS_EXCEL)
+                 , IS_PRINT     = DECODE(IS_PRINT	,'Y',?, IS_PRINT)
+                 , IS_CONFIRM   = DECODE(IS_CONFIRM	,'Y',?, IS_CONFIRM) 
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE PID          = ?
+        ]]>        
+    </query>
+    
+    <!-- 그룹별 프로그램 권한 수정하기  -->
+    <query name="UPD_GRPPGM">
+        <![CDATA[
+            UPDATE COM.TC_GRPPGM
+               SET IS_RET       = DECODE(IS_RET		,'Y',?, IS_RET)
+                 , IS_NEW       = DECODE(IS_NEW		,'Y',?, IS_NEW)
+                 , IS_DEL       = DECODE(IS_DEL		,'Y',?, IS_DEL)
+                 , IS_SAVE      = DECODE(IS_SAVE	,'Y',?, IS_SAVE)
+                 , IS_EXCEL     = DECODE(IS_EXCEL	,'Y',?, IS_EXCEL)
+                 , IS_PRINT     = DECODE(IS_PRINT	,'Y',?, IS_PRINT)
+                 , IS_CONFIRM   = DECODE(IS_CONFIRM	,'Y',?, IS_CONFIRM) 
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE PID          = ?
+        ]]>        
+    </query>
+    
+    <!-- 그룹별 프로그램 권한 삭제하기  -->
+    <query name="DEL_GRPPGM">
+        <![CDATA[
+            DELETE FROM COM.TC_GRPPGM
+             WHERE PID = ?
+        ]]>        
+    </query>
+    
+    <!-- 사용자별 프로그램 권한 수정하기  -->
+    <query name="DEL_USRPGM">
+        <![CDATA[
+            DELETE FROM COM.TC_USRPGM
+             WHERE PID = ?
+        ]]>        
+    </query>
+
+</service>

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.17
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal422.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="EVENT_PLACE_CD"          colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_NAME"        colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"                  colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROFRATE"                colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_DANGA"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+    <gauce name="H_SEL_EVENTDT"> 
+        <column colName="EVENT_S_DT"              colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"              colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_EVENTDT">        
+        <![CDATA[
+            
+            SELECT A.EVENT_PLACE_CD
+                 , D.EVENT_PLACE_NAME
+                 , A.ORG_CD
+                 , B.ORG_SHORT_NAME                                AS ORG_NAME
+                 , A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.TOT_SALE_AMT
+                 , A.PROF_AMT
+                 , (CASE WHEN NVL(A.NORM_SALE_AMT,0) = 0 THEN 0 
+                     ELSE 
+                     (CASE WHEN E.TAX_FLAG = '1' 
+                      THEN NVL(A.PROF_AMT,0)/ROUND(A.NORM_SALE_AMT/1.1,0)*100
+                      ELSE NVL(A.PROF_AMT,0)/A.NORM_SALE_AMT*100
+                      END)
+                     END)                                           AS PROFRATE
+                 , A.CUST_CNT
+                 , A.CUST_DANGA
+              FROM (
+                     SELECT A.STR_CD
+                          , A.EVENT_PLACE_CD
+                          , LPAD(C.SALE_ORG_CD, 8) || '00'                                                      AS ORG_CD
+                          , A.PUMBUN_CD
+                          , SUM(NVL(A.NORM_SALE_AMT,0))                                                     AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                          , SUM(A.SALE_PROF_AMT)                                                           AS PROF_AMT
+                          , SUM(A.NORM_SALE_AMT)                                                           AS NORM_SALE_AMT
+                          , SUM(A.CUST_CNT)                                                                AS CUST_CNT
+                          , (CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0
+                             ELSE ROUND(SUM(A.NORM_SALE_AMT)/SUM(A.CUST_CNT),0) END)                        AS CUST_DANGA	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                       FROM DPS.PS_DAYEVENT   A
+                              , DPS.PC_ORGMST     F
+                              , DPS.PC_STRPBN      C
+                      WHERE F.ORG_CD     = C.SALE_ORG_CD
+                        AND A.STR_CD     = C.STR_CD
+                        AND A.PUMBUN_CD = C.PUMBUN_CD
+                        AND F.STR_CD     = ?
+                        AND F.DEPT_CD    = ?
+                        AND F.TEAM_CD    LIKE ?  || '%'
+                        AND F.PC_CD      LIKE ?  || '%'
+                        AND A.EVENT_PLACE_CD  LIKE ? || '%'
+                        AND A.EVENT_CD   = ?
+                        AND A.SALE_DT    >= ?
+                        AND A.SALE_DT    <= ?
+                        AND EXISTS ( SELECT MYORG.USER_ID
+                                       FROM COM.V_MYORG MYORG
+                                      WHERE MYORG.STR_CD      = F.STR_CD
+                                        AND MYORG.DEPT_CD     = F.DEPT_CD
+                                        AND MYORG.TEAM_CD     = F.TEAM_CD
+                                        AND MYORG.PC_CD       = F.PC_CD
+                                        AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                        AND MYORG.USER_ID     = ?
+                                   )
+                      GROUP BY
+                            A.STR_CD
+                          , A.EVENT_PLACE_CD
+                          , LPAD(C.SALE_ORG_CD, 8)
+                          , A.PUMBUN_CD
+                   ) A
+                 , DPS.PC_ORGMST      B
+                 , DPS.PC_STRPBN      C
+                 , DPS.PC_EVTPLACMST  D
+                 , DPS.PC_PBNMST      E
+             WHERE A.ORG_CD         = B.ORG_CD
+               AND B.STR_CD         = C.STR_CD
+               AND A.PUMBUN_CD      = C.PUMBUN_CD
+               AND A.EVENT_PLACE_CD = D.EVENT_PLACE_CD
+               AND A.STR_CD         = D.STR_CD
+               AND A.PUMBUN_CD      = E.PUMBUN_CD
+             ORDER BY
+                   A.EVENT_PLACE_CD
+                 , A.ORG_CD
+                 , A.PUMBUN_CD
+            
+        ]]>        
+    </query>
+    <query name="SEL_SALE_EVENTDT2">        
+        <![CDATA[
+            
+            SELECT A.EVENT_PLACE_CD
+                 , D.EVENT_PLACE_NAME
+                 , A.ORG_CD
+                 , B.ORG_SHORT_NAME                                AS ORG_NAME
+                 , A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.TOT_SALE_AMT
+                 , A.PROF_AMT
+                 , (CASE WHEN NVL(A.NORM_SALE_AMT,0) = 0 THEN 0 
+                     ELSE 
+                     (CASE WHEN E.TAX_FLAG = '1' 
+                      THEN NVL(A.PROF_AMT,0)/ROUND(A.NORM_SALE_AMT/1.1,0)*100
+                      ELSE NVL(A.PROF_AMT,0)/A.NORM_SALE_AMT*100
+                      END)
+                     END)                                           AS PROFRATE
+                 , A.CUST_CNT
+                 , A.CUST_DANGA
+              FROM (
+                     SELECT A.STR_CD
+                          , A.EVENT_PLACE_CD
+                          , LPAD(C.BUY_ORG_CD, 8) || '00'                                                      AS ORG_CD
+                          , A.PUMBUN_CD
+                          , SUM(NVL(A.NORM_SALE_AMT,0))                                                     AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                          , SUM(A.SALE_PROF_AMT)                                                           AS PROF_AMT
+                          , SUM(A.NORM_SALE_AMT)                                                           AS NORM_SALE_AMT
+                          , SUM(A.CUST_CNT)                                                                AS CUST_CNT
+                          , (CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0
+                             ELSE ROUND(SUM(A.NORM_SALE_AMT)/SUM(A.CUST_CNT),0) END)                        AS CUST_DANGA	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                       FROM DPS.PS_DAYEVENT   A
+                              , DPS.PC_ORGMST     F
+                              , DPS.PC_STRPBN      C
+                      WHERE F.ORG_CD     = C.BUY_ORG_CD
+                        AND A.STR_CD     = C.STR_CD
+                        AND A.PUMBUN_CD = C.PUMBUN_CD
+                        AND F.STR_CD     = ?
+                        AND F.DEPT_CD    = ?
+                        AND F.TEAM_CD    LIKE ?  || '%'
+                        AND F.PC_CD      LIKE ?  || '%'
+                        AND A.EVENT_PLACE_CD  LIKE ? || '%'
+                        AND A.EVENT_CD   = ?
+                        AND A.SALE_DT    >= ?
+                        AND A.SALE_DT    <= ?
+                        AND EXISTS ( SELECT MYORG.USER_ID
+                                       FROM COM.V_MYORG MYORG
+                                      WHERE MYORG.STR_CD      = F.STR_CD
+                                        AND MYORG.DEPT_CD     = F.DEPT_CD
+                                        AND MYORG.TEAM_CD     = F.TEAM_CD
+                                        AND MYORG.PC_CD       = F.PC_CD
+                                        AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                        AND MYORG.USER_ID     = ?
+                                   )
+                      GROUP BY
+                            A.STR_CD
+                          , A.EVENT_PLACE_CD
+                          , LPAD(C.BUY_ORG_CD, 8)
+                          , A.PUMBUN_CD
+                   ) A
+                 , DPS.PC_ORGMST      B
+                 , DPS.PC_STRPBN      C
+                 , DPS.PC_EVTPLACMST  D
+                 , DPS.PC_PBNMST      E
+             WHERE A.ORG_CD         = B.ORG_CD
+               AND B.STR_CD         = C.STR_CD
+               AND A.PUMBUN_CD      = C.PUMBUN_CD
+               AND A.EVENT_PLACE_CD = D.EVENT_PLACE_CD
+               AND A.STR_CD         = D.STR_CD
+               AND A.PUMBUN_CD      = E.PUMBUN_CD
+             ORDER BY
+                   A.EVENT_PLACE_CD
+                 , A.ORG_CD
+                 , A.PUMBUN_CD
+            
+        ]]>        
+    </query>
+    <query name="SEL_EVENTDT">        
+        <![CDATA[
+            SELECT EVENT_S_DT
+                 , EVENT_E_DT
+              FROM DPS.PC_EVTMST
+             WHERE EVENT_CD = ?
+        ]]>        
+    </query>
+</service>

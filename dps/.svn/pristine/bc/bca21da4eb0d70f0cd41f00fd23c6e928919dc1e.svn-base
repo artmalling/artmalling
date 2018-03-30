@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 
+ * 작 성 일 : 2010.05.11
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  판매분매입 자동 전표 생성
+ -->
+<service name="/pstk504.ps">
+
+    <!-- 조회조건  리스트 -->
+    <gauce name="H_SEARCH"> 
+    <column colName="STR_CD"			colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+    <column colName="AUTO_SLIP_FLAG" 	colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CLOSE_TASK_FLAG" 	colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CLOSE_UNIT_FLAG"	colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CLOSE_YM"			colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+  
+  
+  
+    <!-- 월 매출 마감 여부 체크 -->
+    <query name="SEL_MONTH_SALE_CLOSE">
+        <![CDATA[
+            SELECT STR_CD
+              FROM DPS.PC_MCLOSE
+             WHERE STR_CD          = ?
+               AND CLOSE_TASK_FLAG = ?
+               AND CLOSE_UNIT_FLAG = ?
+               AND CLOSE_YM        = ?
+               AND CLOSE_YN        = 'Y'
+        ]]>
+    </query>
+    
+    
+    <!-- 월 매입 마감 여부 체크 -->
+    <query name="SEL_MONTH_BUY_CLOSE">
+        <![CDATA[
+            SELECT STR_CD
+              FROM DPS.PC_MCLOSE
+             WHERE STR_CD          = ?
+               AND CLOSE_TASK_FLAG = 'PORD'
+               AND CLOSE_UNIT_FLAG = '42'
+               AND CLOSE_YM        = ?
+               AND CLOSE_YN        = 'Y'
+        ]]>
+    </query>
+    
+ </service>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 박래형
+ * 회 사 명    : FKSS
+ * 작 성 일    : 2010.04.08
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  개발팀에서 기입해주세요
+ --> 
+<service name="/pord701.po">
+    <!-- 매입현황표  리스트 --> 
+    <gauce name="H_LIST"> 
+        <column colName="CHK"             colType="TB_STRING"     size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_CD"          colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="STR_NM"          colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="VEN_CD"          colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="VEN_NAME"        colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PUMBUN_CD"       colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PUMBUN_NM"       colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PUMMOK_NM"       colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PRINT_CD"        colType="TB_STRING"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PRINT_CNT"       colType="TB_DECIMAL"    size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+    </gauce>
+    
+    <query name="SEL_LIST">
+        <![CDATA[
+			SELECT 'F' AS CHK
+			     , A.STR_CD
+			     , A.STR_NM || A.BIZ_TYPE_NM                AS STR_NM
+			     , A.VEN_CD
+			     , A.VEN_NAME
+			     , A.PUMBUN_CD
+			     , A.PUMBUN_NM
+			     , A.PUMMOK_NM
+			     , '21' || A.PUMBUN_CD || A.PUMMOK_SRT_CD   AS PRINT_CD
+			     , 6                                        AS PRINT_CNT
+			  FROM (
+			        SELECT B.STR_CD                         AS STR_CD
+			             , DPS.FN_GET_STORE_NAME(B.STR_CD)  AS STR_NM
+                         , D.VEN_CD
+                         , E.VEN_NAME
+			             , A.PUMBUN_CD
+			             , SUBSTRB(B.RECP_NAME, 1, 14)      AS PUMBUN_NM   /* 품번 영수증명 */
+			             , SUBSTRB(C.PUMMOK_NAME, 1, 17)    AS PUMMOK_NM
+			             , C.PUMMOK_SRT_CD
+			             , SUBSTR(COM.FN_GET_COMM_NAME('D', 'P002', D.BIZ_TYPE), 1, 1) AS BIZ_TYPE_NM  /* 거래형태*/
+			          FROM DPS.PC_PBNPMK A
+			             , DPS.PC_STRPBN B 
+			             , DPS.PC_PMKMST C
+			             , DPS.PC_PBNMST D
+			             , DPS.PC_VENMST E
+			         WHERE 1 = 1
+			           AND B.STR_CD    = ?
+			           AND A.PUMBUN_CD = B.PUMBUN_CD
+			           AND A.PUMMOK_CD = C.PUMMOK_CD
+			           AND B.PUMBUN_CD = D.PUMBUN_CD
+			           AND D.VEN_CD    = E.VEN_CD
+			           AND A.USE_YN = 'Y'
+			           AND B.USE_YN = 'Y'
+			           AND C.USE_YN = 'Y'
+			           AND D.USE_YN = 'Y'
+			           AND E.USE_YN = 'Y'
+			       ) A
+			 ORDER BY A.PUMBUN_CD
+        ]]>
+    </query> 
+    
+</service>

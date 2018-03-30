@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.31
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  공제
+ -->
+<service name="/ppay206.pp">
+
+    <!-- 공제등록 리스트 -->
+        <gauce name="H_MASTER"> 
+        <column colName="SEL"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_KEY" roundMode="ROUND" /> 
+        <column colName="SALE_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_KEY" roundMode="ROUND" /> 
+        <column colName="PUMBUN_CD"      colType="TB_STRING"  size="6"   dec="0" keyType="TB_KEY" roundMode="ROUND" />
+    	<column colName="PUMBUN_NM"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_KEY" roundMode="ROUND" />
+    	<column colName="PUMMOK_CD"      colType="TB_STRING"  size="4"   dec="0" keyType="TB_KEY" roundMode="ROUND" />
+    	<column colName="PUMMOK_NM"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_KEY" roundMode="ROUND" />
+        <column colName="SEQ"            colType="TB_DECIMAL" size="11"  dec="0" keyType="TB_KEY" roundMode="ROUND" />
+        <column colName="TRAN_FLAG"      colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_AMT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CNT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_FLAG"      colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        
+    </gauce>
+
+    <!-- KEYVALUE 체크 -->
+        <gauce name="H_KEYVALUE">  
+        <column colName="KEYVALUE"       colType="TB_STRING"  size="18"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- VAT 여부 세팅 -->
+        <gauce name="H_SETVAT">  
+        <column colName="COMM_CODE"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REFER_CODE"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+      
+    <!-- 공제등록 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT 
+				   '' SEL,
+			       STR_CD,
+			       SALE_DT,
+			       PUMBUN_CD,
+			       (SELECT PUMBUN_NAME FROM DPS.PC_PBNMST Z WHERE Z.PUMBUN_CD = M.PUMBUN_CD)  PUMBUN_NM,
+			       PUMMOK_CD,
+			       (SELECT PUMMOK_NAME FROM DPS.PC_PMKMST X WHERE X.PUMMOK_SRT_CD = M.PUMMOK_CD)  PUMMOK_NM,
+			       SEQ,
+			       TRAN_FLAG,
+			       SALE_AMT,
+			       SALE_CNT,
+			       CONF_FLAG
+			FROM DPS.PS_SALESKEYIN M
+			WHERE STR_CD = ?
+			AND SALE_DT = ?
+			AND M.PUMBUN_CD IN 
+			        (SELECT D.PUMBUN_CD FROM COM.V_MYORG D WHERE USER_ID = ?)
+			ORDER BY SEQ
+			
+        ]]>
+    </query> 
+    
+    <!-- TEAM -->
+    <query name="SEL_TEAM">
+        <![CDATA[
+			  AND PUMBUN_CD IN (SELECT PUMBUN_CD FROM DPS.PC_STRPBN  
+                           WHERE SUBSTR(BUY_ORG_CD,1,6) IN (SELECT
+                                                            ORG_CD
+                                                        FROM
+                                                            (SELECT DECODE(LEVEL,1,RESERVED1,2,RESERVED2,3,RESERVED3,4,RESERVED4,5,RESERVED5) ORG_CD
+                                                            FROM 
+                                                                (SELECT * FROM COM.TC_COMMCODE T
+                                                                WHERE SYS_PART = 'D'
+                                                                AND COMM_PART = 'P250'
+                                                                AND COMM_CODE = ?) T
+                                                            CONNECT BY LEVEL <= 5)
+                                                        WHERE ORG_CD IS NOT NULL))
+        ]]>
+    </query>
+    
+    <!-- ORER BY  -->
+    <query name="SEL_ORDER">
+        <![CDATA[
+			  ORDER BY VEN_CD,PUMBUN_CD,REASON_CD
+        ]]>
+    </query>
+    
+    <!-- SEQ_NO 생성 -->
+    <query name="SEL_SEQ_NO">
+        <![CDATA[
+			  SELECT LPAD(NVL(MAX(SEQ_NO),0)+1, 3, 0) AS SEQ_NO
+			    FROM DPS.PP_PREDEFDED 
+			   WHERE STR_CD  = ?
+			     AND PAY_YM  = ? 
+			     AND PAY_CYC = ? 
+			     AND PAY_CNT = ? 
+			     AND VEN_CD  = ? 
+			     AND PUMBUN_CD  = ?  
+        ]]>
+    </query>
+
+    <!-- 공제등록 INSERT -->
+    <query name="INS_MASTER">
+        <![CDATA[
+			  INSERT INTO DPS.PS_SALESKEYIN(
+			        STR_CD,
+			        SALE_DT,
+			        PUMBUN_CD,
+			        PUMMOK_CD,
+			        SEQ,
+			        TRAN_FLAG,
+			        SALE_AMT,
+			        SALE_CNT,
+			        CONF_FLAG,
+			        REG_ID,
+			        REG_DATE) VALUES (
+			        ?,
+			        ?,
+			        ?,
+			        ?,
+			        ?,
+			        ?,
+			        ?,
+			        ?,
+			        ?,
+			        ?,
+			        SYSDATE)
+			      
+
+        ]]>
+    </query> 
+    
+    <!-- 공제등록 수정 -->
+    <query name="UPD_MASTER">
+        <![CDATA[
+            UPDATE DPS.PS_SALESKEYIN
+               SET TRAN_FLAG = ? ,
+			       SALE_AMT  = ? ,
+			       SALE_CNT  = ? 
+             WHERE STR_CD     = ?                              
+               AND SALE_DT    = ?                                                                              
+               AND PUMBUN_CD  = ?                                                    
+               AND PUMMOK_CD  = ?                                                  
+               AND SEQ        = ?
+        ]]>
+    </query>
+    
+    <!-- 공제등록 삭제 -->
+    <query name="DEL_MASTER">
+        <![CDATA[
+         DELETE FROM DPS.PP_PREDEFDED
+          WHERE STR_CD     = ?                              
+            AND PAY_YM     = ?                                                                              
+            AND PAY_CYC    = ?                                                    
+            AND PAY_CNT    = ?                                               
+            AND VEN_CD     = ?
+            AND DED_VEN_CD = ?    
+            AND PUMBUN_CD  = ?                                                       
+            AND SEQ_NO     = ? 
+        ]]>
+    </query>  
+    
+    <!-- KEYVALUE 체크 -->
+    <query name="SEL_KEYVALUE">
+        <![CDATA[
+            SELECT STR_CD || PAY_YM || PAY_CYC || PAY_CNT || VEN_CD || PUMBUN_CD || REASON_CD AS KEYVALUE
+              FROM DPS.PP_PREDEFDED
+             WHERE STR_CD || PAY_YM || PAY_CYC || PAY_CNT || VEN_CD || PUMBUN_CD || REASON_CD = ?
+               AND PAY_CD_FLAG = '2'
+        ]]>
+    </query>
+    
+    <!-- KEYVALUE 체크 -->
+    <query name="SEL_VATXYN">
+        <![CDATA[
+			SELECT COMM_CODE
+			     , REFER_CODE
+			  FROM COM.TC_COMMCODE 
+			 WHERE SYS_PART  = 'D' 
+			   AND COMM_PART = 'P412' 
+			   AND COMM_CODE = ?
+        ]]>
+    </query>
+</service>

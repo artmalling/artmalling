@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 조형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.24
+ * 변 경 일 : 2011.07.19(fkss)
+ * 변경내용 : 
+ * 개    요 : 고객 클레임를 조회한다.
+ -->
+<service name="/dvoc002.dv">
+    <!-- VOC 클레임 목록 조회 -->
+    <gauce name="H_MASTER">
+        <column colName="STR_CD"          colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REC_DT"          colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REC_SEQ"         colType="TB_DECIMAL"  size="20"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CLM_KIND"     	  colType="TB_STRING"   size="20"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" /> 
+        <column colName="REC_TITLE"       colType="TB_STRING"   size="100"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" /> 
+        <column colName="BRAND_NM"        colType="TB_STRING"   size="20"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"       colType="TB_STRING"   size="20"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH1"      colType="TB_STRING"   size="20"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH2"      colType="TB_STRING"   size="20"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH3"      colType="TB_STRING"   size="20"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_ID"         colType="TB_STRING"   size="20"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REC_TYPE"        colType="TB_STRING"   size="100"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PROC_GBN"        colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+    </gauce> 
+    
+   
+    <!-- VOC 클레임 목록 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , A.REC_DT
+     			 , A.REC_SEQ
+     			 , A.CLM_KIND
+     			 , A.REC_TITLE
+     			 , B.PUMBUN_NAME
+     			 , A.CUST_NAME
+     			 , DCS.SC_Crypto_FUN('DEC', MOBILE_PH1)  AS MOBILE_PH1
+                 , DCS.SC_Crypto_FUN('DEC', MOBILE_PH2)  AS MOBILE_PH2
+                 , DCS.SC_Crypto_FUN('DEC', MOBILE_PH3)  AS MOBILE_PH3
+    			 , A.CUST_ID
+   			     , A.REC_TYPE
+   			     , A.PROC_GBN AS PROC_GBN
+  			  FROM DCS.DV_VOCMST A
+  			     , DPS.PC_PBNMST B
+ 			 WHERE A.BRAND_CD = B.PUMBUN_CD (+)
+  			   AND A.STR_CD LIKE ? || '%'   
+  			   AND A.REC_DT BETWEEN ? AND ?
+   			   AND A.CLM_KIND LIKE ? || '%'
+               AND A.PROC_GBN LIKE ? || '%'
+               AND A.REC_SEQ BETWEEN  ? AND ?
+               AND A.MBR_GBN LIKE ? 
+               AND A.REC_TYPE LIKE ? || '%'
+               AND NVL(A.CUST_ID,' ') LIKE ? || '%'
+               AND NVL(A.CUST_NAME,' ') LIKE ? || '%'
+        ]]>        
+    </query>       
+    <!-- VOC 클레임 목록 상세 조회 -->
+    <gauce name="H_SEL_DETAIL">
+        <column colName="CLM_GRADE"        colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REC_TYPE"         colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_ID"          colType="TB_STRING"   size="9"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"        colType="TB_STRING"   size="50"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH1"       colType="TB_STRING"   size="96"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH2"       colType="TB_STRING"   size="96"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOBILE_PH3"       colType="TB_STRING"   size="96"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="STR_CD"          colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CLM_KIND"          colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REC_DT"          colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REC_ID"          colType="TB_STRING"   size="10"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REC_NAME"        colType="TB_STRING"   size="50"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PROC_DEPT"          colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REC_TITLE"          colType="TB_STRING"   size="100"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REC_CONT"          colType="TB_STRING"   size="1000"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REC_SUMMARY"          colType="TB_STRING"   size="1000"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PROC_ID"          colType="TB_STRING"   size="10"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PROC_GBN"          colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PROC_DT"          colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PROC_CONT"          colType="TB_STRING"   size="1000"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BRAND_CD"          colType="TB_STRING"   size="6"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MBR_GBN"          colType="TB_STRING"   size="1"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"          colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL"  roundMode="ROUND" />
+
+    </gauce> 
+    
+    <!-- VOC 클레임 목록 상세 조회 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT A.CLM_GRADE
+            	 , A.REC_TYPE
+            	 , A.CUST_ID
+            	 , A.CUST_NAME
+            	 , DCS.SC_Crypto_FUN('DEC', MOBILE_PH1)  AS MOBILE_PH1
+                 , DCS.SC_Crypto_FUN('DEC', MOBILE_PH2)  AS MOBILE_PH2
+                 , DCS.SC_Crypto_FUN('DEC', MOBILE_PH3)  AS MOBILE_PH3
+            	 , A.STR_CD
+            	 , A.CLM_KIND
+            	 , A.REC_DT
+            	 , A.REC_ID
+            	 , COM.FN_GET_USER_NAME(A.REC_ID) AS REC_NAME
+            	 , A.PROC_DEPT
+            	 , A.REC_TITLE
+            	 , A.REC_CONT
+            	 , A.REC_SUMMARY
+            	 , A.PROC_ID
+            	 , A.PROC_GBN
+            	 , A.PROC_DT
+            	 , A.PROC_CONT
+            	 , A.BRAND_CD
+            	 , A.MBR_GBN
+            	 , B.PUMBUN_NAME
+  			  FROM DCS.DV_VOCMST A
+  			  	 , DPS.PC_PBNMST B  
+  			 WHERE A.BRAND_CD = B.PUMBUN_CD(+)
+  			   AND A.STR_CD = ?
+  			   AND NVL(A.CUST_ID,  ' ') LIKE '%' || ? || '%'
+  			   AND A.REC_DT = ?
+               AND A.REC_SEQ = ?
+        ]]>        
+    </query>       
+   
+</service>

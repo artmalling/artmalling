@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 
+ * 작 성 일 : 2010.05.11
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  월손익계산
+ -->
+<service name="/pstk501.ps">
+
+    <!-- 조회조건  리스트 -->
+    <gauce name="H_SEARCH"> 
+    <column colName="STR_CD"			colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+    <column colName="PROFIT_FLAG"    	colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CLOSE_TASK_FLAG" 	colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CLOSE_UNIT_FLAG"	colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CLOSE_YM"			colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+  
+  
+  
+    <!-- 월 손익 마감 여부 체크 -->
+    <query name="SEL_MONTH_PROFIT_CLOSE">
+        <![CDATA[
+            SELECT STR_CD
+              FROM DPS.PC_MCLOSE
+             WHERE STR_CD          = ?
+               AND CLOSE_TASK_FLAG = ?
+               AND CLOSE_UNIT_FLAG = ?
+               AND CLOSE_YM        = ?
+               AND CLOSE_YN        = 'Y'
+        ]]>
+    </query>
+    
+    <query name="MERGE_MCLOSE">
+        <![CDATA[
+            MERGE INTO DPS.PC_MCLOSE MC
+            USING (SELECT ?          AS STR_CD
+                        , ?          AS CLOSE_TASK_FLAG
+                        , ?          AS CLOSE_UNIT_FLAG
+                        , ?          AS CLOSE_YM
+                        , ?          AS CLOSE_YN
+                        , ?          AS SAP_IF_YN
+                        , ?          AS USER_ID
+                     FROM DUAL
+                  ) UPD_DATA
+               ON(MC.STR_CD              = UPD_DATA.STR_CD
+                  AND MC.CLOSE_TASK_FLAG = UPD_DATA.CLOSE_TASK_FLAG
+                  AND MC.CLOSE_UNIT_FLAG = UPD_DATA.CLOSE_UNIT_FLAG
+                  AND MC.CLOSE_YM        = UPD_DATA.CLOSE_YM
+                 )
+             WHEN MATCHED THEN
+                  UPDATE SET MC.CLOSE_YN     = UPD_DATA.CLOSE_YN
+                           , MC.MOD_DATE     = SYSDATE
+                           , MC.MOD_ID       = UPD_DATA.USER_ID
+             WHEN NOT MATCHED THEN
+                  INSERT(STR_CD
+                       , CLOSE_TASK_FLAG
+                       , CLOSE_UNIT_FLAG
+                       , CLOSE_YM
+                       , CLOSE_YN
+                       , SAP_IF_YN
+                       , REG_DATE
+                       , REG_ID
+                       , MOD_DATE
+                       , MOD_ID
+                        ) 
+                  VALUES(UPD_DATA.STR_CD
+                       , UPD_DATA.CLOSE_TASK_FLAG
+                       , UPD_DATA.CLOSE_UNIT_FLAG
+                       , UPD_DATA.CLOSE_YM
+                       , UPD_DATA.CLOSE_YN
+                       , UPD_DATA.SAP_IF_YN
+                       , SYSDATE
+                       , UPD_DATA.USER_ID
+                       , SYSDATE
+                       , UPD_DATA.USER_ID
+                        )
+        ]]>
+    </query>
+    
+ </service>

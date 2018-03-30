@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.05.26
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  위탁출고 등록 
+ -->
+<service name="/mgif215.mg">
+    <!--위탁출고 등록 마스터 조회-->
+    <gauce name="H_MASTER">
+      <column colName="OUT_DT"          	colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="OUT_STR"         	colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STR_NAME"        	colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="OUT_SLIP_NO"     	colType="TB_STRING"  size="7"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_CD"				colType="TB_STRING"  size="6"  dec="6" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_NAME"        	colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="OUT_QTY"         	colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="OUT_AMT"         	colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STAT_FLAG_NM"    	colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STAT_FLAG"       	colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!--위탁출고 등록 디테일 조회-->
+    <gauce name="H_DETAIL">
+      <column colName="OUT_DT"          	colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="OUT_STR"         	colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_CD"       		colType="TB_STRING"  size="6"  dec="6" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_CD"    	colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ISSUE_TYPE"      	colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_TYPE"   	colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_NAME"   	colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT"		colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_S_NO"			colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_E_NO"       	colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="OUT_QTY"         	colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="OUT_AMT"         	colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- 상품권 반납등록 개수  -->
+    <gauce name="H_CNT"> 
+        <column colName="GIFTCARD_CNT"      colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_ALL_CNT"  colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--  위탁출고 등록 마스터 조회-->
+    <query name="SEL_MASTER">
+        <![CDATA[                                        
+            SELECT VA.OUT_DT
+                   ,VA.OUT_STR
+                   ,DPS.FN_GET_STORE_NAME(VA.OUT_STR) AS STR_NAME
+                   ,VA.OUT_SLIP_NO
+                   ,VA.VEN_CD
+                   ,VB.VEN_NAME
+                   ,DECODE(VA.STAT_FLAG,'04',VA.OUT_QTY*-1,VA.OUT_QTY) AS OUT_QTY
+                   ,DECODE(VA.STAT_FLAG,'04',VA.OUT_AMT*-1,VA.OUT_AMT) AS OUT_AMT
+                   ,VC.COMM_NAME1 AS STAT_FLAG_NM
+                   ,VA.STAT_FLAG
+			  FROM (
+			        SELECT TA.OUT_DT
+			               ,TA.OUT_STR
+			               ,TA.OUT_SLIP_NO
+			               ,TA.VEN_CD
+			               ,TA.STAT_FLAG
+			               ,SUM(TA.OUT_QTY) AS OUT_QTY
+			               ,SUM(TA.OUT_QTY * TB.GIFTCERT_AMT) AS OUT_AMT
+			          FROM MSS.MG_OUTREQCONF TA
+			               ,MSS.MG_GIFTAMTMST TB
+			         WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+			           AND TA.ISSUE_TYPE = TB.ISSUE_TYPE
+			           AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE
+			           AND TA.STAT_FLAG IN (?,?)
+			           AND TA.OUT_STR = ?
+			           AND TA.OUT_DT BETWEEN ? AND ?
+			           AND TA.VEN_CD LIKE ?|| '%'
+			         GROUP BY TA.OUT_DT,
+			                  TA.OUT_STR,
+			                  TA.OUT_SLIP_NO,
+			                  TA.VEN_CD,
+			                  TA.STAT_FLAG
+			        ) VA,
+			        DPS.PC_STRVENMST VB,
+                    COM.TC_COMMCODE VC
+              WHERE VA.VEN_CD = VB.VEN_CD
+                AND VA.OUT_STR = VB.STR_CD
+                AND VA.STAT_FLAG = VC.COMM_CODE
+                AND VC.COMM_PART = 'M106'
+                AND VC.SYS_PART = 'D'
+             ORDER BY VA.OUT_DT,
+                      VA.OUT_SLIP_NO DESC
+        ]]>
+    </query>
+    
+    <!--  위탁출고 등록 디테일 조회-->
+    <query name="SEL_DETAIL">
+        <![CDATA[                                        
+            SELECT '' AS OUT_STR
+                   ,'' AS OUT_DT
+                   ,'' AS VEN_CD
+                   ,TA.GIFT_TYPE_CD
+			       ,TA.ISSUE_TYPE
+			       ,TA.GIFT_AMT_TYPE
+			       ,TB.GIFT_AMT_NAME
+			       ,TB.GIFTCERT_AMT
+			       ,TA.GIFT_S_NO
+			       ,TA.GIFT_E_NO
+			       ,TA.OUT_QTY
+			       ,TA.OUT_QTY * TB.GIFTCERT_AMT AS OUT_AMT
+			  FROM MSS.MG_OUTREQCONF TA
+			       ,MSS.MG_GIFTAMTMST TB
+			 WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+			   AND TA.ISSUE_TYPE = TB.ISSUE_TYPE
+			   AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE
+			   AND TA.STAT_FLAG = ?
+			   AND TA.OUT_STR = ?
+			   AND TA.OUT_DT = ?
+			   AND TA.OUT_SLIP_NO = ?
+		   
+        ]]>
+    </query>
+    
+    <!-- 출고전표 번호 조회 -->
+    <query name="SEL_SLIP_NO">
+        <![CDATA[
+        SELECT LPAD(MSS.SQ_MG_OUTREQCONF.NEXTVAL,6,'0') AS SLIP_NO FROM DUAL
+        ]]>
+    </query> 
+    
+    <!-- 판매전표 번호 조회 -->
+    <query name="SEL_SALE_SLIP_NO">
+        <![CDATA[
+        SELECT LPAD(MSS.SQ_MG_SALEMST.NEXTVAL,6,'0') AS SLIP_NO FROM DUAL
+        ]]>
+    </query> 
+    
+    <!-- 위탁출고 유효수량 체크 -->
+    <query name="OUTSEL_CNT">
+        <![CDATA[
+        SELECT SUM(GIFTCARD_CNT) AS GIFTCARD_CNT
+             , SUM(GIFTCARD_ALL_CNT) AS GIFTCARD_ALL_CNT
+         FROM (                           
+               SELECT COUNT(*) AS GIFTCARD_CNT
+                    , 0 AS GIFTCARD_ALL_CNT
+                 FROM MSS.MG_GIFTMST
+                WHERE GIFTCARD_NO BETWEEN ? AND ?
+                  AND STAT_FLAG = '01'
+                  AND ACDT_FLAG = 'N'
+                  AND ISSUE_IN_STR = ?
+                  AND ISSUE_IN_DT <= ?
+                  
+                  UNION ALL
+               SELECT 0 AS GIFTCARD_CNT
+                    , COUNT(*) AS GIFTCARD_ALL_CNT
+                 FROM MSS.MG_GIFTMST
+                WHERE GIFTCARD_NO BETWEEN ? AND ?
+                  AND ACDT_FLAG = 'N'
+                  AND ISSUE_IN_STR = ?
+                  AND ISSUE_IN_DT <= ?)
+        ]]>
+    </query> 
+    
+    <!-- 위탁반품 유효수량 체크 -->
+    <query name="RFDSEL_CNT">
+        <![CDATA[
+        SELECT SUM(GIFTCARD_CNT) AS GIFTCARD_CNT
+             , SUM(GIFTCARD_ALL_CNT) AS GIFTCARD_ALL_CNT
+         FROM (           
+               SELECT COUNT(*) AS GIFTCARD_CNT
+                     , 0 AS GIFTCARD_ALL_CNT
+                FROM MSS.MG_GIFTMST
+                WHERE GIFTCARD_NO BETWEEN ? AND ?
+                  AND ACDT_FLAG = 'N'
+               UNION ALL 
+                SELECT 0 AS GIFTCARD_CNT
+                    , COUNT(*) AS GIFTCARD_ALL_CNT
+                 FROM MSS.MG_GIFTMST
+                WHERE GIFTCARD_NO BETWEEN ? AND ?
+                  AND STAT_FLAG = '05'
+                  AND ACDT_FLAG = 'N'
+                  AND CNS_OUT_FLAG = '03'
+                  AND CNS_VEN_CD = ?
+                  AND CNS_OUT_DT <= ?)
+              
+        ]]>
+    </query> 
+    
+    
+     <!-- 위탁출고시 상품권 상태정보체크  -->
+    <query name="SEL_GIFT_INSERT">
+        <![CDATA[
+            SELECT '' AS OUT_STR
+                   ,'' AS OUT_DT
+                   ,'' AS VEN_CD
+                   ,TA.GIFT_TYPE_CD
+                  ,TA.ISSUE_TYPE
+                  ,TA.GIFT_AMT_TYPE
+                  ,TB.GIFT_AMT_NAME
+                  ,TB.GIFTCERT_AMT
+                  ,'' AS GIFT_S_NO --상품권 시작번호
+                  ,'' AS GIFT_E_NO --상품권 종료번호
+                  ,0 AS CONF_QTY --확정수량
+                  ,0 AS CONF_AMT --확정금액
+            FROM MSS.MG_GIFTMST TA
+                 ,MSS.MG_GIFTAMTMST TB
+           WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+             AND TA.ISSUE_TYPE = TB.ISSUE_TYPE
+             AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE
+             AND TA.ACDT_FLAG = 'N'
+             AND TA.GIFTCARD_NO = ? 
+             AND TA.ISSUE_IN_STR = ?
+        ]]>
+    </query>  
+    
+    <!-- 위탁반품시 상품권상태정보 체크루틴  -->
+    <query name="WHERE_SELOUT">
+        <![CDATA[
+            AND TA.STAT_FLAG = '01'
+            AND TA.ISSUE_IN_DT <= ?
+        ]]>
+    </query>  
+    
+    <!-- 위탁반품시 상품권상태정보 체크루틴  -->
+    <query name="WHERE_SELRFD">
+        <![CDATA[
+            AND TA.STAT_FLAG = '05'
+            AND CNS_OUT_FLAG = '03'
+            AND TA.CNS_VEN_CD = ?
+            AND TA.CNS_OUT_DT <= ?
+        ]]>
+    </query>  
+    
+    <!-- 위탁출고 저장 -->
+    <query name="INS_MG_OUTREQCONF">
+        <![CDATA[
+        INSERT INTO MSS.MG_OUTREQCONF (OUT_DT
+                               ,OUT_STR
+                               ,OUT_SLIP_NO
+                               ,OUT_SEQ_NO
+                               ,GIFT_TYPE_CD
+                               ,ISSUE_TYPE
+                               ,GIFT_AMT_TYPE
+                               ,GIFT_S_NO
+                               ,GIFT_E_NO
+                               ,OUT_QTY
+                               ,VEN_CD
+                               ,STAT_FLAG
+                               ,MOD_ID
+                               ,MOD_DATE
+                               ,REG_ID
+                               ,REG_DATE
+                               )
+                        VALUES ( 
+                                ?
+                               ,?
+                               ,?
+                               ,(SELECT NVL(MAX(IA.SEQNO), 1)
+                                   FROM (
+                                          SELECT /*+ INDEX_DESC (TA PK_MG_OUTREQCONF) */
+                                                 OUT_SEQ_NO + 1 AS SEQNO
+                                            FROM MSS.MG_OUTREQCONF TA
+                                           WHERE TA.OUT_DT = ?
+                                             AND TA.OUT_STR = ?
+                                             AND TA.OUT_SLIP_NO = ?
+                                             AND ROWNUM = 1
+                                         ) IA 
+                                 )
+                                ,?
+                                ,?
+                                ,?
+                                ,?
+                                ,?
+                                ,?
+                                ,?
+                                ,?
+                                ,?
+                                ,SYSDATE
+                                ,?
+                                ,SYSDATE
+                                )
+        ]]>
+    </query> 
+    
+    <!-- 상품권 판매 디테일 등록-->
+    <query name="INS_MG_SALEMST">
+        <![CDATA[
+        INSERT INTO MSS.MG_SALEMST (SALE_DT
+		                            ,STR_CD
+		                            ,SALE_SLIP_NO
+		                            ,SALE_PART_CD
+		                            ,SALE_FLAG         
+		                            ,SALE_AMT
+		                            ,CANCEL_GB
+		                            ,SALE_CD
+		                            ,MOD_ID
+		                            ,MOD_DATE
+		                            ,REG_ID
+		                            ,REG_DATE
+		                            )
+		                   VALUES (?
+		                           ,?
+		                           ,?
+		                           ,?
+		                           ,'05'
+		                           ,?
+		                           ,'0'
+		                           ,MSS.FN_GET_SALE_CHECKDIGIT(?,?,?)
+		                           ,?
+		                           ,SYSDATE
+		                           ,?
+		                           ,SYSDATE
+		                          )
+        ]]>
+    </query> 
+    
+    <!-- 상품권 마스터 수정 -->
+    <query name="UPD_MG_GIFTMST">
+        <![CDATA[ 
+            UPDATE MSS.MG_GIFTMST
+			   SET STAT_FLAG = CASE WHEN ? = '03' THEN '05' ELSE '01' END
+			       ,CNS_OUT_DT = ?       --위탁출고일자
+			       ,CNS_OUT_STR = ?      --위탁출고점
+			       ,CNS_OUT_FLAG = ?        --위탁출고구분
+			       ,CNS_VEN_CD = ?      --위탁출고협력사
+			       ,MOD_ID = ?
+			       ,MOD_DATE = SYSDATE
+			WHERE GIFTCARD_NO BETWEEN ? AND ?
+        ]]>
+    </query> 
+    
+        <!-- 상품권 마스터 수정 -->
+    <query name="UPD_MG_GIFTMST_IN_DT">
+        <![CDATA[ 
+           AND ISSUE_IN_DT <= ?
+        ]]>
+    </query> 
+    
+        <!-- 상품권 마스터 수정 -->
+    <query name="UPD_MG_GIFTMST_OUT_DT">
+        <![CDATA[ 
+            AND CNS_OUT_DT <= ?
+        ]]>
+    </query> 
+</service>

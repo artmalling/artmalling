@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.02.21
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 가맹점(상품권관리) 
+ -->
+<service name="/ccom201.cc">	
+
+    <!-- POPUP HEADER -->
+    <gauce name="H_SEL_CODE">
+        <column colName="CHK"           colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CODE"          colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="NAME"          colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 사은행사 협력사 통합 조회-->
+    <query name="SEL_EVT_VEN_ALL">
+        <![CDATA[
+           SELECT 
+                  'F'          AS CHK
+                , PVM.VEN_CD   AS CODE
+                , PVM.VEN_NAME AS NAME 
+             FROM DPS.PC_STRVENMST MEM
+                , DPS.PC_VENMST    PVM
+            WHERE MEM.VEN_CD = PVM.VEN_CD
+              AND PVM.BIZ_FLAG = '93'
+              AND MEM.STR_CD LIKE ? ||'%'
+              AND MEM.VEN_CD LIKE ? ||'%'
+              AND PVM.VEN_NAME LIKE '%'||?||'%'
+         ORDER BY PVM.VEN_CD
+        ]]>
+    </query> 
+    
+    <!-- 사은행사 협력사 개별 조회 01: 카드 , 02: 일반-->
+    <query name="SEL_EVT_VEN">
+        <![CDATA[
+        SELECT 'F'          AS CHK
+              , PVM.VEN_CD   AS CODE
+              , PVM.VEN_NAME AS NAME 
+           FROM MSS.MC_VENMST    MEM
+              , DPS.PC_VENMST    PVM
+          WHERE MEM.VEN_CD = PVM.VEN_CD
+            AND PVM.BIZ_FLAG = '93'
+            AND MEM.VEN_FLAG LIKE ? || '%'
+            AND MEM.STR_CD = ?
+            AND MEM.VEN_CD LIKE ? || '%'
+            AND PVM.VEN_NAME LIKE '%'||?||'%'
+       ORDER BY PVM.VEN_CD
+        ]]>
+    </query> 
+    
+</service>
+

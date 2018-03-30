@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.07
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개      요 :  재청구 잔여건 조회
+ -->
+<service name="/psal936.ps">
+    <gauce name="H_MASTER"> 
+        <column colName="PAY_DT"       colType="TB_STRING"    size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_NM"     colType="TB_STRING"    size="43"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JBRCH_ID"     colType="TB_STRING"    size="15"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VRTN_NM"      colType="TB_STRING"    size="43"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT"          colType="TB_DECIMAL"   size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REBUY_CNT"    colType="TB_DECIMAL"   size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NOBUY_CNT"    colType="TB_DECIMAL"   size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NOREQ_CNT"    colType="TB_DECIMAL"   size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.PAY_DT
+                 , DPS.FN_GET_CCOMP_NM(C.BCOMP_CD) BCOMP_NM   
+                 , A.JBRCH_ID
+                 , COM.FN_GET_COMM_NAME('D', 'D041', A.VRTN_CD) VRTN_NM
+                 , SUM(1)  CNT
+                 , SUM(CASE WHEN B.BUYREQ_YN  = 'Y'  THEN  1  ELSE  0  END) REBUY_CNT
+                 , SUM(CASE WHEN B.BUYREQ_YN  = 'N'  THEN  1  ELSE  0  END) NOBUY_CNT
+                 , SUM(CASE WHEN B.BUYREQ_YN IS NULL THEN  1  ELSE  0  END) NOREQ_CNT
+              FROM DPS.PD_RTND A
+                 , DPS.PD_REBUYREQ B
+                 , DPS.PD_CARDCOMP C
+             WHERE A.PAY_DT     =    B.PAY_DT(+) 
+               AND A.PAY_SEQ    =    B.PAY_SEQ(+)
+               AND A.SEQ_NO     =    B.SEQ_NO(+) 
+               AND A.CCOMP_CD   =    C.CCOMP_CD
+               AND A.JBRCH_ID   IN ( SELECT JBRCH_ID FROM DPS.PD_BRANCH
+                                      WHERE STR_CD = ?
+                                   )
+               AND A.PAY_DT     BETWEEN ? AND ?
+               AND C.BCOMP_CD   LIKE   ? || '%'
+               AND A.JBRCH_ID   LIKE   ? || '%'
+               AND A.VRTN_CD    LIKE   ? || '%'
+             GROUP BY A.PAY_DT, C.BCOMP_CD, A.JBRCH_ID, A.VRTN_CD
+             ORDER BY A.PAY_DT, C.BCOMP_CD, A.JBRCH_ID, A.VRTN_CD
+        ]]>        
+    </query>
+</service>

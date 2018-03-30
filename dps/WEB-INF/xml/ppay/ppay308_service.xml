@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  대금지불내역 현황
+ -->
+<service name="/ppay308.pp">
+    
+    <!-- 대금지불내역 현황  마스터 리스트-->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_NM"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"             colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_NM"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"          colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"          colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_TYPE"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BIZ_TYPE_NM"        colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_CYC"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PAY_CNT"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="REAL_PAY_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_PAY_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_BFPAY_AMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_HOLD_AMT"     colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_DED_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_RLPAY_AMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_BAL_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+        <column colName="BTIME_HOLD_AMT"     colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BTIME_DED_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BTIME_RLPAY_AMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BTIME_HOLD_TAMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BTIME_BFPAY_AMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BTIME_BAL_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_SUP_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_TOT_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_TAX_SUP_AMT"  colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_VAT_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_TAX_VAT_AMT"  colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NTIME_HOLD_TAMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+
+    </gauce>
+    
+    <!-- 지불일자조회 (콤보) -->
+    <gauce name="H_PAY_DT">     
+    <column colName="NAME"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CODE"           colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--  지불일자조회(콤보)  -->
+    <query name="SEL_PAY_DT">
+        <![CDATA[
+            SELECT '전체'        AS NAME 
+                 , '%'           AS CODE
+             FROM DUAL
+           UNION ALL
+		    SELECT DISTINCT REAL_PAY_DT       AS NAME
+                 , REAL_PAY_DT                AS CODE 
+              FROM DPS.PP_BILLMST
+             WHERE STR_CD  = ?
+               AND PAY_YM  = ?
+               AND PAY_CYC = ?
+               AND PAY_CNT = ?
+             ORDER BY CODE
+        ]]>
+    </query>
+    
+    <!-- 대금지불대장 현황  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+		 SELECT BILL.STR_CD                                                  /* 점 */
+		      , DPS.FN_GET_STORE_NAME(BILL.STR_CD) AS STR_NM                 /* 점명 */
+		      , BILL.VEN_CD                                                  /* 협력사 */    
+		      , DPS.FN_GET_VENDOR_NAME(BILL.VEN_CD) AS VEN_NM                /* 협력사명 */
+		      , BILL.PUMBUN_CD											     /* 브랜드코드 */
+              , DPS.FN_GET_PUMBUN_NAME(BILL.PUMBUN_CD) AS PUMBUN_NM			 /* 브랜드명 */
+		      , VEN.BIZ_TYPE                                                 /* 거래형태 */
+		      , COM.FN_GET_COMM_NAME('D', 'P002', BIZ_TYPE) AS BIZ_TYPE_NM   /* 거래형태명 */
+		      , BILL.PAY_CYC                                                 /* 지불주기 */      
+		      , BILL.PAY_CNT                                                 /* 지불회차 */
+		      , BILL.REAL_PAY_DT                                             /* 지불일자*/
+		      , NTIME_PAY_AMT                                                /* 지불대상액 */
+		      , NTIME_BFPAY_AMT                                              /* 선급금액 */
+		      , NTIME_HOLD_AMT                                               /* 보류액 */
+		      , NTIME_DED_AMT                                                /* 공제액 */
+		      , NTIME_RLPAY_AMT                                              /* 실지불액 */
+		      , NTIME_BAL_AMT                                                /* 지불후잔액 */
+		      , BTIME_HOLD_AMT                                               /* 전회지불보류액 */
+		      , BTIME_DED_AMT                                                /* 전회지불공제액 */
+		      , BTIME_RLPAY_AMT                                              /* 전회실지불액 */
+		      , BTIME_HOLD_TAMT                                              /* 전회지불보류누계액 */
+		      , BTIME_BFPAY_AMT                                              /* 전회선지불금액 */
+		      , BTIME_BAL_AMT                                                /* 전회잔액 */
+		      , NTIME_SUP_AMT                                                /* 당회매입원가 */
+		      , NTIME_TOT_AMT                                                /* 당회매입액 */
+		      , NTIME_TAX_SUP_AMT                                            /* 당회계산서공급가 */
+		      , NTIME_VAT_AMT                                                /* 당회매입부가세액 */
+		      , NTIME_TAX_VAT_AMT                                            /* 당회계산서부가세액 */
+		      , NTIME_HOLD_TAMT                                              /* 당회지불보류액누계 */
+		  FROM DPS.PP_BILLMST   BILL
+		      , DPS.PC_STRVENMST VEN
+		 WHERE BILL.STR_CD = VEN.STR_CD
+		   AND BILL.VEN_CD = VEN.VEN_CD
+		   AND BILL.STR_CD  = ?
+		   AND BILL.PAY_YM  = ?
+		   AND BILL.PAY_CYC = ?
+		   AND BILL.PAY_CNT = ?
+		   AND BILL.REAL_PAY_DT LIKE ? || '%'
+		   AND VEN.BIZ_TYPE LIKE ? || '%'
+		   AND BILL.VEN_CD  LIKE ? || '%'
+		   AND BILL.PUMBUN_CD  LIKE ? || '%'
+		 ORDER BY BILL.REAL_PAY_DT
+		        , BILL.VEN_CD , BILL.PUMBUN_CD
+        ]]>
+    </query> 
+ </service>

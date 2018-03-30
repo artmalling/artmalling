@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif119.mg">
+<!-- 코드/명 조회 -->
+    
+     <gauce name="H_MASTER">
+	      <column colName="GIFTNO"     		colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="GIFT_TYPE_CD"   	colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="GIFT_TYPE_NAME" 	colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="GIFT_AMT_CD"    	colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="GIFT_AMT_NAME"  	colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="GIFTCERT_AMT"  	colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="STATE" 	 		colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="STATE_NAME"		colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="USESTORE"		colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="USEDAT"			colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="USETIM"			colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="BIGO"			colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+	      <column colName="ROW_NUM"        colType="TB_DECIMAL" size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>  
+    
+     
+
+    
+    <gauce name="H_GIFT_TYPE_CD"> 
+        <column colName="CODE"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    <!-- 상품권 종류 조회 -->
+    <query name="SEL_GIFT_TYPE_CD">
+        <![CDATA[                                        
+         SELECT GIFT_TYPE_CD     AS CODE
+			    , GIFT_TYPE_NAME   AS NAME
+			 FROM MSS.MG_GIFTTPMST
+			WHERE GIFT_TYPE_FLAG = '01' 
+		    ORDER BY CODE
+        ]]>
+    </query>
+    
+    <gauce name="H_GIFT_AMT_TYPE"> 
+        <column colName="CODE"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    <!-- 금종코드 조회 -->
+    <query name="SEL_GIFT_AMT_TYPE">
+        <![CDATA[                                        
+		SELECT GIFT_AMT_TYPE AS CODE
+			    , GIFT_AMT_NAME AS NAME
+			 FROM MSS.MG_GIFTAMTMST
+			WHERE ISSUE_TYPE = '1'
+			  AND GIFT_TYPE_CD = ?
+         ORDER BY CODE
+        ]]>
+    </query>
+    
+    <!-- 상품권 정보 리스트 조회 -->
+    <query name="SEL_MASTER_SEARCH">
+        <![CDATA[                                        
+			SELECT A.GIFTNO
+			     , A.GIFT_TYPE_CD
+			     , B.GIFT_TYPE_NAME
+			     , A.GIFT_AMT_CD
+			     , C.GIFT_AMT_NAME
+			     , C.GIFTCERT_AMT 
+			     , A.STATE
+			     , DECODE(A.STATE,'A','미사용','B','사용','회수처리') STATE_NM
+			     , A.USESTORE
+			     , A.USEDAT
+			     , A.USETIM
+			     , A.ZCOMMENT BIGO
+				 , ROW_NUMBER() OVER(ORDER BY USEDAT,USETIM ) AS ROW_NUM
+			FROM (
+			SELECT GIFTNO
+			     , STATE
+			     , USESTORE
+			     , DECODE(USEDAT,'00000000',NULL, USEDAT) USEDAT
+			     , DECODE(USETIM,'000000',NULL, USETIM) USETIM
+			     , ZCOMMENT
+			     , SUBSTR(GIFTNO,1,1) GIFT_TYPE_CD
+			     , SUBSTR(GIFTNO,2,1) GIFT_AMT_CD
+			 FROM T_GIFTCERTI@HYUNGJI 
+			WHERE GIFTNO LIKE ?||'%'
+			  AND USESTORE LIKE ?||'%'
+			  AND USEDAT BETWEEN ? AND ?
+			  AND SUBSTR(GIFTNO,1,1) LIKE ?||'%'
+  			  AND SUBSTR(GIFTNO,2,1) LIKE ?||'%'
+			) A
+			, MSS.MG_GIFTTPMST B
+			, MSS.MG_GIFTAMTMST C
+			WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD(+)
+			  AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD(+)
+			  AND A.GIFT_AMT_CD = C.GIFT_AMT_TYPE(+)
+  			ORDER BY USEDAT
+			       , USETIM
+        ]]>
+    </query>
+    
+</service>

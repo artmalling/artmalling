@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  제휴/브랜드상품권(쿠폰)마스터 등록
+ -->
+<service name="/mgif102.mg">
+    <!-- 상품권 공통 콤보 -->
+    <gauce name="H_COMM_CODE">
+      <column colName="CODE"            	colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"            	colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+   
+    <gauce name="H_MASTER">
+      <column colName="GIFT_TYPE_CD"        colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_NAME"      colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_FLAG"      colType="TB_STRING" size="2"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_FLAG_NM"   colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="USE_S_DT"            colType="TB_STRING" size="8"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="USE_E_DT"            colType="TB_STRING" size="8"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PAYREC_FLAG"         colType="TB_STRING" size="1"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_CD"              colType="TB_STRING" size="6"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="VEN_NM"              colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GROUP_CD"            colType="TB_STRING" size="2"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="USE_YN"              colType="TB_STRING" size="1"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <gauce name="H_DETAIL">
+      <column colName="GIFT_TYPE_CD"       colType="TB_STRING" 	size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ISSUE_TYPE"         colType="TB_STRING"	size="1"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_TYPE"      colType="TB_STRING"	size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_NAME"      colType="TB_STRING"	size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT"       colType="TB_DECIMAL" size="9"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="RFD_PERMIT_RATE"    colType="TB_DECIMAL" size="5,2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="USE_YN"             colType="TB_STRING"	size="1"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+
+    <!--  전체 추가-->
+    <query name="SEL_COMBO_ALL">
+        <![CDATA[                                        
+        SELECT '%' AS CODE
+             , '전체' AS NAME
+          FROM DUAL
+         UNION ALL
+        ]]>
+    </query>
+    
+    <!-- 상품권종류 구분 콤보 -->
+    <query name="SEL_GIFT_TYPE_FLAG">
+        <![CDATA[                                        
+        SELECT COMM_CODE AS CODE
+             , COMM_NAME1 AS NAME
+          FROM COM.TC_COMMCODE
+         WHERE COMM_PART = 'M008'
+           AND COMM_CODE <> '01'
+           AND USE_YN = 'Y'
+        ]]>
+    </query>
+    
+      <!-- 상품권 종류 팝업 조회 -->
+    <query name="SEL_GIFT_TYPE_CD_POP">
+        <![CDATA[                                        
+        SELECT GIFT_TYPE_CD AS CODE
+             , GIFT_TYPE_NAME AS NAME
+          FROM MSS.MG_GIFTTPMST
+         WHERE GIFT_TYPE_FLAG <> '01' 
+        ]]>
+    </query>
+    
+    <!-- 수수료 구분 콤보 -->
+    <query name="SEL_PAYREC_FLAG">
+        <![CDATA[                                        
+        SELECT '1'     AS CODE
+	         , '지급'  AS NAME
+	      FROM DUAL
+	     UNION ALL 
+	    SELECT '2'     AS CODE
+	         , '수취'  AS NAME
+	      FROM DUAL
+        ]]>
+    </query>
+    
+        <!--  발행형태 -->
+    <query name="SEL_ISSUE_TYPE">
+        <![CDATA[                                        
+       SELECT COMM_CODE AS CODE
+            , COMM_NAME1 AS NAME
+         FROM COM.TC_COMMCODE
+        WHERE COMM_PART = 'M009'
+        ]]>
+    </query>
+    
+        <!-- 상품권종류정보  리스트 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[                                        
+        SELECT GIFT_TYPE_CD
+		     , GIFT_TYPE_NAME
+		     , GIFT_TYPE_FLAG
+		     , COM.FN_GET_COMM_NAME('D','M008', GIFT_TYPE_FLAG) AS GIFT_TYPE_FLAG_NM
+		     , USE_S_DT
+		     , USE_E_DT
+		     , PAYREC_FLAG
+		     , VEN_CD
+		     , DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VEN_NM
+		     , GROUP_CD
+		     , DECODE(USE_YN,'Y','T','F') AS USE_YN
+		 FROM MSS.MG_GIFTTPMST
+		WHERE GIFT_TYPE_FLAG <> '01'
+		  AND GIFT_TYPE_FLAG LIKE ? || '%'
+		  AND GIFT_TYPE_CD LIKE ? || '%'
+     ORDER BY GIFT_TYPE_CD
+        ]]>
+    </query>
+    
+    <!-- 금종정보 리스트 조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[                                        
+        SELECT GIFT_TYPE_CD
+             , ISSUE_TYPE
+             , GIFT_AMT_TYPE
+             , GIFT_AMT_NAME
+             , GIFTCERT_AMT
+             , RFD_PERMIT_RATE
+             , DECODE(USE_YN,'Y','T','F') AS USE_YN
+          FROM MSS.MG_GIFTAMTMST
+         WHERE GIFT_TYPE_CD = ?
+      ORDER BY GIFT_AMT_TYPE
+        ]]>
+    </query>
+    
+   <!-- 상품권종류정보  조회  -->
+    <query name="SEL_GIFT_TYPE_CD">
+        <![CDATA[                                        
+        SELECT MAX(GIFT_TYPE_CD) AS GIFT_TYPE_CD
+          FROM MSS.MG_GIFTTPMST 
+         WHERE GIFT_TYPE_FLAG = ? 
+        ]]>
+    </query>
+    
+    <!-- 제휴상품권 종류코드 신규채번  -->
+    <query name="SEL_GIFT_TYPE_CD2">
+        <![CDATA[                                        
+         SELECT SUBSTR(?,2,1) || DTL AS GIFT_TYPE_CD
+          FROM (
+                SELECT LPAD(NVL(MAX(SUBSTR(GIFT_TYPE_CD, 2, 4)), 0) + 1, 3, '0') AS DTL
+		               FROM MSS.MG_GIFTTPMST 
+		               WHERE GIFT_TYPE_FLAG = ?
+          ) 
+        ]]>
+    </query>
+    
+      <!-- 상품권 종류 정보 저장 -->
+    <query name="INS_GIFTTPMST">
+        <![CDATA[                                        
+        INSERT INTO MSS.MG_GIFTTPMST ( GIFT_TYPE_CD
+                                     , GIFT_TYPE_NAME
+                                     , GIFT_TYPE_FLAG
+                                     , USE_S_DT
+                                     , USE_E_DT
+                                     , PAYREC_FLAG
+                                     , VEN_CD
+                                     , GROUP_CD
+                                     , USE_YN
+                                     , REG_ID
+                                     , REG_DATE
+                                     , MOD_ID
+                                     , MOD_DATE
+                                   )
+                             VALUES(   ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE
+                                   )
+        ]]>
+    </query>
+    
+        <!-- 상품권 종류 정보 수정 -->
+    <query name="UPD_GIFTTPMST">
+        <![CDATA[                                        
+        UPDATE MSS.MG_GIFTTPMST
+           SET GIFT_TYPE_NAME = ?
+             , GIFT_TYPE_FLAG = ?
+             , USE_S_DT = ?
+             , USE_E_DT = ?
+             , PAYREC_FLAG = ?
+             , VEN_CD = ?
+             , GROUP_CD = ?
+             , USE_YN = ?
+             , MOD_ID = ?
+             , MOD_DATE = SYSDATE
+         WHERE GIFT_TYPE_CD = ?
+        ]]>
+    </query>
+    
+     <!-- 금종   코드 발번 -->
+    <query name="SEL_NEW_GIFT_AMT_TYPE">
+        <![CDATA[                                        
+        SELECT LPAD(NVL(MAX(GIFT_AMT_TYPE),0)+1,4,'0')  AS GIFT_AMT_TYPE
+          FROM MSS.MG_GIFTAMTMST 
+         WHERE GIFT_TYPE_CD = ? 
+           AND ISSUE_TYPE = ?
+        ]]>
+    </query>
+    
+    <!-- 금종 정보 저장 -->
+    <query name="INS_GIFTAMTMST">
+        <![CDATA[                                        
+        INSERT INTO MSS.MG_GIFTAMTMST ( GIFT_TYPE_CD
+                                      , ISSUE_TYPE 
+                                      , GIFT_AMT_TYPE
+                                      , GIFT_AMT_NAME
+                                      , GIFTCERT_AMT
+                                      , RFD_PERMIT_RATE
+                                      , USE_YN
+                                      , REG_ID
+                                      , REG_DATE
+                                      , MOD_ID
+                                      , MOD_DATE
+                                      )
+                                VALUES( ?
+                                      , ?
+                                      , ?
+                                      , ?
+                                      , ?
+                                      , ?
+                                      , ?
+                                      , ?
+                                      , SYSDATE
+                                      , ?
+                                      , SYSDATE)
+        ]]>
+    </query>
+    
+        <!-- 금종 정보 수정 -->
+    <query name="UPD_GIFTAMTMST">
+        <![CDATA[                                        
+        UPDATE MSS.MG_GIFTAMTMST 
+           SET GIFT_AMT_NAME = ?
+             , GIFTCERT_AMT = ?
+             , RFD_PERMIT_RATE = ?
+             , USE_YN = ?
+             , MOD_ID = ?
+             , MOD_DATE = SYSDATE
+         WHERE GIFT_TYPE_CD = ?
+           AND ISSUE_TYPE = ?
+           AND GIFT_AMT_TYPE = ?
+        ]]>
+    </query>
+
+</service>

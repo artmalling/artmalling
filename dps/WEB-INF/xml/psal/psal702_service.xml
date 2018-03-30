@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김경은
+ * 회 사 명    : 
+ * 작 성 일    : 2011.06.15
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       : 매장등급 및 C/S 평가등록
+ -->
+<service name="/psal702.ps">
+
+    <!-- 확정여부확인 -->
+    <gauce name="H_CHECK"> 
+    <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="EVALU_YM"           colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="CONF_DT"            colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <!-- 매장등급 및 C/S 평가 데이터 -->
+    <gauce name="H_MASTER"> 
+        <column colName="EVALU_YM"          colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"            colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"         colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"         colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"            colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_AREA_SIZE"       colType="TB_DECIMAL"     size="7"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_PUMBUN_GRADE"    colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_PUMBUN_WEIGHT"   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_EVALU_SCORE"     colType="TB_DECIMAL"     size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_CNT1"            colType="TB_DECIMAL"     size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_CNT2"            colType="TB_DECIMAL"     size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_CNT3"            colType="TB_DECIMAL"     size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AREA_SIZE"         colType="TB_DECIMAL"     size="7"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_GRADE"      colType="TB_STRING"      size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_WEIGHT"     colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVALU_SCORE"       colType="TB_DECIMAL"     size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT1"              colType="TB_DECIMAL"     size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT2"              colType="TB_DECIMAL"     size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT3"              colType="TB_DECIMAL"     size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_CONF_DT"         colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_DT"           colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 확정여부확인 -->
+    <gauce name="H_SCORE"> 
+        <column colName="ALLOT_SCORE"       colType="TB_INT"     size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    
+    <!-- 매장등급 및 C/S 평가 DATA  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+            SELECT ?                                    AS EVALU_YM
+                 , CS.STR_CD
+                 , CS.PUMBUN_CD
+                 , DPS.FN_GET_PUMBUN_NAME(CS.PUMBUN_CD) AS PUMBUN_NM
+                 , STRPBN.SALE_ORG_CD                   AS ORG_CD
+                 , SUM(J_AREA_SIZE)                     AS J_AREA_SIZE
+                 , MAX(J_PUMBUN_GRADE)                  AS J_PUMBUN_GRADE
+                 , SUM(J_PUMBUN_WEIGHT)                 AS J_PUMBUN_WEIGHT
+                 , SUM(J_EVALU_SCORE)                   AS J_EVALU_SCORE
+                 , SUM(J_CNT1)                          AS J_CNT1
+                 , SUM(J_CNT2)                          AS J_CNT2
+                 , SUM(J_CNT3)                          AS J_CNT3
+                 , SUM(STRPBN.AREA_SIZE)                AS AREA_SIZE
+                 , MAX(PUMBUN_GRADE)                    AS PUMBUN_GRADE
+                 , SUM(PUMBUN_WEIGHT)                   AS PUMBUN_WEIGHT
+                 , SUM(EVALU_SCORE)                     AS EVALU_SCORE
+                 , SUM(CNT1)                            AS CNT1
+                 , SUM(CNT2)                            AS CNT2
+                 , SUM(CNT3)                            AS CNT3
+                 , MAX(J_CONF_DT)                       AS J_CONF_DT
+                 , MAX(CONF_DT)                         AS CONF_DT
+              FROM (
+                    SELECT MST.STR_CD      AS STR_CD
+                         , MST.PUMBUN_CD   AS PUMBUN_CD
+                         , MST.ORG_CD      AS ORG_CD
+                         , AREA_SIZE       AS J_AREA_SIZE
+                         , PUMBUN_GRADE    AS J_PUMBUN_GRADE
+                         , PUMBUN_WEIGHT   AS J_PUMBUN_WEIGHT
+                         , EVALU_SCORE     AS J_EVALU_SCORE
+                         , 0               AS AREA_SIZE
+                         , ''              AS PUMBUN_GRADE
+                         , 0               AS PUMBUN_WEIGHT
+                         , 0               AS EVALU_SCORE
+                         , TOT_CNT         AS J_CNT1
+                         , PRO_DEF_CNT     AS J_CNT2
+                         , CUST_CSMS_CNT   AS J_CNT3
+                         , 0               AS CNT1
+                         , 0               AS CNT2
+                         , 0               AS CNT3
+                         , MST.CONF_DT     AS J_CONF_DT
+                         , ''              AS CONF_DT
+                      FROM DPS.PS_YM_EVALUMST MST
+                         , DPS.PS_YM_EVALUDTL DTL
+                         , ( SELECT STR_CD                                 AS STR_CD
+                                  , PUMBUN_CD                              AS PUMBUN_CD
+                                  , COUNT(STR_CD)                          AS TOT_CNT
+                                  , SUM(CASE WHEN PROC_STAT = '1'  THEN 1
+                                        ELSE 0 END)                        AS PRO_DEF_CNT
+                                  , SUM(CASE WHEN PROC_STAT = '2' 
+                                               OR PROC_STAT = '4' THEN 1
+                                        ELSE 0 END)                        AS CUST_CSMS_CNT
+                               FROM MSS.MP_PROMISECERT
+                              WHERE SUBSTR(LAST_PROM_DT, 0, 6) = TO_CHAR(ADD_MONTHS(?||'01',-1),'YYYYMM')
+                                AND STR_CD                     = ?
+                              GROUP BY STR_CD
+                                     , PUMBUN_CD                     
+                            ) PROM
+                     WHERE MST.STR_CD       = DTL.STR_CD
+                       AND MST.EVALU_YM     = DTL.EVALU_YM
+                       AND MST.PUMBUN_CD    = DTL.PUMBUN_CD
+                       AND MST.STR_CD       = PROM.STR_CD(+)
+                       AND MST.PUMBUN_CD    = PROM.PUMBUN_CD(+)
+                       AND DTL.VEN_EVALU_CD = '07'
+                       AND MST.STR_CD       = ?
+                       AND MST.EVALU_YM     = TO_CHAR(ADD_MONTHS(?||'01',-1),'YYYYMM')
+                       AND MST.ORG_CD       LIKE ? || '%'
+                    UNION ALL
+            
+                    /* 당월 */
+                    SELECT PBN.STR_CD
+                         , PBN.PUMBUN_CD
+                         , PBN.SALE_ORG_CD AS ORG_CD
+                         , 0               AS J_AREA_SIZE
+                         , ''              AS J_PUMBUN_GRADE
+                         , 0               AS J_PUMBUN_WEIGHT
+                         , 0               AS J_EVALU_SCORE
+                         , DECODE(EVALU.AREA_SIZE, '', PBN.AREA_SIZE, EVALU.AREA_SIZE) AS AREA_SIZE
+                         , EVALU.PUMBUN_GRADE
+                         , EVALU.PUMBUN_WEIGHT
+                         , EVALU.EVALU_SCORE
+                         , 0               AS J_CNT1
+                         , 0               AS J_CNT2
+                         , 0               AS J_CNT3
+                         , TOT_CNT         AS CNT1
+                         , PRO_DEF_CNT     AS CNT2
+                         , CUST_CSMS_CNT   AS CNT3
+                         , ''              AS J_CONF_DT
+                         , EVALU.CONF_DT   AS CONF_DT
+                      FROM DPS.PC_STRPBN PBN
+                         , (SELECT MST.STR_CD
+                                 , MST.EVALU_YM
+                                 , MST.PUMBUN_CD
+                                 , AREA_SIZE
+                                 , PUMBUN_GRADE
+                                 , PUMBUN_WEIGHT
+                                 , DTL.EVALU_SCORE
+                                 , MST.CONF_DT
+                              FROM DPS.PS_YM_EVALUMST MST
+                                 , DPS.PS_YM_EVALUDTL DTL
+                             WHERE MST.STR_CD       = DTL.STR_CD
+                               AND MST.EVALU_YM     = DTL.EVALU_YM
+                               AND MST.PUMBUN_CD    = DTL.PUMBUN_CD
+                               AND DTL.VEN_EVALU_CD = '07'
+                               AND MST.STR_CD       = ?
+                               AND MST.EVALU_YM     = ?) EVALU    
+                         , ( SELECT STR_CD                                AS STR_CD
+                                  , PUMBUN_CD                              AS PUMBUN_CD
+                                  , COUNT(STR_CD)                          AS TOT_CNT
+                                  , SUM(CASE WHEN PROC_STAT = '1'  THEN 1
+                                        ELSE 0 END)                        AS PRO_DEF_CNT
+                                  , SUM(CASE WHEN PROC_STAT = '2' 
+                                               OR PROC_STAT = '4' THEN 1
+                                        ELSE 0 END)                        AS CUST_CSMS_CNT
+                               FROM MSS.MP_PROMISECERT
+                              WHERE SUBSTR(LAST_PROM_DT, 0, 6) = ?
+                                AND STR_CD                     = ?
+                              GROUP BY STR_CD
+                                     , PUMBUN_CD                     
+                            ) PROM
+                     WHERE PBN.STR_CD       = ?
+                       AND PBN.EVALU_YN     = 'Y'
+                       AND PBN.USE_YN       = 'Y'
+                       AND PBN.STR_CD       = EVALU.STR_CD(+)
+                       AND PBN.PUMBUN_CD    = EVALU.PUMBUN_CD(+)
+                       AND PBN.STR_CD       = PROM.STR_CD(+)
+                       AND PBN.PUMBUN_CD    = PROM.PUMBUN_CD(+)
+                       AND PBN.SALE_ORG_CD  LIKE  ? || '%'
+                       
+                    ) CS
+                    , DPS.PC_STRPBN STRPBN
+              WHERE CS.STR_CD    = STRPBN.STR_CD
+                AND CS.PUMBUN_CD = STRPBN.PUMBUN_CD
+                AND EXISTS ( SELECT MYORG.USER_ID
+		                       FROM COM.V_MYORG MYORG
+		                      WHERE MYORG.PUMBUN_CD = PUMBUN_CD
+		                        AND MYORG.STR_CD    = ?
+		                        AND MYORG.USER_ID   = ?
+		                        AND MYORG.ORG_FLAG  = '1'
+		                        AND ROWNUM          = 1
+		                    )
+              GROUP BY CS.STR_CD
+                     , CS.PUMBUN_CD
+                     , STRPBN.SALE_ORG_CD
+              ORDER BY CS.STR_CD
+                     , CS.PUMBUN_CD
+                     , STRPBN.SALE_ORG_CD
+        ]]>
+    </query> 
+ 
+    
+    <!-- 평가항목코드 생성  -->
+    <query name="SEL_VEN_EVALU_CD">
+        <![CDATA[
+            SELECT LPAD(NVL(MAX(VEN_EVALU_CD),0)+1,2,'0') ORD_SEQ_NO
+			  FROM DPS.PS_EVALUCDMST
+			 WHERE STR_CD   = ?
+			   AND EVALU_YM = ?         
+          
+        ]]>
+    </query>
+
+    <!-- 매장등급 및 C/S 평가MST 등록  -->
+    <query name="INS_MASTER">
+        <![CDATA[
+	        MERGE INTO DPS.PS_YM_EVALUMST
+	               USING DUAL
+	               ON (STR_CD               = ?
+		               AND EVALU_YM         = ? 
+		               AND PUMBUN_CD        = ?)
+	               WHEN MATCHED THEN 
+	                UPDATE SET ORG_CD           = ?          /* 조직 */
+	                         , AREA_SIZE        = ?          /* 면적 */
+			                 , PUMBUN_GRADE     = ?          /* 등급 */
+			                 , PUMBUN_WEIGHT    = ?          /* 가중치 */
+			                 , MOD_DATE         = SYSDATE    /* 수정일시 */
+			                 , MOD_ID           = ?          /* 수정자 */  
+				               WHEN NOT MATCHED THEN 
+	                INSERT (  STR_CD                         /* 점 */
+                            , EVALU_YM                       /* 평가년월 */
+                            , PUMBUN_CD                      /* 품번 */
+                            , ORG_CD                         /* 조직코드 */
+                            , AREA_SIZE                      /* 면적 */
+                            , PUMBUN_GRADE                   /* 등급 */
+                            , PUMBUN_WEIGHT                  /* 가중치 */
+                            , REG_DATE                       /* 등록일시 */
+                            , REG_ID                         /* 등록자 */
+                            , MOD_DATE                       /* 수정일시 */
+                            , MOD_ID                         /* 수정자 */
+                            )                                
+                     VALUES (
+                             ?
+                           , ?
+                           , ?
+                           , ?
+                           , ?
+                           , ?
+                           , ?
+                           , SYSDATE
+                           , ?
+                           , SYSDATE
+                           , ?      
+                           )
+                      
+        ]]>
+    </query>  
+   
+    <!-- 매장등급 및 C/S 평가DTL 등록  -->
+    <query name="INS_DETAIL">
+        <![CDATA[
+        MERGE INTO DPS.PS_YM_EVALUDTL
+                   USING DUAL
+                   ON (STR_CD               = ?
+		               AND EVALU_YM         = ? 
+		               AND PUMBUN_CD        = ?
+		               AND VEN_EVALU_CD     = ?)
+                   WHEN MATCHED THEN 
+                    UPDATE SET EVALU_SCORE      = ?          /* 평가점수 */
+			                 , MOD_DATE         = SYSDATE    /* 수정일시 */
+			                 , MOD_ID           = ?          /* 수정자 */  
+                               WHEN NOT MATCHED THEN 
+                    INSERT (  STR_CD                        /* 점 */
+                            , EVALU_YM                      /* 평가년월 */
+                            , PUMBUN_CD                     /* 품번 */
+                            , VEN_EVALU_CD                  /* 평가항목 */
+                            , EVALU_SCORE                   /* 평가점수 */
+                            , REG_DATE                      /* 등록일시 */
+                            , REG_ID                        /* 등록자 */
+                            , MOD_DATE                      /* 수정일시 */
+                            , MOD_ID                        /* 수정자 */
+                            )
+                     VALUES (
+                             ?
+                           , ?
+                           , ?
+                           , ?
+                           , ?
+                           , SYSDATE
+                           , ?
+                           , SYSDATE
+                           , ?      
+                           )
+
+        ]]>
+    </query>  
+    
+    <!--  매장등급 및 C/S 평가MST  수정  -->
+    <query name="UPD_MASTER">
+        <![CDATA[
+            UPDATE DPS.PS_YM_EVALUMST
+               SET AREA_SIZE        = ?                 /* 면적 */
+                 , PUMBUN_GRADE     = ?             /* 등급 */
+                 , PUMBUN_WEIGHT    = ?             /* 가중치 */
+                 , MOD_DATE         = SYSDATE    /* 수정일시 */
+                 , MOD_ID           = ?          /* 수정자 */ 
+             WHERE STR_CD           = ?
+               AND EVALU_YM         = ? 
+               AND PUMBUN_CD        = ?
+        ]]>
+    </query>
+    
+    <!--  매장등급 및 C/S 평가DTL  수정  -->
+    <query name="UPD_DETAIL">
+        <![CDATA[
+            UPDATE DPS.PS_YM_EVALUDTL
+               SET EVALU_SCORE      = ?          /* 평가점수 */
+                 , MOD_DATE         = SYSDATE    /* 수정일시 */
+                 , MOD_ID           = ?          /* 수정자 */ 
+             WHERE STR_CD           = ?
+               AND EVALU_YM         = ? 
+               AND PUMBUN_CD        = ?
+               AND VEN_EVALU_CD     = ?
+        ]]>
+    </query>
+    
+    <!-- 매장등급및 C/S평가등록 전월내역복사  -->
+    <query name="INS_MASTER_COPY">
+        <![CDATA[
+            INSERT INTO DPS.PS_YM_EVALUMST (  STR_CD                         /* 점 */
+				                            , EVALU_YM                       /* 평가년월 */
+				                            , PUMBUN_CD                      /* 품번 */
+				                            , ORG_CD                         /* 조직코드 */
+				                            , AREA_SIZE                      /* 면적 */
+				                            , PUMBUN_GRADE                   /* 등급 */
+				                            , PUMBUN_WEIGHT                  /* 가중치 */
+				                            , REG_DATE                       /* 등록일시 */
+				                            , REG_ID                         /* 등록자 */
+				                            , MOD_DATE                       /* 수정일시 */
+				                            , MOD_ID                         /* 수정자 */             
+                                             )
+                                             (SELECT STR_CD                                     
+									               , ?                                   
+									               , PUMBUN_CD                     
+		                                           , ORG_CD                        
+		                                           , AREA_SIZE                     
+		                                           , PUMBUN_GRADE                  
+		                                           , PUMBUN_WEIGHT                                        
+									               , SYSDATE
+		                                           , ?
+		                                           , SYSDATE
+		                                           , ?      
+									           FROM DPS.PS_YM_EVALUMST
+									          WHERE STR_CD    = ?
+								                AND EVALU_YM = TO_CHAR(ADD_MONTHS(?||'01',-1),'YYYYMM')
+								                AND ORG_CD    LIKE ? || '%'
+								                AND EXISTS ( SELECT MYORG.USER_ID
+								                                FROM COM.V_MYORG MYORG
+								                               WHERE MYORG.PUMBUN_CD = PUMBUN_CD
+								                                 AND MYORG.STR_CD    = ?
+								                                 AND MYORG.USER_ID   = ?
+								                                 AND MYORG.ORG_FLAG  = '1'
+								                                 AND ROWNUM          = 1
+								                            )
+                                              )
+                                            
+        ]]>
+    </query>  
+    
+    <!-- 매장등급및 C/S평가등록 전월내역복사  -->
+    <query name="INS_DETAIL_COPY">
+        <![CDATA[
+            INSERT INTO DPS.PS_YM_EVALUDTL (  STR_CD                        /* 점 */
+				                            , EVALU_YM                      /* 평가년월 */
+				                            , PUMBUN_CD                     /* 품번 */
+				                            , VEN_EVALU_CD                  /* 평가항목 */
+				                            , EVALU_SCORE                   /* 평가점수 */
+				                            , REG_DATE                      /* 등록일시 */
+				                            , REG_ID                        /* 등록자 */
+				                            , MOD_DATE                      /* 수정일시 */
+				                            , MOD_ID                        /* 수정자 */          
+                                             )
+                                             (SELECT DTL.STR_CD                                     
+                                                   , ?                          
+                                                   , DTL.PUMBUN_CD                  
+		                                           , DTL.VEN_EVALU_CD               
+		                                           , DTL.EVALU_SCORE                                            
+                                                   , SYSDATE
+                                                   , ?
+                                                   , SYSDATE
+                                                   , ?      
+                                                FROM DPS.PS_YM_EVALUMST MST
+				                                   , DPS.PS_YM_EVALUDTL DTL
+				                               WHERE MST.STR_CD       = DTL.STR_CD
+				                                 AND MST.EVALU_YM     = DTL.EVALU_YM
+				                                 AND MST.PUMBUN_CD    = DTL.PUMBUN_CD
+				                                 AND DTL.VEN_EVALU_CD = '07' 
+				                                 AND DTL.STR_CD       = ?
+                                                 AND DTL.EVALU_YM     = TO_CHAR(ADD_MONTHS(?||'01',-1),'YYYYMM')
+                                                 AND MST.ORG_CD       LIKE ? || '%'
+                                                 AND EXISTS ( SELECT MYORG.USER_ID
+                                                                FROM COM.V_MYORG MYORG
+                                                               WHERE MYORG.PUMBUN_CD = DTL.PUMBUN_CD
+                                                                 AND MYORG.STR_CD    = ?
+                                                                 AND MYORG.USER_ID   = ?
+                                                                 AND MYORG.ORG_FLAG  = '1'
+                                                                 AND ROWNUM          = 1
+                                                            )
+                                              )
+                                            
+        ]]>
+    </query>  
+    
+   <!-- 확정여부  -->
+    <query name="SEL_CONF_CHECK">
+        <![CDATA[
+        SELECT STR_CD
+             , EVALU_YM
+             , CONF_DT
+          FROM DPS.PS_YM_EVALUMST
+         WHERE STR_CD   = ?
+           AND EVALU_YM = ?
+           AND NVL(CONF_DT, ' ') <> ' '
+        ]]>
+    </query>
+
+ <!-- 등록된 데이터확인  -->
+    <query name="SEL_VALCHECK">
+        <![CDATA[   
+            SELECT STR_CD
+                 , EVALU_YM
+                 , CONF_DT
+              FROM DPS.PS_YM_EVALUMST
+             WHERE STR_CD    = ?
+               AND EVALU_YM  = ?
+               AND ORG_CD    LIKE ? || '%'
+               AND EXISTS ( SELECT MYORG.USER_ID
+                               FROM COM.V_MYORG MYORG
+                              WHERE MYORG.PUMBUN_CD = PUMBUN_CD
+                                AND MYORG.STR_CD    = ?
+                                AND MYORG.USER_ID   = ?
+                                AND MYORG.ORG_FLAG  = '1'
+                                AND ROWNUM          = 1
+                           )
+        ]]>
+    </query>
+    
+ <!-- 등록된 배점 조회 -->
+    <query name="SEL_ALLOT_SCORE">
+        <![CDATA[   
+            SELECT ALLOT_SCORE
+              FROM DPS.PS_EVALUCDMST
+             WHERE STR_CD       = ?
+               AND EVALU_YM     = ?
+               AND VEN_EVALU_CD = '07'
+        ]]>
+    </query>
+ </service>

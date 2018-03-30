@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif623.mg">
+    <!--  상품권종류 콤보 -->
+    <gauce name="H_COMBO">
+      <column colName="CODE"              	colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"              	colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    
+    
+    <!-- 자사상품권  마스터  SUM  조회  -->
+    <gauce name="H_MASTER"> 
+      <column colName="GIFT_TYPE_CD"        colType="TB_STRING" size="4"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_TYPE"       colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_NAME"       colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT"        colType="TB_DECIMAL" size="9"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_QTY"        colType="TB_DECIMAL" size="7"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT_SUM"    colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL"  roundMode="" />				        
+    </gauce>
+    
+    <!-- 자사상품권 마스터존재  조회  -->
+    <gauce name="H_DETAIL"> 
+      <column colName="GIFT_TYPE_CD"        colType="TB_STRING" size="4"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_TYPE"       colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_NAME"       colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT"        colType="TB_DECIMAL" size="9"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_QTY"        colType="TB_DECIMAL" size="7"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT_SUM"    colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL"  roundMode="" />				        
+    </gauce>
+   
+    <!-- 자사상품권  마스터 미존재  조회  -->
+    <gauce name="H_DETAIL2"> 
+      <column colName="GIFT_TYPE_CD"        colType="TB_STRING" size="4"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_TYPE"       colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_NAME"       colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT"        colType="TB_DECIMAL" size="9"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_QTY"        colType="TB_DECIMAL" size="7"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT_SUM"    colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    
+    
+
+   
+<!--  상품권종류 콤보 -->
+<query name="SEL_COMBO">
+    <![CDATA[                                        
+		SELECT GIFT_TYPE_CD     AS CODE
+		     , GIFT_TYPE_NAME   AS NAME
+		  FROM MSS.MG_GIFTTPMST
+		 WHERE GIFT_TYPE_FLAG = '01'
+		    ORDER BY GIFT_TYPE_CD
+      ]]>
+</query>    
+
+ <!-- 자사상품권 POS회수 집계 조회  -->
+ <query name="SEL_MG_POSDRAWL_MST">
+     <![CDATA[
+     SELECT M.GIFT_TYPE_CD
+          , M.GIFT_AMT_TYPE
+          , A.GIFT_AMT_NAME
+          , A.GIFTCERT_AMT
+          , COUNT( A.GIFTCERT_AMT) AS "GIFTCERT_QTY"
+          , ( A.GIFTCERT_AMT * COUNT( A.GIFTCERT_AMT) ) AS GIFTCERT_AMT_SUM      
+       FROM MSS.MG_POSDRAWL M
+          , MSS.MG_GIFTAMTMST A
+      WHERE M.GIFT_TYPE_CD = A.GIFT_TYPE_CD
+        AND M.GIFT_AMT_TYPE = A.GIFT_AMT_TYPE 
+        AND M.ISSUE_TYPE = A.ISSUE_TYPE 
+        AND M.DRAWL_STR = ?
+        AND M.DRAWL_DT BETWEEN ? AND ?
+   GROUP BY M.GIFT_TYPE_CD
+          , M.GIFT_AMT_TYPE
+          , A.GIFT_AMT_NAME
+          , A.GIFTCERT_AMT
+     ]]>
+ </query>
+ 
+				        
+     <!-- 자사상품권마스터존재 POS회수 집계 조회 -->
+ <query name="SEL_MG_POSDRAWL_DTL">
+     <![CDATA[
+     SELECT M.GIFT_TYPE_CD
+          , M.GIFT_AMT_TYPE
+          , A.GIFT_AMT_NAME
+          , A.GIFTCERT_AMT
+          , COUNT( A.GIFTCERT_AMT) AS "GIFTCERT_QTY"
+          , ( A.GIFTCERT_AMT * COUNT( A.GIFTCERT_AMT) ) AS GIFTCERT_AMT_SUM      
+       FROM MSS.MG_POSDRAWL M
+          , MSS.MG_GIFTAMTMST A
+          , MSS.MG_GIFTMST B
+      WHERE M.GIFT_TYPE_CD = A.GIFT_TYPE_CD
+        AND M.GIFT_AMT_TYPE = A.GIFT_AMT_TYPE 
+        AND M.ISSUE_TYPE = A.ISSUE_TYPE 
+        AND M.GIFTCARD_NO  = B.GIFTCARD_NO
+        AND M.DRAWL_STR    = ?
+        AND M.DRAWL_DT BETWEEN ? AND ?
+   GROUP BY M.GIFT_TYPE_CD
+          , M.GIFT_AMT_TYPE
+          , A.GIFT_AMT_NAME
+          , A.GIFTCERT_AMT
+     ]]>
+ </query>   
+ 
+      <!-- 자사상품권마스터 미존재 POS회수 집계 조회 -->
+ <query name="SEL_MG_POSDRAWL_DTL_NOT">
+     <![CDATA[
+     SELECT M.GIFT_TYPE_CD
+          , M.GIFT_AMT_TYPE
+          , A.GIFT_AMT_NAME
+          , A.GIFTCERT_AMT
+          , COUNT( A.GIFTCERT_AMT) AS "GIFTCERT_QTY"
+          , ( A.GIFTCERT_AMT * COUNT( A.GIFTCERT_AMT) ) AS GIFTCERT_AMT_SUM      
+       FROM MSS.MG_POSDRAWL M
+          , MSS.MG_GIFTAMTMST A
+      WHERE M.GIFT_TYPE_CD  = A.GIFT_TYPE_CD
+        AND M.GIFT_AMT_TYPE = A.GIFT_AMT_TYPE 
+        AND M.ISSUE_TYPE    = A.ISSUE_TYPE 
+        AND NOT EXISTS ( SELECT B.GIFTCARD_NO
+                           FROM MSS.MG_GIFTMST B
+                          WHERE M.GIFTCARD_NO   = B.GIFTCARD_NO)
+        AND M.DRAWL_STR     = ?
+        AND M.DRAWL_DT BETWEEN ? AND ?
+   GROUP BY M.GIFT_TYPE_CD
+          , M.GIFT_AMT_TYPE
+          , A.GIFT_AMT_NAME
+          , A.GIFTCERT_AMT
+     ]]>
+ </query>  
+</service>

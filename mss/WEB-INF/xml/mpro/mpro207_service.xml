@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="euc-kr"?>
+
+<!--
+ * 작 성 자 : 오형규
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  해피콜 만족도 분석
+ -->
+
+<service name="/mpro207.mp">
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STRNM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAKE_DT" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CORNER_NM" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SERVICE01" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SERVICE02" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SERVICE03" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SERVICE04" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SERVICE05" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SERVICE_CNT" colType="TB_DECIMAL" size="5" dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM01" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM02" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM03" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM04" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM05" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM_CNT" colType="TB_DECIMAL" size="5" dec="2" keyType="TB_NORMAL" roundMode="ROUND" />        
+    </gauce>
+    
+    <!-- 해피콜 만족도 분석  -->
+    <gauce name="H_SEL_MASTER"> 
+    </gauce>
+    
+    <!-- 해피콜 만족도 분석  -->
+    <query name="SEL_HAPPYCALL">
+        <![CDATA[
+        SELECT A.STR_CD AS STR_CD
+	         , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM
+	         , A.TAKE_DT AS TAKE_DT
+	         , D.DEPT_NM AS DEPT_NM
+	         , D.TEAM_NM  AS TEAM_NM
+	         , D.PC_NM AS PC_NM
+	         , D.CORNER_NM AS CORNER_NM
+	         , D.ORG_CD AS ORGCD
+	         , SUM(CASE WHEN A.SERVICE = '1' THEN 1 ELSE 0 END) AS SERVICE01
+	         , SUM(CASE WHEN A.SERVICE = '2' THEN 1 ELSE 0 END) AS SERVICE02
+	         , SUM(CASE WHEN A.SERVICE = '3' THEN 1 ELSE 0 END) AS SERVICE03
+	         , SUM(CASE WHEN A.SERVICE = '4' THEN 1 ELSE 0 END) AS SERVICE04
+	         , SUM(CASE WHEN A.SERVICE = '5' THEN 1 ELSE 0 END) AS SERVICE05
+	         , ROUND((
+                       SUM(CASE WHEN A.SERVICE = '1' THEN 5 ELSE 0 END) +
+                       SUM(CASE WHEN A.SERVICE = '2' THEN 4 ELSE 0 END) +
+                       SUM(CASE WHEN A.SERVICE = '3' THEN 3 ELSE 0 END) +
+                       SUM(CASE WHEN A.SERVICE = '4' THEN 2 ELSE 0 END) +
+                       SUM(CASE WHEN A.SERVICE = '5' THEN 1 ELSE 0 END)
+	                  ) / (
+	                        SUM(CASE WHEN A.SERVICE = '1' THEN 1 ELSE 0 END) +
+	                        SUM(CASE WHEN A.SERVICE = '2' THEN 1 ELSE 0 END) +
+	                        SUM(CASE WHEN A.SERVICE = '3' THEN 1 ELSE 0 END) +
+	                        SUM(CASE WHEN A.SERVICE = '4' THEN 1 ELSE 0 END) +
+	                        SUM(CASE WHEN A.SERVICE = '5' THEN 1 ELSE 0 END)
+	                      ), 2) AS SERVICE_CNT
+	          , SUM(CASE WHEN A.ITEM = '1' THEN 1 ELSE 0 END ) AS ITEM01
+	          , SUM(CASE WHEN A.ITEM = '2' THEN 1 ELSE 0 END ) AS ITEM02
+	          , SUM(CASE WHEN A.ITEM = '3' THEN 1 ELSE 0 END ) AS ITEM03
+	          , SUM(CASE WHEN A.ITEM = '4' THEN 1 ELSE 0 END ) AS ITEM04
+	          , SUM(CASE WHEN A.ITEM = '5' THEN 1 ELSE 0 END ) AS ITEM05
+	          , ROUND((
+                       SUM(CASE WHEN A.ITEM = '1' THEN 5 ELSE 0 END ) +
+                       SUM(CASE WHEN A.ITEM = '2' THEN 4 ELSE 0 END ) +
+                       SUM(CASE WHEN A.ITEM = '3' THEN 3 ELSE 0 END ) +
+                       SUM(CASE WHEN A.ITEM = '4' THEN 2 ELSE 0 END ) +
+                       SUM(CASE WHEN A.ITEM = '5' THEN 1 ELSE 0 END ) 
+	                   ) / (
+	                         SUM(CASE WHEN A.ITEM = '1' THEN 1 ELSE 0 END ) +
+	                         SUM(CASE WHEN A.ITEM = '2' THEN 1 ELSE 0 END ) +
+	                         SUM(CASE WHEN A.ITEM = '3' THEN 1 ELSE 0 END ) +
+	                         SUM(CASE WHEN A.ITEM = '4' THEN 1 ELSE 0 END ) +
+	                         SUM(CASE WHEN A.ITEM = '5' THEN 1 ELSE 0 END ) 
+	                  ), 2)   AS ITEM_CNT
+	       FROM 
+	            (SELECT A.STR_CD AS STR_CD 
+                      , A.TAKE_DT AS TAKE_DT
+                      , A.PUMBUN_CD AS PUMBUN_CD                                                                                                                                      
+                      , SUBSTR(MSS.FN_HAPPYCALL(A.STR_CD,A.TAKE_DT, A.TAKE_SEQ), 0,1) AS SERVICE
+                      , SUBSTR(MSS.FN_HAPPYCALL(A.STR_CD,A.TAKE_DT, A.TAKE_SEQ), 2,1) AS ITEM                 
+			       FROM MSS.MP_PROMISECERT A ,  MSS.MP_HAPPYCALLMGR B
+			      WHERE A.STR_CD = B.STR_CD                                        
+			        AND A.TAKE_SEQ = B.TAKE_SEQ
+			        AND A.TAKE_DT = B.TAKE_DT
+			        AND A.PROC_STAT IN ('3', '4')
+			        AND A.LAST_PROM_DT >= ? AND  A.LAST_PROM_DT<= ?        
+			   GROUP BY A.STR_CD, A.PUMBUN_CD,  A.TAKE_DT, A.TAKE_SEQ
+			    ) A, DPS.PC_STRPBN C, DPS.V_ORGPART D
+	      WHERE A.STR_CD = C.STR_CD
+			AND A.PUMBUN_CD = C.PUMBUN_CD
+			AND C.SALE_ORG_CD = D.ORG_CD
+			AND C.SALE_ORG_CD LIKE ? || '%'
+			AND A.STR_CD IN (SELECT DISTINCT STR_CD FROM COM.V_MYORG WHERE USER_ID = ? AND ORG_FLAG = '1')
+	   GROUP BY A.STR_CD, A.TAKE_DT,  D.DEPT_NM,  D.TEAM_NM, D.PC_NM, D.CORNER_NM, D.ORG_CD
+	   ORDER BY A.STR_CD, A.TAKE_DT
+        ]]>
+    </query>
+</service>

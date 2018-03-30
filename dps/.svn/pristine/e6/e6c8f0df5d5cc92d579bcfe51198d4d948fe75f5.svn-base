@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.11
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  매입세금계산서 생성
+ -->
+<service name="/ppay102.pp">
+    
+    <!-- 세금계산서 생성 마스터  리스트 -->
+    <gauce name="H_MASTER"> 
+    <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_YM"             colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CYC"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PAY_CNT"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="TAX_ISSUE_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="TAX_ISSUE_SEQ_NO"   colType="TB_INT"     size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VEN_CD"             colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VEN_NM"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="BIZ_TYPE"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="TAX_FLAG"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CHK_COST_TAMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CHK_V_COST_TAMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    <column colName="CHK_TOT_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    <column colName="ROUND_FLAG"         colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="TERM_S_DT"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="TERM_E_DT"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="ISSUE_FLAG"         colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PUMBUN_CD"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="S_PAY_YM"           colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="S_PAY_CYC"          colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="S_PAY_CNT"          colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="S_TERM_S_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="S_TERM_E_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="SEL"                colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="RVS_ISSUE_FLAG"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 세금계산서 생성상세  리스트 -->
+    <gauce name="H_DETAIL"> 
+    <column colName="CHK_DT"             colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="SLIP_FLAG"          colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="SLIP_NO"            colType="TB_STRING"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="PUMBUN_CD"          colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PUMBUN_NM"          colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CHK_COST_TAMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="CHK_V_COST_TAMT"    colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    <column colName="CHK_TOT_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    <column colName="ROUND_FLAG"         colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="REMARK"             colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="AUTO_SLIP"          colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--  세금계산서 생성 마스터  리스트  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+        
+        SELECT STR_CD
+             , PAY_YM
+             , PAY_CYC
+             , PAY_CNT
+             , TAX_ISSUE_DT
+             , TAX_ISSUE_SEQ_NO
+             , VEN_CD
+             , DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VEN_NM      /* 협력사명 */
+             , BIZ_TYPE
+             , TAX_FLAG
+             , CHK_COST_TAMT
+             , CHK_V_COST_TAMT
+             , CHK_TOT_AMT
+             , ROUND_FLAG
+             , TERM_S_DT
+             , TERM_E_DT
+             , ISSUE_FLAG
+             , PUMBUN_CD
+             , ? AS S_PAY_YM
+             , ? AS S_PAY_CYC
+             , ? AS S_PAY_CNT
+             , ? AS S_TERM_S_DT
+             , ? AS S_TERM_E_DT
+             , 'F' AS SEL
+             ,  RVS_ISSUE_FLAG
+          FROM (
+                SELECT A.STR_CD
+                     , ?   AS PAY_YM
+                     , ?   AS PAY_CYC
+                     , ?   AS PAY_CNT
+                     , A.TAX_ISSUE_DT     AS TAX_ISSUE_DT
+                     , A.TAX_ISSUE_SEQ_NO AS TAX_ISSUE_SEQ_NO
+                     , A.VEN_CD
+                     , A.BIZ_TYPE
+                     , A.TAX_FLAG
+                     , DECODE(A.ISSUE_FLAG, 'N', SUM(A.CHK_COST_TAMT) 
+                                               , MAX(C.SUP_AMT))           AS CHK_COST_TAMT 
+                     , DECODE(A.ISSUE_FLAG, 'N', DPS.FN_GET_ROUND_PROC( A.ROUND_FLAG
+							                                          , SUM(A.CHK_COST_TAMT) * 0.1 
+							                                          , 0)
+							                   , MAX(C.VAT_AMT)) AS CHK_V_COST_TAMT
+                     , DECODE(A.ISSUE_FLAG, 'N', DPS.FN_GET_ROUND_PROC( A.ROUND_FLAG
+                                                                      , SUM(A.CHK_COST_TAMT) + (SUM(A.CHK_COST_TAMT) * 0.1)
+                                                                      , 0)
+                                               , MAX(C.TOT_AMT))   AS CHK_TOT_AMT
+                     , A.ROUND_FLAG
+                     , ?   AS TERM_S_DT
+                     , ?   AS TERM_E_DT
+                     , A.ISSUE_FLAG
+                     , DECODE(A.BIZ_TYPE,'1','%', A.PUMBUN_CD) AS PUMBUN_CD 
+                     , D.RVS_ISSUE_FLAG AS RVS_ISSUE_FLAG
+                FROM(
+                     SELECT STR_CD
+                          , VEN_CD
+                          , BIZ_TYPE
+                          , TAX_FLAG
+                          , DECODE(SLIP_FLAG, 'A',CHK_COST_TAMT, CHK_COST_TAMT * (-1)) AS CHK_COST_TAMT
+                          , DECODE(SLIP_FLAG, 'A',CHK_VAT_TAMT, CHK_VAT_TAMT   * (-1)) AS CHK_V_COST_TAMT
+                          , DPS.FN_GET_ROUND_FLAG(STR_CD, VEN_CD) AS ROUND_FLAG
+                          , DECODE(NVL(TAX_ISSUE_DT,''),'','N','Y') AS ISSUE_FLAG 
+                          , TAX_ISSUE_DT
+                          , TAX_ISSUE_SEQ_NO
+                          , PUMBUN_CD
+                     FROM DPS.PO_SLPMST 
+                      WHERE SLIP_FLAG IN ('A','B')
+                        AND SLIP_PROC_STAT = '09'
+                        AND STR_CD         = ?
+                        AND VEN_CD         LIKE ? || '%'
+                        AND BIZ_TYPE       LIKE ? || '%'
+                        AND TAX_FLAG       LIKE ? || '%'
+                        AND CHK_DT         BETWEEN ? AND ?
+                        AND DEL_FLAG       = 'N'
+                        AND DECODE(NVL(TAX_ISSUE_DT,''),'','N','Y')   LIKE ? || '%'
+                        ) A
+                        , DPS.PC_STRVENMST B
+                        , DPS.PP_TAXMST C
+                        , DPS.PC_VENMST D
+               WHERE A.STR_CD           = B.STR_CD
+                 AND A.VEN_CD           = B.VEN_CD
+                 AND A.VEN_CD           = D.VEN_CD
+                 AND A.TAX_ISSUE_DT     = C.TAX_ISSUE_DT(+)
+                 AND A.TAX_ISSUE_SEQ_NO = C.TAX_ISSUE_SEQ_NO(+)
+                 AND D.ETAX_ISSUE_FLAG = '1'
+                 AND B.PAY_CYC    = ?
+            GROUP BY A.STR_CD
+                   , A.VEN_CD
+                   , A.BIZ_TYPE
+                   , A.TAX_FLAG
+                   , A.ROUND_FLAG
+                   , A.ISSUE_FLAG
+                   , A.TAX_ISSUE_DT
+                   , A.TAX_ISSUE_SEQ_NO
+                   , DECODE(A.BIZ_TYPE,'1','%', A.PUMBUN_CD)
+                   , D.RVS_ISSUE_FLAG
+                   
+            UNION ALL
+        
+            SELECT A.STR_CD
+                 , PAY_YM
+                 , PAY_CYC
+                 , PAY_CNT
+                 , A.TAX_ISSUE_DT     AS TAX_ISSUE_DT
+                 , A.TAX_ISSUE_SEQ_NO AS TAX_ISSUE_SEQ_NO
+                 , A.VEN_CD
+                 , A.BIZ_TYPE
+                 , A.TAX_FLAG
+                 , SUM(A.CHK_COST_TAMT)     AS CHK_COST_TAMT
+                 , SUM(A.CHK_V_COST_TAMT)   AS CHK_V_COST_TAMT
+                 , SUM(A.CHK_COST_TAMT) + SUM(A.CHK_V_COST_TAMT) AS CHK_TOT_AMT
+                 , A.ROUND_FLAG
+                 , DPS.FN_GET_TERM_DATE(PAY_CYC, PAY_CNT, PAY_YM,'S')   AS TERM_S_DT
+                 , DPS.FN_GET_TERM_DATE(PAY_CYC, PAY_CNT, PAY_YM,'E')   AS TERM_E_DT
+                 , A.ISSUE_FLAG
+                 , A.PUMBUN_CD
+                 , A.RVS_ISSUE_FLAG AS RVS_ISSUE_FLAG
+            FROM(
+                 SELECT A.STR_CD
+                      , SUBSTR(CHK_DT, 1, 6) AS PAY_YM
+                      , B.PAY_CYC
+                      , DPS.FN_GET_PAYCNT(B.PAY_CYC, CHK_DT) AS PAY_CNT
+                      , A.TAX_ISSUE_DT
+                      , A.TAX_ISSUE_SEQ_NO
+                      , A.VEN_CD
+                      , A.BIZ_TYPE
+                      , A.TAX_FLAG
+                      , A.CHK_COST_TAMT
+                      , A.CHK_V_COST_TAMT
+                      , A.ROUND_FLAG
+                      , ISSUE_FLAG
+                      , DECODE(A.BIZ_TYPE,'1','%', A.PUMBUN_CD) AS PUMBUN_CD
+                      , C.RVS_ISSUE_FLAG AS RVS_ISSUE_FLAG
+                 FROM(
+                      SELECT STR_CD
+                           , CHK_DT
+                           , VEN_CD
+                           , BIZ_TYPE
+                           , TAX_FLAG
+                           , DECODE(SLIP_FLAG, 'A',CHK_COST_TAMT, CHK_COST_TAMT * (-1)) AS CHK_COST_TAMT
+                          , DECODE(SLIP_FLAG, 'A',CHK_VAT_TAMT, CHK_VAT_TAMT    * (-1)) AS CHK_V_COST_TAMT
+                           , DPS.FN_GET_ROUND_FLAG(STR_CD, VEN_CD) AS ROUND_FLAG
+                           , DECODE(NVL(TAX_ISSUE_DT,''),'','N','Y') AS ISSUE_FLAG 
+                           , TAX_ISSUE_DT
+                           , TAX_ISSUE_SEQ_NO
+                           , PUMBUN_CD
+                      FROM DPS.PO_SLPMST 
+                     WHERE SLIP_FLAG IN ('A','B')
+                       AND SLIP_PROC_STAT = '09'
+                       AND STR_CD         = ?
+                       AND VEN_CD         LIKE ? || '%'
+                       AND BIZ_TYPE       LIKE ? || '%'
+                       AND TAX_FLAG       LIKE ? || '%'
+                       AND CHK_DT         BETWEEN TO_CHAR(ADD_MONTHS(?,-3),'YYYYMM')||'01' AND TO_CHAR(TO_DATE(?, 'yyyymmdd')-1,'YYYYMMDD') /* 매입시작일 3개월 전부터 매입시작일-1까지 조회 */
+                       AND DEL_FLAG       = 'N'
+                       AND TAX_ISSUE_DT IS NULL
+                       ) A
+                       , DPS.PC_STRVENMST B
+                       , DPS.PC_VENMST C
+                WHERE A.STR_CD     = B.STR_CD
+                  AND A.VEN_CD     = B.VEN_CD
+                  AND A.VEN_CD     = C.VEN_CD
+                  AND C.ETAX_ISSUE_FLAG = '1'
+                  AND A.ISSUE_FLAG LIKE ?
+                  AND B.PAY_CYC    = ?
+                ) A
+             GROUP BY A.STR_CD
+                    , A.PAY_YM
+                    , A.PAY_CYC
+                    , A.PAY_CNT
+                    , A.VEN_CD
+                    , A.BIZ_TYPE
+                    , A.TAX_FLAG
+                    , A.ROUND_FLAG
+                    , A.ISSUE_FLAG
+                    , A.TAX_ISSUE_DT
+                    , A.TAX_ISSUE_SEQ_NO
+                    , A.PUMBUN_CD
+                    , A.RVS_ISSUE_FLAG
+          )
+          ORDER BY STR_CD
+                 , PAY_YM
+                 , VEN_CD
+     
+        ]]>
+    </query> 
+    
+    <!--  세금계산서 생성 디테일  리스트  -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+		SELECT CHK_DT
+		     , SLIP_FLAG
+		     , SLIP_NO
+		     , PUMBUN_CD
+		     , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NM
+		     , DPS.FN_GET_ROUND_PROC(ROUND_FLAG, CHK_COST_TAMT,0)     AS CHK_COST_TAMT
+		     , DPS.FN_GET_ROUND_PROC(ROUND_FLAG, CHK_V_COST_TAMT,0)   AS CHK_V_COST_TAMT
+		     , DPS.FN_GET_ROUND_PROC(ROUND_FLAG, CHK_COST_TAMT,0)
+		       + DPS.FN_GET_ROUND_PROC(ROUND_FLAG, CHK_V_COST_TAMT,0) AS CHK_TOT_AMT
+		     , ROUND_FLAG
+		     , REMARK
+		     , DPS.FN_GET_AUTOSLIP_FLAG(STR_CD, SLIP_NO)              AS AUTO_SLIP
+		  FROM(
+		        SELECT CHK_DT
+		             , SLIP_FLAG
+		             , SLIP_NO
+		             , PUMBUN_CD
+		             , DECODE(SLIP_FLAG, 'A', CHK_COST_TAMT, CHK_COST_TAMT*-1)   AS CHK_COST_TAMT
+                     , DECODE(SLIP_FLAG, 'A',CHK_VAT_TAMT, CHK_VAT_TAMT * (-1)) AS CHK_V_COST_TAMT
+		             , DPS.FN_GET_ROUND_FLAG(STR_CD, VEN_CD) AS ROUND_FLAG
+		             , REMARK
+		             , STR_CD
+		        FROM DPS.PO_SLPMST 
+		         WHERE SLIP_FLAG IN ('A','B')
+		           AND SLIP_PROC_STAT = '09'
+		           AND STR_CD         = ?
+		           AND VEN_CD         LIKE ? || '%'
+		           AND BIZ_TYPE       LIKE ? || '%'
+		           AND TAX_FLAG       LIKE ? || '%'
+		           AND CHK_DT         BETWEEN ? AND ?
+		           AND NVL(TAX_ISSUE_DT, 'X') = NVL(?, 'X')
+		           AND NVL(TAX_ISSUE_SEQ_NO, '0') = NVL(?, '0')
+		           AND PUMBUN_CD LIKE ?||'%'
+                   AND DEL_FLAG       = 'N'
+		           ) A
+		       ORDER BY CHK_DT
+                      , SLIP_NO
+        ]]> 
+    </query> 
+    
+    <!--  세금계산서 생성 저장  -->
+    <query name="INS_MASTER">
+        <![CDATA[
+        INSERT INTO DPS.PP_BUYTAXPROCHIST ( 
+                             REG_DATE                  /* 등록일시 */                
+                           , REG_ID                    /* 등록자  */                        
+                           , STR_CD                    /* 점코드 */  
+                           , PAY_YM                    /* 지불년월  */  
+                           , PAY_CYC                   /* 지불주기  */          
+                           , PAY_CNT                   /* 지불회차  */ 
+                           , BIZ_TYPE                  /* 거래형태 */   
+                           , TAX_FLAG                  /* 과세구분  */    
+                           , VEN_CD                    /* 협력사코드  */   
+                           , TERM_S_DT                 /* 매출/매입기간시작일 */      
+                           , TERM_E_DT                 /* 매출/매입기간종료일 */      
+                            )
+                     VALUES (
+                               SYSDATE
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             , ?
+                             )
+        ]]>
+    </query> 
+    
+    <!--  SYSDATE가져오기  -->
+    <query name="SEL_SYSDATE">
+        <![CDATA[
+        SELECT TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') AS TODAY
+          FROM DUAL
+        ]]>
+    </query> 
+ </service>

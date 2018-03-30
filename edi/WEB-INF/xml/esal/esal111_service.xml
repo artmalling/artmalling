@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal111.es">
+    <!-- 일매출 현황 조회 -->
+    <query name="SEL_DAYMGPBN1">
+        <![CDATA[
+	  	/* 상단조회쿼리 */         
+         SELECT D.STR_CD          AS STR_CD
+             , D.PUMBUN_CD        AS PUMBUN_CD
+             , B.PUMBUN_NAME      AS PUMBUN_NAME
+             , C.CUST_ID          AS CUST_ID
+             , C.CUST_NAME        AS CUST_NAME
+             , C.CARD_NO          AS CARD_NO
+             , C.BIRTH_DT         AS BIRTH_DT
+             , C.MOBILE_PH1       AS MOBILE_PH1
+             , C.MOBILE_PH2       AS MOBILE_PH2
+             , C.MOBILE_PH3       AS MOBILE_PH3
+             , C.TEXT_SALEAMT     AS SALE_AMT
+             , ?                  AS S_SALE_DT
+             , ?                  AS E_SALE_DT
+          FROM  DPS.PC_STRPBN B
+             , DPS.PC_REGUCUSTMST C
+             , DPS.PC_REGUCUSTDTL D
+          WHERE TO_CHAR(C.REG_DATE,'YYYYMMDD') >= ?  -- 매출기간시작일
+           AND TO_CHAR(C.REG_DATE,'YYYYMMDD') <= ?  -- 매출기간종료일
+           AND D.STR_CD   = ?          -- 점코드
+           AND D.PUMBUN_CD LIKE ? || '%' -- 브랜드
+           AND D.VEN_CD    LIKE ? || '%'-- 협력사코드
+           AND B.STR_CD  = D.STR_CD
+           AND B.PUMBUN_CD = D.PUMBUN_CD
+           AND B.VEN_CD = D.VEN_CD
+           AND C.REGUCUST_ID = D.REGUCUST_ID
+           AND C.CUST_NAME LIKE '%' || ? || '%' -- 고객명
+         --  AND C.CARD_NO   LIKE  ? || '%'-- 카드 번호 입력되었을 때만 조건 들어감.
+       ]]>
+    </query>       
+           
+
+    <query name="SEL_DAYMGPBN2">
+        <![CDATA[           
+			AND C.HOME_ADDR1 like '%'||?||'%' -- 고객지역   
+        ]]>
+    </query>
+
+    <query name="SEL_DAYMGPBN3">
+        <![CDATA[           
+			AND (TO_CHAR(SYSDATE,'YYYY') - SUBSTR(C.BIRTH_DT, 1,4) + 1) BETWEEN ? AND ? -- 연령대    
+        ]]>
+    </query>
+        <query name="SEL_DAYMGPBN4">
+        <![CDATA[           
+			AND SUBSTR(C.BIRTH_DT,5,2) BETWEEN ? AND ? -- 생월    
+        ]]>
+    </query>
+    <query name="SEL_DAYMGPBN5">
+        <![CDATA[           
+           AND C.TEXT_SALEAMT BETWEEN ? AND ? 
+           --매출  
+        ]]>
+    </query>
+    
+    <query name="SEL_DAYMGPBN7">
+        <![CDATA[           
+			AND C.SEX_CD like ?  -- 성별
+        ]]>
+    </query>
+    
+    <query name="SEL_DAYMGPBN6">
+        <![CDATA[           
+         GROUP BY  B.PUMBUN_NAME
+				  ,D.STR_CD
+				  ,D.PUMBUN_CD
+				  ,C.CUST_ID
+				  ,C.CUST_NAME
+				  ,C.CARD_NO
+				  ,C.BIRTH_DT    
+				  ,C.MOBILE_PH1  
+				  ,C.MOBILE_PH2 
+				  ,C.MOBILE_PH3 
+				  ,C.TEXT_SALEAMT    
+        ]]>
+    </query>
+    
+    
+    <!--  
+    	SEL_DAYMGPBN6에서 권한 조회 삭제
+               AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD      = B.STR_CD
+                           AND MYORG.PUMBUN_CD   = B.PUMBUN_CD
+                           AND MYORG.USER_ID     = 'lhm001'     로긴사번
+                      )
+    --> 
+    
+    <!-- 일매출 디테일 조회  -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+		/* 하단조회쿼리 */
+		SELECT A.SALE_DT
+			 , C.PUMMOK_CD
+			 , MAX(C.PUMMOK_NAME) AS PUMMOK_NAME
+			 , SUM(CASE	WHEN A.TRAN_FLAG = 0 THEN NVL(B.SALE_QTY,0)	ELSE NVL(B.SALE_QTY,0)*(-1)	END) AS	SALE_QTY
+			 , SUM(CASE	WHEN A.TRAN_FLAG = 0 THEN NVL(B.SALE_AMT,0)	ELSE NVL(B.SALE_AMT,0)*(-1)	END) AS	SALE_TOT_AMT
+		  FROM DPS.PS_TRHEADER A
+			 , DPS.PS_DISITEM B
+			 , DPS.PC_PMKMST C
+		 WHERE A.SALE_DT	>= ?
+		   AND A.SALE_DT	<= ?
+		   AND A.STR_CD		= ?
+		   AND A.CUST_NO	= ?			-- 고객id
+		   AND B.SALE_DT	= A.SALE_DT
+		   AND B.STR_CD		= A.STR_CD
+		   AND B.POS_NO		= A.POS_NO
+		   AND B.TRAN_NO	= A.TRAN_NO
+		   AND B.PUMBUN_CD	LIKE ? || '%'
+		   AND C.PUMMOK_CD = B.PUMMOK_CD
+		 GROUP BY A.SALE_DT
+				, A.STR_CD
+				, C.PUMMOK_CD
+        ]]>
+    </query>
+</service>

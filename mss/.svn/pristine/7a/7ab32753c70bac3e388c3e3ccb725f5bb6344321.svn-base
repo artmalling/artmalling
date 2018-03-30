@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.04
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상담일지작성
+ -->
+<service name="/mcou105.mu">
+    <!-- 상담신청 내역 내역 -->
+    <gauce name="H_SEL_MO_COUNSELDAILY">
+        <column colName="WRITE_DT"      colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WRITE_SEQ"     colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_CD"      colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NM"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TITLE"         colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_NM"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAN_NM"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PATH"          colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_DT"        colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_SEQ"       colType="TB_STRING" size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_TITLE"     colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIME_HH"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIME_MM"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLACE"         colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NM"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAN_ATNT_NM"   colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_PATH"      colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FILE_PATH"     colType="TB_URL"    size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FILE_NM"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OLD_FILE_NM"   colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FILE_SEQ_NO"   colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONTENT"       colType="TB_STRING" size="4000" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FILE_GB"       colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AUTHCHK"       colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_MO_COUNSELDAILY_FILE">
+        <column colName="FILE_PATH"     colType="TB_URL"    size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FILE_NM"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 신청내역조회 -->
+    <gauce name="H_SEL_MO_COUNSELREQ">
+        <column colName="MOD_DT"            colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"            colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_BUYER_CD"      colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_ORG_SHORT_NAME"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_BUYER_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_BUYER_CD"      colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="M_ORG_SHORT_NAME"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="M_BUYER_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 조회 Query  -->
+    <query name="SEL_MO_COUNSELREQ">
+        <![CDATA[   
+            SELECT CDY.WRITE_DT
+                 , CDY.WRITE_SEQ
+                 , BYM.STR_CD AS STR_CD
+                 , CDY.BUYER_CD
+                 , BYM.BUYER_NAME AS BUYER_NM
+                 , CDY.TITLE
+                 , CDY.BRAND_NM
+                 , CDY.VAN_NM
+                 , CDY.PATH
+                 , CSR.REQ_DT
+                 , LPAD(CSR.REQ_SEQ,5,'0') AS REQ_SEQ
+                 , CSR.TITLE AS REQ_TITLE
+                 , SUBSTR(CDY.TIME, 1,2) AS TIME_HH
+                 , SUBSTR(CDY.TIME, 3,4) AS TIME_MM
+                 , CDY.PLACE
+                 , CDY.PUMMOK_NM 
+                 , CDY.VAN_ATNT_NM
+                 , CDY.REQ_PATH
+                 , DFI.FILE_PATH
+                 , DFI.FILE_NM
+                 , DFI.FILE_NM  AS OLD_FILE_NM
+                 , DFI.SEQ_NO   AS FILE_SEQ_NO
+                 , CDY.CONTENT
+                 , 'N' AS FILE_GB
+                 , NVL((SELECT BUYER_CD
+                          FROM DPS.PC_BUYERORG
+                         WHERE APP_S_DT <= TO_CHAR(SYSDATE,'YYYYMMDD')  
+                           AND (APP_E_DT = '99991231' OR 
+                                APP_E_DT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+                           AND EMP_NO = ?
+                           AND BUYER_CD = CDY.BUYER_CD
+                       ), 'N') AS AUTHCHK
+              FROM MSS.MO_COUNSELDAILY  CDY
+                 , DPS.PC_BUYERMST      BYM
+                 , DPS.PC_ORGMST        OMT
+                 , MSS.MO_DAILYFILES    DFI
+                 , MSS.MO_COUNSELREQ    CSR
+             WHERE CDY.STR_CD = DFI.STR_CD(+)
+               AND CDY.WRITE_DT = DFI.WRITE_DT(+)
+               AND CDY.WRITE_SEQ = DFI.WRITE_SEQ(+)
+               AND CDY.STR_CD = CSR.STR_CD(+)
+               AND CDY.REQ_DT = CSR.REQ_DT(+)
+               AND CDY.REQ_SEQ = CSR.REQ_SEQ(+)
+               AND CDY.BUYER_CD = BYM.BUYER_CD
+               AND BYM.PC_ORG_CD = OMT.ORG_CD
+               AND OMT.ORG_CD   LIKE ?
+               AND CDY.WRITE_DT >= ?
+               AND CDY.WRITE_DT <= ?
+        ]]>        
+    </query>
+    <!-- 조회 조건 BRAND_NM  -->
+    <query name="SEL_WHERE_BRAND_NM">
+        <![CDATA[   
+               AND CDY.BRAND_NM LIKE ?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 조회 조건 VAN_NM  -->
+    <query name="SEL_WHERE_VAN_NM">
+        <![CDATA[   
+               AND CDY.VAN_NM LIKE ?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 조회 조건 PUMMOK_NM  -->
+    <query name="SEL_WHERE_PUMMOK_NM">
+        <![CDATA[   
+               AND CDY.PUMMOK_NM LIKE ?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 조회 조건 PLACE  -->
+    <query name="SEL_WHERE_PLACE">
+        <![CDATA[   
+               AND CDY.PLACE LIKE ?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 조회 조건 TITLE  -->
+    <query name="SEL_WHERE_TITLE">
+        <![CDATA[   
+               AND CDY.TITLE LIKE ?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 조회 조건 TITLE  -->
+    <query name="SEL_WHERE_BUYER">
+        <![CDATA[   
+               AND BYM.BUYER_CD = ?
+        ]]>        
+    </query>
+    
+    <!-- ORDER BY  -->
+    <query name="SEL_ORDER_BY">
+        <![CDATA[   
+             ORDER BY CDY.WRITE_DT DESC, CDY.WRITE_SEQ DESC
+        ]]>        
+    </query>
+    
+    <query name="SEL_MO_COUNSELDAILY_SEQ">
+        <![CDATA[   
+            SELECT NVL(MAX(WRITE_SEQ)+1,1)  AS COUNSEL_SEQ
+              FROM MSS.MO_COUNSELDAILY 
+             WHERE STR_CD = ?
+               AND WRITE_DT = ?
+        ]]>        
+    </query>
+    
+    <!-- 상담일지 등록  -->
+    <query name="INS_MO_COUNSELDAILY">
+        <![CDATA[   
+            INSERT INTO MSS.MO_COUNSELDAILY
+                   (  STR_CD
+                    , WRITE_DT
+                    , WRITE_SEQ
+                    , REQ_DT
+                    , REQ_SEQ
+                    , REQ_PATH
+                    , VAN_ATNT_NM
+                    , BUYER_CD
+                    , TIME
+                    , PATH
+                    , PLACE
+                    , CONTENT
+                    , TITLE
+                    , BRAND_NM
+                    , VAN_NM
+                    , PUMMOK_NM
+                    , REG_ID
+                    , REG_DATE
+                    , MOD_ID
+                    , MOD_DATE
+                   ) 
+            VALUES (  ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?||?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , ?
+                    , SYSDATE
+                    , ?
+                    , SYSDATE
+                   )
+        ]]>        
+    </query>
+    
+    <!-- 상담일지 수정  -->
+    <query name="UPD_MO_COUNSELDAILY">
+        <![CDATA[ 
+            UPDATE MSS.MO_COUNSELDAILY SET
+                   REQ_DT       = ?
+                 , REQ_SEQ      = ?
+                 , REQ_PATH     = ?
+                 , VAN_ATNT_NM  = ?
+                 , BUYER_CD     = ?
+                 , TIME         = ?||?
+                 , PATH         = ?
+                 , PLACE        = ?
+                 , CONTENT      = ?
+                 , TITLE        = ?
+                 , BRAND_NM     = ?
+                 , VAN_NM       = ?
+                 , PUMMOK_NM    = ?
+                 , MOD_ID       = ?
+                 , MOD_DATE     = SYSDATE
+             WHERE STR_CD       = ?
+               AND WRITE_DT     = ?
+               AND WRITE_SEQ    = ?
+        ]]>        
+    </query>
+    
+    <!-- 상담일지첨부 수정-->
+    <query name="UPD_MO_DAILYFILES">
+        <![CDATA[ 
+            MERGE INTO MSS.MO_DAILYFILES DAF
+            USING ( SELECT ? AS STR_CD
+                         , ? AS WRITE_DT
+                         , ? AS WRITE_SEQ
+                         , ? AS SEQ_NO
+                         , ? AS FILE_PATH
+                         , ? AS FILE_NM
+                         , ? AS REG_ID
+                         , ? AS MOD_ID
+                      FROM DUAL  )  DUL
+               ON ( DAF.STR_CD  = DUL.STR_CD   AND
+                    DAF.WRITE_DT = DUL.WRITE_DT   AND 
+                    DAF.WRITE_SEQ = DUL.WRITE_SEQ AND
+                    DAF.SEQ_NO = DUL.SEQ_NO)
+             WHEN MATCHED THEN UPDATE SET FILE_PATH  = DUL.FILE_PATH
+                                        , FILE_NM    = DUL.FILE_NM
+                                        , MOD_ID     = DUL.MOD_ID
+                                        , MOD_DATE   = SYSDATE
+         WHEN NOT MATCHED THEN INSERT (   STR_CD
+                                        , WRITE_DT
+                                        , WRITE_SEQ
+                                        , SEQ_NO
+                                        , FILE_PATH
+                                        , FILE_NM
+                                        , REG_ID
+                                        , REG_DATE
+                                        , MOD_ID
+                                        , MOD_DATE) 
+                                VALUES (  DUL.STR_CD
+                                        , DUL.WRITE_DT
+                                        , DUL.WRITE_SEQ
+                                        , (SELECT NVL(MAX(SEQ_NO)+1,1)
+                                             FROM MSS.MO_DAILYFILES 
+                                            WHERE STR_CD = ? AND WRITE_DT = ? AND WRITE_SEQ = ?)
+                                        , DUL.FILE_PATH
+                                        , DUL.FILE_NM
+                                        , DUL.REG_ID
+                                        , SYSDATE
+                                        , DUL.MOD_ID
+                                        , SYSDATE) 
+        ]]>        
+    </query>
+    
+    <!-- 상담일지첨부 삭제-->
+    <query name="DEL_MO_COUNSELDAILY">
+        <![CDATA[
+            DELETE MSS.MO_DAILYFILES
+             WHERE STR_CD       = ?
+               AND WRITE_DT     = ?
+               AND WRITE_SEQ    = ?
+               AND SEQ_NO       = ?
+        ]]>        
+    </query>
+    
+    <!-- 상담신청 내역 내역 -->
+    <gauce name="H_SEL_MO_COUNSELREQ_P">
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NM"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_NM"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"         colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NM"         colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_CD"      colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_NM"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TITLE"         colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_NAME"      colType="TB_STRING" size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_DT"        colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_SEQ"       colType="TB_STRING" size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_STAT"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ANS_DT"        colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE1_NO"     colType="TB_STRING" size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE2_NO"     colType="TB_STRING" size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE3_NO"     colType="TB_STRING" size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH1"    colType="TB_STRING" size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"    colType="TB_STRING" size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"    colType="TB_STRING" size="32"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL"         colType="TB_STRING" size="124"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_CONTENT"   colType="TB_STRING" size="4000" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 상담신청 내역 조회 Query  -->
+    <query name="SEL_MO_COUNSELREQ_P">
+        <![CDATA[   
+           SELECT  COQ.STR_CD  
+                 , OPR.STR_NM
+                 , COQ.DEPT_CD  
+                 , OPR.DEPT_NM
+                 , COQ.TEAM_CD  
+                 , OPR.TEAM_NM
+                 , COQ.PC_CD    
+                 , OPR.PC_NM            
+                 , COQ.BUYER_CD
+                 , BMS.BUYER_NAME AS BUYER_NM
+                 , COQ.TITLE        
+                 , COQ.COMP_NAME    
+                 , COQ.REP_NAME
+                 , COQ.REQ_NAME     
+                 , COQ.REQ_DT       
+                 , COQ.REQ_SEQ      
+                 , COQ.PROC_STAT    
+                 , TO_CHAR(COA.REG_DATE, 'YYYYMMDD') AS ANS_DT
+                 , DCS.SC_Crypto_FUN('DEC', COQ.PHONE1_NO) AS PHONE1_NO   
+                 , DCS.SC_Crypto_FUN('DEC', COQ.PHONE2_NO) AS PHONE2_NO
+                 , DCS.SC_Crypto_FUN('DEC', COQ.PHONE3_NO) AS PHONE3_NO
+                 , DCS.SC_Crypto_FUN('DEC', COQ.MOBILE_PH1) AS MOBILE_PH1    
+                 , DCS.SC_Crypto_FUN('DEC', COQ.MOBILE_PH2) AS MOBILE_PH2
+                 , DCS.SC_Crypto_FUN('DEC', COQ.MOBILE_PH3) AS MOBILE_PH3
+                 , DCS.SC_Crypto_FUN('DEC', COQ.EMAIL) AS EMAIL      
+                 , COQ.REQ_CONTENT  
+              FROM MSS.MO_COUNSELREQ    COQ
+                 , (SELECT REQ_DT, REQ_SEQ, MAX(REG_DATE) AS REG_DATE 
+                      FROM MSS.MO_COUNSELANS 
+                     GROUP BY REQ_DT, REQ_SEQ) COA 
+                 , DPS.PC_BUYERMST      BMS   
+                 , DPS.V_ORGPART        OPR
+             WHERE COQ.REQ_DT = COA.REQ_DT(+)
+               AND COQ.REQ_SEQ  = COA.REQ_SEQ(+)
+               AND COQ.BUYER_CD = BMS.BUYER_CD
+               AND OPR.ORG_CD  = COQ.STR_CD||COQ.DEPT_CD||COQ.TEAM_CD||COQ.PC_CD||'00'
+               AND BMS.PC_ORG_CD IN (SELECT PC_ORG_CD
+		                               FROM DPS.PC_BUYERORG
+		                              WHERE APP_S_DT <= TO_CHAR(SYSDATE,'YYYYMMDD')  
+		                                AND (APP_E_DT = '99991231' OR 
+		                                     APP_E_DT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		                                AND EMP_NO = ?)
+               AND COQ.STR_CD LIKE ?||'%'
+               AND COQ.DEPT_CD LIKE ?||'%'
+               AND COQ.TEAM_CD LIKE ?||'%'
+               AND COQ.PC_CD LIKE ?||'%'
+               AND COQ.REQ_DT >= ?
+               AND COQ.REQ_DT <= ?
+               AND COQ.PROC_STAT LIKE ?||'%'
+               AND COQ.BUYER_CD = ?
+        ]]>        
+    </query>
+    
+    <!-- 검색어 - 회사  -->
+    <query name="SEL_MO_COUNSELREQ_COMP_P">
+        <![CDATA[   
+               AND COQ.COMP_NAME LIKE '%'||?||'%' 
+        ]]>        
+    </query>
+    
+    <!-- 검색어 - 대표자  -->
+    <query name="SEL_MO_COUNSELREQ_REP_P">
+        <![CDATA[   
+               AND COQ.REP_NAME LIKE '%'||?||'%' 
+        ]]>        
+    </query>
+    
+    <!-- 검색어 - 신청자  -->
+    <query name="SEL_MO_COUNSELREQ_REQ_P">
+        <![CDATA[   
+               AND COQ.REQ_NAME LIKE '%'||?||'%'
+        ]]>        
+    </query>
+    
+    
+    <!-- 바이어코드 헤더 -->
+    <gauce name="H_SEL_BUYER">
+        <column colName="CODE"  colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 바이어조회  -->
+    <query name="SEL_BUYER">
+        <![CDATA[   
+			SELECT BORG.BUYER_CD     AS CODE
+			     , BMST.BUYER_NAME   AS NAME
+			  FROM DPS.PC_BUYERORG BORG
+			     , DPS.PC_BUYERMST BMST
+			 WHERE BORG.BUYER_CD = BMST.BUYER_CD
+			   AND BORG.EMP_NO = ?
+			   AND BORG.STR_CD = ?
+			   AND BORG.USE_YN = 'Y'
+			   AND BORG.APP_E_DT = '99991231'
+        ]]>        
+    </query>
+    
+    
+    
+    
+</service>

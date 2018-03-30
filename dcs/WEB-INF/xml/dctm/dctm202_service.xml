@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 
+ * 작 성 일    : 2010.02.25
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개          요 :  법인카드조회
+ -->
+<service name="/dctm202.dm">
+    <!-- 법인카드 List -->
+    <gauce name="H_MASTER"> 
+        <column colName="ISSUE_DT"     colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"      colType="TB_STRING"  size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_STAT_CD" colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_NM"      colType="TB_STRING"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTR_PATH_CD" colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_TYPE_CD" colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TYPE_NM"      colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SCED_REQ_DT"  colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 법인카드조회-->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.ISSUE_DT
+                 , DCS.SC_Crypto_FUN('DEC', A.CARD_NO) AS CARD_NO
+                 , DECODE(A.REP_CARD_YN, 'N', 'N', 'Y') REP_YN
+                 , A.CARD_STAT_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D017', A.CARD_STAT_CD) STAT_NM 
+                 , A.ENTR_PATH_CD
+                 , DCS.F_GET_BRCH_NAME(A.ENTR_PATH_CD) BRCH_NAME
+                 , A.CARD_TYPE_CD 
+                 , COM.FN_GET_COMM_NAME('D', 'D005',A.CARD_TYPE_CD) TYPE_NM
+                 , B.SCED_REQ_DT    
+              FROM DCS.DM_CARD A
+                 , DCS.DM_CUSTOMER B
+                 , DCS.DM_HOUSEHOLD C
+             WHERE A.CUST_ID        = B.CUST_ID
+               AND B.HHOLD_ID       = C.HHOLD_ID
+               AND B.COMP_PERS_FLAG <> 'P'
+               AND B.CUST_STAT_FLAG = '0'      
+               AND A.CUST_ID = ( 
+                                 SELECT UNIQUE A.CUST_ID 
+                                   FROM DCS.DM_CARD A
+                                      , DCS.DM_CUSTOMER B
+                                  WHERE A.CUST_ID    =    B.CUST_ID
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_CARD_NO">   
+        <![CDATA[
+                                    AND A.CARD_NO    = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_CUST_ID">   
+        <![CDATA[
+                                    AND A.CUST_ID    = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_SS_NO">   
+        <![CDATA[
+                                    AND B.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>  
+    <query name="SEL_MASTER_ORDER">   
+        <![CDATA[
+                               )
+          ORDER BY A.REP_CARD_YN DESC, A.MOD_DATE DESC
+        ]]>        
+    </query>
+    
+    <!-- 대표카드 수정 -->
+    <query name="UPD_CARD">
+        <![CDATA[
+            UPDATE DCS.DM_CARD
+               SET REP_CARD_YN = ?  
+                 , MOD_DATE    = SYSDATE
+                 , MOD_ID      = ?  
+             WHERE CARD_NO     = ?
+        ]]>
+    </query> 
+</service>

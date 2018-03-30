@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 
+ * 작 성 일    : 2010.02.16
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  일단위 포인트 현황 조회
+ -->
+<service name="/dbri201.db">
+    <!-- 일단위 포인트 현황 -->
+    <gauce name="H_MASTER"> 
+        <column colName="BRCH_ID"        colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_DT"         colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NO"        colType="TB_STRING"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_BRAND_NM"   colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_CNT"        colType="TB_INT"     size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_POINT"      colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_POINT"     colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAM_POINT"      colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_POINT"    colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DCUBE_DVD_AMT"  colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_DVD_AMT"   colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_FEE_AMT"    colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_CNT"        colType="TB_INT"     size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_POINT"      colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_FEE_AMT"    colType="TB_INT"     size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 일단위 포인트 현황 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.BRCH_ID       
+                 , B.BRCH_NAME 
+                 , A.SUM_DT
+                 , B.COMP_NO
+                 , B.REP_BRAND_NM  
+                 , SUM(ADD_CNT)       ADD_CNT     
+                 , SUM(ADD_POINT)     ADD_POINT   
+                 , SUM(RECP_POINT)    RECP_POINT  
+                 , SUM(CAM_POINT)     CAM_POINT   
+                 , SUM(EVENT_POINT)   EVENT_POINT 
+                 , SUM(DCUBE_DVD_AMT) DCUBE_DVD_AMT 
+                 , SUM(BRCH_DVD_AMT)  BRCH_DVD_AMT 
+                 , SUM(ADD_FEE_AMT)   ADD_FEE_AMT  
+                 , SUM(USE_CNT)       USE_CNT      
+                 , SUM(USE_POINT)     USE_POINT    
+                 , SUM(USE_FEE_AMT)   USE_FEE_AMT  
+              FROM DCS.DC_BR_DSUM A, DCS.DB_BRANCH B
+             WHERE A.BRCH_ID = B.BRCH_ID
+               AND A.SUM_DT BETWEEN ? AND ?
+               AND A.BRCH_ID   LIKE ? ||'%'
+             GROUP BY A.BRCH_ID, B.BRCH_NAME, A.SUM_DT,B.COMP_NO, B.REP_BRAND_NM
+             ORDER BY A.BRCH_ID ASC, A.SUM_DT DESC
+        ]]>        
+    </query>  
+</service>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 강진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2012.05.22
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  주소변경이력 조회
+ -->
+<service name="/dctm414.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="CUST_ID"       colType="TB_STRING"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"     colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="JUSO_GBN"      colType="TB_STRING"  size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BF_ZIP_CD"     colType="TB_STRING"  size="6"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BF_ADDR"     	colType="TB_STRING"  size="200" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="AFT_ZIP_CD"    colType="TB_STRING"  size="6"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="AFT_ADDR"     	colType="TB_STRING"  size="200" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOD_DATE"      colType="TB_STRING"  size="14"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOD_ID"        colType="TB_STRING"  size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="USER_NAME"     colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+
+    <!-- 주소변경이력 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[                                    
+            SELECT A.CUST_ID
+                 , (SELECT CUST_NAME 
+                      FROM DCS.DM_CUSTOMER 
+                     WHERE CUST_ID = A.CUST_ID) AS CUST_NAME
+                 , DECODE(A.ADDR_FLAG,'H','자택','O','직장') AS JUSO_GBN   
+                 , (A.BF_ZIP_CD1 || A.BF_ZIP_CD2) AS BF_ZIP_CD
+                 , (A.BF_ADDR1 || A.BF_ADDR2) AS BF_ADDR
+                 , (A.AFT_ZIP_CD1 || A.AFT_ZIP_CD2) AS AFT_ZIP_CD
+                 , (A.AFT_ADDR1 || A.AFT_ADDR2) AS AFT_ADDR
+                 , TO_CHAR( TO_DATE(A.MODI_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS') MOD_DATE
+                 , A.REG_ID AS MOD_ID
+                 , B.USER_NAME
+              FROM DCS.DM_ADDR_UPD A
+                 , COM.TC_USRMST B
+             WHERE A.REG_ID = B.USER_ID 
+               AND A.MODI_DATE BETWEEN ? || '000000' AND ? || '240000'
+               AND A.CUST_ID = ( SELECT UNIQUE A.CUST_ID 
+                                   FROM DCS.DM_CARD A
+                                      , DCS.DM_CUSTOMER B
+                                  WHERE A.CUST_ID    =    B.CUST_ID                                                 
+        ]]>        
+    </query> 
+    
+    <query name="SEL_MASTER_CARD_NO">   
+        <![CDATA[
+                                    AND A.CARD_NO    = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_CUST_ID">   
+        <![CDATA[
+                                    AND A.CUST_ID    = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_SS_NO">   
+        <![CDATA[
+                                    AND B.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>  
+    <query name="SEL_MASTER_ORDER">   
+        <![CDATA[
+                               )
+             ORDER BY A.MODI_DATE DESC
+        ]]>        
+    </query>   
+    
+    <!-- 주소변경이력 리스트 조회 -->
+    <query name="SEL_MASTER2">   
+        <![CDATA[    
+            SELECT A.CUST_ID
+                 , (SELECT CUST_NAME 
+                      FROM DCS.DM_CUSTOMER 
+                     WHERE CUST_ID = A.CUST_ID) AS CUST_NAME
+                 , DECODE(A.ADDR_FLAG,'H','자택','O','직장') AS JUSO_GBN   
+                 , (A.BF_ZIP_CD1 || A.BF_ZIP_CD2) AS BF_ZIP_CD
+                 , (A.BF_ADDR1 || A.BF_ADDR2) AS BF_ADDR
+                 , (A.AFT_ZIP_CD1 || A.AFT_ZIP_CD2) AS AFT_ZIP_CD
+                 , (A.AFT_ADDR1 || A.AFT_ADDR2) AS AFT_ADDR
+                 , TO_CHAR( TO_DATE(A.MODI_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS') MOD_DATE
+                 , A.REG_ID AS MOD_ID
+                 , B.USER_NAME
+              FROM DCS.DM_ADDR_UPD A
+                 , COM.TC_USRMST B
+             WHERE A.REG_ID = B.USER_ID 
+               AND A.MODI_DATE BETWEEN ? || '000000' AND ? || '240000'
+             ORDER BY A.CUST_ID, A.MODI_DATE DESC     
+        ]]>        
+    </query>   
+</service>

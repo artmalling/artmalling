@@ -1,0 +1,640 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal501.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="POS_NO"                colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INQR_ORDER"            colType="TB_STRING"      size="3"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BALANCE_FLAG"          colType="TB_STRING"      size="3"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMM_NAME1"            colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_CNT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_AMT"         colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNO"> 
+        <column colName="POSNO"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSNOMM"> 
+        <column colName="POSNO_MIN"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSNO_MAX"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSFLOR"> 
+        <column colName="FLOR_CD"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSFLORMM"> 
+        <column colName="POSFLOR_MIN"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POSFLOR_MAX"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_POSFLORH"> 
+        <column colName="FLOR_CD"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <gauce name="H_SEL_POSNOH"> 
+        <column colName="POSNO"                   colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <query name="SEL_SALE_POS_POS">        
+        <![CDATA[
+		 SELECT DECODE(X.POS_NO, '0000', '* 합  계 *', '0001', '** 소  계 **', X.POS_NO) AS POS_NO
+	          , X.INQR_ORDER
+	          , X.BALANCE_FLAG
+	          , X.COMM_NAME1
+	          , X.NORM_TRAN_CNT
+	          , X.NORM_TRAN_AMT
+	       FROM (
+	            SELECT '0000' AS POS_NO
+	                 , C.INQR_ORDER
+	                 , A.BALANCE_FLAG
+	                 , C.COMM_NAME1
+	                 , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_CNT END) AS NORM_TRAN_CNT
+	                 , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_AMT END) AS NORM_TRAN_AMT
+	              FROM DPS.PS_TRTOTAL A
+	                 , DPS.PC_POSMST     B
+	                 , (
+		                SELECT COMM_CODE
+		                     , COMM_NAME1
+		                     , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+		                  FROM COM.TC_COMMCODE
+		                 WHERE COMM_PART = 'P606'
+		                   AND SYS_PART  = 'D'
+		                   AND USE_YN    = 'Y'
+		                   AND COMM_CODE <> '170'
+	                   ) C
+	             WHERE A.STR_CD       = B.STR_CD
+	               AND A.POS_NO       = B.POS_NO
+	               AND A.BALANCE_FLAG = C.COMM_CODE
+	               AND A.TOTAL_FLAG   = ?
+	               AND A.STR_CD       LIKE ? || '%'
+	               AND B.FLOR_CD      LIKE ? || '%'
+	               AND B.POS_FLAG     LIKE ? || '%'
+	               AND B.HALL_CD      LIKE ? || '%'
+	               AND A.POS_NO       >= ?
+	               AND A.POS_NO       <= ?
+	               AND A.SALE_DT      = ?
+			       AND A.POS_NO NOT IN ('8001', '8002', '8001', '8002')
+	               AND EXISTS ( SELECT MYORG.USER_ID
+	                              FROM COM.V_MYORG MYORG
+	                             WHERE MYORG.STR_CD      = A.STR_CD
+	                               AND MYORG.USER_ID     = ?
+	                           )
+	             GROUP BY A.STR_CD
+	                    , A.BALANCE_FLAG
+	                    , C.COMM_NAME1
+	                    , C.INQR_ORDER                                
+	            UNION ALL
+	           SELECT A.POS_NO
+	                 , C.INQR_ORDER
+	                 , A.BALANCE_FLAG
+	                 , C.COMM_NAME1
+	                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_CNT END AS NORM_TRAN_CNT
+	                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_AMT END AS NORM_TRAN_AMT
+	              FROM DPS.PS_TRTOTAL A
+	                 , DPS.PC_POSMST     B
+	                 , (
+		                SELECT COMM_CODE
+		                     , COMM_NAME1
+		                     , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+		                  FROM COM.TC_COMMCODE
+		                 WHERE COMM_PART = 'P606'
+		                   AND SYS_PART  = 'D'
+		                   AND USE_YN    = 'Y'
+		                   AND COMM_CODE <> '170'
+	                   ) C
+	             WHERE A.STR_CD       = B.STR_CD
+	               AND A.POS_NO       = B.POS_NO
+	               AND A.BALANCE_FLAG = C.COMM_CODE
+	               AND A.TOTAL_FLAG   = ?
+	               AND A.STR_CD       LIKE ? || '%'
+	               AND B.FLOR_CD      LIKE ? || '%'
+	               AND B.POS_FLAG     LIKE ? || '%'
+	               AND B.HALL_CD      LIKE ? || '%'
+	               AND A.POS_NO       >= ?
+	               AND A.POS_NO       <= ?
+	               AND A.SALE_DT      = ?
+	               AND EXISTS ( SELECT MYORG.USER_ID
+	                              FROM COM.V_MYORG MYORG
+	                             WHERE MYORG.STR_CD      = A.STR_CD
+	                               AND MYORG.USER_ID     = ?
+	                           )
+	            ) X
+	       ORDER BY
+	             X.INQR_ORDER
+	           , X.COMM_NAME1
+	           , X.POS_NO
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_POS_POS_OLD">        
+        <![CDATA[
+            SELECT A.POS_NO
+                 , A.BALANCE_FLAG
+                 , C.COMM_NAME1
+                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_CNT END AS NORM_TRAN_CNT
+                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_AMT END AS NORM_TRAN_AMT
+              FROM DPS.PS_TRTOTAL A
+                 , DPS.PC_POSMST     B
+                 , (SELECT COMM_CODE
+                         , COMM_NAME1
+                         , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+                      FROM COM.TC_COMMCODE
+                     WHERE COMM_PART = 'P606'
+                       AND SYS_PART  = 'D'
+                       AND USE_YN = 'Y') C
+             WHERE A.STR_CD       = B.STR_CD
+               AND A.POS_NO       = B.POS_NO
+               AND A.BALANCE_FLAG = C.COMM_CODE
+               AND A.TOTAL_FLAG   = '01'
+               AND A.STR_CD       LIKE ? || '%'
+               AND B.FLOR_CD      LIKE ? || '%'
+               AND B.POS_FLAG     LIKE ? || '%'
+               AND A.POS_NO       >= ?
+               AND A.POS_NO       <= ?
+               AND A.SALE_DT      = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = A.STR_CD
+                               AND MYORG.USER_ID     = ?
+                           )
+             ORDER BY 
+                   C.INQR_ORDER
+                 , C.COMM_NAME1
+                 , A.POS_NO
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_POS_FLOR">        
+        <![CDATA[
+	     SELECT DECODE(X.FLOR_CD, '0000', '* 합  계 *', '0001', '** 소  계 **', X.FLOR_CD) AS FLOR_CD
+	          , X.INQR_ORDER
+	          , X.BALANCE_FLAG
+	          , X.COMM_NAME1
+	          , X.NORM_TRAN_CNT
+	          , X.NORM_TRAN_AMT
+	       FROM (
+	            SELECT '0000' AS FLOR_CD
+	                 , C.INQR_ORDER
+	                 , A.BALANCE_FLAG
+	                 , C.COMM_NAME1
+	                 , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_CNT END) AS NORM_TRAN_CNT
+	                 , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_AMT END) AS NORM_TRAN_AMT
+	              FROM DPS.PS_TRTOTAL A
+	                 , DPS.PC_POSMST     B
+		             , (
+		                SELECT COMM_CODE
+		                     , COMM_NAME1
+		                     , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+		                  FROM COM.TC_COMMCODE
+		                 WHERE COMM_PART = 'P606'
+		                   AND SYS_PART  = 'D'
+		                   AND USE_YN    = 'Y'
+		                   AND COMM_CODE <> '170'
+		                ) C
+	             WHERE A.STR_CD       = B.STR_CD
+	               AND A.POS_NO       = B.POS_NO
+	               AND A.BALANCE_FLAG = C.COMM_CODE
+	               AND A.TOTAL_FLAG   = ?
+	               AND A.STR_CD       LIKE ? || '%'
+	               AND B.FLOR_CD      LIKE ? || '%'
+	               AND B.POS_FLAG     LIKE ? || '%'
+	               AND B.HALL_CD      LIKE ? || '%'
+	               AND A.POS_NO       >= ?
+	               AND A.POS_NO       <= ?
+	               AND A.SALE_DT      = ?
+			       AND A.POS_NO NOT IN ('8001', '8002', '8001', '8002')
+	               AND EXISTS ( SELECT MYORG.USER_ID
+	                              FROM COM.V_MYORG MYORG
+	                             WHERE MYORG.STR_CD      = A.STR_CD
+	                               AND MYORG.USER_ID     = ?
+	                           )
+	             GROUP BY A.STR_CD
+	                    , A.BALANCE_FLAG
+	                    , C.COMM_NAME1
+	                    , C.INQR_ORDER
+	           UNION ALL
+	            SELECT '0001' AS FLOR_CD
+	                 , C.INQR_ORDER
+	                 , A.BALANCE_FLAG
+	                 , C.COMM_NAME1
+	                 , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_CNT END) AS NORM_TRAN_CNT
+	                 , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE A.NORM_TRAN_AMT END) AS NORM_TRAN_AMT
+	              FROM DPS.PS_TRTOTAL A
+	                 , DPS.PC_POSMST     B
+	                 , (
+		                SELECT COMM_CODE
+		                     , COMM_NAME1
+		                     , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+		                  FROM COM.TC_COMMCODE
+		                 WHERE COMM_PART = 'P606'
+		                   AND SYS_PART  = 'D'
+		                   AND USE_YN    = 'Y'
+		                   AND COMM_CODE <> '170'
+	                   ) C
+	             WHERE A.STR_CD       = B.STR_CD
+	               AND A.POS_NO       = B.POS_NO
+	               AND A.BALANCE_FLAG = C.COMM_CODE
+	               AND A.TOTAL_FLAG   = ?
+	               AND A.STR_CD       LIKE ? || '%'
+	               AND B.POS_FLAG     LIKE ? || '%'
+	               AND B.HALL_CD      LIKE ? || '%'
+	               AND B.FLOR_CD      >= ?
+	               AND B.FLOR_CD      <= ?
+	               AND A.SALE_DT      = ?
+			       AND A.POS_NO NOT IN ('8001', '8002', '8001', '8002')
+	               AND EXISTS ( SELECT MYORG.USER_ID
+	                              FROM COM.V_MYORG MYORG
+	                             WHERE MYORG.STR_CD      = A.STR_CD
+	                               AND MYORG.USER_ID     = ?
+	                           )
+	             GROUP BY A.STR_CD
+	                    , A.BALANCE_FLAG
+	                    , C.COMM_NAME1
+	                    , C.INQR_ORDER
+	           UNION ALL           
+	            SELECT B.FLOR_CD
+	                 , C.INQR_ORDER
+	                 , A.BALANCE_FLAG
+	                 , C.COMM_NAME1
+	                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE SUM(A.NORM_TRAN_CNT) END AS NORM_TRAN_CNT
+	                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE SUM(A.NORM_TRAN_AMT) END AS NORM_TRAN_AMT
+	              FROM DPS.PS_TRTOTAL A
+	                 , DPS.PC_POSMST  B
+		             , (
+		                SELECT COMM_CODE
+		                     , COMM_NAME1
+		                     , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+		                  FROM COM.TC_COMMCODE
+		                 WHERE COMM_PART = 'P606'
+		                   AND SYS_PART  = 'D'
+		                   AND USE_YN    = 'Y'
+		                   AND COMM_CODE <> '170'
+		                ) C
+	                 , ( SELECT COMM_CODE
+	                          , RESERVED1
+	                       FROM COM.TC_COMMCODE
+	                      WHERE SYS_PART = 'D'
+	                        AND COMM_PART = 'P061'
+	                        AND USE_YN = 'Y'
+	                   ) D       
+	             WHERE A.STR_CD       = B.STR_CD
+	               AND A.POS_NO       = B.POS_NO
+	               AND A.BALANCE_FLAG = C.COMM_CODE
+	               AND B.FLOR_CD      = D.COMM_CODE
+	               AND A.TOTAL_FLAG   = ?
+	               AND A.STR_CD       LIKE ? || '%'
+	               AND B.POS_FLAG     LIKE ? || '%'
+	               AND B.HALL_CD      LIKE ? || '%'
+			       AND A.POS_NO NOT IN ('8001', '8002', '8001', '8002')
+	               AND D.RESERVED1 BETWEEN (
+	                                       SELECT TO_NUMBER(RESERVED1)
+	                                         FROM COM.TC_COMMCODE
+	                                        WHERE COMM_PART = 'P061'
+	                                          AND USE_YN = 'Y'
+	                                          AND COMM_CODE = ?
+	                                        )
+	                           				AND 
+	                                        (
+	                                        SELECT TO_NUMBER(RESERVED1)
+	                                          FROM COM.TC_COMMCODE
+	                                         WHERE COMM_PART = 'P061'
+	                                           AND USE_YN = 'Y'
+	                                           AND COMM_CODE = ?
+	                                        )
+	               AND A.SALE_DT      = ?
+	               AND EXISTS ( SELECT MYORG.USER_ID
+	                              FROM COM.V_MYORG MYORG
+	                             WHERE MYORG.STR_CD      = A.STR_CD
+	                               AND MYORG.USER_ID     = ?
+	                           )
+	             GROUP BY
+	                   B.FLOR_CD
+	                 , A.BALANCE_FLAG
+	                 , A.TOTAL_FLAG
+	                 , C.COMM_NAME1
+	                 , C.INQR_ORDER
+	            ) X
+	       ORDER BY
+	       		 X.INQR_ORDER
+	           , X.COMM_NAME1
+	           , X.FLOR_CD
+        ]]>        
+    </query>
+
+    <query name="SEL_SALE_POS_FLOR_OLD">        
+        <![CDATA[
+            SELECT B.FLOR_CD
+                 , A.BALANCE_FLAG
+                 , C.COMM_NAME1
+                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE SUM(A.NORM_TRAN_CNT) END AS NORM_TRAN_CNT
+                 , CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN NULL ELSE SUM(A.NORM_TRAN_AMT) END AS NORM_TRAN_AMT
+              FROM DPS.PS_TRTOTAL A
+                 , DPS.PC_POSMST  B
+                 , (
+                    SELECT COMM_CODE
+                         , COMM_NAME1
+                         , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+                      FROM COM.TC_COMMCODE
+                     WHERE COMM_PART = 'P606'
+                       AND SYS_PART  = 'D'
+                       AND USE_YN = 'Y'
+                   ) C
+             WHERE A.STR_CD       = B.STR_CD
+               AND A.POS_NO       = B.POS_NO
+               AND A.BALANCE_FLAG = C.COMM_CODE
+               AND A.TOTAL_FLAG   = '01'
+               AND A.STR_CD       LIKE ? || '%'
+               AND B.POS_FLAG     LIKE ? || '%'
+               AND B.FLOR_CD      >= ?
+               AND B.FLOR_CD      <= ?
+               AND A.SALE_DT      = ?
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = A.STR_CD
+                               AND MYORG.USER_ID     = ?
+                           )
+             GROUP BY
+                   B.FLOR_CD
+                 , A.BALANCE_FLAG
+                 , A.TOTAL_FLAG
+                 , C.COMM_NAME1
+                 , C.INQR_ORDER
+             ORDER BY 
+                   C.INQR_ORDER
+                 , C.COMM_NAME1
+                 , B.FLOR_CD            
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSNO">        
+        <![CDATA[
+            SELECT A.POS_NO
+              FROM DPS.PC_POSMST A
+             WHERE A.POS_NO = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSNOMM">        
+        <![CDATA[
+            SELECT MAX(A.POSNO_MIN) AS POSNO_MIN
+                 , MAX(A.POSNO_MAX) AS POSNO_MAX
+              FROM (
+		            SELECT MIN(A.POS_NO) AS POSNO_MIN
+		                 , ''            AS POSNO_MAX
+		              FROM DPS.PC_POSMST A
+		              
+		            UNION ALL
+		              
+		            SELECT ''            AS POSNO_MIN
+		                 , MAX(A.POS_NO) AS POSNO_MAX
+		              FROM DPS.PC_POSMST A
+		           ) A
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSFLOR">        
+        <![CDATA[
+            SELECT A.COMM_CODE AS FLOR_CD
+              FROM COM.TC_COMMCODE A
+             WHERE A.COMM_PART = 'P061'
+               AND A.COMM_CODE = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSFLORMM">        
+        <![CDATA[ 
+            SELECT MAX(A.POSFLOR_MIN) AS POSFLOR_MIN
+                 , MAX(A.POSFLOR_MAX) AS POSFLOR_MAX
+              FROM (
+                    SELECT A.COMM_CODE    AS POSFLOR_MIN
+                         , ''             AS POSFLOR_MAX
+                      FROM COM.TC_COMMCODE A
+                     WHERE A.COMM_PART = 'P061'
+                       AND INQR_ORDER IN  (SELECT MAX(INQR_ORDER)
+                                             FROM COM.TC_COMMCODE
+                                            WHERE COMM_PART = 'P061'
+                                              AND USE_YN = 'Y'
+                                           )
+                      
+                    UNION ALL
+                      
+                    SELECT ''             AS POSFLOR_MIN
+                         , A.COMM_CODE    AS POSFLOR_MAX
+                      FROM COM.TC_COMMCODE A
+                     WHERE A.COMM_PART = 'P061'
+                       AND INQR_ORDER IN  (SELECT MIN(INQR_ORDER)
+                                             FROM COM.TC_COMMCODE
+                                            WHERE COMM_PART = 'P061'
+                                              AND USE_YN = 'Y'
+                                           )
+                   ) A
+        ]]>        
+    </query>
+    
+    
+    <query name="SEL_POSNO_HEADER">        
+        <![CDATA[
+            SELECT A.POS_NO
+              FROM DPS.PC_POSMST A
+             WHERE A.POS_NO >= ?
+               AND A.POS_NO <= ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_POSFLOR_HEADER">        
+        <![CDATA[
+            SELECT DISTINCT A.FLOR_CD
+              FROM DPS.PC_POSMST A
+             WHERE A.FLOR_CD >= ?
+               AND A.FLOR_CD <= ?
+        ]]>        
+    </query>
+    
+
+    <gauce name="H_SEL_MASTER2"> 
+        <column colName="POS_NO"           colType="TB_STRING"   size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INQR_ORDER"       colType="TB_STRING"   size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BALANCE_FLAG"     colType="TB_STRING"   size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMM_NAME1"       colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_CNT01"  colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_AMT01"  colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_CNT02"  colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_TRAN_AMT02"  colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_CNT"          colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAP_AMT"          colType="TB_DECIMAL"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <query name="SEL_SALE_POS_POS_ALL">        
+        <![CDATA[
+			SELECT X.POS_NO
+			     , X.INQR_ORDER
+			     , X.BALANCE_FLAG
+			     , X.COMM_NAME1
+			     , X.NORM_TRAN_CNT01
+			     , X.NORM_TRAN_AMT01
+			     , X.NORM_TRAN_CNT02
+			     , X.NORM_TRAN_AMT02
+			     , X.NORM_TRAN_CNT01 - X.NORM_TRAN_CNT02 AS GAP_CNT
+			     , X.NORM_TRAN_AMT01 - X.NORM_TRAN_AMT02 AS GAP_AMT
+			  FROM (
+			       SELECT A.POS_NO
+			            , C.INQR_ORDER
+			            , A.BALANCE_FLAG
+			            , C.COMM_NAME1
+			            , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN 0 ELSE DECODE(A.TOTAL_FLAG, '01', A.NORM_TRAN_CNT, 0) END) AS NORM_TRAN_CNT01
+			            , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN 0 ELSE DECODE(A.TOTAL_FLAG, '01', A.NORM_TRAN_AMT, 0) END) AS NORM_TRAN_AMT01
+			            , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN 0 ELSE DECODE(A.TOTAL_FLAG, '02', A.NORM_TRAN_CNT, 0) END) AS NORM_TRAN_CNT02
+			            , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN 0 ELSE DECODE(A.TOTAL_FLAG, '02', A.NORM_TRAN_AMT, 0) END) AS NORM_TRAN_AMT02
+			         FROM DPS.PS_TRTOTAL A
+			            , DPS.PC_POSMST  B
+			            , (
+			               SELECT COMM_CODE
+			                    , COMM_NAME1
+			                    , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+			                 FROM COM.TC_COMMCODE
+			                WHERE COMM_PART = 'P606'
+			                  AND SYS_PART  = 'D'
+			                  AND USE_YN    = 'Y'
+			                  AND COMM_CODE <> '170'
+			               ) C
+			        WHERE A.STR_CD       = B.STR_CD
+			          AND A.POS_NO       = B.POS_NO
+			          AND A.BALANCE_FLAG = C.COMM_CODE
+			          AND A.STR_CD       LIKE ? || '%'
+			          AND B.FLOR_CD      LIKE ? || '%'
+			          AND B.POS_FLAG     LIKE ? || '%'
+			          AND B.HALL_CD      LIKE ? || '%'
+			          AND A.POS_NO       >= ?
+			          AND A.POS_NO       <= ?
+			          AND A.SALE_DT      =  ?
+			          AND A.POS_NO NOT IN ('8001', '8002', '8001', '8002')
+			          AND EXISTS ( SELECT MYORG.USER_ID
+			                         FROM COM.V_MYORG MYORG
+			                        WHERE MYORG.STR_CD      = A.STR_CD
+			                          AND MYORG.USER_ID     = ?
+			                     )
+			          AND EXISTS (
+			                        SELECT *
+			                          FROM DPS.PS_DISPOSMAGAM
+			                         WHERE STR_CD     = ?
+			                           AND SALE_DT    = ?
+			                           AND MAGAM_FLAG = 'Y'
+			                           AND POS_NO     = A.POS_NO
+			                     )
+			        GROUP BY A.POS_NO
+			               , C.INQR_ORDER
+			               , A.BALANCE_FLAG
+			               , C.COMM_NAME1
+			       ) X
+			   WHERE (X.NORM_TRAN_CNT01 - X.NORM_TRAN_CNT02) <> 0
+			     AND (X.NORM_TRAN_AMT01 - X.NORM_TRAN_AMT02) <> 0
+			   ORDER BY X.INQR_ORDER
+			          , X.COMM_NAME1
+			          , X.POS_NO
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_POS_FLOR_ALL">        
+        <![CDATA[
+			SELECT X.FLOR_CD       AS POS_NO
+			     , X.INQR_ORDER
+			     , X.BALANCE_FLAG
+			     , X.COMM_NAME1
+			     , X.NORM_TRAN_CNT01
+			     , X.NORM_TRAN_AMT01
+			     , X.NORM_TRAN_CNT02
+			     , X.NORM_TRAN_AMT02
+			     , X.NORM_TRAN_CNT01 - X.NORM_TRAN_CNT02 AS GAP_CNT
+			     , X.NORM_TRAN_AMT01 - X.NORM_TRAN_AMT02 AS GAP_AMT
+			  FROM (
+			       SELECT B.FLOR_CD
+			            , C.INQR_ORDER
+			            , A.BALANCE_FLAG
+			            , C.COMM_NAME1
+			            , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN 0 ELSE DECODE(A.TOTAL_FLAG, '01', A.NORM_TRAN_CNT, 0) END) AS NORM_TRAN_CNT01
+			            , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN 0 ELSE DECODE(A.TOTAL_FLAG, '01', A.NORM_TRAN_AMT, 0) END) AS NORM_TRAN_AMT01
+			            , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN 0 ELSE DECODE(A.TOTAL_FLAG, '02', A.NORM_TRAN_CNT, 0) END) AS NORM_TRAN_CNT02
+			            , SUM(CASE WHEN A.BALANCE_FLAG IN ('0', '50', '100', '190', '600', '500') THEN 0 ELSE DECODE(A.TOTAL_FLAG, '02', A.NORM_TRAN_AMT, 0) END) AS NORM_TRAN_AMT02
+			         FROM DPS.PS_TRTOTAL A
+			            , DPS.PC_POSMST  B
+			            , (
+			               SELECT COMM_CODE
+			                    , COMM_NAME1
+			                    , TO_CHAR(INQR_ORDER, '000') AS INQR_ORDER
+			                 FROM COM.TC_COMMCODE
+			                WHERE COMM_PART = 'P606'
+			                  AND SYS_PART  = 'D'
+			                  AND USE_YN    = 'Y'
+			                  AND COMM_CODE <> '170'
+			               ) C
+			            , ( SELECT COMM_CODE
+			                     , RESERVED1
+			                  FROM COM.TC_COMMCODE
+			                 WHERE SYS_PART = 'D'
+			                   AND COMM_PART = 'P061'
+			                   AND USE_YN = 'Y'
+			              ) D       
+			        WHERE A.STR_CD       = B.STR_CD
+			          AND A.POS_NO       = B.POS_NO
+			          AND A.BALANCE_FLAG = C.COMM_CODE
+			          AND B.FLOR_CD      = D.COMM_CODE
+			          AND A.STR_CD       LIKE ? || '%'
+			          AND B.POS_FLAG     LIKE ? || '%'
+			          AND B.HALL_CD      LIKE ? || '%'
+			          AND A.POS_NO NOT IN ('8001', '8002', '8001', '8002')
+			          AND D.RESERVED1 BETWEEN (
+			                                  SELECT TO_NUMBER(RESERVED1)
+			                                    FROM COM.TC_COMMCODE
+			                                   WHERE COMM_PART = 'P061'
+			                                     AND USE_YN = 'Y'
+			                                     AND COMM_CODE = ?
+			                                   )
+			                                   AND 
+			                                   (
+			                                   SELECT TO_NUMBER(RESERVED1)
+			                                     FROM COM.TC_COMMCODE
+			                                    WHERE COMM_PART = 'P061'
+			                                      AND USE_YN = 'Y'
+			                                      AND COMM_CODE = ?
+			                                   )
+			          AND A.SALE_DT      = ?
+			          AND EXISTS ( SELECT MYORG.USER_ID
+			                         FROM COM.V_MYORG MYORG
+			                        WHERE MYORG.STR_CD      = A.STR_CD
+			                          AND MYORG.USER_ID     = ?
+			                      )
+			          AND EXISTS (
+			                        SELECT *
+			                          FROM DPS.PS_DISPOSMAGAM
+			                         WHERE STR_CD     = ?
+			                           AND SALE_DT    = ?
+			                           AND MAGAM_FLAG = 'Y'
+			                           AND POS_NO     = A.POS_NO
+			                     )
+			        GROUP BY B.FLOR_CD
+			               , C.INQR_ORDER
+			               , A.BALANCE_FLAG
+			               , C.COMM_NAME1
+			       ) X
+			   WHERE (X.NORM_TRAN_CNT01 - X.NORM_TRAN_CNT02) <> 0
+			     AND (X.NORM_TRAN_AMT01 - X.NORM_TRAN_AMT02) <> 0
+			   ORDER BY X.INQR_ORDER
+			          , X.COMM_NAME1
+			      	  , X.FLOR_CD
+        ]]>        
+    </query>
+    
+</service>

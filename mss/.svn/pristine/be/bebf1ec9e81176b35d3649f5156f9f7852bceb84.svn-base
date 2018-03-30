@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae503.mc">
+<!-- 사은품 일수불 MASTER 조회 -->
+    <gauce name="H_MASTER">  
+        <column colName="EVENT_CD"              colType="TB_STRING"      size="11"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_NAME"            colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SKU_GB"                colType="TB_STRING"      size="20"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_CD"                colType="TB_STRING"      size="13"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_NAME"              colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="IN_QTY"                colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RFD_QTY"               colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PRSNT_QTY"             colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EXCP_PRSNT_QTY"        colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ETC_PRSNT"             colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="RECOVERY_QTY"          colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="POS_NDRAWL_CAN_QTY"    colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NQTY"                  colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="DQTY"                  colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="INFRR_QTY"             colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="LOSS_QTY"              colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="QTY"                   colType="TB_DECIMAL"     size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>
+     
+    <query name="SEL_MASTER">
+        <![CDATA[    
+             SELECT STK.EVENT_CD
+                  , EVT.EVENT_NAME
+                  , MST.SKU_GB
+                  , STK.SKU_CD
+                  , SKU.SKU_NAME	
+                  , SUM(STK.IN_QTY) AS IN_QTY      							--입고
+                  , SUM(STK.RFD_QTY) AS RFD_QTY  							--반품
+                  , SUM(STK.PRSNT_QTY) AS PRSNT_QTY  						--정상지급
+                  , SUM(STK.EXCP_PRSNT_QTY) AS EXCP_PRSNT_QTY  				--사후지급
+                  , SUM(STK.ETC_PRSNT) AS ETC_PRSNT   						--기타지급
+                  , SUM(STK.RECOVERY_QTY) AS RECOVERY_QTY  					--회수 + 지급취소 + 사후지급취소
+                  , SUM(STK.POS_NDRAWL_CAN_QTY) AS POS_NDRAWL_CAN_QTY  		--POS미회수취소수량
+                  , SUM(STK.NQTY) AS NQTY 									--(지급+사후지급+기타지급)-(회수+지급취소+사후지급취소)=누적지급
+                  , SUM(STK.DQTY) AS DQTY    								-- 당일지급(당일취소 미반영)
+                  , SUM(STK.INFRR_QTY) AS INFRR_QTY  						--불량수량
+                  , SUM(STK.LOSS_QTY) AS LOSS_QTY   						--loss수량
+                  , SUM(STK.QTY) AS QTY   									--현재고(불량은 현재고에 포함)
+              FROM ( SELECT STK.STK_DT
+                          , STK.STR_CD
+                          , STK.EVENT_CD  
+                          , STK.SKU_CD 
+                          , STK.IN_QTY    				--입고
+                          , STK.RFD_QTY  			 	--반품
+                          , STK.PRSNT_QTY  				--정상지급
+                          , STK.EXCP_PRSNT_QTY   		--사후지급
+                          , STK.ETC_PRSNT   			--기타지
+                          , STK.RECOVERY_QTY + STK.CPRSNT_QTY + STK.CEXCP_PRSNT_QTY AS RECOVERY_QTY  --회수 + 지급취소 + 사후지급취소
+                          , STK.POS_NDRAWL_CAN_QTY   												--POS미회수취소수량
+                          , STK.PRSNT_QTY + STK.EXCP_PRSNT_QTY - (STK.RECOVERY_QTY + STK.CPRSNT_QTY + STK.CEXCP_PRSNT_QTY) + ETC_PRSNT AS NQTY --(지급+사후지급+기타지급)-(회수+지급취소+사후지급취소)=누적지급
+                          , CASE WHEN STK.STK_DT = ? THEN 
+                                      STK.PRSNT_QTY+STK.EXCP_PRSNT_QTY+STK.ETC_PRSNT ELSE 0 END AS DQTY  		-- 당일지급(당일취소 미반영)
+                          , STK.INFRR_QTY 																		--불량수량
+                          , STK.LOSS_QTY  																		--loss수량
+                          , STK.IN_QTY - STK.RFD_QTY 
+                            - (STK.PRSNT_QTY + STK.EXCP_PRSNT_QTY + ETC_PRSNT - (STK.RECOVERY_QTY + STK.CPRSNT_QTY + STK.CEXCP_PRSNT_QTY)) 
+                            - STK.LOSS_QTY AS QTY   															--현재고(불량은 현재고에 포함)
+                       FROM MSS.MC_EVTSKUSTOCK STK )STK , MSS.MC_EVTSKUMST MST, DPS.PC_EVTMST EVT, DPS.PC_STRSKUMST SKU
+             WHERE STK.EVENT_CD = MST.EVENT_CD
+               AND STK.EVENT_CD = EVT.EVENT_CD 
+               AND STK.SKU_CD = SKU.SKU_CD 
+               AND STK.SKU_CD = MST.SKU_CD
+               AND STK.STR_CD = MST.STR_CD
+               AND STK.STR_CD = SKU.STR_CD  
+               AND STK.STK_DT <= ?
+               AND STK.EVENT_CD = ?
+               AND STK.STR_CD = ?
+          GROUP BY STK.EVENT_CD
+                 , EVT.EVENT_NAME
+                 , MST.SKU_GB
+                 , STK.SKU_CD
+                 , SKU.SKU_NAME
+          ORDER BY EVT.EVENT_NAME, MST.SKU_GB, SKU.SKU_NAME
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER2">
+        <![CDATA[    
+             SELECT STK.EVENT_CD
+	              , EVT.EVENT_NAME
+		          , MST.SKU_GB
+		          , STK.SKU_CD
+		          , SKU.SKU_NAME 
+		          , SUM(STK.IN_QTY) * MST.BUY_COST_PRC  AS IN_QTY
+		          , SUM(STK.RFD_QTY) * MST.BUY_COST_PRC  AS RFD_QTY
+		          , SUM(STK.PRSNT_QTY) * MST.BUY_COST_PRC  AS PRSNT_QTY
+		          , SUM(STK.EXCP_PRSNT_QTY) * MST.BUY_COST_PRC  AS EXCP_PRSNT_QTY
+		          , SUM(STK.ETC_PRSNT) * MST.BUY_COST_PRC  AS ETC_PRSNT
+		          , SUM(STK.RECOVERY_QTY) * MST.BUY_COST_PRC  AS RECOVERY_QTY
+		          , SUM(STK.POS_NDRAWL_CAN_QTY) * MST.BUY_COST_PRC  AS POS_NDRAWL_CAN_QTY
+		          , SUM(STK.NQTY) * MST.BUY_COST_PRC  AS NQTY
+		          , SUM(STK.DQTY) * MST.BUY_COST_PRC  AS DQTY
+		          , SUM(STK.INFRR_QTY) * MST.BUY_COST_PRC  AS INFRR_QTY
+		          , SUM(STK.LOSS_QTY) * MST.BUY_COST_PRC  AS LOSS_QTY
+		          , SUM(STK.QTY) * MST.BUY_COST_PRC  AS QTY
+		       FROM ( SELECT STK.STK_DT
+		                   , STK.STR_CD
+		                   , STK.EVENT_CD  
+		                   , STK.SKU_CD 
+		                   , STK.IN_QTY
+		                   , STK.RFD_QTY
+		                   , STK.PRSNT_QTY
+		                   , STK.EXCP_PRSNT_QTY
+		                   , STK.ETC_PRSNT
+		                   , STK.RECOVERY_QTY
+		                   , STK.POS_NDRAWL_CAN_QTY
+		                   , STK.PRSNT_QTY + STK.EXCP_PRSNT_QTY - STK.RECOVERY_QTY + ETC_PRSNT AS NQTY
+		                   , CASE WHEN STK.STK_DT = ? THEN STK.PRSNT_QTY+STK.EXCP_PRSNT_QTY+STK.ETC_PRSNT ELSE 0 END AS DQTY  
+		                   , STK.INFRR_QTY 
+		                   , STK.LOSS_QTY 
+		                   , STK.IN_QTY - STK.RFD_QTY - (STK.PRSNT_QTY + STK.EXCP_PRSNT_QTY - STK.RECOVERY_QTY + ETC_PRSNT) - STK.LOSS_QTY AS QTY
+		                FROM MSS.MC_EVTSKUSTOCK STK )STK , MSS.MC_EVTSKUMST MST, DPS.PC_EVTMST EVT, DPS.PC_STRSKUMST SKU
+		      WHERE STK.EVENT_CD = MST.EVENT_CD
+		        AND STK.EVENT_CD = EVT.EVENT_CD 
+		        AND STK.SKU_CD = SKU.SKU_CD 
+		        AND STK.SKU_CD = MST.SKU_CD
+ 		        AND STK.STR_CD = MST.STR_CD
+		        AND STK.STR_CD = SKU.STR_CD  
+		        AND STK.STK_DT<= ?
+		        AND STK.EVENT_CD = ?
+		        AND STK.STR_CD  = ? 
+		   GROUP BY STK.EVENT_CD
+		          , EVT.EVENT_NAME
+		          , MST.SKU_GB
+		          , STK.SKU_CD
+		          , SKU.SKU_NAME
+		          , MST.BUY_COST_PRC
+           ORDER BY EVT.EVENT_NAME, MST.SKU_GB, SKU.SKU_NAME
+        ]]>        
+    </query>
+</service>

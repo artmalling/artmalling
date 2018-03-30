@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  회원가입처별 주소조회
+ -->
+<service name="/dctm422.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="CUST_ID"         colType="TB_STRING"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"       colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ADDR_FLAG_NM"    colType="TB_STRING"  size="30"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ADDR_PATH_CD"    colType="TB_STRING"  size="10"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="BRCH_NAME"       colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ADDR_CLS_YN"     colType="TB_STRING"  size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="ZIP_CD"          colType="TB_STRING"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="FULL_ADDR"       colType="TB_STRING"  size="401" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_INPUT_ADDR" colType="TB_STRING"  size="409" dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MOD_DATE"        colType="TB_STRING"  size="14"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+
+    <!-- 회원탈퇴등록 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT A.CUST_ID
+                 , B.CUST_NAME
+                 , COM.FN_GET_COMM_NAME('D', 'D004', A.ADDR_FLAG) ADDR_FLAG_NM
+                 , A.ADDR_PATH_CD
+                 , C.BRCH_NAME
+                 , A.ADDR_CLS_YN
+                 , A.ZIP_CD1 || A.ZIP_CD2  AS ZIP_CD
+                 , A.ADDR1 ||' '|| ADDR2   AS FULL_ADDR
+                 , A.ORI_ZIP_CD1 ||'-'||ORI_ZIP_CD2 ||' '|| ORI_ADDR1 ||' '|| ORI_ADDR2 AS CUST_INPUT_ADDR
+                 , TO_CHAR( A.MOD_DATE, 'YYYYMMDDHH24MISS') MOD_DATE
+              FROM DCS.DM_CUST_ADDR A
+                 , DCS.DM_CUSTOMER B
+                 , DCS.DB_BRANCH C
+             WHERE A.CUST_ID      = B.CUST_ID 
+               AND A.ADDR_PATH_CD = C.BRCH_ID 
+               AND A.CUST_ID      = ( SELECT UNIQUE A.CUST_ID 
+                                        FROM DCS.DM_CARD A
+                                           , DCS.DM_CUSTOMER B
+                                       WHERE A.CUST_ID    =    B.CUST_ID
+        ]]>        
+    </query> 
+    
+    <query name="SEL_MASTER_CARD_NO">   
+        <![CDATA[
+                                    AND A.CARD_NO    = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_CUST_ID">   
+        <![CDATA[
+                                    AND A.CUST_ID    = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_SS_NO">   
+        <![CDATA[
+                                    AND B.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>  
+    <query name="SEL_MASTER_ORDER">   
+        <![CDATA[
+                               )
+             ORDER BY A.MOD_DATE DESC
+        ]]>        
+    </query>     
+</service>

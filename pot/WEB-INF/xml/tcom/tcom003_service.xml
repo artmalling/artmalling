@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/tcom003.tc">
+    <!-- 서브 시스템 코드() -->
+    <gauce name="H_SUB_SYSTEM">
+        <column colName="SUB_SYSTEM" colType="TB_STRING" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 트리뷰 -->
+    <gauce name="H_TREE_MAIN">
+        <column colName="LVL" colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TXT" colType="TB_STRING" size="50" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="URL" colType="TB_STRING" size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LCODE" colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MCODE" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SCODE" colType="TB_STRING" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OIMG" colType="TB_STRING" size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CIMG" colType="TB_STRING" size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIMG" colType="TB_STRING" size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 트리뷰를 위한 쿼리 (일부메뉴) -->
+    <query name="SEL_TREE_VIEW_PARTIAL">
+        <![CDATA[  
+            -- 기본적으로 서브시스템(SUB_SYSTEM)에 따른 전체 메뉴를 
+            -- 로딩하여 가상 테이블로 만듬 (프로그램 사용여부 = 사용 : 2010.05.27 HSEON)
+            WITH MTREE AS (
+                SELECT 
+                      LVL,
+                      LNAME AS TXT,
+                      CD1 LCODE,
+                      CD2 MCODE,
+                      CD3 SCODE,
+                      LVSEQ,
+                      URL,
+                      LSEQ,
+                      MSEQ,
+                      SSEQ,
+                      SUB_SYSTEM
+                FROM   (
+                        SELECT 
+                              '2' LVL, 
+                              LCODE cd1, 
+                              '99' cd2, 
+                              '' cd3, 
+                              LNAME,
+                              SUB_SYSTEM,
+                              '' URL,
+                              LPAD(NVL(SEQ ,0), 2,0 ) || LCODE  LVSEQ ,
+                              SEQ lseq,
+                              0 mseq,
+                              0 sseq
+                        FROM  COM.TC_PGMLMENU      
+                        UNION
+                        SELECT 
+                              '3' LVL, 
+                              m.LCODE cd1, 
+                              m.LCODE||m.MCODE cd2, 
+                              '', 
+                              m.MNAME,
+                              l.SUB_SYSTEM,
+                              '' URL,
+                                 LPAD(NVL(L.SEQ,0), 2, 0 ) || L.LCODE 
+                              || LPAD(NVL(M.SEQ,0), 2, 0 ) || M.MCODE LVSEQ , 
+                              l.SEQ lseq,
+                              m.SEQ mseq,
+                              0 sseq
+                        FROM  COM.TC_PGMMMENU m, COM.TC_PGMLMENU l
+                        WHERE l.lcode = m.lcode
+                        UNION
+                        SELECT 
+                              '4' LVL, 
+                              s.LCODE cd1, 
+                              s.LCODE||s.MCODE cd2, 
+                              s.SCODE cd3, 
+                              s.SNAME,
+                              l.SUB_SYSTEM,
+                              p.URL,
+                                LPAD(NVL(L.SEQ,0), 2, 0 ) || L.LCODE 
+                             || LPAD(NVL(M.SEQ,0), 2, 0 ) || M.MCODE   
+                             || LPAD(NVL(S.SEQ,0), 2, 0 ) LVESEQ   ,
+                              l.SEQ lseq,
+                              m.SEQ mseq,
+                              s.SEQ sseq 
+                        FROM  COM.TC_PGMSMENU s, COM.TC_PGMLMENU l, COM.TC_PGMMST p, COM.TC_PGMMMENU m
+                        WHERE s.lcode = l.lcode
+                          AND s.lcode = m.lcode
+                          AND s.mcode = m.mcode
+                          AND p.pid = s.scode
+                          AND p.USE_YN = 'Y'    -- HSEON
+                     ) m
+                WHERE SUB_SYSTEM = ?     
+                START WITH LVL >= 2
+                CONNECT BY PRIOR cd2=cd1
+                ORDER BY lseq, mseq, sseq
+            ), OK_MENU AS (
+               -- 개인별 프로그램 권한 
+                SELECT LVL, TXT, SCODE, URL
+                  FROM MTREE 
+                 WHERE scode    in (
+                                      SELECT PID
+                                      FROM   COM.TC_USRPGM                                     
+                                      WHERE  USER_ID   = ?  
+                                   ) 
+                UNION
+                -- 그룹별 프로그램 권한
+                SELECT LVL, TXT, SCODE, URL
+                FROM   MTREE  
+                WHERE  scode in (
+                                 SELECT  pid
+                                 FROM    COM.TC_GRPPGM                                     
+                                 WHERE   group_cd = ( 
+                                                      SELECT group_cd                  
+                                                      FROM   COM.TC_USRMST                 
+                                                      WHERE  USER_ID = ?            
+                                                    )  
+                                ) 
+            ) 
+            --------------------------------------------------------------------
+            -- 모든 메뉴 && 그룹별 프로그램 권한 && 개인별 프로그램 권한
+            -- 위 세가지의 교집합을 추출하면 그사람이 볼 수 있는 메뉴 권한
+            -- 그룹별 프로그램 권한과 개인별 프로그램 권한이 동시에 있는 경우엔
+            -- 두가지 권한을 합하여 처리
+            --------------------------------------------------------------------
+            SELECT LVL 
+                 , TXT
+                 , URL
+                 , LCODE
+                 , MCODE
+                 , SCODE
+                 , 'g_folder_o' AS OIMG
+                 , 'g_folder_c' AS CIMG
+                 , 'g_docu' AS DIMG
+            FROM (
+                SELECT MTREE.SUB_SYSTEM, MTREE.LVSEQ, MTREE.LVL, MTREE.TXT, MTREE.URL, MTREE.LCODE, MTREE.MCODE, MTREE.SCODE, MTREE.LSEQ, MTREE.MSEQ, MTREE.SSEQ
+                FROM   MTREE, OK_MENU       
+                WHERE  MTREE.scode = OK_MENU.scode
+                UNION           
+                SELECT MTREE.SUB_SYSTEM, MTREE.LVSEQ, MTREE.LVL, MTREE.TXT, MTREE.URL, MTREE.LCODE, MTREE.MCODE, MTREE.SCODE, MTREE.LSEQ, MTREE.MSEQ, MTREE.SSEQ
+                FROM   MTREE                    
+                WHERE  MTREE.LCODE  in (
+                                        SELECT MTREE.LCODE
+                                        FROM   MTREE, OK_MENU       
+                                        WHERE  MTREE.scode = OK_MENU.scode
+                                       ) 
+                AND    ( MTREE.MCODE  in (
+                                        SELECT MTREE.MCODE
+                                        FROM   MTREE, OK_MENU       
+                                        WHERE  MTREE.scode = OK_MENU.scode
+                                       ) 
+                         OR MTREE.MCODE = '99'
+                       )
+                AND    MTREE.LVL != '4'
+            )  
+        ]]>        
+    </query>
+    
+    <query name="SEL_TREE_VIEW_PARTIAL_WHERE">
+        <![CDATA[  
+            WHERE (TXT LIKE '%'||?||'%' AND LVL ='4')
+        ]]>        
+    </query>
+    
+    <query name="SEL_TREE_VIEW_PARTIAL_ORDER_BY">
+        <![CDATA[  
+            ORDER BY SUB_SYSTEM, LVSEQ, LSEQ,  MSEQ, LVL, SSEQ                     
+        ]]>        
+    </query>
+    
+    
+    <!-- 트리뷰를 위한 쿼리  (전체메뉴)-->
+    <query name="SEL_TREE_VIEW_ALL">
+        <![CDATA[  
+            -- 기본적으로 서브시스템(SUB_SYSTEM)에 따른 전체 메뉴를 
+            -- 로딩하여 가상 테이블로 만듬
+            WITH MTREE AS (
+                SELECT 
+                      LVL,
+                      LNAME AS TXT,
+                      CD1 LCODE,
+                      CD2 MCODE,
+                      CD3 SCODE,
+                      URL
+                FROM   (
+                        SELECT 
+                              '2' LVL, 
+                              LCODE cd1, 
+                              '99' cd2, 
+                              '' cd3, 
+                              LNAME,
+                              SUB_SYSTEM,
+                              '' URL,
+                              SEQ lseq,
+                              0 mseq,
+                              0 sseq
+                        FROM  COM.TC_PGMLMENU      
+                        UNION
+                        SELECT 
+                              '3' LVL, 
+                              m.LCODE cd1, 
+                              m.LCODE||m.MCODE cd2, 
+                              '', 
+                              m.MNAME,
+                              l.SUB_SYSTEM,
+                              '' URL,
+                              l.SEQ lseq,
+                              m.SEQ mseq,
+                              0 sseq
+                        FROM  COM.TC_PGMMMENU m, COM.TC_PGMLMENU l
+                        WHERE l.lcode = m.lcode
+                        UNION
+                        SELECT 
+                              '4' LVL, 
+                              s.LCODE cd1, 
+                              s.LCODE||s.MCODE cd2, 
+                              s.SCODE cd3, 
+                              s.SNAME,
+                              l.SUB_SYSTEM,
+                              p.URL,
+                              l.SEQ lseq,
+                              m.SEQ mseq,
+                              s.SEQ sseq 
+                        FROM  COM.TC_PGMSMENU s, COM.TC_PGMLMENU l, COM.TC_PGMMST p, COM.TC_PGMMMENU m
+                        WHERE s.lcode = l.lcode
+                          AND s.lcode = m.lcode
+                          AND s.mcode = m.mcode
+                          AND p.pid = s.scode
+                     ) m
+                WHERE SUB_SYSTEM = ?
+                START WITH LVL >= 2
+                CONNECT BY PRIOR cd2=cd1
+                ORDER BY lseq, mseq, sseq
+            ), OK_MENU AS (
+               -- 개인별 프로그램 권한 
+                SELECT LVL, TXT, SCODE, URL
+                FROM   MTREE 
+                WHERE  scode    in (
+                                      SELECT pid
+                                      FROM   COM.TC_USRPGM                                     
+                                      WHERE  usr_cd   = ?  
+                                   ) 
+                UNION
+                -- 그룹별 프로그램 권한
+                SELECT LVL, TXT, SCODE, URL
+                FROM   MTREE  
+                WHERE  scode in (
+                                 SELECT  pid
+                                 FROM    COM.TC_GRPPGM                                     
+                                 WHERE   group_cd = ( 
+                                                      SELECT group_cd                  
+                                                      FROM   COM.TC_USRMST                 
+                                                      WHERE  USER_ID = ?               
+                                                    )  
+                                ) 
+            ) , CNT_OK_MENU AS (
+                    SELECT COUNT(*) CNT
+                    FROM   OK_MENU
+            )
+            --------------------------------------------------------------------
+            -- 모든 메뉴 && 그룹별 프로그램 권한 && 개인별 프로그램 권한
+            -- 위 세가지의 교집합을 추출하면 그사람이 볼 수 있는 메뉴 권한
+            -- 그룹별 프로그램 권한과 개인별 프로그램 권한이 동시에 있는 경우엔
+            -- 두가지 권한을 합하여 처리
+            --------------------------------------------------------------------
+            SELECT MTREE.lvl, MTREE.txt, MTREE.url, MTREE.lcode, MTREE.mcode, MTREE.scode
+            FROM   MTREE, OK_MENU, CNT_OK_MENU          
+            WHERE  MTREE.scode = OK_MENU.scode(+)   
+        ]]>        
+    </query>
+
+
+    <!-- 전체를 다 보기 위한  쿼리 (개발시만 사용함) -->
+    <query name="SEL_TREE_VIEW_PARTIAL_SUPER">
+        <![CDATA[  
+            -- 기본적으로 서브시스템(SUB_SYSTEM)에 따른 전체 메뉴를 
+            -- 로딩하여 가상 테이블로 만듬
+            WITH MTREE AS (
+                SELECT 
+                      LVL,
+                      LNAME AS TXT,
+                      CD1 LCODE,
+                      CD2 MCODE,
+                      CD3 SCODE,
+                      LVSEQ,
+                      URL,
+                      LSEQ,
+                      MSEQ,
+                      SSEQ,
+                      SUB_SYSTEM
+                FROM   (
+                        SELECT 
+                              '2' LVL, 
+                              LCODE cd1, 
+                              '99' cd2, 
+                              '' cd3, 
+                              LNAME,
+                              SUB_SYSTEM,
+                              '' URL,
+                              LPAD(NVL(SEQ ,0), 2,0 ) || LCODE  LVSEQ ,
+                              SEQ lseq,
+                              0 mseq,
+                              0 sseq
+                        FROM  COM.TC_PGMLMENU      
+                        UNION
+                        SELECT 
+                              '3' LVL, 
+                              m.LCODE cd1, 
+                              m.LCODE||m.MCODE cd2, 
+                              '', 
+                              m.MNAME,
+                              l.SUB_SYSTEM,
+                              '' URL,
+                                 LPAD(NVL(L.SEQ,0), 2, 0 ) || L.LCODE 
+                              || LPAD(NVL(M.SEQ,0), 2, 0 ) || M.MCODE LVSEQ , 
+                              l.SEQ lseq,
+                              m.SEQ mseq,
+                              0 sseq
+                        FROM  COM.TC_PGMMMENU m, COM.TC_PGMLMENU l
+                        WHERE l.lcode = m.lcode
+                        UNION
+                        SELECT 
+                              '4' LVL, 
+                              s.LCODE cd1, 
+                              s.LCODE||s.MCODE cd2, 
+                              s.SCODE cd3, 
+                              s.SNAME,
+                              l.SUB_SYSTEM,
+                              p.URL,
+                                LPAD(NVL(L.SEQ,0), 2, 0 ) || L.LCODE 
+                             || LPAD(NVL(M.SEQ,0), 2, 0 ) || M.MCODE   
+                             || LPAD(NVL(S.SEQ,0), 2, 0 ) LVESEQ   ,
+                              l.SEQ lseq,
+                              m.SEQ mseq,
+                              s.SEQ sseq 
+                        FROM  COM.TC_PGMSMENU s, COM.TC_PGMLMENU l, COM.TC_PGMMST p, COM.TC_PGMMMENU m
+                        WHERE s.lcode = l.lcode
+                          AND s.lcode = m.lcode
+                          AND s.mcode = m.mcode
+                          AND p.pid = s.scode
+                          --AND p.USE_YN = 'Y'    -- HSEON
+                     ) m
+                --WHERE SUB_SYSTEM IN ('C')
+                WHERE SUB_SYSTEM = ?
+                START WITH LVL >= 2
+                CONNECT BY PRIOR cd2=cd1
+                ORDER BY lseq, mseq, sseq
+            ), OK_MENU AS (
+               -- 개인별 프로그램 권한 
+                SELECT LVL, TXT, SCODE, URL
+                FROM   MTREE 
+                --WHERE  scode    in (
+                --                      SELECT pid
+                --                      FROM   COM.TC_USRPGM                                     
+                --                      WHERE  usr_cd   =  
+                --                   ) 
+                UNION
+                -- 그룹별 프로그램 권한
+                SELECT LVL, TXT, SCODE, URL
+                FROM   MTREE  
+                WHERE  scode in (
+                                 SELECT  pid
+                                 FROM    COM.TC_GRPPGM                                     
+                                 WHERE   group_cd = ( 
+                                                      SELECT group_cd                  
+                                                      FROM   COM.TC_USRMST                 
+                                                      WHERE  USER_ID = ?            
+                                                    )  
+                                ) 
+            ) 
+            --------------------------------------------------------------------
+            -- 모든 메뉴 && 그룹별 프로그램 권한 && 개인별 프로그램 권한
+            -- 위 세가지의 교집합을 추출하면 그사람이 볼 수 있는 메뉴 권한
+            -- 그룹별 프로그램 권한과 개인별 프로그램 권한이 동시에 있는 경우엔
+            -- 두가지 권한을 합하여 처리
+            --------------------------------------------------------------------
+            SELECT LVL, 
+                   --TXT,
+                   (SELECT DECODE(USE_YN,'N','*','') FROM COM.TC_PGMMST WHERE PID = X.SCODE AND SCODE = X.SCODE ) 
+                   ||TXT||
+                   (SELECT DECODE(USE_YN,'N','*','') FROM COM.TC_PGMMST WHERE PID = X.SCODE AND SCODE = X.SCODE ) AS TXT,
+                   URL,
+                   LCODE,
+                   MCODE,
+                   SCODE
+                 , 'g_folder_o' AS OIMG
+                 , 'g_folder_c' AS CIMG
+                 , 'g_docu' AS DIMG
+            FROM (
+                SELECT MTREE.SUB_SYSTEM, MTREE.LVSEQ, MTREE.LVL, MTREE.TXT, MTREE.URL, MTREE.LCODE, MTREE.MCODE, MTREE.SCODE, MTREE.LSEQ, MTREE.MSEQ, MTREE.SSEQ
+                FROM   MTREE, OK_MENU       
+                WHERE  MTREE.scode = OK_MENU.scode
+                UNION           
+                SELECT MTREE.SUB_SYSTEM, MTREE.LVSEQ, MTREE.LVL, MTREE.TXT, MTREE.URL, MTREE.LCODE, MTREE.MCODE, MTREE.SCODE, MTREE.LSEQ, MTREE.MSEQ, MTREE.SSEQ
+                FROM   MTREE                    
+                WHERE  MTREE.LCODE  in (
+                                        SELECT MTREE.LCODE
+                                        FROM   MTREE, OK_MENU       
+                                        WHERE  MTREE.scode = OK_MENU.scode
+                                       ) 
+                AND    ( MTREE.MCODE  in (
+                                        SELECT MTREE.MCODE
+                                        FROM   MTREE, OK_MENU       
+                                        WHERE  MTREE.scode = OK_MENU.scode
+                                       ) 
+                         OR MTREE.MCODE = '99'
+                       )
+                AND    MTREE.LVL != '4'
+            ) X     
+            --ORDER BY LVSEQ            
+            ORDER BY SUB_SYSTEM, LVSEQ, LSEQ,  MSEQ, LVL, SSEQ
+			         
+        ]]>        
+    </query>
+    
+    
+    <!-- 트리뷰 권한 처리하기전 COUNT 개인별, 그룹별 프로그램 권한에서 COUNT 하기 위한 QUERY  -->
+    <query name="SEL_PGM_CNT">
+        <![CDATA[           
+            WITH  OK_MENU AS (             
+                SELECT pid
+                FROM   COM.TC_USRPGM                                     
+                WHERE  usr_cd   = ?                                  
+                UNION
+                -- 그룹별 프로그램 권한          
+                SELECT  pid
+                FROM    COM.TC_GRPPGM                                     
+                WHERE   group_cd = ( 
+                                    SELECT group_cd                  
+                                    FROM   COM.TC_USRMST                 
+                                    WHERE  USER_ID =?                
+                                  )                                
+            ) 
+            --------------------------------------------------------------------
+            -- 그룹별 프로그램 권한과 개인별 프로그램 권한에서의 개수 구함
+            --------------------------------------------------------------------
+            SELECT COUNT(*) CNT
+            FROM   OK_MENU          
+        ]]>        
+    </query>
+    
+    <!-- 즐겨찾기  -->
+    <query name="SEL_FAVORITE">
+        <![CDATA[           
+        SELECT '1' AS LVL
+             , '즐겨찾기 목록'   AS TXT
+             , ''               AS URL
+             , ''               AS LCODE
+             , ''               AS MCODE
+             , ''               AS SCODE
+             , 'g_folder_o'     AS OIMG
+             , 'g_folder_c'     AS CIMG
+             , 'g_docu'         AS DIMG
+          FROM DUAL             
+         UNION ALL             
+        SELECT '2'              AS LVL
+             , S.SNAME          AS TXT
+             , MST.URL
+             , S.LCODE          AS LCODE
+             , S.LCODE||S.MCODE AS MCODE
+             , FAV.PID          AS SCODE
+             , 'g_folder_o'     AS OIMG
+             , 'g_folder_c'     AS CIMG
+             , 'g_docu'         AS DIMG
+          FROM COM.TC_FAVORITE FAV
+             , COM.TC_PGMMST   MST
+             , COM.TC_PGMLMENU L
+             , COM.TC_PGMMMENU M
+             , COM.TC_PGMSMENU S
+         WHERE FAV.PID     = MST.PID
+           AND MST.USE_YN  = 'Y'    
+           AND MST.PID     = S.SCODE
+           AND S.LCODE     = L.LCODE
+           AND S.LCODE     = M.LCODE                
+           AND S.MCODE     = M.MCODE
+           AND FAV.USER_ID = ?
+         ORDER BY LVL, SCODE
+        ]]>        
+    </query>
+
+</service>

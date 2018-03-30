@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.06.09
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  자사위탁판매 입금등록
+ -->
+<service name="/mgif605.mg">
+    <!--입금내역 -->
+    <gauce name="H_VENPAY"> 
+        <column colName="STR_CD"            colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_DT"            colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"            colType="TB_STRING" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"            colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"            colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_PAY_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FEE_RATE"          colType="TB_DECIMAL" size="5" dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FEE_PAY_AMT"       colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_FLAG"        colType="TB_STRING" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_FLAG_NM"     colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_FLAG"          colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!--수수료 정보 -->
+    <gauce name="H_VENFEE"> 
+        <column colName="VEN_CD"            colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FEE_RATE"          colType="TB_DECIMAL" size="5" dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!--입금내역 -->
+    <query name="SEL_VENPAY">
+        <![CDATA[
+		SELECT STR_CD
+             , PAY_DT
+             , SEQ_NO
+             , VEN_CD
+             , DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VEN_NM
+             , PAY_AMT + FEE_PAY_AMT AS TOT_PAY_AMT
+             , FEE_RATE
+             , PAY_AMT
+             , FEE_PAY_AMT
+             , DPS.FN_GET_CLOSECHECK( STR_CD, PAY_DT , 'MGIF', '47', '0', 'M') AS CLOSE_FLAG
+             , DECODE(DPS.FN_GET_CLOSECHECK( STR_CD, PAY_DT , 'MGIF', '47', '0', 'M'), 'FALSE', '마감전','마감') AS CLOSE_FLAG_NM
+             , (SELECT COUNT(*) FROM MSS.MG_VENCAL B
+                                WHERE CAL_YM = SUBSTR(A.PAY_DT,0,6)
+                                  AND STR_CD = A.STR_CD
+                                  AND CAL_TYPE = A.CAL_TYPE
+                                  AND VEN_CD = A.VEN_CD
+                                  AND PAYREC_FLAG = A.PAYREC_FLAG
+                                  AND CAL_FLAG = A.CAL_FLAG) AS CAL_FLAG
+          FROM MSS.MG_VENPAY A
+        WHERE SUBSTR(PAY_DT,0,6) BETWEEN ? AND ?
+           AND STR_CD = ?
+           AND VEN_CD LIKE ? || '%'
+           AND CAL_TYPE = '3'
+           AND PAYREC_FLAG = '1'
+           AND CAL_FLAG = '1'
+        ]]>
+    </query> 
+        
+    <!--수수료율 조회-->
+    <query name="SEL_VENFEE">
+        <![CDATA[
+		SELECT VEN_CD
+		     , CNS_PAY_FEE_RATE AS FEE_RATE
+		  FROM MSS.MG_VENFEEMST
+		 WHERE ? BETWEEN APP_DT AND END_DT
+		   AND STR_CD = ?
+		   AND VEN_CD = ?
+		   AND ROWNUM = 1
+      ORDER BY APP_DT DESC
+        ]]>
+    </query>  
+    
+    <!--입금자료 등록-->
+    <query name="INS_VENPAY">
+        <![CDATA[
+		INSERT INTO MSS.MG_VENPAY  ( CAL_YM
+		                           , PAY_DT
+		                           , STR_CD
+		                           , CAL_TYPE
+		                           , VEN_CD
+		                           , PAYREC_FLAG
+		                           , CAL_FLAG
+		                           , SEQ_NO
+		                           , FEE_RATE
+		                           , PAY_AMT
+		                           , FEE_PAY_AMT
+		                           , REG_ID
+		                           , REG_DATE                 
+		                           , MOD_ID
+		                           , MOD_DATE ) 
+		                    VALUES ( SUBSTR(?,0,6)
+		                           , ?
+		                           , ?
+		                           , '3'
+		                           , ?
+		                           , '1'
+		                           , '1'
+		                           , (SELECT NVL(MAX(SEQ_NO),0) + 1 FROM MSS.MG_VENPAY
+		                               WHERE CAL_YM = SUBSTR(?,0,6)
+		                                 AND PAY_DT = ?
+										 AND STR_CD = ?
+										 AND CAL_TYPE = '3'
+										 AND VEN_CD = ?
+										 AND PAYREC_FLAG = '1'
+										 AND CAL_FLAG = '1')
+		                           , ?
+		                           , ?
+		                           , ?
+		                           , ?
+		                           , SYSDATE
+		                           , ?
+		                           , SYSDATE)
+        ]]>
+    </query>  
+    
+     <!--입금자료 수정-->
+    <query name="UPD_VENPAY">
+        <![CDATA[
+        UPDATE MSS.MG_VENPAY
+               SET PAY_AMT = ?
+                 , FEE_PAY_AMT = ?
+                 , MOD_ID = ?
+                 , MOD_DATE = SYSDATE
+             WHERE CAL_YM = SUBSTR(?,0,6)
+               AND PAY_DT = ?
+               AND STR_CD = ?
+               AND VEN_CD = ?
+               AND CAL_TYPE = '3'
+               AND PAYREC_FLAG = '1'
+               AND CAL_FLAG = '1'
+               AND SEQ_NO = ?
+               
+        ]]>
+    </query>  
+    
+         <!--입금자료 수정-->
+    <query name="DEL_VENPAY">
+        <![CDATA[
+	   DELETE MSS.MG_VENPAY
+	    WHERE CAL_YM = SUBSTR(?,0,6)
+	      AND PAY_DT = ?
+	      AND STR_CD = ?
+	      AND CAL_TYPE = '3'
+	      AND VEN_CD = ?
+	      AND PAYREC_FLAG = '1'
+	      AND CAL_FLAG = '1'
+	      AND SEQ_NO = ?
+        ]]>
+    </query>  
+</service>

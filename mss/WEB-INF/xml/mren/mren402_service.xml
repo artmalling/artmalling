@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.09
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  세금계산서관리
+ -->
+<service name="/mren402.mr">
+    <gauce name="H_SEL_MR_CALMST">
+        <column colName="CHK_BOX"          colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+	    <column colName="STR_CD"           colType="TB_STRING"   size="2"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_YM"           colType="TB_STRING"   size="6"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_TYPE"         colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_CD"           colType="TB_STRING"   size="6"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"           colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_TYPE"         colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_TYPE_NM"      colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_GB"           colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CPN_REC_AMT"      colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="SUP_AMT"          colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VAT_AMT"          colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TOT_AMT"          colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_ISSUE"        colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_ISSUE_NM"     colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ETAX_STAT"        colType="TB_STRING"   size="5"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_ISSUE_FLAG"   colType="TB_STRING"   size="2"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_ID"          colType="TB_STRING"   size="20" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MR_CALMST">
+        <![CDATA[
+            SELECT 'F' AS CHK_BOX 
+                 , CNT.STR_CD
+                 , CAL.CAL_YM
+                 , CAL.CAL_TYPE
+                 , CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , CAL.TAX_TYPE
+                 /*세금계산서 구분  0:매출수수료, 1:관리비, 3:임대료*/
+                 , CASE WHEN CAL.TAX_TYPE = '1' THEN '관리비'
+                        WHEN CAL.TAX_TYPE = '3' THEN '임대료'
+                        ELSE '기타'
+                        END AS TAX_TYPE_NM
+                 , CAL.TAX_GB
+                 , CAL.CPN_REC_AMT
+                 , TAX.SUP_AMT
+                 , TAX.VAT_AMT
+                 , TAX.TOT_AMT
+                 , CAL.TAX_ISSUE
+                 , DECODE(CAL.TAX_ISSUE, 'Y', '발행', '미발행') AS TAX_ISSUE_NM /*계산서 발행구분*/
+                 , CASE WHEN CAL.TAX_ISSUE = 'Y' THEN DPS.FN_GET_TAX_STATE(TAX.EDI_SEQ_NO)
+                        ELSE '미발행' END  AS ETAX_STAT  /*전자세금계산서상태*/
+                 , CNT.RENT_TYPE||CAL.TAX_TYPE AS TAX_ISSUE_FLAG
+                 , CNT.CNTR_ID 
+              FROM MSS.MR_CNTRMST   CNT
+                 , DPS.PC_VENMST    VEN
+                 , DPS.PP_TAXMST    TAX
+                 , (SELECT CAL_YM, CNTR_ID, CAL_TYPE, TAX_TYPE, TAX_GB, CPN_REC_AMT, TAX_ISSUE, TAX_ISSUE_NO
+                      FROM (
+                            SELECT CAL_YM
+                                 , CNTR_ID
+                                 , CAL_TYPE
+                                 , '1' AS TAX_TYPE /*세금계산서 구분  0:매출수수료, 1:관리비, 3:임대료*/
+                                 , '1' AS TAX_GB /*세금계산서 구분 1:과세, 2:면세*/
+                                 , TAX_AMT                  AS CPN_REC_AMT
+                                 , TAX_ISSUE_MGR            AS TAX_ISSUE_NO
+                                 , DECODE(TAX_ISSUE_MGR, '', 'N', 'Y')  AS TAX_ISSUE
+                              FROM MSS.MR_CALMST    CAL
+                             WHERE TAX_AMT <> 0
+                             UNION ALL
+                            SELECT CAL_YM
+                                 , CNTR_ID
+                                 , CAL_TYPE
+                                 , '1' AS TAX_TYPE /*세금계산서 구분  0:매출수수료, 1:관리비, 3:임대료*/
+                                 , '2' AS TAX_GB /*세금계산서 구분 1:과세, 2:면세*/
+                                 , NTAX_AMT AS CPN_REC_AMT
+                                 , TAX_ISSUE_MGRNTAX        AS TAX_ISSUE_NO
+                                 , DECODE(TAX_ISSUE_MGRNTAX, '', 'N', 'Y')  AS TAX_ISSUE
+                              FROM MSS.MR_CALMST CAL
+                             WHERE NTAX_AMT <> 0
+                             UNION ALL
+                            SELECT CAL_YM
+                                 , CNTR_ID
+                                 , CAL_TYPE
+                                 , '3' AS TAX_TYPE /*세금계산서 구분  0:매출수수료, 1:관리비, 3:임대료*/
+                                 , '1' AS TAX_GB /*세금계산서 구분 1:과세, 2:면세*/
+                                 , RENT_AMT                 AS CPN_REC_AMT
+                                 , TAX_ISSUE_RENT           AS TAX_ISSUE_NO
+                                 , DECODE(TAX_ISSUE_RENT, '', 'N', 'Y') AS TAX_ISSUE
+                              FROM MSS.MR_CALMST    CAL
+                             WHERE RENT_AMT <> 0 ) 
+                   ) CAL
+             WHERE CAL.CNTR_ID = CNT.CNTR_ID
+               AND CNT.VEN_CD = VEN.VEN_CD
+               --AND CAL.CPN_REC_AMT > 0
+               AND CNT.RENT_TYPE IN ('3','4', '5') /*임대갑, 임대을B*/
+               AND (SUBSTR(CAL.TAX_ISSUE_NO,1,2)) = TAX.STR_CD(+)
+               AND (SUBSTR(CAL.TAX_ISSUE_NO,3,8)) = TAX.TAX_ISSUE_DT(+)
+               AND (SUBSTR(CAL.TAX_ISSUE_NO,11,5)) = TAX.TAX_ISSUE_SEQ_NO(+)
+			   AND CAL.TAX_TYPE LIKE ?||'%'
+			   AND CNT.VEN_CD LIKE ?||'%'
+			   AND CNT.STR_CD = ?
+			   AND CAL.CAL_YM = ?
+			 ORDER BY CAL.CAL_YM, CNT.VEN_CD
+        ]]>
+    </query>
+</service>

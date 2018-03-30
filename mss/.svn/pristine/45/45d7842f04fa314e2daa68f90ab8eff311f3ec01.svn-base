@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif603.mg">
+    <!-- 자사상품권  회수내역 마스터 조회 헤더 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"		colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_YM"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAM_ID"		colType="TB_STRING"  size="17" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAM_NM"      	colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_CNT"      	colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DRWL_CPN_CNT"  colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MI_CPN_CNT"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+	<!-- 자사쿠푼 회수 내역 마스터  조회 -->
+	<query name="SEL_COUPON_MST">
+	    <![CDATA[
+	        SELECT VA.STR_CD,
+                   IB.STR_NAME,
+                   VA.APP_YM,
+                   VA.CAMPAIGN_ID,
+                   VA.APP_YM || ' - 전자쿠폰캠페인' AS CAMPAIGN_NM,
+                   VA.CPN_CNT,
+                   VA.DRWL_CPN_CNT,
+                   VA.CPN_CNT - VA.DRWL_CPN_CNT AS MI_CPN_CNT
+              FROM (SELECT TA.STR_CD,
+                           SUBSTR(TA.START_DT,1,6) AS APP_YM,
+                           TA.CAMPAIGN_ID,
+                           COUNT(CAMPAIGN_ID) AS CPN_CNT,
+                           COUNT((SELECT 1
+                                   FROM DCS.DO_E_CPN_USE
+                                  WHERE 
+                                    --APP_YM = TA.APP_YM
+                                    USE_DT BETWEEN TA.START_DT AND TA.END_DT
+                                    AND STR_CD = TA.STR_CD
+                                    AND CUST_ID = TA.CUST_ID
+                                    AND CPN_ID = TA.CPN_ID)) AS DRWL_CPN_CNT
+                      FROM DCS.DO_E_COUPON TA
+                     WHERE TA.STR_CD IN (SELECT A.STR_CD
+                                           FROM COM.V_MYORG A,
+                                                DPS.PC_STRMST B
+                                          WHERE A.STR_CD = B.STR_CD
+                                            AND A.USE_YN = 'Y'
+                                            AND USER_ID = ?
+                                            AND ORG_FLAG = '1'
+                                            AND B.STR_CD LIKE ?||'%'
+                                          GROUP BY A.STR_CD)
+                       --AND TA.APP_YM BETWEEN X AND X
+                       AND TA.END_DT >=  ?||'01' 
+                       AND TA.START_DT <= ?||'31'
+                     GROUP BY TA.STR_CD,
+                              --TA.APP_YM,
+                              SUBSTR(TA.START_DT,1,6),
+                              TA.CAMPAIGN_ID) VA,
+                   DPS.PC_STRMST IB
+             WHERE VA.STR_CD = IB.STR_CD
+	    ]]>
+	</query>  
+	 <!-- 자사상품권  회수내역 디테일 조회 헤더 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="STR_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_DT"        colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_ID"		colType="TB_STRING"  size="17" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_CNT"		colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 자사쿠푼 회수 내역 디테일  조회 -->
+    <query name="SEL_COUPON_USE">
+        <![CDATA[
+            SELECT IA.STR_NAME,
+			       VA.USE_DT,
+			       VA.CPN_ID,
+			       VA.CPN_CNT
+			  FROM (SELECT TA.STR_CD,
+			               TA.USE_DT,
+			               TA.CPN_ID,
+			               COUNT(TA.CPN_ID) AS CPN_CNT
+			          FROM DCS.DO_E_CPN_USE TA
+			         WHERE TA.STR_CD = ?
+			           --AND TA.APP_YM = X
+                       AND TA.USE_DT LIKE ?||'%'
+			           AND TA.CAMPAIGN_ID = ?
+			         GROUP BY TA.STR_CD,
+			                  TA.USE_DT,
+			                  TA.CPN_ID) VA,
+			       DPS.PC_STRMST IA
+			 WHERE VA.STR_CD = IA.STR_CD
+        ]]>
+    </query> 
+
+</service>

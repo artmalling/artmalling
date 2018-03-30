@@ -1,0 +1,251 @@
+<!-- 
+/*******************************************************************************
+ * 시스템명 : 공통버튼 - 엑셀 출력 선택 화면
+ * 작 성 일 : 2006.06.13
+ * 작 성 자 : FKL
+ * 수 정 자 : 
+ * 파 일 명 : excelM.jsp
+ * 버    전 : 1.0 
+ * 개    요 : MGRID에서  엑셀 다운
+ * 이    력 :
+ ******************************************************************************/
+--> 
+<%@ page language="java" contentType="text/html;charset=utf-8" import="common.util.Util, 
+   common.vo.SessionInfo, kr.fujitsu.ffw.base.BaseProperty"   %>
+<% request.setCharacterEncoding("utf-8"); %>
+<%@ taglib uri="/WEB-INF/tld/c-rt.tld" prefix="c" %>
+<%@ taglib uri="/WEB-INF/tld/gauce40.tld"         prefix="gauce" %>  
+<%@ taglib uri="/WEB-INF/tld/app.tld"             prefix="loginChk" %>
+<%@ taglib uri="/WEB-INF/tld/button.tld"         prefix="button" %>
+
+
+<%String dir = BaseProperty.get("context.common.dir");%>
+<html>
+<head>
+<title>엑셀/텍스트 파일 선택</title>
+<meta http-equiv="pragma" content="no-cache">
+<link href="/<%=dir%>/css/mds.css" rel="stylesheet" type="text/css">
+<script language="javascript" src="/<%=dir%>/js/common.js" 	type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/gauce.js"	type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/global.js"	type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/message.js"	type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/popup.js"	type="text/javascript"></script>
+<script language="javascript" src="/<%=dir%>/js/popup_dcs.js"	type="text/javascript"></script>
+
+
+
+<!-- 화면 function 선언 -->
+<script language="javascript">
+    if (dialogArguments.length < 2){
+        alert("인자값을 GridObject, Title로 넘겨야합니다." );
+    }
+    var objGrid = eval(dialogArguments[0]);
+    var strTitle = dialogArguments[1];
+    var strCond  = dialogArguments[2];
+    var strPid   = dialogArguments[4];
+    if (typeof strPid == 'undefined') {
+    	strPid = "";
+    }
+    
+    function doInit(){
+        DS_LOG.setDataHeader('DOWN_COND:STRING(1000),PID:STRING(40)');
+    }
+    function on_Close(){
+        window.close();
+    }
+    
+  	//10보다 작은값에 두자리수 채우기
+    function fnSetZero(str) {
+    	if(str<10) {
+    		str = "0" + str;
+    	}
+    	return str;
+    }
+    
+    function on_Save(){
+        var strExcelFileType = tbrdo_ItemDiv.CodeValue;
+        
+        var today    = new Date();
+        var day      = today.getDay();
+        var hour     = today.getHours();
+        var minute   = today.getMinutes();
+        var second   = today.getSeconds();
+        var strWeek  = "";
+        
+        switch(strExcelFileType){
+            case "1" :
+                // 2006년 07월 19일 추가           
+                strTitle = strTitle + "_" +   fnSetZero(today.getYear()) + fnSetZero(today.getMonth() + 1) + fnSetZero(today.getDate()) + fnSetZero(hour) + fnSetZero(minute) + fnSetZero(second);
+                
+                objGrid.ExportTitle(0);
+                TITLE = "value:" + strTitle + "; font-face:굴림체; font-size:24pt; font-color:black;font-bold; font-underline; bgcolor:#C1C1C1; align:center; line-color:black;line-width:0.5pt; skiprow:1;";
+                
+                objGrid.ExportTitle(1, TITLE);        //타이틀 설정    
+                
+                if (day==0) {week="일요일";}
+                else if (day==1) {week="월요일";}
+                else if (day==2) {week="화요일";}
+                else if (day==3) {week="수요일";}
+                else if (day==4) {week="목요일";}
+                else if (day==5) {week="금요일";}
+                else if (day==6) {week="토요일";}
+
+                if (hour>12) {hour="오후 "+(hour-12);}
+                else {hour="오전 "+hour;}
+                
+                
+                var ymd = today.getYear() +"년 "+ (today.getMonth() + 1) +"월 "+ today.getDate() + "일"
+                var hms = hour + "시 " + minute + "분 " +  second + "초";
+                TITLE  = "value : 출력일자 : " + ymd + " ("+ week + ")";
+                TITLE += "\n" + hms;
+                TITLE += "value : 출력일자 : " + ymd + " ("+ week + ")"+"\n" + hms+"; font-face: '굴림체';font-size: 10pt;font-color:#336600;font-italic;bgcolor:#C1C1C1;align:right;line-color:black;line-width:0.5pt;skiprow: 1;";
+                //objGrid.ExportTitle(1, "value : 출력일자 : " + ymd + " ("+ week + ")"+"\n" + hms+"; font-face: '굴림체';font-size: 10pt;font-color:#336600;font-italic;bgcolor:#C1C1C1;align:right;line-color:black;line-width:0.5pt;skiprow: 1;");        //타이틀 설정    
+                
+                if (typeof(strCond)!= "undefined" && typeof(strCond)=="string"){
+                    var strToken = strCond.split("^");
+                    for (var i=0; i<strToken.length; i++){
+                    	objGrid.ExportTitle(1, 'value:'+strToken[i]+";");
+                    }
+                }
+
+                objGrid.GridtoExcel(strTitle, strTitle, 23);
+                objGrid.ExportTitle(0);
+                break;
+            case "2" :
+                // 2006년 07월 19일 추가           
+                strTitle = strTitle + "_" +   fnSetZero(today.getYear()) + fnSetZero(today.getMonth() + 1) + fnSetZero(today.getDate()) + fnSetZero(hour) + fnSetZero(minute) + fnSetZero(second);
+                objGrid.ExportTitle(0);          
+                TITLE = "value:" + strTitle + ";font-face:굴림체;font-size:24pt;font-color:black;font-bold;font-underline;bgcolor:#C1C1C1;align: center;line-color:black;line-width:0.5pt;skiprow:1;";
+                alert(strTitle);
+                objGrid.ExportTitle(1, TITLE);        //타이틀 설정    
+                
+                if (day==0) {week="일요일";}
+                else if (day==1) {week="월요일";}
+                else if (day==2) {week="화요일";}
+                else if (day==3) {week="수요일";}
+                else if (day==4) {week="목요일";}
+                else if (day==5) {week="금요일";}
+                else if (day==6) {week="토요일";}
+
+                if (hour>12) {hour="오후 "+(hour-12);}
+                else {hour="오전 "+hour;}
+                
+                
+                var ymd = today.getYear() +"년 "+ (today.getMonth() + 1) +"월 "+ today.getDate() + "일"
+                var hms = hour + "시 " + minute + "분 " +  second + "초";
+                TITLE  = "value : 출력일자 : " + ymd + " ("+ week + ")";
+                TITLE += "\n" + hms;
+                TITLE += "; font-face: '굴림체';font-size: 10pt;font-color:#336600;font-italic;bgcolor:#C1C1C1;align:right;line-color:black;line-width:0.5pt;skiprow: 1;";
+                //objGrid.ExportTitle(1, TITLE);
+
+                if (typeof(strCond)!= "undefined" && typeof(strCond)=="string"){
+                    var strToken = strCond.split("^");
+                    for (var i=0; i<strToken.length; i++){
+                    	objGrid.ExportTitle(1, 'value:'+strToken[i]+";");
+                    }
+                }
+
+                objGrid.GridtoExcel(strTitle, strTitle, 0);
+                objGrid.ExportTitle(0);
+                break;
+            default :
+                break;
+        }
+        DS_LOG.ClearData();
+        DS_LOG.AddRow();
+        DS_LOG.NameValue(1,"DOWN_COND") = strCond;
+        DS_LOG.NameValue(1,"PID") 		= strPid;
+        
+        TR_MAIN.Action   = "/<%=dir%>/ccom900.cc?goTo=saveExcelDownLog";
+        TR_MAIN.KeyValue = "SERVLET(I:DS_LOG=DS_LOG)";
+        TR_MAIN.Post();
+        
+        window.close();
+    }
+    
+    function ln_Excel(obj,title){
+        
+    }
+</script>
+
+
+</head>
+
+
+<!--------------------- 1. DataSet  ------------------------------------------->
+<comment id="_NSID_"><object id="DS_LOG" classid=<%= Util.CLSID_DATASET %>></object></comment><script>_ws_(_NSID_);</script>
+<!--------------------- 2. Transaction  --------------------------------------->
+<comment id="_NSID_"><object id="TR_MAIN" classid=<%=Util.CLSID_TRANSACTION%>><param name="KeyName" value="Toinb_dataid4"></object></comment><script>_ws_(_NSID_);</script>
+
+<body onLoad="doInit();">
+<!------///------->
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td class="pop01"></td>
+    <td class="pop02" ></td>
+    <td class="pop03" ></td>
+  </tr>
+  <tr>
+    <td class="pop04" ></td>
+    <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+      <tr>
+        <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td width="" class="title"><img src="/<%=dir%>/imgs/comm/title_head.gif" width="15" height="13" align="absmiddle" class="PR05 PL03" /> 엑셀/텍스트 파일선택</td>
+            <td><table border="0" align="right" cellpadding="0" cellspacing="0">
+              <tr>
+               
+                </tr>
+            </table></td>
+          </tr>
+        </table></td>
+      </tr>
+      <tr>
+        <td class="PT10 PB03"><table width="100%" border="0" cellspacing="0" cellpadding="0" class="o_table">
+          <tr>
+            <td><table width="100%" border="0" cellpadding="0" cellspacing="0" class="s_table">
+              <tr>
+                 <td align=center>
+                <comment id="_NSID_">
+                <object id="tbrdo_ItemDiv" classid="<%=Util.CLSID_RADIO%>" height="22px" width="350px">
+                       <param name="Cols"       value="2">
+                       <param name="Format"     value="1^엑셀저장,2^엑셀열기">
+                       <param name="CodeValue"  value="1">
+                </object>
+                </comment>
+                <script> _ws_(_NSID_);</script>
+                </td>
+              </tr>
+            </table></td>
+          </tr>
+        </table></td>
+      </tr>
+      <tr>
+        <td class="P10 lh160">I.정보통신망 이용촉진 및 정보보호 등에 관한 법률 및 시행령에 따라, II.기업정보 유출 방지를 목적으로 
+            본 시스템은 엑셀 작업을 진행하실 경우, 로그를 기록하고 있음을 알려드립니다. </td>
+      </tr>
+      <tr>
+        <td><table width="100%" border="0" cellspacing="0" cellpadding="0" >      
+        <tr align = center>
+
+        <td><img src="/<%=dir%>/imgs/btn/save.gif" width="50" height="22"  onClick="on_Save();"/>
+        <img src="/<%=dir%>/imgs/btn/close.gif" width="50" height="22"  onClick="on_Close();"/></td>
+        </tr>
+        </table></td>
+      </tr>
+    </table></td>
+     <td class="pop06" ></td>
+  </tr>
+  <tr>
+     <td class="pop07" ></td>
+     <td class="pop08" ></td>
+     <td class="pop09" ></td>
+  </tr>
+</table>
+
+
+
+
+
+</body>
+</html>

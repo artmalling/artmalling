@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  계량기관리 
+ -->
+<service name="/mren108.mr">
+    <gauce name="H_SEL_MR_GAUGMST">
+        <column colName="GAUG_ID"         colType="TB_STRING"   size="20"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="GAUG_TYPE"       colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="INST_PLC"        colType="TB_STRING"   size="200" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="GAUG_LVL"        colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="GAUG_USE_FLAG"   colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="DIV_RULE_TYPE"   colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="GAUG_KIND_CD"    colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PWR_TYPE"        colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PWR_SEL_CHARGE"  colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PWR_CNTR_QTY"    colType="TB_DECIMAL"  size="7"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PWR_REVER_RATE"  colType="TB_DECIMAL"  size="7"   dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="USE_EQUIP_QTY"   colType="TB_DECIMAL"  size="7"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="GAUG_MULTIPLE"   colType="TB_DECIMAL"  size="9"   dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="WWTR_CHARGE_YN"  colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="WTR_CAL_SIZE"    colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VALID_S_DT"      colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VALID_E_DT"      colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FILE_PATH"       colType="TB_STRING"   size="100" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FILE_PATH_REAL"  colType="TB_URL"      size="100" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="OLD_FILE_PATH"   colType="TB_STRING"   size="100" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="STR_CD"          colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="INST_STR_CD"     colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="HIGH_GAUG_ID"    colType="TB_STRING"   size="20"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FILE_GB"         colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+
+    <query name="SEL_MR_GAUGMST">
+       <![CDATA[   
+            SELECT HGA.GAUG_ID  
+                 , HGA.GAUG_TYPE  
+                 , HGA.INST_PLC  
+                 , HGA.GAUG_LVL  
+                 , HGA.GAUG_USE_FLAG  
+                 , HGA.DIV_RULE_TYPE  
+                 , HGA.GAUG_KIND_CD  
+                 , HGA.PWR_TYPE  
+                 , HGA.PWR_SEL_CHARGE  
+                 , HGA.PWR_CNTR_QTY  
+                 , HGA.PWR_REVER_RATE 
+                 , HGA.GAUG_MULTIPLE
+                 , HGA.USE_EQUIP_QTY 
+                 , HGA.WWTR_CHARGE_YN
+                 , HGA.WTR_CAL_SIZE  
+                 , HGA.VALID_S_DT  
+                 , HGA.VALID_E_DT  
+                 , HGA.FILE_PATH  
+                 , ''    AS FILE_PATH_REAL
+                 , HGA.FILE_PATH    AS OLD_FILE_PATH
+                 , HGA.STR_CD  
+                 , HGA.INST_STR_CD  
+                 , HGA.HIGH_GAUG_ID 
+                 , 'N' AS   FILE_GB
+              FROM MSS.MR_GAUGMST   HGA
+             WHERE HGA.GAUG_ID LIKE ?||'%'
+               AND HGA.GAUG_TYPE = ?
+               AND HGA.STR_CD = ?
+             ORDER BY HGA.GAUG_ID ASC
+        ]]>
+    </query>
+    
+    <query name="INS_MR_GAUGMST">
+       <![CDATA[   
+			INSERT INTO MSS.MR_GAUGMST(
+			                           GAUG_ID
+			                         , GAUG_TYPE        
+                                     , INST_PLC         
+                                     , GAUG_LVL         
+                                     , GAUG_USE_FLAG    
+                                     , DIV_RULE_TYPE    
+                                     , GAUG_KIND_CD     
+                                     , PWR_TYPE         
+                                     , PWR_SEL_CHARGE   
+                                     , PWR_CNTR_QTY     
+                                     , GAUG_MULTIPLE    
+                                     , WWTR_CHARGE_YN   
+                                     , WTR_CAL_SIZE     
+                                     , VALID_S_DT       
+                                     , VALID_E_DT       
+                                     , FILE_PATH        
+                                     , STR_CD           
+                                     , INST_STR_CD      
+                                     , HIGH_GAUG_ID     
+                                     , MOD_ID           
+                                     , MOD_DATE 
+                                       )        
+			                   VALUES ((SELECT LPAD( NVL(MAX(TO_NUMBER( GAUG_ID )), 10000) + 1 ,  5, '0')
+                                          FROM MSS.MR_GAUGMST
+                                       )  
+			                         , ? 
+			                         , ?
+			                         , ?
+			                         , ?  
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , ?
+			                         , SYSDATE
+			                           )
+        ]]>
+    </query>
+    
+    <query name="UPD_MR_GAUGMST">
+       <![CDATA[   
+			UPDATE MSS.MR_GAUGMST
+			   SET GAUG_TYPE        = ? 
+			     , INST_PLC         = ?
+			     , GAUG_LVL         = ?
+			     , GAUG_USE_FLAG    = ?  
+			     , DIV_RULE_TYPE    = ?
+			     , GAUG_KIND_CD     = ?
+			     , PWR_TYPE         = ?
+			     , PWR_SEL_CHARGE   = ?
+			     , PWR_CNTR_QTY     = ?
+			     , GAUG_MULTIPLE    = ?
+			     , WWTR_CHARGE_YN   = ?
+			     , WTR_CAL_SIZE     = ?
+			     , VALID_S_DT       = ?
+			     , VALID_E_DT       = ?
+			     , FILE_PATH        = ?
+			     , STR_CD           = ?
+			     , INST_STR_CD      = ?
+			     , HIGH_GAUG_ID     = ?
+			     , MOD_ID           = ?
+			     , MOD_DATE         = SYSDATE
+			 WHERE GAUG_ID          = ?
+        ]]>
+    </query>
+    
+    <gauce name="H_SEL_MR_GAUGMST_DTL">
+        <column colName="GAUG_ID"         colType="TB_STRING"   size="20"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="STR_CD"          colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="INST_PLC"        colType="TB_STRING"   size="200" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="INST_STR_CD"     colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="GAUG_TYPE"       colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="GAUG_LVL"        colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="HIGH_GAUG_ID"    colType="TB_STRING"   size="20"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="GAUG_USE_FLAG"   colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VALID_S_DT"      colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VALID_E_DT"      colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MR_GAUGMST_DTL">
+       <![CDATA[   
+            SELECT HGA.GAUG_ID  
+                 , HGA.STR_CD  
+                 , HGA.INST_PLC  
+                 , HGA.INST_STR_CD  
+                 , HGA.GAUG_TYPE  
+                 , HGA.GAUG_LVL  
+                 , HGA.HIGH_GAUG_ID  
+                 , HGA.GAUG_USE_FLAG  
+                 , HGA.VALID_S_DT  
+                 , HGA.VALID_E_DT  
+              FROM MSS.MR_GAUGMST   HGA
+             WHERE HGA.HIGH_GAUG_ID = ?
+               AND HGA.STR_CD = ?
+             ORDER BY HGA.GAUG_ID ASC
+        ]]>
+    </query>
+    
+    <query name="UPD_MR_GAUGMST_DTL">
+       <![CDATA[   
+			UPDATE MSS.MR_GAUGMST
+			   SET HIGH_GAUG_ID     = ?
+                 , MOD_ID           = ?
+                 , MOD_DATE         = SYSDATE
+			 WHERE GAUG_ID          = ?
+        ]]>
+    </query>
+</service>

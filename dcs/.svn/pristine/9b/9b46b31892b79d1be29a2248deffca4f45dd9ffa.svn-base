@@ -1,0 +1,647 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 윤지영
+ * 회 사 명 : 
+ * 작 성 일 : 2016.12.01
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 영수증사후적립 (일괄)
+ --> 
+<service name="/dmbo642.do">
+
+	<!-- 영수증사후적립(일괄) -->
+    <gauce name="H_CUST"> 
+        <column colName="FLAG"         colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"      colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"    colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH1"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH2"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH3"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="MOBILE_PH1"   colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"   colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"   colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"        colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_ADDR"    colType="TB_STRING"  size="406" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT"        colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OCCURS_POINT" colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_POINT"    colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL1"       colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL2"       colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRADE_NAME"   colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH1"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH2"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH3"     colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"      colType="TB_STRING"  size="64"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_STAT_CD" colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CTYPE_NAME"   colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 회원정보 조회 (회원미등록)-->
+    <query name="SEL_CUSTINFO">        
+        <![CDATA[
+			SELECT '' AS FLAG
+                 , '*********' AS CUST_ID
+                 , '미등록' AS CUST_NAME
+                 , '' AS HOME_PH1
+                 , '' AS HOME_PH2
+                 , '' AS HOME_PH3
+                 , '' AS MOBILE_PH1
+                 , '' AS MOBILE_PH2
+                 , '' AS MOBILE_PH3
+                 , '' AS SS_NO
+                 , '' AS HOME_ADDR
+                 , C.ADD_POINT
+                 , 0 AS OCCURS_POINT
+                 , C.ADD_POINT AS SUM_POINT
+                 , '' AS EMAIL1
+                 , '' AS EMAIL2
+                 , '미등록' AS GRADE_NAME
+                 , '' AS OFFI_PH1
+                 , '' AS OFFI_PH2
+                 , '' AS OFFI_PH3
+                 , ? AS CARD_NO
+                 , '0' AS  CARD_STAT_CD
+                 , '미등록' CTYPE_NAME --2012.05.03 강진 유형추가
+              FROM DCS.DM_CARD A
+                 , DCS.DO_CD_POINT C
+             WHERE A.CARD_NO = C.CARD_NO(+)
+               AND A.CARD_STAT_CD ='0'
+        ]]>        
+    </query> 
+    
+    <!-- 회원정보 조회 (회원등록)-->
+    <query name="SEL_CUSTINFO_OLD">        
+        <![CDATA[
+            SELECT '' AS FLAG
+                 , A.CUST_ID
+                 , A.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC',A.HOME_PH1) AS HOME_PH1
+                 , DCS.SC_Crypto_FUN('DEC',A.HOME_PH2) AS HOME_PH2
+                 , DCS.SC_Crypto_FUN('DEC',A.HOME_PH3) AS HOME_PH3
+                 , DCS.SC_Crypto_FUN('DEC',A.MOBILE_PH1) AS MOBILE_PH1
+                 , DCS.SC_Crypto_FUN('DEC',A.MOBILE_PH2) AS MOBILE_PH2
+                 , DCS.SC_Crypto_FUN('DEC',A.MOBILE_PH3) AS MOBILE_PH3
+                 , A.SS_NO
+                 , DECODE(NULL, '', A.HOME_ZIP_CD1 ||'-'|| A.HOME_ZIP_CD2 ||' '|| A.HOME_ADDR1 ||' '|| A.HOME_ADDR2) HOME_ADDR
+                 , C.POINT
+                 , C.OCCURS_POINT
+                 , C.POINT + C.OCCURS_POINT AS SUM_POINT
+                 , DCS.SC_Crypto_FUN('DEC',A.EMAIL1) AS EMAIL1
+                 , DCS.SC_Crypto_FUN('DEC',A.EMAIL2) AS EMAIL2
+                 , COM.FN_GET_COMM_NAME('D', 'D011', (SELECT DECODE(COUNT(X.CUST_GRADE),0,'N', MAX(X.CUST_GRADE)) CUST_GRADE
+                       FROM DCS.V_DO_CUST_GRADE_CURR X
+                      WHERE X.BRCH_ID  = A.ENTR_PATH_CD
+                        AND X.CUST_ID  = A.CUST_ID
+                   )) GRADE_NAME
+                 , A.OFFI_PH1
+                 , A.OFFI_PH2
+                 , A.OFFI_PH3 
+                 , DCS.SC_Crypto_FUN('DEC',(SELECT MAX(CARD_NO) KEEP(DENSE_RANK FIRST ORDER BY MOD_DATE DESC) AS CARD_NO
+                                                FROM DCS.DM_CARD
+                                               WHERE CUST_ID      = A.CUST_ID
+                                                 AND CARD_STAT_CD = '0')) AS CARD_NO 
+                 , (SELECT MAX(D.CARD_STAT_CD)
+                      FROM DCS.DM_CARD  D
+                     WHERE D.CUST_ID = A.CUST_ID
+                       AND D.CARD_NO = CARD_NO
+                       AND D.CARD_STAT_CD = '0') CARD_STAT_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D115', (SELECT MAX(Z.CUST_TYPE)
+                                              FROM DCS.V_DO_CUST_TYPE_CURR Z
+                                             WHERE Z.CUST_ID = A.CUST_ID
+                                               AND Z.BRCH_ID = A.ENTR_PATH_CD
+                                            )) CTYPE_NAME
+                 
+              FROM DCS.DM_CUSTOMER A
+                 , DCS.DO_CUST_TPOINT C
+             WHERE 1=1
+               AND A.CUST_ID = C.CUST_ID
+               AND A.COMP_PERS_FLAG = ?
+               --AND B.BRCH_ID        = X
+               AND A.CUST_ID = ( 
+                                 SELECT UNIQUE A.CUST_ID 
+                                   FROM DCS.DM_CARD A
+                                      , DCS.DM_CUSTOMER B
+                                  WHERE A.CUST_ID  =  B.CUST_ID
+                   
+        ]]>        
+    </query> 
+        
+    <query name="SEL_CUSTINFO_SS_NO">
+        <![CDATA[
+        	AND B.SS_NO   = DCS.SC_Crypto_FUN('ENC', ?)
+         ]]>
+    </query>
+    <query name="SEL_CUSTINFO_CUST_ID">
+        <![CDATA[
+        	AND A.CUST_ID = ?
+         ]]>
+    </query>
+    <query name="SEL_CUSTINFO_CARD_NO">
+        <![CDATA[
+        	AND A.CARD_NO = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+         ]]>
+    </query>
+    
+    <query name="SEL_CUSTINFO_ORDER">
+        <![CDATA[        	 
+                       )    
+         ]]>
+    </query>   
+
+    <!-- 회원정보 조회 법인/단체 (사용안함)-->
+    <query name="SEL_CUSTINFO_COM">        
+        <![CDATA[
+            SELECT '' AS FLAG
+                 , A.CUST_ID
+                 , A.CUST_NAME
+                 , A.HOME_PH1
+                 , A.HOME_PH2
+                 , A.HOME_PH3
+                 , A.MOBILE_PH1 
+                 , A.MOBILE_PH2 
+                 , A.MOBILE_PH3
+                 , A.SS_NO
+                 , DECODE(NULL, '', A.HOME_ZIP_CD1 ||'-'|| A.HOME_ZIP_CD2 ||' '|| A.HOME_ADDR1 ||' '|| A.HOME_ADDR2) HOME_ADDR
+                 , C.POINT
+                 , C.OCCURS_POINT
+                 , C.POINT + C.OCCURS_POINT AS SUM_POINT
+                 , A.EMAIL1
+                 , A.EMAIL2
+                 , COM.FN_GET_COMM_NAME('D', 'D011', B.CUST_GRADE) GRADE_NAME
+                 , A.OFFI_PH1
+                 , A.OFFI_PH2
+                 , A.OFFI_PH3
+                 , (SELECT MAX(CARD_NO) KEEP(DENSE_RANK FIRST ORDER BY MOD_DATE DESC) AS CARD_NO 
+                      FROM DCS.DM_CARD 
+                     WHERE CUST_ID      = A.CUST_ID
+                       AND CARD_STAT_CD = '0') AS CARD_NO
+                 , D.CARD_STAT_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D115', E.CUST_TYPE) CTYPE_NAME --2012.05.03 강진 유형추가         
+              FROM DCS.DM_CUSTOMER A
+                 , DCS.DO_CUST_GRADE B
+                 , DCS.DO_CUST_TPOINT C
+                 , DCS.DM_CARD        D
+                 , DCS.DO_CUST_TYPE E
+             WHERE A.CUST_ID = B.CUST_ID
+               AND A.CUST_ID = C.CUST_ID
+               AND A.CUST_ID = D.CUST_ID
+			   AND A.CUST_ID = E.CUST_ID
+               AND B.BRCH_ID = E.BRCH_ID               
+               AND A.COMP_PERS_FLAG <> ?
+               AND B.BRCH_ID        =  ? 
+               AND A.CUST_ID = ( 
+                                 SELECT UNIQUE A.CUST_ID 
+                                   FROM DCS.DM_CARD A
+                                      , DCS.DM_CUSTOMER B
+                                  WHERE A.CUST_ID  =  B.CUST_ID
+                  
+        ]]>        
+    </query>    
+    
+	<gauce name="H_MASTER">   
+        <column colName="BRCH_ID"        colType="TB_STRING"   size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"   size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"   size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"        colType="TB_STRING"   size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_FLAG"      colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="TRAN_TYPE"      colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_TOT_AMT"   colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 영수증내역 마스터-->
+    <query name="SEL_MASTER">
+	    <![CDATA[
+	        SELECT B.BRCH_ID --가맹점번호
+	             , A.STR_CD  --점코드
+			     , A.SALE_DT --매출일자 
+			     , A.POS_NO  --POS번호
+			     , A.TRAN_NO --거래번호
+			     , A.TRAN_FLAG --거래구분
+			     , A.TRAN_TYPE --거래형태
+			     , A.SALE_TOT_AMT --판매합계금액 
+			 FROM DPS.PS_TRHEADER A
+			     , DCS.DB_BRANCH B
+			WHERE A.STR_CD  = B.STR_CD
+			  AND A.STR_CD  = SUBSTR(?,  12, 2)
+			  AND A.SALE_DT = SUBSTR(?,  1 , 8)
+			  AND A.POS_NO  = SUBSTR(?,  14, 4)
+			  AND A.TRAN_NO = SUBSTR(?,  18, 5)
+			  AND B.BRCH_ID = ?
+			  AND A.TRAN_FLAG = '0' --거래구분(0:정상)
+	     ]]>
+    </query>
+    
+    <gauce name="H_DETAIL"> 
+        <column colName="FLAG"           colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_DT"        colType="TB_STRING"   size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"   size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_NO"        colType="TB_STRING"   size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"         colType="TB_DECIMAL"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRAN_FLAG"      colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM_CD"        colType="TB_STRING"   size="18"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ITEM_NAME"      colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PRC"       colType="TB_DECIMAL"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"       colType="TB_DECIMAL"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"       colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"      colType="TB_STRING"   size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"   colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_SALE_AMT"  colType="TB_DECIMAL"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 영수증내역 상세-->
+    <query name="SEL_DETAIL">
+    	<![CDATA[
+	        SELECT '' AS FLAG
+	             , A.STR_CD
+	             , A.SALE_DT
+	             , A.POS_NO 
+	             , A.TRAN_NO
+	             , B.SEQ_NO
+	             , A.TRAN_FLAG
+	             , B.ITEM_CD
+	             , B.ITEM_NAME
+	             , B.SALE_PRC
+	             , DECODE(TRAN_FLAG, 0, 1, -1) * B.SALE_QTY SALE_QTY
+	             , DECODE(TRAN_FLAG, 0, 1, -1) * B.SALE_AMT SALE_AMT
+	             /*DPS.PR_PSPUMBUNCUST 프로시져를 호출 하기 위한 필요 데이터 start*/ 
+	             , B.PUMBUN_CD
+	             , (NVL(B.SALE_AMT,0) - (NVL(B.BOTTLE_PRC,0) * NVL(B.SALE_QTY,0))) +  ((NVL(B.REDU_PRC,0) + NVL(B.DC_PRC,0)) * NVL(B.SALE_QTY,0)) AS TOT_SALE_AMT -- 총매출액((판매금액 - 공병금액) + 할인액 + 에누리액
+	             , (NVL(B.SALE_AMT,0) - (NVL(B.BOTTLE_PRC,0) * NVL(B.SALE_QTY,0))) +  (NVL(B.DC_PRC,0) * NVL(B.SALE_QTY,0)) AS NORM_SALE_AMT                       -- 매출액((판매금액 - 공병금액) + 에누리액
+	             /*DPS.PR_PSPUMBUNCUST 프로시져를 호출 하기 위한 필요 데이터 end*/
+	          FROM DPS.PS_TRHEADER A
+	             , DPS.PS_TRITEM B
+	             , DCS.DB_BRANCH C
+	         WHERE A.STR_CD  = B.STR_CD
+	           AND A.SALE_DT = B.SALE_DT
+	           AND A.POS_NO  = B.POS_NO
+	           AND A.TRAN_NO = B.TRAN_NO
+	           AND A.STR_CD  = C.STR_CD
+	           AND A.STR_CD  = SUBSTR(?, 12, 2)
+	           AND A.SALE_DT = SUBSTR(?,  1, 8)
+	           AND A.POS_NO  = SUBSTR(?, 14, 4)
+	           AND A.TRAN_NO = SUBSTR(?, 18, 5) 
+	           AND C.BRCH_ID = ?
+		]]>
+    </query> 
+    
+   <!-- 영수증 거래상세 결제내역 조회  -->
+    <gauce name="H_DETAIL_H"> 
+        <column colName="FLAG"              colType="TB_STRING"   size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_ID"            colType="TB_STRING"   size="200"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_NM"            colType="TB_STRING"   size="200"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_VAL_DISP"      colType="TB_STRING"   size="200"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_VAL"           colType="TB_DECIMAL"  size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_VAL2"          colType="TB_DECIMAL"  size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_VAL3"          colType="TB_STRING"   size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COL_VAL4"          colType="TB_STRING"   size="9"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <query name="SEL_DETAIL_H">
+    <![CDATA[
+      	WITH TEMP AS
+           (SELECT A.STR_CD
+                 , A.SALE_DT
+                 , A.POS_NO
+                 , A.TRAN_NO
+                 , A.PAY_TYPE
+                 --, (CASE WHEN A.PAY_TYPE IN ('61', '62', '63') THEN '00' ELSE A.PAY_TYPE END) AS PAY_TYPE
+                 , SUM(A.PAY_AMT) PAY_AMT
+                 , A.PAY_DATA_06 AS CCOMP_CD
+            FROM DPS.PS_TRPAID A
+            WHERE A.STR_CD  = SUBSTR(?,  12, 2)
+              AND A.SALE_DT = SUBSTR(?,  1 , 8)
+              AND A.POS_NO  = SUBSTR(?,  14, 4)
+              AND A.TRAN_NO = SUBSTR(?,  18, 5)
+            GROUP BY STR_CD,SALE_DT,POS_NO,TRAN_NO,PAY_TYPE,A.PAY_DATA_06 )
+           SELECT ''                                                  AS  FLAG, 'SALE_DT' AS COL_ID
+                , '거래일자'                                          AS COL_NM
+                , TO_CHAR(TO_DATE(SALE_DT, 'YYYYMMDD'), 'YYYY/MM/DD')     AS COL_VAL_DISP
+                , 0                                                   AS COL_VAL
+                , 0                                                   AS COL_VAL2
+                , ''                                                  AS COL_VAL3 
+                , ''                                                  AS COL_VAL4 
+             FROM TEMP WHERE ROWNUM = 1
+        UNION ALL
+            SELECT ''
+                 , 'STR_CD'
+                 , '점포코드'
+                 , STR_CD
+                 , 0
+                 , 0
+                 , ''
+                 , '' 
+              FROM TEMP 
+             WHERE ROWNUM = 1
+        UNION ALL
+            SELECT ''
+                 , 'POS_NO'
+                 ,  'POS번호'
+                 ,  POS_NO
+                 ,  0
+                 , 0
+                 , ''
+                 , '' 
+              FROM TEMP 
+             WHERE ROWNUM = 1
+        UNION ALL
+            SELECT ''
+                 , 'TRAN_NO'
+                 , '거래번호'
+                 , TRAN_NO
+                 , 0
+                 , 0
+                 , ''
+                 , '' 
+              FROM TEMP WHERE ROWNUM = 1
+         UNION ALL
+            SELECT '', 'PAY_AMT'
+                 , case when pay_type = '11' 
+                   then COM.FN_GET_COMM_NAME('D', 'D072', PAY_TYPE) || '(' || COM.FN_GET_COMM_NAME('D', 'D061', ccomp_cd)|| ')'
+                        -- 제휴카드면 카드발급사를 추가로 표시함.
+                        -- D010 : 결재수단코드/명,  D016 : 제휴카드사코드.명
+                   else COM.FN_GET_COMM_NAME('D', 'D072', PAY_TYPE) end  
+           --      , (SELECT A.COMM_NAME1
+           --           FROM COM.TC_COMMCODE A
+           --          WHERE A.SYS_PART = 'D'
+           --            AND A.COMM_PART = 'D072'
+           --            AND A.COMM_CODE = PAY_TYPE)
+                 , TO_CHAR(PAY_AMT, 'FM999,999,999'), 0, PAY_AMT, PAY_TYPE, ccomp_cd FROM TEMP
+        UNION ALL
+            SELECT ''
+                 , 'PAY_AMT_SUM'
+                 , '합계금액'
+                 , TO_CHAR(SUM(PAY_AMT), 'FM999,999,999')
+                 , NVL(SUM(PAY_AMT),0)
+                 , 0
+                 , ''
+                 , '' 
+             FROM TEMP 
+           HAVING DECODE(NVL(SUM(PAY_AMT),0), 0, 0, 1) = 1
+        UNION ALL
+            SELECT ''
+                 , 'OCC_POINT'
+                 , '적립된 포인트'
+                 , TO_CHAR(SUM(NVL(A.ADD_POINT,0)), 'FM999,999,999')
+                 , SUM(NVL(A.ADD_POINT,0))
+                 , 0
+                 , ''
+                 , ''
+        FROM 
+        (
+           SELECT NVL(OCC_POINT,0) ADD_POINT
+             FROM DPS.PS_TRPOINT
+            WHERE STR_CD = SUBSTR(?, 1, 2)
+              --원거래 영수증 번호(19) =점(2)+일자(8)+POS번호(4)+거래번호(5)
+              AND ORG_TRAN_NO = ?
+            UNION ALL
+            SELECT NVL(Y.ADD_POINT,0) ADD_POINT
+              FROM DPS.PS_TRPOINT X, TEMP A, DCS.DO_RECP_ADD Y
+             WHERE X.STR_CD(+)  = A.STR_CD
+               AND X.SALE_DT(+) = A.SALE_DT
+               AND X.POS_NO(+)  = A.POS_NO
+               AND X.TRAN_NO(+) = A.TRAN_NO
+               AND X.STR_CD     = Y.STR_CD(+)
+               AND X.SALE_DT    = Y.SALE_DT(+)
+               AND X.POS_NO     = Y.POS_NO(+)
+               AND X.TRAN_NO    = Y.TRAN_NO(+)
+               AND ROWNUM = 1
+        ) A
+    ]]>
+    </query>
+     
+    <!-- 영수증 반품여부 체크  -->
+    <query name="SEL_TRHEADER_CHK">
+        <![CDATA[    
+            SELECT COUNT(TRAN_NO) AS CNT
+              FROM DPS.PS_TRHEADER 
+             WHERE TRAN_FLAG = '1' --거래형태(1:반품) 
+               AND STR_CD 	 = SUBSTR(? ,  12, 2)
+               AND O_SALE_DT = SUBSTR(? ,  1 , 8)
+               AND O_POS_NO  = SUBSTR(? ,  14, 4)
+               AND O_TRAN_NO = SUBSTR(? ,  18, 5)
+         ]]>
+    </query>
+    
+    <!-- 영수증 적립 여부 체크  -->
+    <query name="SEL_RECP_ADD_CHK">
+        <![CDATA[    
+			SELECT COUNT(TRAN_NO) AS CNT 
+			  FROM DCS.DO_RECP_ADD
+			 WHERE STR_CD  = SUBSTR(? ,  12, 2)
+			   AND SALE_DT = SUBSTR(? ,  1 , 8)
+			   AND POS_NO  = SUBSTR(? ,  14, 4)
+			   AND TRAN_NO = SUBSTR(? ,  18, 5) 
+         ]]>
+    </query>
+        
+    <!-- 적립 여부 체크  -->
+    <query name="SEL_RECP_CNT">        
+        <![CDATA[
+	         SELECT SUM(CNT) AS REC_CNT
+	           FROM (SELECT COUNT(STR_CD) CNT 
+	                  FROM DPS.PS_TRPOINT
+	                 WHERE STR_CD  = ?
+	                   AND SALE_DT = ?
+	                   AND POS_NO  = ?
+	                   AND TRAN_NO = ?
+	                   AND RSLT_CD = '0000'
+	                UNION ALL
+	                SELECT COUNT(STR_CD) CNT 
+	                  FROM DCS.DO_RECP_ADD
+	                 WHERE STR_CD  = ?
+	                   AND SALE_DT = ?
+	                   AND POS_NO  = ?
+	                   AND TRAN_NO = ?)
+        ]]>        
+    </query>
+    
+    <!-- 영수증사후적립 저장(사용안함)  -->
+    <query name="INS_RECP">
+     <![CDATA[
+          INSERT INTO DCS.DO_RECP_ADD (
+                      SALE_DT     
+					, STR_CD      
+					, POS_NO      
+					, TRAN_NO     
+					, CARD_NO     
+					, BRCH_ID     
+					, RECP_NO     
+					, RECP_AMT    
+					, ADD_POINT   
+					, BASE_APOINT 
+					, CAM_APOINT  
+					, CAM_ID      
+					, EVENT_APOINT
+					, EVENT_CD    
+					, ETC_APOINT  
+					, PROC_FLAG   
+					, REG_DATE    
+					, REG_ID 
+                    )
+              VALUES ( 
+                      ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+					, ?
+                    , SYSDATE /* REG_DATE */
+                    , ? 
+                   )
+     ]]>
+    </query>
+    
+    <!-- 영수증사후적립 저장(사용안함)  -->
+    <query name="NEXT_POINT_SEQ">        
+        <![CDATA[
+         SELECT MAX(a.SEQ_NO) as SEQ_NO
+          FROM DPS.PS_TRPOINT a
+         WHERE a.STR_CD  = ?
+           AND a.SALE_DT = ?
+           AND a.POS_NO  = ?
+           AND a.TRAN_NO = ?
+        ]]>        
+    </query>
+    
+    <!-- 영수증사후적립 저장(사용안함)  -->
+    <query name="INS_POINT">
+     <![CDATA[
+          INSERT INTO DPS.PS_TRPOINT (
+                          STR_CD
+                        , TRAN_NO
+                        , SALE_DT
+                        , POS_NO
+                        , SEQ_NO
+                        , POINT_TYPE
+                        , PAY_TYPE_01
+                        , PAY_DTL_01
+                        , TRG_AMT_01
+                        , PAY_TYPE_02
+                        , PAY_DTL_02
+                        , TRG_AMT_02
+                        , PAY_TYPE_03
+                        , PAY_DTL_03
+                        , TRG_AMT_03
+                        , PAY_TYPE_04
+                        , PAY_DTL_04
+                        , TRG_AMT_04
+                        , PAY_TYPE_05
+                        , PAY_DTL_05
+                        , TRG_AMT_05
+                        , PAY_TYPE_06
+                        , PAY_DTL_06
+                        , TRG_AMT_06
+                        , PAY_TYPE_07
+                        , PAY_DTL_07
+                        , TRG_AMT_07
+                        , PAY_TYPE_08
+                        , PAY_DTL_08
+                        , TRG_AMT_08
+                        , PAY_CNT
+                        , PAY_TOT_AMT
+                        , ORG_TRAN_NO
+                        , ORG_APPR_NO
+                        , IN_TYPE
+                        , MBSH_NO
+                        , EXE_TYPE
+                        , APPR_NO
+                        , RSLT_CD
+                        , RSLT_MSG
+                        , CUST_NM
+                        , CUST_GRADE
+                        , ACML_POINT
+                        , OCC_POINT
+                        , BASE_APOINT
+                        , CAM_APOINT
+                        , EVENT_APOINT
+                        , ETC_APOINT
+                        , MSG_01
+                        , MSG_02
+                        , REG_DATE
+                        )
+                        VALUES ( 
+                          ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , SYSDATE /* REG_DATE */
+                        )
+     ]]>
+    </query>
+    
+    <!-- Pop-Up  조회 SQL (사용안함) -->
+    <query name="SEL_STR_CD">
+        <![CDATA[
+            SELECT A.BRCH_ID
+                 , A.BRCH_NAME 
+                 , A.STR_CD
+                 , B.STR_NAME
+                 , A.COMP_NO 
+                 , A.REP_BRAND_NM          
+              FROM DCS.DB_BRANCH A, DPS.PC_STRMST B
+             WHERE A.STR_CD = B.STR_CD
+               AND A.BRCH_ID = ?              
+             ORDER BY A.BRCH_ID
+        ]]>
+    </query> 
+    
+</service>

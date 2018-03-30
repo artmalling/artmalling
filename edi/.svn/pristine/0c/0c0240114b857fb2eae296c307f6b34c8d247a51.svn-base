@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이윤희
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.20
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/ejob901.ej">
+
+	<!-- 협력사 EDI 구인리스트조회 총 카운트 -->
+    <query name="SEL_JOB_OFFER_COUNT">
+        <![CDATA[
+        
+        SELECT
+        		COUNT(*) AS CNT
+        	FROM
+	        	(
+		        	SELECT
+		        			STR_CD,
+		        			STR_NM,
+		        			VEN_CD,
+		        			VEN_NM,
+		        			YM,
+		        			SEQ,
+		        			TITLE,
+		        			BRAND,
+		        			WANTED_JOB,
+		        			END_DT,
+		        			PERSON_CHARGE,
+		        			TEL_1,
+		        			TEL_2,
+		        			TEL_3,
+		        			SUBMIT_DOC,
+		        			CONTENT,
+		        			HITS, 
+		        			REG_DATE
+		        		FROM
+		        			(        
+					            SELECT                          
+					            		A.STR_CD, 
+					            		(SELECT STR_NAME FROM DPS.PC_STRMST WHERE A.STR_CD = STR_CD) AS STR_NM,
+					                    A.VEN_CD, 
+					                    (SELECT VEN_NAME FROM DPS.PC_STRVENMST WHERE VEN_CD = A.VEN_CD AND STR_CD = A.STR_CD) AS VEN_NM,
+							            A.YM,
+							            A.SEQ,
+							            A.TITLE,
+							            A.BRAND,
+							            A.WANTED_JOB,
+							            A.END_DT,
+							            A.PERSON_CHARGE,
+							            A.TEL_1,
+					        			A.TEL_2,
+					        			A.TEL_3,
+							            A.SUBMIT_DOC,
+							            A.CONTENT,
+							            A.HITS,
+							            A.REG_DATE
+					           		FROM                            
+					            		USS.OC_JOB_OFFER@DCP_LINK A
+					            )
+					       WHERE 1 = 1
+					       AND STR_CD IN (SELECT STR_CD FROM DPS.PC_STRMST WHERE STR_NAME LIKE ?)
+				)
+			WHERE 1 = 1
+					       
+        ]]>        
+    </query>
+    
+    <!-- 협력사 EDI 구인리스트조회  TOP : use PAGING-->
+    <query name="SEL_JOB_OFFER_TOP">
+        <![CDATA[
+        SELECT
+        		*
+        	FROM
+        		(
+     ]]>        
+    </query>
+    
+    <!-- 협력사 EDI 구인리스트조회  BOTTOM : use PAGING-->
+    <query name="SEL_JOB_OFFER_END">
+        <![CDATA[
+        ) WHERE RN BETWEEN ? AND ?
+     ]]>        
+    </query>
+    
+    <!-- 협력사 EDI 구인리스트조회 -->
+    <query name="SEL_JOB_OFFER">
+        <![CDATA[
+	        	SELECT
+	        			ROWNUM RN
+	        			,STR_CD
+	        			,STR_NM
+	        			,VEN_CD
+	        			,VEN_NM
+	        			,YM
+	        			,SEQ
+	        			,TITLE
+	        			,BRAND
+	        			,WANTED_JOB
+	        			,END_DT
+	        			,PERSON_CHARGE
+	        			,TEL_1
+	        			,TEL_2
+	        			,TEL_3
+	        			,SUBMIT_DOC
+	        			,CONTENT
+	        			,HITS
+	        			,TO_CHAR(REG_DATE,'YYYY-MM-DD') AS REG_DATE
+	        			,?					
+	        			,?				
+	        		FROM
+	        			(        
+				            SELECT                          
+				            		A.STR_CD 
+				            		,(SELECT STR_NAME FROM DPS.PC_STRMST WHERE A.STR_CD = STR_CD) AS STR_NM
+				                    ,A.VEN_CD 
+				                    ,(SELECT VEN_NAME FROM DPS.PC_STRVENMST WHERE VEN_CD = A.VEN_CD AND STR_CD = A.STR_CD) AS VEN_NM
+						            ,A.YM
+						            ,A.SEQ
+						            ,A.TITLE
+						            ,A.BRAND
+						            ,A.WANTED_JOB
+						            ,A.END_DT
+						            ,A.PERSON_CHARGE
+						            ,A.TEL_1
+		        					,A.TEL_2
+		        					,A.TEL_3
+						            ,A.SUBMIT_DOC
+						            ,A.CONTENT
+						            ,A.HITS
+						            ,A.REG_DATE
+				           		FROM                            
+				            		USS.OC_JOB_OFFER@DCP_LINK A
+				            		ORDER BY A.YM||A.SEQ ASC
+				            )
+				       WHERE 1 = 1
+				       AND STR_CD IN (SELECT STR_CD FROM DPS.PC_STRMST WHERE STR_NAME LIKE ?)
+				   
+        ]]>        
+    </query>
+    
+	    <query name="SEL_JOB_OFFER_SDATE">
+	        <![CDATA[
+				       AND END_DT >= ?
+	        ]]>        
+	    </query>
+	    
+	    <query name="SEL_JOB_OFFER_EDATE">
+	        <![CDATA[
+				       AND END_DT <= ?
+	        ]]>        
+	    </query>
+	    <query name="SEL_JOB_OFFER_STRNM">
+	        <![CDATA[
+				       AND STR_CD IN (SELECT STR_CD FROM DPS.PC_STRMST WHERE STR_NAME LIKE ?)
+	        ]]>        
+	    </query>
+	    <query name="SEL_JOB_OFFER_VENCD">
+	        <![CDATA[
+				       AND VEN_CD LIKE ?
+	        ]]>        
+	    </query>
+	    <query name="SEL_JOB_OFFER_VENNM">
+	        <![CDATA[
+				       AND VEN_CD IN (SELECT VEN_CD FROM DPS.PC_STRVENMST WHERE VEN_NAME LIKE ?)
+	        ]]>        
+	    </query>
+	    <query name="SEL_JOB_OFFER_TITLE">
+	        <![CDATA[
+				       AND TITLE LIKE ?
+	        ]]>        
+	    </query>
+	    
+	    <query name="SEL_JOB_OFFER_ORDERBY">
+	        <![CDATA[
+				       ORDER BY ROWNUM
+	        ]]>        
+	    </query>
+	    
+	    
+	    
+	    <!-- //협력사 EDI 구인리스트 상세 조회수 증가 -->
+    <query name="UP_JOB_OFFER_HIT">
+        <![CDATA[         
+        UPDATE 
+        		USS.OC_JOB_OFFER@DCP_LINK
+        	SET
+        		HITS = HITS + 1
+        	WHERE
+            	STR_CD 		= ?
+            	AND VEN_CD 	= ?
+            	AND YM		= ?
+            	AND	SEQ 	= ?
+            								
+        ]]>        
+    </query>
+    
+	    
+	    
+	    
+	    
+    <!-- //협력사 EDI 구인리스트 상세 조회 -->
+    
+    <query name="SEL_JOB_OFFER_DETAIL">
+        <![CDATA[         
+        SELECT                          
+      				A.STR_CD 
+      				,(SELECT STR_NAME FROM DPS.PC_STRMST WHERE A.STR_CD = STR_CD) AS STR_NM
+                    ,A.VEN_CD 
+                    ,(SELECT VEN_NAME FROM DPS.PC_STRVENMST WHERE VEN_CD = A.VEN_CD AND STR_CD = A.STR_CD) AS VEN_NM
+		            ,A.YM
+		            ,A.SEQ
+		            ,A.TITLE
+		            ,A.BRAND
+		            ,A.WANTED_JOB
+		            ,A.END_DT
+		            ,A.PERSON_CHARGE
+		            ,A.TEL_1
+        			,A.TEL_2
+        			,A.TEL_3
+		            ,A.SUBMIT_DOC
+		            ,A.CONTENT
+		            ,A.HITS
+		            ,COM.FN_GET_USER_NAME(A.REG_ID) AS REG_NAME
+		            ,A.REG_DATE
+		            ,A.REG_ID
+            FROM                            
+					USS.OC_JOB_OFFER@DCP_LINK A
+            WHERE
+            		A.STR_CD 		= ?
+            		AND A.VEN_CD 	= ?
+            		AND A.YM		= ?
+            		AND	SEQ 		= ?
+            								
+        ]]>        
+    </query>
+    
+    
+    
+    <query name="DEL_JOB_OFFER_LIST">
+        <![CDATA[         
+            DELETE 
+					FROM USS.OC_JOB_OFFER@DCP_LINK
+				WHERE 
+					SEQ 		= ?
+					AND STR_CD 	= ?
+					AND VEN_CD 	= ?
+					AND YM 		= ? 
+        ]]>        
+    </query>
+    
+    <query name="UP_JOB_OFFER">
+        <![CDATA[         
+            UPDATE USS.OC_JOB_OFFER@DCP_LINK
+                SET  
+                    TITLE  			= ?
+		            ,BRAND          = ?
+		            ,WANTED_JOB     = ?
+		            ,END_DT         = ?
+		            ,PERSON_CHARGE  = ?
+		            ,TEL_1          = ?
+		            ,TEL_2          = ?
+		            ,TEL_3          = ?
+		            ,SUBMIT_DOC     = ?
+		            ,CONTENT        = ?
+		            ,MOD_DATE		= sysdate
+		            ,MOD_ID			= ?
+		       WHERE SEQ            = ?
+		       		AND STR_CD		= ?
+		       		AND VEN_CD		= ?
+		       		AND YM			= ?
+        ]]>        
+    </query>
+    
+    <query name="IN_JOB_OFFER">
+        <![CDATA[         
+            INSERT INTO	USS.OC_JOB_OFFER@DCP_LINK 
+            		(
+            		STR_CD
+                    ,VEN_CD
+		            ,YM
+		            ,SEQ
+		            ,TITLE
+		            ,BRAND
+		            ,WANTED_JOB
+		            ,END_DT
+		            ,PERSON_CHARGE
+		            ,TEL_1
+		            ,TEL_2
+		            ,TEL_3
+		            ,SUBMIT_DOC
+		            ,CONTENT
+		            ,REG_DATE
+		            ,REG_ID
+		            ,MOD_DATE
+		            ,MOD_ID)
+		        VALUES(
+		        	?
+		        	,?
+		        	,?
+		        	,USS.FN_GET_SEQ_OC_JOB_OFFER@DCP_LINK(?,?,?)
+		        	,?
+		        	,?
+		        	,?
+		        	,?
+		        	,?
+		        	,?
+		        	,?
+		        	,?
+		        	,?
+		        	,?
+		        	,sysdate
+		        	,?
+		        	,sysdate
+                    ,?)
+        ]]>        
+    </query>
+    
+    <query name="SEL_VENDOR">
+        <![CDATA[         
+            SELECT 
+            		A.STR_CD
+            		,(SELECT STR_NAME FROM DPS.PC_STRMST WHERE A.STR_CD = STR_CD) AS STR_NM
+            		,A.VEN_CD
+            		,A.VEN_NAME
+            		,A.VEN_SHORT_NAME
+            	FROM
+            		DPS.PC_STRVENMST A
+            	WHERE
+            		STR_CD IN (SELECT STR_CD FROM DPS.PC_STRMST WHERE STR_NAME LIKE ?) 
+            		AND VEN_CD LIKE ?
+            		AND (VEN_NAME LIKE ? OR VEN_NAME LIKE ? )
+            	ORDER BY STR_CD, VEN_NAME ASC
+        ]]>        
+    </query>
+    
+</service>

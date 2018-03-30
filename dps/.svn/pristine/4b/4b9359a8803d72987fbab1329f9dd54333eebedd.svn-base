@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal420.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="ETHEM_CD"                colType="TB_STRING"      size="4"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_THME_NAME"         colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"                colType="TB_STRING"      size="11"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"              colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"              colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"              colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_CD"          colType="TB_STRING"      size="4"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_PLACE_NAME"        colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AVG_AMT"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_RATE"               colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT_DANGA"          colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_EVENTTHEM">        
+        <![CDATA[               
+            SELECT A.ETHEM_CD
+                 , A.EVENT_THME_NAME
+                 , A.EVENT_CD
+                 , A.EVENT_NAME
+                 , A.EVENT_S_DT
+                 , A.EVENT_E_DT
+                 , '' AS EVENT_PLACE_CD
+                 , '' AS EVENT_PLACE_NAME
+                 , SUM(A.TOT_SALE_AMT)                                         AS TOT_SALE_AMT
+                 , ROUND(SUM(A.TOT_SALE_AMT)/(TO_DATE(A.EVENT_E_DT,'YYYYMMDD') 
+                   - TO_DATE(A.EVENT_S_DT, 'YYYYMMDD') +1 ) ,0)                AS AVG_AMT
+                 , SUM(A.SALE_PROF_AMT)                                        AS PROF_AMT
+                 , (CASE WHEN SUM(A.NORM_SALE_AMT) = 0 
+                    THEN 0 
+                    ELSE SUM(A.SALE_PROF_AMT)/SUM(A.NORM_SALE_AMT)*100 
+                    END)                                                       AS PROFRATE
+                 , SUM(A.CUST_CNT)                                             AS CUST_CNT
+                 , (CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0 
+                    ELSE ROUND(SUM(A.TOT_SALE_AMT)/SUM(A.CUST_CNT),0) END)     AS CUST_CNT_DANGA
+              FROM (
+                    SELECT A.ETHEM_CD
+                         , C.EVENT_THME_NAME
+                         , A.EVENT_CD
+                         , B.EVENT_NAME
+                         , B.EVENT_S_DT
+                         , B.EVENT_E_DT
+                         , SUM(A.TOT_SALE_AMT)                                         AS TOT_SALE_AMT
+                         , SUM(A.SALE_PROF_AMT)                                        AS SALE_PROF_AMT
+                         ,  (CASE WHEN E.TAX_FLAG = '1' 
+                              THEN SUM(ROUND(A.NORM_SALE_AMT/1.1,0))
+                              ELSE SUM(A.NORM_SALE_AMT)
+                              END)                                                     AS NORM_SALE_AMT
+                         , SUM(A.CUST_CNT)                                             AS CUST_CNT
+                      FROM DPS.PS_DAYEVENT A
+                         , DPS.PC_EVTMST B
+                         , DPS.PC_EVTTHMEMST C
+                         , DPS.PC_PBNMST     E
+                    WHERE A.EVENT_CD        = B.EVENT_CD
+                       AND A.ETHEM_CD       = C.EVENT_THME_CD
+                       AND A.PUMBUN_CD      = E.PUMBUN_CD
+                       AND A.STR_CD         = ?
+                       AND A.ETHEM_CD       LIKE ?||?||?||'%'
+                       AND A.SALE_DT        >= ?
+                       AND A.SALE_DT        <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = A.STR_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )
+                     GROUP BY
+                           A.ETHEM_CD
+                         , C.EVENT_THME_NAME
+                         , A.EVENT_CD
+                         , B.EVENT_NAME
+                         , B.EVENT_S_DT
+                         , B.EVENT_E_DT
+                         , E.TAX_FLAG
+                  )   A
+            GROUP BY
+                  A.ETHEM_CD
+                , A.EVENT_THME_NAME
+                , A.EVENT_CD
+                , A.EVENT_NAME
+                , A.EVENT_S_DT
+                , A.EVENT_E_DT
+            ORDER BY
+                  A.ETHEM_CD
+                , A.EVENT_CD
+                , A.EVENT_S_DT
+        ]]>        
+    </query>
+    
+    
+    
+    <query name="SEL_SALE_EVENTTHEM_TEMP">        
+        <![CDATA[               
+            SELECT A.ETHEM_CD
+                 , A.EVENT_THME_NAME
+                 , A.EVENT_CD
+                 , A.EVENT_NAME
+                 , A.EVENT_S_DT
+                 , A.EVENT_E_DT
+                 , A.EVENT_PLACE_CD
+                 , A.EVENT_PLACE_NAME
+                 , SUM(A.TOT_SALE_AMT)                                         AS TOT_SALE_AMT
+                 , ROUND(SUM(A.TOT_SALE_AMT)/(TO_DATE(A.EVENT_E_DT,'YYYYMMDD') 
+                   - TO_DATE(A.EVENT_S_DT, 'YYYYMMDD') +1 ) ,0)                AS AVG_AMT
+                 , SUM(A.SALE_PROF_AMT)                                        AS PROF_AMT
+                 , (CASE WHEN SUM(A.NORM_SALE_AMT) = 0 
+                    THEN 0 
+                    ELSE SUM(A.SALE_PROF_AMT)/SUM(A.NORM_SALE_AMT)*100 
+                    END)                                                       AS PROFRATE
+                 , SUM(A.CUST_CNT)                                             AS CUST_CNT
+                 , (CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0 
+                    ELSE ROUND(SUM(A.TOT_SALE_AMT)/SUM(A.CUST_CNT),0) END)     AS CUST_CNT_DANGA
+              FROM (
+                    SELECT A.ETHEM_CD
+                         , C.EVENT_THME_NAME
+                         , A.EVENT_CD
+                         , B.EVENT_NAME
+                         , B.EVENT_S_DT
+                         , B.EVENT_E_DT
+                         , A.EVENT_PLACE_CD
+                         , D.EVENT_PLACE_NAME
+                         , SUM(A.TOT_SALE_AMT)                                         AS TOT_SALE_AMT
+                         , SUM(A.SALE_PROF_AMT)                                        AS SALE_PROF_AMT
+                         ,  (CASE WHEN E.TAX_FLAG = '1' 
+                              THEN SUM(ROUND(A.NORM_SALE_AMT/1.1,0))
+                              ELSE SUM(A.NORM_SALE_AMT)
+                              END)                                                     AS NORM_SALE_AMT
+                         , SUM(A.CUST_CNT)                                             AS CUST_CNT
+                      FROM DPS.PS_DAYEVENT A
+                         , DPS.PC_EVTMST B
+                         , DPS.PC_EVTTHMEMST C
+                         , DPS.PC_EVTPLACMST D
+                         , DPS.PC_PBNMST     E
+                    WHERE A.EVENT_CD        = B.EVENT_CD
+                       AND A.ETHEM_CD       = C.EVENT_THME_CD
+                       AND A.STR_CD         = D.STR_CD
+                       AND A.EVENT_PLACE_CD = D.EVENT_PLACE_CD
+                       AND A.PUMBUN_CD      = E.PUMBUN_CD
+                       AND A.STR_CD         = ?
+                       AND A.ETHEM_CD       LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT        >= ?
+                       AND A.SALE_DT        <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = A.STR_CD
+                                       AND MYORG.USER_ID     = ?
+                                  )
+                     GROUP BY
+                           A.ETHEM_CD
+                         , C.EVENT_THME_NAME
+                         , A.EVENT_CD
+                         , B.EVENT_NAME
+                         , B.EVENT_S_DT
+                         , B.EVENT_E_DT
+                         , A.EVENT_PLACE_CD
+                         , D.EVENT_PLACE_NAME
+                         , E.TAX_FLAG
+                  )   A
+            GROUP BY
+                  A.ETHEM_CD
+                , A.EVENT_THME_NAME
+                , A.EVENT_CD
+                , A.EVENT_NAME
+                , A.EVENT_S_DT
+                , A.EVENT_E_DT
+                , A.EVENT_PLACE_CD
+                , A.EVENT_PLACE_NAME
+            ORDER BY
+                  A.ETHEM_CD
+                , A.EVENT_CD
+                , A.EVENT_PLACE_CD
+                , A.EVENT_S_DT
+        ]]>        
+    </query>
+    
+    
+</service>

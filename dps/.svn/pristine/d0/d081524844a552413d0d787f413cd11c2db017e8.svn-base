@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 조형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  카드매입사의 입금예정일을 관리한다.
+ -->
+<service name="/psal902.ps">
+    <!-- 매입사별입금일목록 -->
+    <gauce name="H_MASTER"> 
+        <column colName="CCOMP_CD"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CCOMP_NM"          colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_DAY"           colType="TB_DECIMAL" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_CD"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_UP_CODE"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 매입사별입금일목록 - 전체 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.CCOMP_CD
+			     , A.CCOMP_NM			     
+                 , B.PAY_DAY                 
+                 , A.BCOMP_CD
+			     , DECODE (B.PAY_DAY, null , 'I','U')  IN_UP_CODE
+			  FROM DPS.PD_CARDCOMP A
+			     , DPS.PD_CPAYDAY B
+			 WHERE A.CCOMP_CD = B.BCOMP_CD (+)
+			   AND A.BCOMP_YN = 'Y'    
+			 ORDER BY CCOMP_CD
+        ]]>        
+    </query>
+    
+        <!-- 매입사 입금일 조회 -->
+    <query name="SEL_CPAYDAY">
+        <![CDATA[
+            SELECT P.BCOMP_CD
+			      ,P.PAY_DAY
+			      ,P.REG_DATE
+			      ,P.REG_ID
+			      ,P.MOD_DATE
+			      ,P.MOD_ID
+			  FROM DPS.PD_CPAYDAY P
+            WHERE BCOMP_CD  = ?
+        ]]>
+    </query>
+    
+    <!-- 매입사 입금일 수정 -->
+    <query name="UPD_CPAYDAY">
+        <![CDATA[
+            UPDATE DPS.PD_CPAYDAY
+			   SET PAY_DAY   = ?
+			      ,MOD_DATE  = SYSDATE
+			      ,MOD_ID    = ?
+			 WHERE BCOMP_CD  = ?
+        ]]>
+    </query>
+    
+    <!-- 가명점번호에 입금수정일 수정 -->
+    <query name="UPD_BRANCH">
+        <![CDATA[
+            UPDATE DPS.PD_BRANCH PB
+               SET PB.PAY_DAY  = ?
+             WHERE PB.BCOMP_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 매입사 입금일 등록 -->
+    <query name="INS_CPAYDAY">
+        <![CDATA[    
+		    INSERT INTO DPS.PD_CPAYDAY (
+	             BCOMP_CD
+	            ,PAY_DAY
+	            ,REG_DATE
+	            ,REG_ID
+	            ,MOD_DATE
+	            ,MOD_ID)
+            VALUES ( 
+                 ?
+                ,?
+                ,SYSDATE
+                ,?
+                ,SYSDATE
+                ,?
+            )
+         ]]>
+    </query>
+    
+</service>

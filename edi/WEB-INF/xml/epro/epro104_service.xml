@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/epro104.ep">
+    
+    <!-- 약속대장 조회 / 접수일자 기준  -->
+    <query name="SEL_TAKE_DT">
+        <![CDATA[
+        SELECT DPS.FN_GET_STORE_NAME(A.STR_CD) STR_CD
+             , A.STR_CD STRCD
+             , A.TAKE_DT TAKE_DT                                       
+             , A.TAKE_SEQ TAKE_SEQ
+             , A.TAKE_USER_ID TAKE_USER_ID                                       
+             , COM.FN_GET_COMM_NAME('D','M021',A.PROM_TYPE) AS PROM_TYPE
+             , COM.FN_GET_COMM_NAME('D','M022',A.DELI_TYPE) AS DELI_TYPE                                        
+             , A.ADDR ADDR
+             , A.LAST_PROM_DT LAST_PROM_DT
+             , DPS.FN_GET_STORE_NAME(A.DELI_STR) DELI_STR
+             , A.CUST_NM CUST_NM
+             , '' AS PHONE
+             , A.MOBILE_PH1 PHONE1
+             , A.MOBILE_PH2 PHONE2
+             , A.MOBILE_PH3 PHONE3
+             , B.PUMBUN_CD PUMBUN_CD
+             , B.PUMBUN_NAME PUMBUN_NAME
+             , A.IN_DELI_DT IN_DELI_DT
+             , A.SKU_NM SKU_NM
+             , A.PROM_DTL PROM_DTL
+          FROM MSS.MP_PROMISECERT A, DPS.PC_STRPBN B
+         WHERE A.PUMBUN_CD = B.PUMBUN_CD
+           AND B.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND A.STR_CD = B.STR_CD
+           AND B.PUMBUN_CD LIKE ? || '%' 
+           AND B.VEN_CD LIKE ?           
+           AND A.PROM_TYPE  LIKE ? || '%'
+           AND A.CUST_NM LIKE '%' || ? || '%'            
+           AND A.STR_CD = ?            
+           AND A.TAKE_DT  >= ? 
+           AND A.TAKE_DT <= ?               
+        ]]>
+    </query> 
+    
+    
+    <!-- 약속대장 조회 / 입고예정일 기준   -->
+    <query name="SEL_IN_DELI_DT">
+        <![CDATA[
+        SELECT DPS.FN_GET_STORE_NAME(A.STR_CD) STR_CD
+             , A.STR_CD STRCD
+             , A.TAKE_DT TAKE_DT                                       
+             , A.TAKE_SEQ TAKE_SEQ
+             , A.TAKE_USER_ID TAKE_USER_ID                                       
+             , COM.FN_GET_COMM_NAME('D','M021',A.PROM_TYPE) AS PROM_TYPE
+             , COM.FN_GET_COMM_NAME('D','M022',A.DELI_TYPE) AS DELI_TYPE                                        
+             , A.ADDR ADDR
+             , A.LAST_PROM_DT LAST_PROM_DT
+             , DPS.FN_GET_STORE_NAME(A.DELI_STR) DELI_STR
+             , A.CUST_NM CUST_NM
+             , '' AS PHONE
+             , A.MOBILE_PH1 PHONE1
+             , A.MOBILE_PH2 PHONE2
+             , A.MOBILE_PH3 PHONE3
+             , B.PUMBUN_CD PUMBUN_CD
+             , B.PUMBUN_NAME PUMBUN_NAME
+             , A.IN_DELI_DT IN_DELI_DT
+             , A.SKU_NM SKU_NM
+             , A.PROM_DTL PROM_DTL
+          FROM MSS.MP_PROMISECERT A, DPS.PC_STRPBN B
+         WHERE A.PUMBUN_CD = B.PUMBUN_CD
+           AND A.STR_CD = B.STR_CD
+           AND B.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND B.PUMBUN_CD LIKE ? || '%' 
+           AND B.VEN_CD LIKE ?           
+           AND A.PROM_TYPE  LIKE ? || '%'
+           AND A.CUST_NM LIKE '%' || ? || '%'            
+           AND A.STR_CD = ?            
+           AND A.IN_DELI_DT   >= ?
+           AND A.IN_DELI_DT  <= ?                 
+        ]]>
+    </query>
+    
+    <!-- 약속대장 조회 /  약속일자 기준    -->
+    <query name="SEL_FRST_PROM_DT">
+        <![CDATA[
+        SELECT DPS.FN_GET_STORE_NAME(A.STR_CD) STR_CD
+             , A.STR_CD STRCD
+             , A.TAKE_DT TAKE_DT                                       
+             , A.TAKE_SEQ TAKE_SEQ
+             , A.TAKE_USER_ID TAKE_USER_ID                                       
+             , COM.FN_GET_COMM_NAME('D','M021',A.PROM_TYPE) AS PROM_TYPE
+             , COM.FN_GET_COMM_NAME('D','M022',A.DELI_TYPE) AS DELI_TYPE                                        
+             , A.ADDR ADDR
+             , A.LAST_PROM_DT LAST_PROM_DT
+             , DPS.FN_GET_STORE_NAME(A.DELI_STR) DELI_STR
+             , A.CUST_NM CUST_NM
+             , '' AS PHONE
+             , A.MOBILE_PH1 PHONE1
+             , A.MOBILE_PH2 PHONE2
+             , A.MOBILE_PH3 PHONE3
+             , B.PUMBUN_CD PUMBUN_CD
+             , B.PUMBUN_NAME PUMBUN_NAME
+             , A.IN_DELI_DT IN_DELI_DT
+             , A.SKU_NM SKU_NM
+             , A.PROM_DTL PROM_DTL
+          FROM MSS.MP_PROMISECERT A, DPS.PC_STRPBN B
+         WHERE A.PUMBUN_CD = B.PUMBUN_CD
+           AND A.STR_CD = B.STR_CD
+           AND B.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND B.PUMBUN_CD LIKE ? || '%' 
+           AND B.VEN_CD LIKE ?           
+           AND A.PROM_TYPE  LIKE ? || '%'
+           AND A.CUST_NM LIKE '%' || ? || '%'            
+           AND A.STR_CD = ?            
+           AND A.FRST_PROM_DT   >= ?
+           AND A.FRST_PROM_DT  <= ?                 
+        ]]>
+    </query>
+    
+     <!-- 전화통화내역 상세조회 -->
+    <query name="SEL_CALLMRG">
+        <![CDATA[
+        SELECT A.CALL_DT CALL_DT
+             , A.SEND_NM SEND_NM
+             , A.SEND_NM EM_SEND_NM                              
+             , A.SEQ_NO SEQ_NO
+             , A.SEQ_NO CALL_SEQ_NO
+             , A.CALL_DT EM_CALL_DT
+             , A.RECV_NM RECV_NM
+             , SUBSTR(CALL_TIME, 0, 2) CALL_HH
+             , SUBSTR(CALL_TIME, 3, 4) CALL_MM
+             , A.CALL_FLAG CALL_FLAG
+             , A.CALL_DESC CALL_DESC
+             , A.TAKE_DT TAKE_DT
+             , A.STR_CD STR_CD
+             , A.TAKE_SEQ TAKE_SEQ
+          FROM MSS.MP_CALLMGR A, MSS.MP_PROMISECERT B
+         WHERE A.TAKE_SEQ = B.TAKE_SEQ
+           AND A.STR_CD = B.STR_CD
+           AND A.TAKE_DT = B.TAKE_DT
+           AND A.TAKE_SEQ = ?
+           AND A.STR_CD = ?  
+           AND A.TAKE_DT = ?
+      ORDER BY A.SEQ_NO DESC           
+        ]]>
+    </query>   
+    
+    
+     <!-- 전화통화내역 상세조회 (입력부) -->
+    <query name="SEL_CALLMRGCAll">
+        <![CDATA[
+        SELECT CALL_DT CALL_DT
+             , SEND_NM SEND_NM
+             , SEND_NM EM_SEND_NM                              
+             , SEQ_NO SEQ_NO
+             , SEQ_NO CALL_SEQ_NO
+             , CALL_DT EM_CALL_DT
+             , RECV_NM RECV_NM
+             , SUBSTR(CALL_TIME, 0, 2) CALL_HH
+             , SUBSTR(CALL_TIME, 3, 4) CALL_MM
+             , CALL_FLAG CALL_FLAG
+             , CALL_DESC CALL_DESC
+             , TAKE_DT TAKE_DT
+             , STR_CD STR_CD
+             , TAKE_SEQ TAKE_SEQ
+          FROM MSS.MP_CALLMGR
+         WHERE CALL_DT = ?
+           AND SEQ_NO = ?
+      ORDER BY SEQ_NO DESC          
+        ]]>
+    </query>
+    
+      <!-- 전화통화상세 삭제 -->
+    <query name="DEL_CALLMRG">
+        <![CDATA[
+        DELETE FROM MSS.MP_CALLMGR
+         WHERE SEQ_NO      = ?
+           AND CALL_DT     = ?  
+        ]]>
+    </query>
+    
+    <query name="SEL_SEQNO">
+        <![CDATA[
+        SELECT NVL(MAX(SEQ_NO),0)+1 SEQ_NO
+          FROM MSS.MP_CALLMGR            
+        ]]>
+    </query>
+    
+    <!-- 전화통화내역 등록 -->
+    <query name="INT_CALLMRG">
+        <![CDATA[
+        INSERT INTO MSS.MP_CALLMGR ( 
+                                    SEQ_NO                           
+                                  , CALL_DT
+                                  , TAKE_DT
+                                  , STR_CD
+                                  , TAKE_SEQ
+                                  , CALL_TIME                             
+                                  , SEND_NM
+                                  , RECV_NM
+                                  , CALL_FLAG
+                                  , CALL_DESC
+                                  , REG_ID
+                                  , REG_DATE
+                                    )
+                              VALUES
+                                    (
+                                     ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , SYSDATE
+                                    )    
+        ]]>
+    </query>
+    
+    <!-- 전화통화상세 수정 등록 -->
+    <query name="UPD_CALLMRG">
+        <![CDATA[
+        UPDATE MSS.MP_CALLMGR SET
+                                 SEND_NM        = ?,
+                                 RECV_NM        = ?,
+                                 CALL_FLAG      = ?,
+                                 CALL_DESC      = ?,
+                                 MOD_ID         = ?,
+                                 MOD_DATE       = SYSDATE
+        WHERE     SEQ_NO = ?
+        AND       CALL_DT = ?
+        ]]>
+    </query>
+          
+      
+    
+    
+
+</service>

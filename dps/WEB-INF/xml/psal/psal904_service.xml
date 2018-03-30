@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal904.ps">
+
+    <gauce name="H_MASTER"> 
+        <column colName="BIN_NO"      colType="TB_STRING"      size="6"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DCARD_TYPE"  colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DCARD_NAME"  colType="TB_STRING"      size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CCOMP_CD"    colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CCOMP_NM"    colType="TB_STRING"      size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NAME"   colType="TB_STRING"      size="20"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VCARD_TYPE"  colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VCARD_NAME"  colType="TB_STRING"      size="40"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_DT"      colType="TB_STRING"      size="8"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEL_YN"      colType="TB_STRING"      size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REF_CODE1"   colType="TB_STRING"      size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.BIN_NO
+                 , A.DCARD_TYPE
+                 , COM.FN_GET_COMM_NAME('D', 'D038', A.DCARD_TYPE) DCARD_NAME
+                 , A.CCOMP_CD
+                 , (SELECT CCOMP_NM 
+                      FROM DPS.PD_CARDCOMP 
+                     WHERE CCOMP_CD = A.CCOMP_CD
+                   ) CCOMP_NM  
+                 , A.CARD_NAME
+                 , A.VCARD_TYPE
+                 , COM.FN_GET_COMM_NAME('D', 'D032', A.VCARD_TYPE) VCARD_NAME
+                 , A.APP_DT
+                 , A.DEL_YN
+                 , A.REF_CODE1
+              FROM DPS.PD_CARDBIN A
+             WHERE A.BIN_NO BETWEEN ? AND ?
+               AND A.CCOMP_CD LIKE ? || '%'
+               AND A.DCARD_TYPE LIKE ? || '%'    
+             ORDER BY CCOMP_CD
+        ]]>        
+    </query>
+    
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT A.BIN_NO
+                 , A.DCARD_TYPE
+                 , COM.FN_GET_COMM_NAME('D', 'D038', A.DCARD_TYPE) DCARD_NAME
+                 , A.CCOMP_CD
+                 , (SELECT CCOMP_NM 
+                      FROM DPS.PD_CARDCOMP 
+                     WHERE CCOMP_CD = A.CCOMP_CD
+                   ) CCOMP_NM  
+                 , A.CARD_NAME
+                 , A.VCARD_TYPE
+                 , COM.FN_GET_COMM_NAME('D', 'D032', A.VCARD_TYPE) VCARD_NAME
+                 , A.APP_DT
+                 , A.DEL_YN
+                 , A.REF_CODE1
+              FROM DPS.PD_CARDBIN A
+             WHERE A.BIN_NO   = ?
+               AND A.DCARD_TYPE = ?
+        ]]>        
+    </query>    
+    
+    <!-- 카드발급사코드 정보 등록 -->
+    <query name="INS_CARDBIN">        
+        <![CDATA[
+            INSERT INTO DPS.PD_CARDBIN (
+                        BIN_NO 
+                      , DCARD_TYPE
+                      , CCOMP_CD
+                      , CARD_NAME 
+                      , VCARD_TYPE
+                      , APP_DT
+                      , DEL_YN
+                      , REG_DATE
+                      , REG_ID   
+                      , MOD_DATE
+                      , MOD_ID
+                      , REF_CODE1
+                      ) VALUES (  
+                        ?
+                      , ?
+                      , ?
+                      , ?
+                      , ?
+                      , ?
+                      , ?
+                      , SYSDATE
+                      , ?
+                      , SYSDATE
+                      , ?   
+                      , ?                 
+                      )
+         ]]>   
+    </query>  
+    
+    <!-- 카드발급사코드 정보 수정 -->
+    <query name="UPD_CARDBIN"> 
+        <![CDATA[   
+            UPDATE DPS.PD_CARDBIN
+               SET CCOMP_CD   = ?
+                 , CARD_NAME  = ?
+                 , DCARD_TYPE = ?
+                 , VCARD_TYPE = ?
+                 , APP_DT     = ?
+                 , DEL_YN     = ?
+                 , REF_CODE1  = ?
+                 , MOD_DATE   = SYSDATE  
+                 , MOD_ID     = ?                  
+             WHERE BIN_NO     = ?
+             	AND DCARD_TYPE = ?
+        ]]>   
+    </query>      
+    
+    <!-- 카드발급사코드 정보 수정 -->
+    <query name="DTL_CARDBIN"> 
+        <![CDATA[   
+            DELETE DPS.PD_CARDBIN
+             WHERE BIN_NO   = ?
+               AND DCARD_TYPE = ?
+        ]]>   
+    </query>         
+    
+</service>

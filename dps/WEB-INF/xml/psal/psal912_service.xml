@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal912.ps">
+
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"      colType="TB_STRING"      size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"      colType="TB_STRING"      size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DT"      colType="TB_STRING"      size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUE_DT"      colType="TB_STRING"      size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_CD"    colType="TB_STRING"      size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_NM"    colType="TB_STRING"      size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_COUNT"   colType="TB_DECIMAL"     size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_COUNT"   colType="TB_DECIMAL"     size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REST_COUNT"  colType="TB_DECIMAL"     size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ERR_COUNT"   colType="TB_DECIMAL"     size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_DETAIL"> 
+        <column colName="RECP_NO"   colType="TB_STRING"      size="16"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_AMT"  colType="TB_DECIMAL"     size="9"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"   colType="TB_STRING"      size="20"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CCOMP_CD"  colType="TB_STRING"      size="2"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CCOMP_NM"  colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_NO"   colType="TB_STRING"      size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_MONTH" colType="TB_DECIMAL"     size="8"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_CD"  colType="TB_STRING"      size="2"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_NM"  colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DT"    colType="TB_STRING"      size="8"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REASON_CD" colType="TB_STRING"      size="2"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REASON_NM" colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUE_DT"    colType="TB_STRING"      size="8"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHRG_YN"   colType="TB_STRING"      size="10"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.STR_CD
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD) STR_NM
+                 , A.REG_DT
+                 , A.DUE_DT
+                 , A.BCOMP_CD
+                 , DPS.FN_GET_CCOMP_NM(A.BCOMP_CD)  BCOMP_NM    
+                 , COUNT(1)                         REG_COUNT
+                 , SUM( DECODE(A.CHRG_YN, 'Y', 1) ) BUY_COUNT
+                 , SUM( DECODE(A.CHRG_YN, 'N', 1) ) REST_COUNT
+                 , SUM ( CASE WHEN A.CHRG_YN = 'N' 
+                               AND A.DUE_DT < TO_CHAR(SYSDATE, 'YYYYMMDD') 
+                              THEN
+                                  1
+                         END 
+                       ) ERR_COUNT
+              FROM DPS.PD_POSTPONE   A
+             WHERE A.STR_CD       LIKE ? ||'%'
+               AND A.REG_DT       BETWEEN ? AND ?
+               AND A.DUE_DT       BETWEEN ? AND ?
+               AND A.CHRG_YN      LIKE ? ||'%'            
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_BCOMP_CD">        
+        <![CDATA[            
+               AND A.BCOMP_CD     = ? 
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_GROUP">        
+        <![CDATA[            
+                GROUP BY A.STR_CD, A.REG_DT, A.DUE_DT, A.BCOMP_CD
+        ]]>        
+    </query>
+    
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT SUBSTR(A.STR_CD,2,1) || SUBSTR(A.SALE_DT,3,6) || A.POS_NO || A.TRAN_NO RECP_NO 
+                 , C.PAY_VALUE_01    APPR_AMT  
+                 , C.PAY_DATA_01     CARD_NO   
+                 , C.PAY_DATA_06     CCOMP_CD  
+                 , DPS.FN_GET_CCOMP_NM(C.PAY_DATA_06) CCOMP_NM   
+                 , C.PAY_DATA_03     APPR_NO  
+                 , C.PAY_VALUE_03    DIV_MONTH 
+                 , A.BCOMP_CD  
+                 , DPS.FN_GET_CCOMP_NM(A.BCOMP_CD) BCOMP_NM    
+                 , A.REG_DT         
+                 , A.REASON_CD    
+                 , COM.FN_GET_COMM_NAME('D', 'D064', A.REASON_CD) REASON_NM
+                 , A.DUE_DT     
+                 , DECODE(A.CHRG_YN,'N','미청구','Y','청구')  CHRG_YN         
+              FROM DPS.PD_POSTPONE   A
+                 , DPS.PS_TRHEADER   B
+                 , DPS.PS_TRPAID     C
+             WHERE A.STR_CD       =    B.STR_CD
+               AND A.SALE_DT      =    B.SALE_DT
+               AND A.POS_NO       =    B.POS_NO
+               AND A.TRAN_NO      =    B.TRAN_NO
+               AND A.STR_CD       =    C.STR_CD
+               AND A.SALE_DT      =    C.SALE_DT
+               AND A.POS_NO       =    C.POS_NO
+               AND A.TRAN_NO      =    C.TRAN_NO
+               AND A.POS_SEQ_NO   =    C.SEQ_NO
+               AND A.PAY_TYPE     =    C.PAY_TYPE   
+               AND A.STR_CD       LIKE ? ||'%'
+               AND A.REG_DT       = ?
+               AND A.DUE_DT       = ?
+               AND A.BCOMP_CD     LIKE ? ||'%'  
+        ]]>        
+    </query>    
+
+</service>

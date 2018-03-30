@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.01.25
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 조직공통 
+ -->
+<service name="/ccom220.cc">	
+
+ <!--  상품 조회 조건 -->
+    <gauce name="H_SKU_COND">
+        <column colName="SERVICE_ID"  colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="COND_TXT"  colType="TB_STRING" size="30"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="PUMBUN_CD"  colType="TB_STRING" size="6"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="STR_CD"  colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="SKU_GB"  colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_CD"  colType="TB_STRING" size="11"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 상품 콤보 Title -->
+    <gauce name="H_SKU">
+        <column colName="TRG_CD"    colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="SKU_CD"	colType="TB_STRING" size="13"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="SKU_NAME"	colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="BUY_COST_PRC"  colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="SKU_GB"  colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="SKU_GB_NM"  colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+
+    <!-- 점별 사은품 상품  조회 -->
+    <query name="SEL_SKU_POP">
+        <![CDATA[
+		 SELECT A.SKU_CD
+               , SKU_NAME
+               , B.SAL_COST_PRC AS BUY_COST_PRC
+            FROM MSS.MC_EVTSKUMST A, DPS.PC_STRSKUMST B, DPS.PC_STRPBN C
+           WHERE A.STR_CD = B.STR_CD
+             AND A.SKU_CD = B.SKU_CD
+             AND B.STR_CD = C.STR_CD
+             AND B.PUMBUN_CD = C.PUMBUN_CD 
+             AND A.STR_CD = ?
+             AND C.PUMBUN_CD = ?
+        ]]>
+    </query> 
+
+      <!-- 상품명   조회 -->
+    <query name="SEL_SKU_NAME">
+        <![CDATA[
+          SELECT A.SKU_CD
+               , SKU_NAME
+               , B.SAL_COST_PRC AS BUY_COST_PRC
+            FROM MSS.MC_EVTSKUMST A, DPS.PC_STRSKUMST B, DPS.PC_STRPBN C
+           WHERE A.STR_CD = B.STR_CD
+             AND A.SKU_CD = B.SKU_CD
+             AND B.STR_CD = C.STR_CD
+             AND B.PUMBUN_CD = C.PUMBUN_CD
+             AND A.STR_CD = ?
+             AND C.PUMBUN_CD = ?
+             AND A.SKU_CD = ?
+        ]]>
+    </query> 
+    
+    
+     <!-- 사은행사 마스터 등록시 사은품 조회 -->
+    <query name="SEL_SKU_POP2">
+        <![CDATA[
+        SELECT '' AS TRG_CD
+              , A.SKU_CD
+              , A.SKU_NAME
+              --, SAL_COST_PRC AS BUY_COST_PRC
+              --, SALE_PRC AS BUY_COST_PRC
+              , DECODE(B.GIFT_AMT_TYPE, '', SAL_COST_PRC, SALE_PRC) AS BUY_COST_PRC   -- 물품이면 원가, 상품권이면 매가 
+              , DECODE(B.GIFT_AMT_TYPE, '', '1', '2')  AS SKU_GB
+              , DECODE(B.GIFT_AMT_TYPE, '', '물품', '상품권')  AS SKU_GB_NM
+           FROM DPS.PC_STRSKUMST A, DPS.PC_SKUMST B 
+          WHERE A.SKU_CD = B.SKU_CD
+            AND A.USE_YN = 'Y'
+            AND B.PUMBUN_TYPE = '5'
+            AND A.STR_CD = ?
+        ]]>
+    </query> 
+    
+         <!-- 사은행사 마스터 등록시 사은품 조회 조회조건1 : 물품 조회-->
+    <query name="ADD_SKU_POP2_01">
+        <![CDATA[
+            AND B.GIFT_AMT_TYPE IS NOT NULL
+        ]]>
+    </query> 
+    
+      <!-- 사은행사 마스터 등록시 사은품 조회 조회조건2 : 상품권 조회-->
+    <query name="ADD_SKU_POP2_02">
+        <![CDATA[
+            AND B.GIFT_AMT_TYPE IS NULL
+        ]]>
+    </query> 
+    
+      <!-- 사은품 지급등록 : 지급품 조회 -->
+    <query name="SEL_SKU_POP3">
+        <![CDATA[
+         SELECT A.TRG_CD
+              , A.SKU_CD
+              , C.SKU_NAME
+              , A.BUY_COST_PRC
+              , '' AS SKU_GB
+              , '' AS SKU_GB_NM
+         FROM MSS.MC_EVTSKUMST A, MSS.MC_EVTTRGMST B, DPS.PC_SKUMST C
+         WHERE A.STR_CD = B.STR_CD
+           AND A.TRG_CD = B.TRG_CD
+           AND A.SKU_CD = C.SKU_CD
+           AND A.STR_CD = ?
+           
+        ]]>
+    </query> 
+    
+    <query name="ADD_SKU_POP3_01">
+        <![CDATA[
+            AND A.EVENT_CD = ?
+        ]]>
+    </query> 
+    
+      <!-- 사은행사 마스터 등록시 사은품 조회 정렬-->
+    <query name="ADD_SKU_POP2_ORD">
+        <![CDATA[
+            ORDER BY A.SKU_CD
+        ]]>
+    </query> 
+</service>
+

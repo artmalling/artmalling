@@ -1,0 +1,1063 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.31
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개          요 : 매입사별청구집계표를 조회한다.
+ -->
+<service name="/psal946.ps">
+    <!-- 매입사별청구집계표 -->
+    <gauce name="H_MASTER">
+        <column colName="CHRG_DT"        colType="TB_STRING"    size="8"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+		<column colName="WORK_FLAG"      colType="TB_STRING"    size="10"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="SUM_CNT"        colType="TB_DECIMAL"   size="10"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="SUM_AMT"        colType="TB_DECIMAL"   size="10"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="BUYREQ_CNT_01"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="BUYREQ_AMT_01"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="BUYREQ_CNT_02"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_AMT_02"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_CNT_03"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_AMT_03"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_CNT_04"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_AMT_04"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_CNT_05"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_AMT_05"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_CNT_08"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_AMT_08"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_CNT_09"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_AMT_09"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />        
+        <column colName="BUYREQ_CNT_10"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+        <column colName="BUYREQ_AMT_10"  colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 매입사별청구집계표 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT X.CHRG_DT
+                 , CASE WHEN X.WORK_FLAG = '11' THEN '매출' 
+                        WHEN X.WORK_FLAG = '12' THEN '반품'
+                        WHEN X.WORK_FLAG = '99' THEN '합계'
+                        ELSE '확인' 
+                   END WORK_FLAG
+                 , SUM( X.BUYREQ_CNT_01 + X.BUYREQ_CNT_02 + X.BUYREQ_CNT_03 
+                   + X.BUYREQ_CNT_04 + X.BUYREQ_CNT_05 + X.BUYREQ_CNT_08 
+                   + X.BUYREQ_CNT_09 + X.BUYREQ_CNT_10
+                   ) SUM_CNT
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN (SUM(X.BUYREQ_AMT_01 + X.BUYREQ_AMT_02 + X.BUYREQ_AMT_03 
+                                                      + X.BUYREQ_AMT_04 + X.BUYREQ_AMT_05 + X.BUYREQ_AMT_08 
+                                                      + X.BUYREQ_AMT_09 + X.BUYREQ_AMT_10)) * (-1)
+                         ELSE SUM(X.BUYREQ_AMT_01 + X.BUYREQ_AMT_02 + X.BUYREQ_AMT_03 
+                              + X.BUYREQ_AMT_04 + X.BUYREQ_AMT_05 + X.BUYREQ_AMT_08 
+                              + X.BUYREQ_AMT_09 + X.BUYREQ_AMT_10)
+                    END) AS SUM_AMT
+                 , SUM(X.BUYREQ_CNT_01)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_01)*(-1)
+                         ELSE SUM(X.BUYREQ_AMT_01) 
+                     END) AS BUYREQ_AMT_01
+                 , SUM(X.BUYREQ_CNT_02)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_02)*(-1)
+                         ELSE SUM(X.BUYREQ_AMT_02) 
+                     END) AS BUYREQ_AMT_02
+                 , SUM(X.BUYREQ_CNT_03)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_03)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_03) 
+                     END) AS BUYREQ_AMT_03
+                 , SUM(X.BUYREQ_CNT_04)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_04)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_04) 
+                     END) AS BUYREQ_AMT_04
+                 , SUM(X.BUYREQ_CNT_05)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_05)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_05) 
+                     END) AS BUYREQ_AMT_05
+                 , SUM(X.BUYREQ_CNT_08)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_08)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_08) 
+                     END) AS BUYREQ_AMT_08
+                 , SUM(X.BUYREQ_CNT_09)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_09)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_09) 
+                     END) AS BUYREQ_AMT_09
+                 , SUM(X.BUYREQ_CNT_10)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_10)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_10) 
+                     END) AS BUYREQ_AMT_10
+              FROM (      ----------- 매출, 반품 --------------- 
+                    SELECT A.CHRG_DT
+                         , A.WORK_FLAG
+                         , COUNT(1)        BUYREQ_CNT_01
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '01' -- 비씨카드
+                     GROUP BY A.CHRG_DT, A.WORK_FLAG
+                    UNION ALL
+                    SELECT A.CHRG_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , COUNT(1)        BUYREQ_CNT_02
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '02' -- 국민카드
+                     GROUP BY A.CHRG_DT, A.WORK_FLAG
+                    UNION ALL         
+                    SELECT A.CHRG_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , COUNT(1)        BUYREQ_CNT_03
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '03' -- 외환카드
+                     GROUP BY A.CHRG_DT, A.WORK_FLAG
+                    UNION ALL
+                    SELECT A.CHRG_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , COUNT(1)        BUYREQ_CNT_04
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '04' -- 삼성카드
+                     GROUP BY A.CHRG_DT, A.WORK_FLAG
+                    UNION ALL         
+                    SELECT A.CHRG_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , COUNT(1)        BUYREQ_CNT_05
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '05' -- 신한카드
+                     GROUP BY A.CHRG_DT, A.WORK_FLAG
+                    UNION ALL
+                    SELECT A.CHRG_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , COUNT(1)        BUYREQ_CNT_08
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '08' -- 현대카드
+                     GROUP BY A.CHRG_DT, A.WORK_FLAG
+                    UNION ALL         
+                    SELECT A.CHRG_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , COUNT(1)        BUYREQ_CNT_09
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '09' -- 롯데카드
+                     GROUP BY A.CHRG_DT, A.WORK_FLAG
+                    UNION ALL         
+                    SELECT A.CHRG_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , COUNT(1)        BUYREQ_CNT_10
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '15' -- 농협
+                     GROUP BY A.CHRG_DT, A.WORK_FLAG
+                    UNION ALL  ----------- 합계 --------------- 
+                    SELECT A.CHRG_DT
+                         , '99' WORK_FLAG
+                         , COUNT(1)        BUYREQ_CNT_01
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '01' -- 비씨카드
+                     GROUP BY A.CHRG_DT
+                    UNION ALL
+                    SELECT A.CHRG_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , COUNT(1)        BUYREQ_CNT_02
+                        , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '02' -- 국민카드
+                     GROUP BY A.CHRG_DT
+                    UNION ALL         
+                    SELECT A.CHRG_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , COUNT(1)        BUYREQ_CNT_03
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '03' -- 외환카드
+                     GROUP BY A.CHRG_DT
+                    UNION ALL
+                    SELECT A.CHRG_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , COUNT(1)        BUYREQ_CNT_04
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '04' -- 삼성카드
+                     GROUP BY A.CHRG_DT
+                    UNION ALL         
+                    SELECT A.CHRG_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , COUNT(1)        BUYREQ_CNT_05
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '05' -- 신한카드
+                     GROUP BY A.CHRG_DT
+                    UNION ALL
+                    SELECT A.CHRG_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , COUNT(1)        BUYREQ_CNT_08
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '08' -- 현대카드
+                     GROUP BY A.CHRG_DT
+                    UNION ALL         
+                    SELECT A.CHRG_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , COUNT(1)        BUYREQ_CNT_09
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '09' -- 롯데카드
+                     GROUP BY A.CHRG_DT
+                    UNION ALL         
+                    SELECT A.CHRG_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , COUNT(1)        BUYREQ_CNT_10
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT)
+                                           BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.CHRG_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '15' -- 농협
+                     GROUP BY A.CHRG_DT
+                   ) X
+             GROUP BY X.CHRG_DT, X.WORK_FLAG 
+             ORDER BY X.CHRG_DT, X.WORK_FLAG   
+        ]]>        
+    </query>
+    
+    <!-- 매입사별청구집계표 -->
+    <query name="SEL_MASTER2">        
+        <![CDATA[
+            SELECT X.SALE_DT CHRG_DT
+                 , CASE WHEN X.WORK_FLAG = '11' THEN '매출' 
+                        WHEN X.WORK_FLAG = '12' THEN '반품'
+                        WHEN X.WORK_FLAG = '99' THEN '합계'
+                        ELSE '확인' 
+                   END WORK_FLAG
+                 , SUM( X.BUYREQ_CNT_01 + X.BUYREQ_CNT_02 + X.BUYREQ_CNT_03 
+                   + X.BUYREQ_CNT_04 + X.BUYREQ_CNT_05 + X.BUYREQ_CNT_08 
+                   + X.BUYREQ_CNT_09 + X.BUYREQ_CNT_10
+                   ) SUM_CNT
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN (SUM(X.BUYREQ_AMT_01 + X.BUYREQ_AMT_02 + X.BUYREQ_AMT_03 
+                                                      + X.BUYREQ_AMT_04 + X.BUYREQ_AMT_05 + X.BUYREQ_AMT_08 
+                                                      + X.BUYREQ_AMT_09 + X.BUYREQ_AMT_10)) * (-1)
+                         ELSE SUM(X.BUYREQ_AMT_01 + X.BUYREQ_AMT_02 + X.BUYREQ_AMT_03 
+                              + X.BUYREQ_AMT_04 + X.BUYREQ_AMT_05 + X.BUYREQ_AMT_08 
+                              + X.BUYREQ_AMT_09 + X.BUYREQ_AMT_10)
+                    END) AS SUM_AMT
+                 , SUM(X.BUYREQ_CNT_01)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_01)*(-1)
+                         ELSE SUM(X.BUYREQ_AMT_01) 
+                     END) AS BUYREQ_AMT_01
+                 , SUM(X.BUYREQ_CNT_02)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_02)*(-1)
+                         ELSE SUM(X.BUYREQ_AMT_02) 
+                     END) AS BUYREQ_AMT_02
+                 , SUM(X.BUYREQ_CNT_03)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_03)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_03) 
+                     END) AS BUYREQ_AMT_03
+                 , SUM(X.BUYREQ_CNT_04)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_04)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_04) 
+                     END) AS BUYREQ_AMT_04
+                 , SUM(X.BUYREQ_CNT_05)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_05)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_05) 
+                     END) AS BUYREQ_AMT_05
+                 , SUM(X.BUYREQ_CNT_08)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_08)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_08) 
+                     END) AS BUYREQ_AMT_08
+                 , SUM(X.BUYREQ_CNT_09)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_09)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_09) 
+                     END) AS BUYREQ_AMT_09
+                 , SUM(X.BUYREQ_CNT_10)
+                 , (CASE WHEN X.WORK_FLAG = '12' THEN  SUM(X.BUYREQ_AMT_10)*(-1)
+                         ELSE  SUM(X.BUYREQ_AMT_10) 
+                     END) AS BUYREQ_AMT_10
+              FROM (      ----------- 매출, 반품 --------------- 
+                    SELECT B.SALE_DT
+                         , A.WORK_FLAG
+                         , COUNT(1)        BUYREQ_CNT_01
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '01' -- 비씨카드
+                     GROUP BY B.SALE_DT, A.WORK_FLAG
+                    UNION ALL
+                    SELECT B.SALE_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , COUNT(1)        BUYREQ_CNT_02
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '02' -- 국민카드
+                     GROUP BY B.SALE_DT, A.WORK_FLAG
+                    UNION ALL         
+                    SELECT B.SALE_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , COUNT(1)        BUYREQ_CNT_03
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '03' -- 외환카드
+                     GROUP BY B.SALE_DT, A.WORK_FLAG
+                    UNION ALL
+                    SELECT B.SALE_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , COUNT(1)        BUYREQ_CNT_04
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '04' -- 삼성카드
+                     GROUP BY B.SALE_DT, A.WORK_FLAG
+                    UNION ALL         
+                    SELECT B.SALE_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , COUNT(1)        BUYREQ_CNT_05
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '05' -- 신한카드
+                     GROUP BY B.SALE_DT, A.WORK_FLAG
+                    UNION ALL
+                    SELECT B.SALE_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , COUNT(1)        BUYREQ_CNT_08
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '08' -- 현대카드
+                     GROUP BY B.SALE_DT, A.WORK_FLAG
+                    UNION ALL         
+                    SELECT B.SALE_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , COUNT(1)        BUYREQ_CNT_09
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '09' -- 롯데카드
+                     GROUP BY B.SALE_DT, A.WORK_FLAG
+                    UNION ALL         
+                    SELECT B.SALE_DT
+                         , A.WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , COUNT(1)        BUYREQ_CNT_10
+                         , SUM(A.APPR_AMT) BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '15' -- 농협
+                     GROUP BY B.SALE_DT, A.WORK_FLAG
+                    UNION ALL  ----------- 합계 --------------- 
+                    SELECT B.SALE_DT
+                         , '99' WORK_FLAG
+                         , COUNT(1)        BUYREQ_CNT_01
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '01' -- 비씨카드
+                     GROUP BY B.SALE_DT
+                    UNION ALL
+                    SELECT B.SALE_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , COUNT(1)        BUYREQ_CNT_02
+                        , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '02' -- 국민카드
+                     GROUP BY B.SALE_DT
+                    UNION ALL         
+                    SELECT B.SALE_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , COUNT(1)        BUYREQ_CNT_03
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '03' -- 외환카드
+                     GROUP BY B.SALE_DT
+                    UNION ALL
+                    SELECT B.SALE_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , COUNT(1)        BUYREQ_CNT_04
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '04' -- 삼성카드
+                     GROUP BY B.SALE_DT
+                    UNION ALL         
+                    SELECT B.SALE_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , COUNT(1)        BUYREQ_CNT_05
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '05' -- 신한카드
+                     GROUP BY B.SALE_DT
+                    UNION ALL
+                    SELECT B.SALE_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , COUNT(1)        BUYREQ_CNT_08
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '08' -- 현대카드
+                     GROUP BY B.SALE_DT
+                    UNION ALL         
+                    SELECT B.SALE_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , COUNT(1)        BUYREQ_CNT_09
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT) 
+                                           BUYREQ_AMT_09
+                         , 0               BUYREQ_CNT_10
+                         , 0               BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '09' -- 롯데카드
+                     GROUP BY B.SALE_DT
+                    UNION ALL         
+                    SELECT B.SALE_DT
+                         , '99' WORK_FLAG
+                         , 0               BUYREQ_CNT_01
+                         , 0               BUYREQ_AMT_01
+                         , 0               BUYREQ_CNT_02
+                         , 0               BUYREQ_AMT_02
+                         , 0               BUYREQ_CNT_03
+                         , 0               BUYREQ_AMT_03
+                         , 0               BUYREQ_CNT_04
+                         , 0               BUYREQ_AMT_04
+                         , 0               BUYREQ_CNT_05
+                         , 0               BUYREQ_AMT_05
+                         , 0               BUYREQ_CNT_08
+                         , 0               BUYREQ_AMT_08
+                         , 0               BUYREQ_CNT_09
+                         , 0               BUYREQ_AMT_09
+                         , COUNT(1)        BUYREQ_CNT_10
+                         , SUM(DECODE(A.WORK_FLAG, '11', 1, -1) * A.APPR_AMT)
+                                           BUYREQ_AMT_10
+                      FROM DPS.PD_BUYREQD A
+                         , DPS.PD_BUYREQPREP B
+                     WHERE A.CHRG_DT    = B.CHRG_DT
+                       AND A.CHRG_SEQ   = B.CHRG_SEQ
+                       AND A.SEQ_NO     = B.CHRG_NO
+                       AND B.STR_CD     = ?
+                       AND B.SALE_DT    BETWEEN ? AND ?
+                       AND A.BCOMP_CD   = '15' -- 농협
+                     GROUP BY B.SALE_DT
+                   ) X
+             GROUP BY X.SALE_DT, X.WORK_FLAG 
+             ORDER BY X.SALE_DT, X.WORK_FLAG   
+        ]]>        
+    </query>
+</service>

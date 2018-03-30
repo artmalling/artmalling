@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  PC별품번 조회순서을 관리한다.
+ -->
+<service name="/pcod207.pc">
+    <!-- PC별 조직 그리드 -->
+    <gauce name="H_SEL_MASTER">
+        <column colName="TEAM_NAME"   colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_ORG_CD"   colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_ORG_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"      colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"     colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"     colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"       colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_FLAG"    colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 품번 그리드 -->
+    <gauce name="H_SEL_DETAIL">
+        <column colName="SORT_NO"     colType="TB_INT"    size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"   colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"      colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CORNER_CD"   colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CORNER_NAME" colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"      colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 조직 조회 -->
+    <query name="SEL_ORGMST">
+        <![CDATA[
+            SELECT PORG.ORG_SHORT_NAME  AS TEAM_NAME
+                 , ORG.ORG_CD           AS PC_ORG_CD
+                 , ORG.ORG_SHORT_NAME   AS PC_ORG_NAME
+                 , ORG.STR_CD
+                 , ORG.DEPT_CD
+                 , ORG.TEAM_CD
+                 , ORG.PC_CD
+                 , ORG.ORG_FLAG
+              FROM DPS.PC_ORGMST ORG
+                 , DPS.PC_ORGMST PORG
+             WHERE ORG.P_ORG_CD  = PORG.ORG_CD
+               AND ORG.STR_CD    = ?
+               AND ORG.ORG_FLAG  = ?
+               AND ORG.ORG_CD    LIKE ?||'%'
+               AND ORG.ORG_LEVEL = 4
+               AND ORG.USE_YN    = 'Y'
+               AND ORG.APP_S_DT  <= TO_CHAR( SYSDATE,'YYYYMMDD')
+               AND ORG.APP_E_DT  >= TO_CHAR( SYSDATE,'YYYYMMDD')
+        ]]> 
+    </query>
+    <query name="SEL_ORGMST_WHERE_AUTH">
+        <![CDATA[
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD   = ORG.STR_CD
+                               AND MYORG.DEPT_CD  = CASE ORG.DEPT_CD WHEN '00' THEN MYORG.DEPT_CD ELSE ORG.DEPT_CD END
+                               AND MYORG.TEAM_CD  = CASE ORG.TEAM_CD WHEN '00' THEN MYORG.TEAM_CD ELSE ORG.TEAM_CD END
+                               AND MYORG.PC_CD    = CASE ORG.PC_CD   WHEN '00' THEN MYORG.PC_CD   ELSE ORG.PC_CD   END
+                               AND MYORG.ORG_FLAG = ?
+                               AND MYORG.USER_ID  = ?
+                               AND ROWNUM         = 1
+                          )
+        ]]> 
+    </query>
+    <query name="SEL_ORGMST_ORDER">
+        <![CDATA[
+             ORDER BY ORG.P_ORG_CD, ORG.ORG_CD
+        ]]> 
+    </query>
+    
+    
+    <!-- 점별품번 조회 -->
+    <query name="SEL_STRPBN">
+        <![CDATA[
+            SELECT SPN.SORT_NO
+                 , SPN.PUMBUN_CD
+                 , SPN.PUMBUN_NAME
+                 , SPN.VEN_CD
+                 , VEN.VEN_NAME
+                 , SPN.SALE_ORG_CD     AS CORNER_CD
+                 , ORG.ORG_SHORT_NAME  AS CORNER_NAME
+                 , SPN.USE_YN
+              FROM DPS.PC_STRPBN SPN
+                 , DPS.PC_VENMST VEN
+                 , DPS.PC_ORGMST ORG
+             WHERE SPN.VEN_CD      = VEN.VEN_CD
+               AND SPN.SALE_ORG_CD = ORG.ORG_CD
+               AND SPN.STR_CD      = ?
+        ]]> 
+    </query>
+    <query name="SEL_STRPBN_WHERE_BUY_ORG_CD">
+        <![CDATA[
+               AND SPN.BUY_ORG_CD  = ?
+        ]]> 
+    </query>    
+    <query name="SEL_STRPBN_WHERE_SALE_ORG_CD">
+        <![CDATA[
+               AND SPN.SALE_ORG_CD IN ( SELECT ORG_CD FROM DPS.PC_ORGMST WHERE  P_ORG_CD = ?)
+        ]]> 
+    </query>    
+    <query name="SEL_STRPBN_WHERE_USE_YN">
+        <![CDATA[
+               AND SPN.USE_YN      = ?
+        ]]> 
+    </query>    
+    <query name="SEL_STRPBN_ORDER">
+        <![CDATA[
+             ORDER BY SPN.SORT_NO, SPN.PUMBUN_CD
+        ]]> 
+    </query>
+    
+    <!-- 점별품번 조회순서 수정 -->
+    <query name="UPD_STRPBN_SORT_NO">
+        <![CDATA[
+        UPDATE DPS.PC_STRPBN
+           SET SORT_NO   = ?
+             , MOD_DATE  = SYSDATE
+             , MOD_ID    = ?
+         WHERE STR_CD    = ?
+           AND PUMBUN_CD = ?
+        ]]> 
+    </query>
+</service>

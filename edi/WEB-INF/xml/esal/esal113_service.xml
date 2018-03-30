@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal113.es">
+    
+   
+    <!-- 일일거래현황 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+				WITH SALE_HEAD AS
+			(
+				/* 결제 헤더 데이터*/
+				SELECT  STR_CD
+				      , SALE_DT
+				      , POS_NO
+				      , TRAN_NO
+				      , TRAN_FLAG
+				      , DECODE(TRAN_FLAG,'0',SALE_TOT_AMT,-1*SALE_TOT_AMT) SALE_TOT_AMT
+				
+				FROM DPS.PS_TRHEADER
+				WHERE 1=1
+				AND STR_CD =?
+				AND SALE_DT BETWEEN ? AND ?
+				AND POS_NO BETWEEN '1001' AND '9999'
+				AND TRAN_NO BETWEEN '00001' AND '99999'
+				AND TRAN_MODE  IN ('00','01') 
+				AND SALE_TOT_AMT <> 0
+				AND SALE_TOT_AMT BETWEEN '-999999999' AND '999999999'
+			)
+			,
+			SALE_PAID AS
+			(
+				/* 결제 수단 데이터*/
+				SELECT STR_CD, SALE_DT, POS_NO, TRAN_NO, MIN(TRAN_FLAG) TRAN_FLAG, MIN(SALE_TOT_AMT) TOT_AMT,
+				      SUM(DECODE(PAY_TYPE, '00', PAY_AMT,0)) CASH_AMT
+				    , SUM(DECODE(PAY_TYPE, '10', PAY_AMT,'11',PAY_AMT, '12',PAY_AMT,0)) CARD_AMT
+				    , SUM(DECODE(PAY_TYPE, '20', PAY_AMT,0)) IGIFT_AMT
+				    , SUM(DECODE(PAY_TYPE, '21', PAY_AMT,0)) OGIFT_AMT
+				    , SUM(DECODE(PAY_TYPE, '61', PAY_AMT,'62',PAY_AMT,'63',PAY_AMT,0) ) ETC_AMT
+                    , SUM(CASH_RECP_AMT) CASH_RECP_AMT
+                    , MIN(CASH_RECP_APPR_NO) CASH_RECP_APPR_NO
+                    , MIN(CASH_RECP_ID) CASH_RECP_ID
+                    , MIN(MSKD_CASH_RECP_ID) MSKD_CASH_RECP_ID
+                    , MIN(APPR_CNT) APPR_CNT				    
+				 FROM 
+				(
+					SELECT A.STR_CD
+					     , A.SALE_DT
+					     , A.POS_NO
+					     , A.TRAN_NO
+					     , A.PAY_TYPE
+					     , B.TRAN_FLAG
+					     , DECODE(B.TRAN_FLAG,'0',A.PAY_AMT, -1*A.PAY_AMT) PAY_AMT
+					     , B.SALE_TOT_AMT
+                         , DECODE(C.CASH_RECP_APPR_NO, NULL, 0, C.CASH_RECP_AMT) CASH_RECP_AMT
+                         , C.CASH_RECP_APPR_NO
+                         , DECODE(C.CASH_RECP_APPR_NO, NULL, NULL, RPAD(SUBSTR(C.CASH_RECP_ID,1,4),LENGTH(C.CASH_RECP_ID),'*') ) MSKD_CASH_RECP_ID
+                         , DECODE(C.CASH_RECP_APPR_NO, NULL, NULL, C.CASH_RECP_ID ) CASH_RECP_ID
+                         , DECODE(C.CASH_RECP_APPR_NO, NULL, 0, 1 ) APPR_CNT					     
+					 FROM DPS.PS_TRPAID A, SALE_HEAD B, DPS.PS_DISCASHRECP C
+					WHERE 1=1 
+					AND A.STR_CD = B.STR_CD
+					AND A.SALE_DT = B.SALE_DT
+					AND A.POS_NO = B.POS_NO
+					AND A.TRAN_NO = B.TRAN_NO
+                    AND A.STR_CD = C.STR_CD(+)
+                    AND A.SALE_DT = C.SALE_DT(+)
+                    AND A.POS_NO = C.POS_NO(+)
+                    AND A.TRAN_NO = C.TRAN_NO(+)					
+				)
+				GROUP BY STR_CD, SALE_DT, POS_NO, TRAN_NO
+			)
+			/* 결제내역 데이터(메인QRY) */
+			SELECT A.STR_CD															-- 점코드
+				 , A.SALE_DT                                                        -- 일자
+			     , A.POS_NO                                                         -- 포스번호
+			     , A.TRAN_NO                                                        -- 거래번호
+			     , A.PUMBUN_CD                                                      -- 품번코드
+			     , MIN(B.PUMBUN_NAME) PUMBUN_NAME                                   -- 품번명
+    			 , DECODE(MIN(C.TRAN_FLAG),'0','정상','반품') TRAN_FLAG             -- 결제구분 (0 정상, 1 반품)
+			     , MIN(C.TOT_AMT) RCP_AMT                                           -- 영수증금액
+			     , SUM(DECODE(C.TRAN_FLAG,'0',A.SALE_AMT,-1*A.SALE_AMT)) ITEM_AMT   -- 세부 금액
+			     , MIN(C.CASH_AMT) CASH_AMT                                         -- 현금금액
+			     , MIN(C.CARD_AMT) CARD_AMT                                         -- 카드금액
+			     , MIN(C.IGIFT_AMT) IGIFT_AMT                                       -- 자사상품권 금액
+			     , MIN(C.OGIFT_AMT) OGIFT_AMT                                       -- 타사상품권 금액
+			     , MIN(C.ETC_AMT) ETC_AMT                                           -- 기타(외상) 금액
+			     --, COUNT( * ) PBN_CNT                                               -- 거래브랜드 수
+			     , MIN(C.CASH_RECP_AMT) CASH_RECP_AMT                               -- 현금영수증 승인금액
+                 , MIN(C.CASH_RECP_ID) CASH_RECP_ID                                 -- 현금영수증번호
+                 , MIN(C.MSKD_CASH_RECP_ID) MSKD_CASH_RECP_ID                       -- 현금영수증번호(마스킹)
+                 , MIN(C.CASH_RECP_APPR_NO) CASH_RECP_APPR_NO                       -- 현금영수증 승인번호
+                 , MIN(C.APPR_CNT) APPR_CNT                       					-- 현금영수 구분			     
+			     FROM DPS.PS_DISITEM A, SALE_PAID C, DPS.PC_PBNMST B
+			WHERE 1=1 
+			AND A.STR_CD = C.STR_CD
+			AND A.SALE_DT = C.SALE_DT
+			AND A.POS_NO = C.POS_NO
+			AND A.TRAN_NO = C.TRAN_NO
+			AND A.PUMBUN_CD  LIKE ?||'%'
+			AND A.PUMBUN_CD = B.PUMBUN_CD
+			AND A.REJCT_FLAG ='0'
+			GROUP BY A.STR_CD
+				   , A.SALE_DT
+			       , A.POS_NO
+			       , A.TRAN_NO
+			       , A.PUMBUN_CD
+			ORDER BY SALE_DT , POS_NO, TRAN_NO, PUMBUN_CD
+        ]]>
+    </query>       
+      
+    
+    
+
+</service>

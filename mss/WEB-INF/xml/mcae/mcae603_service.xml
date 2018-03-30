@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae603.mc">
+    <gauce name="H_MASTER">  
+        <column colName="STR_CD"        colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_NM"        colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"      colType="TB_STRING"      size="11"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_NAME"    colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_DT"         colType="TB_STRING"      size="25"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_TYPE"    colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_TYPE_NM"    colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_GIFT_TYPE"    colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EVENT_GIFT_NM"    colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+    </gauce>
+    
+    <query name="SEL_MASTER">
+        <![CDATA[     
+            SELECT TA.STR_CD,   --점코드
+                   DPS.FN_GET_STORE_NAME(TA.STR_CD) AS STR_NM,
+			       TA.EVENT_CD, --행사코드
+			       TB.EVENT_NAME,   --행사명
+			       SUBSTR(TF.EVENT_S_DT,1,4)||'/'||SUBSTR(TF.EVENT_S_DT,5,2)||'/'||SUBSTR(TF.EVENT_S_DT,7,2)||'~'||
+			       SUBSTR(TF.EVENT_E_DT,1,4)||'/'||SUBSTR(TF.EVENT_E_DT,5,2)||'/'||SUBSTR(TF.EVENT_E_DT,7,2) AS EVENT_DT, --행사일자
+			       TA.EVENT_TYPE    , --행사유형
+			       TD.COMM_NAME1 AS EVENT_TYPE_NM,
+			       TA.EVENT_GIFT_TYPE, --사은품종류                                                                          
+			       TE.COMM_NAME1 AS EVENT_GIFT_NM
+			FROM MSS.MC_EVTMST TA,
+			     DPS.PC_EVTMST TB,
+			     DPS.PC_STRMST TC,
+			     COM.TC_COMMCODE TD,
+			     COM.TC_COMMCODE TE,
+			     DPS.PC_STREVT TF
+			WHERE TA.EVENT_CD = TB.EVENT_CD
+			AND TA.STR_CD = TC.STR_CD
+			AND TA.EVENT_TYPE = TD.COMM_CODE
+			AND TD.SYS_PART = 'D'
+			AND TD.COMM_PART = 'M002'
+			AND TA.EVENT_GIFT_TYPE = TE.COMM_CODE
+			AND TE.SYS_PART = 'D'
+			AND TE.COMM_PART = 'M003'
+			AND TA.STR_CD = TF.STR_CD
+			AND TA.EVENT_CD = TF.EVENT_CD
+			AND TA.STR_CD = ?
+			AND ((? >= TB.EVENT_S_DT AND ? <= TB.EVENT_E_DT) OR
+			    (? >= TB.EVENT_S_DT AND ? <= TB.EVENT_E_DT) OR
+			    (TB.EVENT_S_DT >= ? AND TB.EVENT_S_DT <= ?) OR
+			    (TB.EVENT_E_DT >= ? AND TB.EVENT_E_DT <= ?))
+			AND TA.EVENT_CD LIKE ?||'%'
+			ORDER BY TA.EVENT_CD
+        ]]>        
+    </query> 
+    
+    <gauce name="H_CARD_DETAIL">  
+        <column colName="CHK"     colType="TB_STRING"      size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"     colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+		<column colName="EVENT_CD"     colType="TB_STRING"      size="11"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+		<column colName="CARD_COMP"     colType="TB_STRING"      size="2"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+		<column colName="CCOMP_NM"      colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+		<column colName="VEN_CD"     colType="TB_STRING"      size="8"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+		<column colName="VEN_NAME"      colType="TB_STRING"      size="40"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+		<column colName="APP_RATE"        colType="TB_DECIMAL"      size="5"     dec="2" keyType="TB_NORMAL" roundMode="ROUND" />  
+		<column colName="CAL_AMT"      colType="TB_DECIMAL"      size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />    
+		<column colName="GIFT_CAL_AMT"  colType="TB_DECIMAL"      size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+		<column colName="TOTAL_AMT"         colType="TB_DECIMAL"      size="12"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+		<column colName="CONF_FLAG"         colType="TB_STRING"      size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+		<column colName="CONF_FLAG_NM"   colType="TB_STRING"      size="25"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    
+    </gauce>
+    
+    <query name="SEL_CARD_DETAIL">
+        <![CDATA[     
+            SELECT 'F' AS CHK,
+                   TA.STR_CD,
+			       TA.EVENT_CD,
+			       TA.CARD_COMP,
+			       TB.CCOMP_NM,
+			       TA.VEN_CD,
+			       TC.VEN_NAME,
+			       TD.APP_RATE,   --부담율
+			       TA.CAL_AMT,    --물품정산금액
+			       TA.GIFT_CAL_AMT,          --상품권정산금액
+			       TA.CAL_AMT + TA.GIFT_CAL_AMT AS TOTAL_AMT,          --총정산금액
+			       TA.CONF_FLAG,            
+			       DECODE(TA.CONF_FLAG, '', '미확정', '0', '미확정', '확정') AS CONF_FLAG_NM
+			FROM MSS.MC_EVTSKUCAL TA,
+			     DPS.PD_CARDCOMP TB,
+			     DPS.PC_VENMST TC,
+			     MSS.MC_CARDCOMP TD
+			WHERE TA.CARD_COMP = CCOMP_CD
+			AND TA.VEN_CD = TC.VEN_CD
+			AND TA.STR_CD = TD.STR_CD
+			AND TA.CARD_COMP = TD.CARD_COMP
+			AND TA.EVENT_CD = TD.EVENT_CD
+			AND TA.CAL_FLAG = '2'
+			AND TA.STR_CD = ?
+			AND TA.EVENT_CD = ?
+        ]]>        
+    </query> 
+    
+    <gauce name="H_MUL_DETAIL">  
+        <column colName="CHK"     colType="TB_STRING"      size="1"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"            colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"          colType="TB_STRING" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"             colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_AMT"            colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRSNT_AMT"         colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EXCP_PRSNT_AMT"    colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECOVERY_AMT"      colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETC_PRSNT_AMT"     colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_PRSNT_AMT"     colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOSS_AMT"          colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_FLAG"         colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_FLAG_NM"      colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <query name="SEL_MUL_DETAIL">
+        <![CDATA[     
+            SELECT 'F' AS CHK
+                   , X.STR_CD
+	               , X.EVENT_CD
+	               , X.VEN_CD
+	               , DPS.FN_GET_VENDOR_NAME(X.VEN_CD) AS VEN_NM
+	               , SUM(IN_AMT) AS IN_AMT
+	               , SUM(PRSNT_AMT) AS PRSNT_AMT
+	               , SUM(EXCP_PRSNT_AMT) AS EXCP_PRSNT_AMT
+	               , SUM(RECOVERY_AMT) AS RECOVERY_AMT
+	               , SUM(ETC_PRSNT_AMT) AS ETC_PRSNT_AMT
+	               , SUM(PRSNT_AMT) + SUM(EXCP_PRSNT_AMT) - SUM(RECOVERY_AMT) + SUM(ETC_PRSNT_AMT) AS TOT_PRSNT_AMT 
+	               , SUM(LOSS_AMT) AS LOSS_AMT
+	               , (SUM(PRSNT_AMT) + SUM(EXCP_PRSNT_AMT) - SUM(RECOVERY_AMT) + SUM(ETC_PRSNT_AMT)) + SUM(LOSS_AMT) AS PAY_AMT
+	               , SUM(CAL_AMT) AS CAL_AMT
+	               , CONF_FLAG
+	               , DECODE(CONF_FLAG, '', '미확정', '0', '미확정', '확정') AS CONF_FLAG_NM
+	            FROM (  
+	                     SELECT STR_CD 
+	                         , EVENT_CD
+	                         , VEN_CD
+	                         , SUM(IN_AMT) AS IN_AMT 
+	                         , SUM(PRSNT_AMT) AS PRSNT_AMT
+	                         , SUM(EXCP_PRSNT_AMT) AS EXCP_PRSNT_AMT
+	                         , SUM(RECOVERY_AMT) AS RECOVERY_AMT
+	                         , SUM(ETC_PRSNT_AMT) AS ETC_PRSNT_AMT
+	                         , SUM(LOSS_AMT) AS LOSS_AMT
+	                    FROM (
+	                            SELECT A.STR_CD
+	                                 , A.EVENT_CD
+	                                 , D.VEN_CD
+	                                 , B.SKU_CD
+	                                 , (SUM(IN_QTY) - SUM(RFD_QTY)) * B.BUY_COST_PRC AS IN_AMT
+	                                 , SUM(PRSNT_QTY) * B.BUY_COST_PRC AS PRSNT_AMT
+	                                 , SUM(EXCP_PRSNT_QTY) * B.BUY_COST_PRC AS EXCP_PRSNT_AMT
+	                                 , SUM(RECOVERY_QTY) * B.BUY_COST_PRC AS RECOVERY_AMT
+	                                 , SUM(ETC_PRSNT) * B.BUY_COST_PRC AS ETC_PRSNT_AMT
+	                                 , SUM(LOSS_QTY) * B.BUY_COST_PRC AS LOSS_AMT
+	                              FROM MSS.MC_EVTSKUSTOCK A
+	                                 , MSS.MC_EVTSKUMST B
+	                                 , DPS.PC_STRSKUMST C
+	                                 , DPS.PC_STRPBN D
+	                             WHERE A.STR_CD = B.STR_CD
+	                               AND A.EVENT_CD = B.EVENT_CD
+	                               AND A.SKU_CD = B.SKU_CD
+	                               AND B.STR_CD = C.STR_CD
+	                               AND B.SKU_CD = C.SKU_CD
+	                               AND C.STR_CD = D.STR_CD
+	                               AND C.PUMBUN_CD = D.PUMBUN_CD
+	                               AND B.SKU_GB = '1'
+	                               AND B.STR_CD = ?
+	                               AND B.EVENT_CD = ?
+	                          GROUP BY A.STR_CD, A.EVENT_CD, D.VEN_CD, B.SKU_CD, B.BUY_COST_PRC) AA
+	                  GROUP BY STR_CD, EVENT_CD, VEN_CD) X
+	                  INNER JOIN 
+	                  MSS.MC_EVTSKUCAL Y
+	               ON X.STR_CD = Y.STR_CD
+	              AND X.EVENT_CD = Y.EVENT_CD
+	              AND X.VEN_CD = Y.VEN_CD
+	              AND Y.CAL_FLAG = '0'
+	             GROUP BY X.STR_CD, X.EVENT_CD, X.VEN_CD, Y.CONF_FLAG,Y.CAL_FLAG
+        ]]>        
+    </query> 
+    
+    <!-- 협력사별 정산확정-->
+    <query name="UPD_MC_EVTSKUCAL">
+        <![CDATA[
+            UPDATE MSS.MC_EVTSKUCAL
+			   SET CONF_FLAG = '1',
+			       MOD_ID = ?,
+			       MOD_DATE = SYSDATE
+			 WHERE STR_CD = ?
+			   AND EVENT_CD = ?
+			   AND VEN_CD = ?
+
+        ]]>
+    </query>
+</service>

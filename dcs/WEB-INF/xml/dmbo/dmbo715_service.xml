@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 한국후지쯔
+ * 작 성 일    : 2010.03.18
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  포인트조회(고객미등록)
+ -->
+<service name="/dmbo715.do">
+    <!-- 포인트조회(고객미등록)  상단-->
+    <gauce name="H_MASTER"> 
+        <column colName="CARD_NO"      colType="TB_STRING"   size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_POINT"    colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DATE"     colType="TB_STRING"   size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_YN"       colType="TB_STRING"   size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_DATE"     colType="TB_STRING"   size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_DATE"     colType="TB_STRING"   size="14" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"           colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"         colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT"             colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OCCURS_POINT"      colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_POINT"      colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 포인트조회(고객미등록)  하단-->
+    <gauce name="H_DETAIL"> 
+        <column colName="PROC_DT"      colType="TB_STRING"   size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_TIME"    colType="TB_STRING"   size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"      colType="TB_STRING"   size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_ID"      colType="TB_STRING"   size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"    colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_POINT"    colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_TYPE"     colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_TYPE_NM"  colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="USE_POINT"    colType="TB_DECIMAL"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_TYPE"     colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_TYPE_NM"  colType="TB_STRING"   size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_NO"      colType="TB_STRING"   size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 포인트조회(고객미등록)  상단 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT DCS.SC_Crypto_FUN('DEC', B.CARD_NO) AS CARD_NO
+                 , NVL2(D.POINT,D.POINT,NVL(A.ADD_POINT,0)) AS ADD_POINT
+                 , TO_CHAR(A.REG_DATE,'YYYYMMDDhh24miss') REG_DATE
+                 , NVL2(A.APP_YN,A.APP_YN,NVL2(B.CUST_ID,'Y','N')) AS APP_YN
+                 , TO_CHAR(A.APP_DATE,'YYYYMMDDhh24miss') APP_DATE
+                 , TO_CHAR(A.MOD_DATE,'YYYYMMDDhh24miss') MOD_DATE
+                 , C.CUST_ID
+                 , C.CUST_NAME
+                 , D.POINT
+                 , D.OCCURS_POINT
+                 , D.POINT + D.OCCURS_POINT AS SUM_POINT
+              FROM DCS.DO_CD_POINT A
+                 , DCS.DM_CARD B
+                 , DCS.DM_CUSTOMER C
+                 , DCS.DO_CUST_TPOINT D    
+             WHERE ( 1 = 1 )
+               AND A.CARD_NO(+) = B.CARD_NO
+               AND B.CUST_ID = C.CUST_ID(+)
+               AND B.CUST_ID = D.CUST_ID(+)
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_CARD_NO">        
+        <![CDATA[
+        	AND B.CARD_NO = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    
+    <!-- 포인트조회(고객미등록)   하단 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT PROC_DT
+                 , PROC_TIME
+                 , DCS.SC_Crypto_FUN('DEC', CARD_NO) AS CARD_NO
+                 , BRCH_ID
+                 , BRCH_NAME
+                 , ADD_POINT
+                 , ADD_TYPE
+                 , ADD_TYPE_NM
+                 , USE_POINT
+                 , USE_TYPE
+                 , USE_TYPE_NM
+                 , RECP_NO
+              FROM 
+                   (     
+                     SELECT A.ADD_DT     PROC_DT
+                          , A.ADD_TIME   PROC_TIME
+                          , A.CARD_NO
+                          , B.BRCH_ID
+                          , B.BRCH_NAME
+                          , A.ADD_POINT
+                          , A.ADD_TYPE
+                          , COM.FN_GET_COMM_NAME('D', 'D006', A.ADD_TYPE) ADD_TYPE_NM 
+                          , 0 USE_POINT
+                          , '' USE_TYPE
+                          , '' USE_TYPE_NM
+                          , A.RECP_NO
+                       FROM DCS.DO_POINT_ADD A
+                          , DCS.DB_BRANCH B
+                      WHERE A.BRCH_ID = B.BRCH_ID
+                        AND A.CARD_NO  = DCS.SC_Crypto_FUN('ENC', ?)
+          			)
+             ORDER BY PROC_DT DESC, PROC_TIME DESC                                                                                                             
+        ]]>        
+    </query>
+  
+</service>    

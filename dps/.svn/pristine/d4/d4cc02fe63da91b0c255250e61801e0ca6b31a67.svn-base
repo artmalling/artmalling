@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김경은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  공제 협력사 매출세금계산서 일괄생성
+ -->
+<service name="/ppay105.pp">
+
+    <!-- 공제협력사 매출세금계산서 마스터  리스트 -->
+    <gauce name="H_MASTER"> 
+    <column colName="SEL"               colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="STR_CD"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PAY_YM"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PAY_CYC"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="PAY_CNT"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VEN_CD"            colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VEN_NM"            colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="REASON_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="REASON_NM"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="BIZ_TYPE"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="BIZ_TYPE_NM"       colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="INPUT_DT"          colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="INPUT_AMT"         colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="SUP_AMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VAT_AMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="TOT_AMT"           colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="TAX_ISSUE_DT"      colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="TAX_ISSUE_SEQ_NO"  colType="TB_STRING"  size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="EDI_SEQ_NO"        colType="TB_STRING"  size="24"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    
+    </gauce>
+
+    <!--  공제협력사 매출세금계산서 마스터  리스트  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+		SELECT 'F'       AS SEL
+		     , A.STR_CD                                                               /* 점 */
+		     , A.PAY_YM                                                               /* 매출년월 */
+		     , A.PAY_CYC                                                              /* 지불주기 */
+		     , A.PAY_CNT                                                              /* 지불회차 */
+		     , A.VEN_CD                                                               /* 협력사 */
+		     , DPS.FN_GET_VENDOR_NAME(A.VEN_CD) AS VEN_NM                             /* 협력사명 */
+		     , A.REASON_CD 
+		     , COM.FN_GET_COMM_NAME('D', 'P412',A.REASON_CD) AS REASON_NM             /* 공제코드 */
+		     , C.BIZ_TYPE                                                             /* 거래형태 */
+             , COM.FN_GET_COMM_NAME('D', 'P003',C.BIZ_TYPE) AS BIZ_TYPE_NM            /* 거래형태명 */
+             , A.INPUT_DT                 AS INPUT_DT                                 /* 공제일자 */
+		     , SUM(A.INPUT_AMT)           AS INPUT_AMT                                /* 공제금액 */
+		     , SUM(B.SUP_AMT)             AS SUP_AMT                                  /* 공급액      */
+		     , SUM(B.VAT_AMT)             AS VAT_AMT                                  /* 부가세      */
+		     , SUM(B.TOT_AMT)             AS TOT_AMT                                  /* 합계        */  
+		     , MAX(NVL(B.TAX_ISSUE_DT,' '))        AS TAX_ISSUE_DT
+		     , MAX(B.TAX_ISSUE_SEQ_NO)    AS TAX_ISSUE_SEQ_NO
+             , MAX(B.EDI_SEQ_NO)          AS EDI_SEQ_NO
+		 FROM DPS.PP_PREDEFDED   A
+		    , DPS.PP_TAXMST      B
+		    , DPS.PC_STRVENMST   C
+		WHERE A.STR_CD               = B.STR_CD(+)
+		  AND A.TAX_ISSUE_DT         = B.TAX_ISSUE_DT(+)
+		  AND A.TAX_ISSUE_SEQ_NO     = B.TAX_ISSUE_SEQ_NO(+)
+		  AND A.STR_CD               = C.STR_CD
+          AND A.VEN_CD               = C.VEN_CD
+		  AND A.PAY_CD_FLAG          = '2'                    /* 공제항목구분(2:공제) */
+		  AND A.VAT_YN               <> 'X'                    /* VAT여부 (X) */
+		  AND A.DED_REG_FLAG         = '0'                    /* 공제등록구분 (0:일반) */
+		  AND A.STR_CD               = ?
+		  AND A.PAY_YM               = ?
+		  AND A.PAY_CYC              = ?
+		  AND A.PAY_CNT              = ?
+		  AND A.VEN_CD               LIKE ? || '%'
+		  AND NVL(B.EDI_SEQ_NO,' ')  LIKE ? || '%'
+		  AND C.BIZ_TYPE             LIKE ? || '%'
+		
+        ]]>
+    </query> 
+    
+    <query name="SEL_TAX_DT">
+        <![CDATA[
+            AND A.TAX_ISSUE_DT BETWEEN ? AND ?
+        ]]>
+    </query> 
+    
+    <query name="SEL_GROUPBY">
+        <![CDATA[
+            GROUP BY A.STR_CD
+               , A.PAY_YM
+               , A.PAY_CYC
+               , A.PAY_CNT
+               , A.VEN_CD
+               , A.REASON_CD
+               , A.INPUT_DT
+               , C.BIZ_TYPE
+        ]]>
+    </query> 
+        
+    <!--  SYSDATE가져오기  -->
+    <query name="SEL_SYSDATE">
+        <![CDATA[
+        SELECT TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') AS TODAY
+          FROM DUAL
+        ]]>
+    </query> 
+ </service>

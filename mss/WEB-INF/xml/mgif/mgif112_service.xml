@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.13
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  발행의뢰(인쇄업체)
+ -->
+<service name="/mgif112.mg">
+    <!-- 본사점 조회 헤더  -->
+    <gauce name="H_MAIN_STR_CD"> 
+        <column colName="CODE"           colType="TB_STRING" size="4"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"           colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 발행의뢰 인쇄업체 헤더  -->
+    <gauce name="H_MASTER"> 
+        <column colName="P_CHK_GB"       colType="TB_STRING" size="1"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING" size="4"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"       colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_DT"         colType="TB_STRING" size="8"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_SLIP_NO"    colType="TB_STRING" size="6"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_QTY_SUM"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_AMT_SUM"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CODE_GUBUN"     colType="TB_STRING" size="10"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CODE_GUBUN_NM"  colType="TB_STRING" size="10"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_CNT"        colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 발행의뢰 인쇄업체 디테일 조회  -->
+    <gauce name="H_DETAIL"> 
+        <column colName="REQ_DT"         colType="TB_STRING" size="8"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING" size="2"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_SLIP_NO"    colType="TB_STRING" size="6"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_SEQ_NO"     colType="TB_STRING" size="3"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"   colType="TB_STRING" size="4"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISSUE_TYPE"     colType="TB_STRING" size="1"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME" colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"  colType="TB_STRING" size="4"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"  colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_QTY"        colType="TB_DECIMAL" size="7"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_S_NO"      colType="TB_STRING" size="18"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_E_NO"      colType="TB_STRING" size="18"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"   colType="TB_DECIMAL" size="13"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_AMT"        colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_FLAG"      colType="TB_STRING" size="2"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_FLAG_NAME" colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 발행의뢰 인쇄업체  엑셀  -->
+    <gauce name="H_EXCEL"> 
+        <column colName="GIFT_AMT_TYPE"  colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"  colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCARD_NO"    colType="TB_STRING" size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 본사점 조회 -->
+    <query name="SEL_MAIN_STR_CD">
+        <![CDATA[
+            SELECT STR_CD AS CODE,
+			       STR_NAME AS NAME
+			  FROM DPS.PC_STRMST
+			 WHERE STR_FLAG = '0' --본사점인경우
+		  ORDER BY STR_CD
+        ]]>
+    </query> 
+    
+    <!-- 발행의뢰 인쇄업체 마스터 조회 -->
+    <query name="SEL_MG_GIFTISSUEREQ_MST">
+        <![CDATA[
+		SELECT 'F' AS P_CHK_GB
+		                   ,VA.STR_CD
+		          ,TD.STR_NAME
+		          ,VA.REQ_DT
+		          ,VA.REQ_SLIP_NO
+		          ,SUM(VA.REQ_QTY) AS REQ_QTY_SUM
+		          ,SUM(VA.REQ_AMT) AS REQ_AMT_SUM
+		          ,CODE_GUBUN
+		          ,CASE VA.CODE_GUBUN
+		              WHEN '0' THEN
+		               '미생성'
+		              WHEN '1' THEN
+		               '생성'
+		              ELSE
+		               ''
+		          END AS CODE_GUBUN_NM
+		         , SUM(REQ_CNT) AS REQ_CNT
+		     FROM (SELECT TA.STR_CD
+		                 ,TA.REQ_DT
+		                 ,TA.REQ_SLIP_NO
+		                 ,TA.REQ_QTY
+		                 ,TA.REQ_QTY * TC.GIFTCERT_AMT AS REQ_AMT
+		                 ,DECODE(STAT_FLAG, '01', '0', '02', '1','03', '1', '09', '1')  AS CODE_GUBUN --발행여부체크
+		                 ,DECODE(TA.STAT_FLAG, 'XX', 0, 1) - DECODE(TA.STAT_FLAG, '09', 1, 0) as REQ_CNT
+		             FROM MSS.MG_GIFTISSUEREQ TA,
+		                  MSS.MG_GIFTAMTMST TC
+		            WHERE TA.GIFT_TYPE_CD = TC.GIFT_TYPE_CD
+		              AND TA.ISSUE_TYPE = TC.ISSUE_TYPE
+		              AND TA.GIFT_AMT_TYPE = TC.GIFT_AMT_TYPE
+		              AND TA.STR_CD = ?
+		              AND TA.REQ_DT BETWEEN ? AND ?
+		              ) VA,
+			       DPS.PC_STRMST TD
+			 WHERE VA.STR_CD = TD.STR_CD
+			   AND VA.CODE_GUBUN LIKE ? || '%'
+			 GROUP BY VA.STR_CD,
+			          TD.STR_NAME,
+			          VA.REQ_DT,
+			          VA.REQ_SLIP_NO,
+			          VA.CODE_GUBUN
+			 ORDER BY VA.STR_CD,
+                      TD.STR_NAME,
+                      VA.REQ_DT,
+                      VA.REQ_SLIP_NO
+        ]]>
+    </query>  
+    
+    <!-- 발행의뢰 인쇄업체 디테일 조회 -->
+    <query name="SEL_MG_GIFTISSUEREQ_DTL">
+        <![CDATA[
+        SELECT TA.REQ_DT
+             , TA.STR_CD
+             , TA.REQ_SLIP_NO
+             , TA.REQ_SEQ_NO
+             , TA.GIFT_TYPE_CD  
+             , TA.ISSUE_TYPE
+             , TC.GIFT_TYPE_NAME
+             , TA.GIFT_AMT_TYPE
+             , TB.GIFT_AMT_NAME
+             , TA.REQ_QTY
+             , TA.GIFT_S_NO
+             , TA.GIFT_E_NO
+             , TB.GIFTCERT_AMT
+             , TA.REQ_QTY * TB.GIFTCERT_AMT AS REQ_AMT
+             , TA.STAT_FLAG
+             , DECODE(TA.STAT_FLAG, '01', '신청', '02', '발행의뢰', '03', '입고', '09','삭제') AS STAT_FLAG_NAME
+          FROM MSS.MG_GIFTISSUEREQ TA,
+               MSS.MG_GIFTAMTMST TB,
+               MSS.MG_GIFTTPMST TC
+         WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+	       AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE
+	       AND TA.ISSUE_TYPE = TB.ISSUE_TYPE 
+	       AND TA.GIFT_TYPE_CD = TC.GIFT_TYPE_CD
+		   AND TA.REQ_DT = ?
+		   AND TA.STR_CD = ?
+		   AND TA.REQ_SLIP_NO = ?
+      ORDER BY TA.GIFT_TYPE_CD, TA.GIFT_AMT_TYPE
+        ]]>
+    </query>    
+    
+         <!-- 엑셀 다운 -->
+    <query name="SEL_EXCEL">
+        <![CDATA[
+		SELECT A.GIFT_AMT_TYPE
+		     , B.GIFT_AMT_NAME
+		     , A.GIFTCARD_NO
+		     , A.GIFTCERT_AMT
+		  FROM MSS.MG_GIFTREQ A
+		     , MSS.MG_GIFTAMTMST B
+		 WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+		   AND A.ISSUE_TYPE = B.ISSUE_TYPE
+		   AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+		   AND REQ_DT = ?
+		   AND REQ_STR = ?
+		   AND REQ_SLIP_NO = ?
+	  ORDER BY A.GIFT_AMT_TYPE, A.GIFTCARD_NO   
+        ]]>
+    </query> 
+    
+            <!--  발행신청 삭제  -->
+    <query name="DEL_DETAIL">
+        <![CDATA[                                        
+        DELETE FROM MSS.MG_GIFTISSUEREQ                                
+         WHERE REQ_DT = ?
+           AND STR_CD = ?
+           AND REQ_SLIP_NO = ?
+        ]]>
+    </query>
+</service>

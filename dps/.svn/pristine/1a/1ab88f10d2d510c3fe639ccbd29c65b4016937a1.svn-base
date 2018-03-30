@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.18
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  점별단품정보를 조회한다.
+ -->
+<service name="/pcod510.pc">
+
+    <gauce name="H_SEL_MASTER">   
+        <column colName="STR_CD"          colType="TB_STRING"  size="2"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SKU_CD"          colType="TB_STRING"  size="13"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SKU_NAME"        colType="TB_STRING"  size="40"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="INPUT_PLU_CD"    colType="TB_STRING"  size="13"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="MODEL_NO"        colType="TB_STRING"  size="24"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PUMBUN_CD"       colType="TB_STRING"  size="6"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"     colType="TB_STRING"  size="40"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="VEN_CD"          colType="TB_STRING"  size="6"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="VEN_NAME"        colType="TB_STRING"  size="40"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PUMMOK_CD"       colType="TB_STRING"  size="8"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"     colType="TB_STRING"  size="40"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="NORM_COST_PRC"   colType="TB_DECIMAL" size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="NORM_SALE_PRC"   colType="TB_DECIMAL" size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="NORM_MG_RATE"    colType="TB_DECIMAL" size="5"    dec="2"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SALE_COST_PRC"   colType="TB_DECIMAL" size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SALE_SALE_PRC"   colType="TB_DECIMAL" size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SALE_MG_RATE"    colType="TB_DECIMAL" size="5"    dec="2"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="APP_S_DT"        colType="TB_STRING"  size="8"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="APP_E_DT"        colType="TB_STRING"  size="8"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="EVENT_CD"        colType="TB_STRING"  size="11"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="EVENT_NAME"      colType="TB_STRING"  size="40"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="AVG_SALE_PRC"    colType="TB_DECIMAL" size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="AVG_SALE_QTY"    colType="TB_DECIMAL" size="9"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="GOAL_PROF_RATE"  colType="TB_DECIMAL" size="5"    dec="2"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="USE_YN"          colType="TB_STRING"  size="1"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+            SELECT SSM.STR_CD
+                 , SSM.SKU_CD
+                 , SSM.SKU_NAME
+                 , BCM.BARCODE
+                 , SKU.MODEL_NO
+                 , SSM.PUMBUN_CD
+                 , DPS.FN_GET_PUMBUN_NAME(SSM.PUMBUN_CD) AS PUMBUN_NAME
+                 , SSM.VEN_CD
+                 , DPS.FN_GET_VENDOR_NAME(SSM.VEN_CD)    AS VEN_NAME
+                 , SKU.PUMMOK_CD
+                 , DPS.FN_GET_PUMMOK_NAME(SKU.PUMMOK_CD) AS PUMMOK_NAME
+                 , NORM.NORM_COST_PRC
+                 , NORM.NORM_SALE_PRC
+                 , NORM.NORM_MG_RATE
+                 , SALE.COST_PRC                         AS SALE_COST_PRC
+                 , SALE.SALE_PRC                         AS SALE_SALE_PRC
+                 , SALE.MG_RATE                          AS SALE_MG_RATE
+                 , SALE.APP_S_DT                         AS APP_S_DT
+                 , SALE.APP_E_DT                         AS APP_E_DT
+                 , SALE.EVENT_CD                         AS EVENT_CD
+                 , DPS.FN_GET_EVENT_NAME(SALE.EVENT_CD)  AS EVENT_NAME
+                 , SSDA.AVG_SALE_PRC
+                 , SSDA.AVG_SALE_QTY
+                 , (SELECT GOAL_PROF_RATE
+                      FROM DPS.PC_STRPMKPRFRT 
+                     WHERE STR_CD    = SSM.STR_CD
+                       AND PUMMOK_CD = SKU.PUMMOK_CD
+                       AND ?         BETWEEN APP_S_DT AND APP_E_DT
+                   )                                     AS GOAL_PROF_RATE
+                 , SSM.USE_YN
+              FROM DPS.PC_STRSKUMST   SSM
+                 , DPS.PC_SKUMST      SKU
+                 , DPS.PC_STRSKUDDAVG SSDA
+                 , DPS.PC_BARCDMST    BCM
+                 , (SELECT STR_CD
+                         , SKU_CD
+                         , NORM_COST_PRC
+                         , NORM_SALE_PRC
+                         , NORM_MG_RATE
+                      FROM DPS.PC_STRSKUPRCMST
+                     WHERE ?        BETWEEN APP_S_DT AND APP_E_DT
+                       AND EVENT_CD = '00000000000'
+                   ) NORM
+                 , (SELECT NORMPRC.STR_CD
+                         , NORMPRC.SKU_CD
+                         , NVL( NVL( NVL(EMPEVNT.EVENT_CD,EMPNORM.EVENT_CD),NORMEVT.EVENT_CD), NORMPRC.EVENT_CD) AS EVENT_CD
+                         , NVL( NVL( NVL(EMPEVNT.COST_PRC,EMPNORM.COST_PRC),NORMEVT.COST_PRC), NORMPRC.COST_PRC) AS COST_PRC
+                         , NVL( NVL( NVL(EMPEVNT.SALE_PRC,EMPNORM.SALE_PRC),NORMEVT.SALE_PRC), NORMPRC.SALE_PRC) AS SALE_PRC
+                         , NVL( NVL( NVL(EMPEVNT.MG_RATE ,EMPNORM.MG_RATE) ,NORMEVT.MG_RATE) , NORMPRC.MG_RATE)  AS MG_RATE
+                         , NVL( NVL( NVL(EMPEVNT.APP_S_DT,EMPNORM.APP_S_DT),NORMEVT.APP_S_DT), NORMPRC.APP_S_DT) AS APP_S_DT
+                         , NVL( NVL( NVL(EMPEVNT.APP_E_DT,EMPNORM.APP_E_DT),NORMEVT.APP_E_DT), NORMPRC.APP_E_DT) AS APP_E_DT
+                      FROM (SELECT EMP.STR_CD
+                                 , EMP.SKU_CD
+                                 , EMP.EVENT_CD
+                                 , EMP.EMG_COST_PRC AS COST_PRC
+                                 , EMP.EMG_SALE_PRC AS SALE_PRC
+                                 , EMP.EMG_MG_RATE  AS MG_RATE
+                                 , EMP.APP_S_DT
+                                 , EMP.APP_E_DT
+                              FROM DPS.PC_EMGPRICE EMP
+                             WHERE ?            BETWEEN APP_S_DT AND APP_E_DT
+                               AND EMP.EVENT_CD != '00000000000'
+                               AND SEQ_NO        = (SELECT MAX(SEQEP.SEQ_NO) 
+                                                     FROM DPS.PC_EMGPRICE SEQEP 
+                                                    WHERE SEQEP.STR_CD    = EMP.STR_CD
+                                                      AND SEQEP.SKU_CD    = EMP.SKU_CD
+                                                      AND SEQEP.EVENT_CD  = EMP.EVENT_CD
+                                                      AND SEQEP.APP_S_DT  = EMP.APP_S_DT
+                                                      AND SEQEP.CONF_FLAG != '1'
+                                                  )
+                           ) EMPEVNT
+                         , (SELECT EMP.STR_CD
+                                 , EMP.SKU_CD
+                                 , EMP.EVENT_CD
+                                 , EMP.EMG_COST_PRC AS COST_PRC
+                                 , EMP.EMG_SALE_PRC AS SALE_PRC
+                                 , EMP.EMG_MG_RATE  AS MG_RATE
+                                 , EMP.APP_S_DT
+                                 , EMP.APP_E_DT
+                              FROM DPS.PC_EMGPRICE EMP
+                             WHERE ?             BETWEEN APP_S_DT AND APP_E_DT
+                               AND EMP.EVENT_CD  = '00000000000'
+                               AND SEQ_NO        = (SELECT MAX(SEQEP.SEQ_NO) 
+                                                     FROM DPS.PC_EMGPRICE SEQEP 
+                                                    WHERE SEQEP.STR_CD    = EMP.STR_CD
+                                                      AND SEQEP.SKU_CD    = EMP.SKU_CD
+                                                      AND SEQEP.EVENT_CD  = EMP.EVENT_CD
+                                                      AND SEQEP.APP_S_DT  = EMP.APP_S_DT
+                                                      AND SEQEP.CONF_FLAG != '1'
+                                                  )
+                           ) EMPNORM
+                         , (SELECT STR_CD
+                                 , SKU_CD
+                                 , EVENT_CD
+                                 , SAL_COST_PRC  AS COST_PRC
+                                 , SALE_PRC
+                                 , SALE_MG_RATE  AS MG_RATE
+                                 , APP_S_DT
+                                 , APP_E_DT
+                              FROM DPS.PC_STRSKUPRCMST
+                             WHERE ?        BETWEEN APP_S_DT AND APP_E_DT
+                               AND EVENT_CD != '00000000000'
+                           ) NORMEVT
+                         , (SELECT STR_CD
+                                 , SKU_CD
+                                 , EVENT_CD
+                                 , SAL_COST_PRC  AS COST_PRC
+                                 , SALE_PRC
+                                 , SALE_MG_RATE  AS MG_RATE
+                                 , APP_S_DT
+                                 , APP_E_DT
+                              FROM DPS.PC_STRSKUPRCMST
+                             WHERE ?         BETWEEN APP_S_DT AND APP_E_DT
+                               AND EVENT_CD  = '00000000000'
+                           ) NORMPRC
+                     WHERE NORMPRC.STR_CD = NORMEVT.STR_CD(+)
+                       AND NORMPRC.SKU_CD = NORMEVT.SKU_CD(+)
+                       AND NORMPRC.STR_CD = EMPNORM.STR_CD(+)
+                       AND NORMPRC.SKU_CD = EMPNORM.SKU_CD(+)
+                       AND NORMPRC.STR_CD = EMPEVNT.STR_CD(+)
+                       AND NORMPRC.SKU_CD = EMPEVNT.SKU_CD(+)
+                   ) SALE 
+             WHERE SSM.SKU_CD     = SKU.SKU_CD
+               AND SSM.STR_CD     = SSDA.STR_CD(+)
+               AND SSM.SKU_CD     = SSDA.SKU_CD(+)
+               AND SSM.STR_CD     = NORM.STR_CD
+               AND SSM.SKU_CD     = NORM.SKU_CD 
+               AND SSM.STR_CD     = SALE.STR_CD
+               AND SSM.SKU_CD     = SALE.SKU_CD 
+               AND SSM.STR_CD     = BCM.STR_CD
+               AND SSM.SKU_CD     = BCM.SKU_CD 
+               AND EXISTS ( SELECT MYORG.USER_ID
+                              FROM COM.V_MYORG MYORG
+                             WHERE MYORG.STR_CD      = SSM.STR_CD
+                               AND MYORG.PUMBUN_CD   = SSM.PUMBUN_CD
+                               AND MYORG.USER_ID     = ?
+                               AND MYORG.ORG_FLAG    = ?
+                               AND ROWNUM            = 1
+                          )
+        ]]>     
+    </query> 
+    <query name="SEL_MASTER_WHERE_STR_CD">
+        <![CDATA[
+               AND SSM.STR_CD     = ?
+        ]]>
+    </query> 
+    <query name="SEL_MASTER_WHERE_VEN_CD">
+        <![CDATA[
+               AND SSM.VEN_CD     = ? 
+        ]]>
+    </query>
+    <query name="SEL_MASTER_WHERE_VEN_NAME">
+        <![CDATA[
+               AND DPS.FN_GET_VENDOR_NAME(SSM.VEN_CD) LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_MASTER_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND SKU.PUMBUN_CD  = ? 
+        ]]>
+    </query>
+    <query name="SEL_MASTER_WHERE_PUMBUN_NAME">
+        <![CDATA[
+               AND DPS.FN_GET_PUMBUN_NAME(SKU.PUMBUN_CD) LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_MASTER_WHERE_SKU_CD">
+        <![CDATA[
+               AND SSM.SKU_CD     = ? 
+        ]]>
+    </query>
+    <query name="SEL_MASTER_WHERE_SKU_NAME">
+        <![CDATA[
+               AND SSM.SKU_NAME   LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_MASTER_WHERE_STYLE_CD">
+        <![CDATA[
+               AND SSM.STYLE_CD  = ? 
+        ]]>
+    </query>
+    <query name="SEL_MASTER_WHERE_PUMMOK_CD">
+        <![CDATA[
+               AND SKU.PUMMOK_CD  = ? 
+        ]]>
+    </query>
+    <query name="SEL_MASTER_WHERE_PUMMOK_NAME">
+        <![CDATA[
+               AND DPS.FN_GET_PUMMOK_NAME(SKU.PUMMOK_CD) LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_MASTER_WHERE_EVENT_CD">
+        <![CDATA[
+               AND SALE.EVENT_CD  = ? 
+        ]]>
+    </query>
+    <query name="SEL_MASTER_ORDER">
+        <![CDATA[
+            ORDER BY STR_CD, PUMBUN_CD, VEN_CD, SSM.STYLE_CD, SKU_CD
+        ]]>
+    </query>
+    
+</service>

@@ -1,0 +1,892 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="edi" default="init" basedir=".">
+	<!-- ### import properties ### -->
+	<property file="build.properties"/>
+	<!-- ### declare local properties ###-->
+	<property name="container.name" value="edi"/>
+	<property name="war" value="war"/>
+	<property name="war.file" value="${war}/${container.name}.war"/>
+	
+    <!-- ### CLASSPATH ### -->
+    <path id="project.class.path">
+        <fileset dir="WEB-INF/lib" includes="*.jar"/>
+    </path>
+
+    <target name="init"  
+            description="디렉토리 생성">
+        <tstamp>
+            <format property="DSTAMP" pattern="yyyy.MM.dd"/>
+            <format property="TSTAMP" pattern="HH:mm"/> 
+        </tstamp>
+        <echo message="디렉토리 생성 ${DSTAMP}-${TSTAMP}"/>
+        <mkdir dir="${build.css}"/>
+        <mkdir dir="${build.html}"/>
+        <mkdir dir="${build.imgs}"/>
+        <mkdir dir="${build.js}"/>
+        <mkdir dir="${build.jsp}"/>
+        <mkdir dir="${build.webinf.classes}"/>
+    	<mkdir dir="${build.webinf.lib}"/>
+        <mkdir dir="${build.webinf.tld}"/>
+        <mkdir dir="${build.webinf.xml}"/>
+		<mkdir dir="${war}"/>
+    </target>
+	
+    <!-- ### COPY STATIC FILES ### -->
+    <target name="copystaticfiles" depends="init" description="정적파일복사">
+        <echo>정적 파일 복사1</echo>
+        <copy todir="${build}">
+            <fileset dir=".">
+                <include name="*.config"/>
+            	<include name="index.html"/>
+            </fileset>
+        </copy>
+        <copy todir="${build.css}">
+            <fileset dir="./css"/>
+        </copy>
+        <copy todir="${build.html}">
+            <fileset dir="./html"/>
+        </copy> 
+        <copy todir="${build.imgs}">
+            <fileset dir="./imgs"/>
+        </copy>
+        <copy todir="${build.js}">
+            <fileset dir="./js"/>
+        </copy>
+        <copy todir="${build.jsp}">
+            <fileset dir="./jsp"/>
+        </copy>
+        <!-- ##  WEB-INF ## -->
+        <copy todir="${build.webinf}">
+            <fileset dir="WEB-INF">
+                <include name="web.xml"/>
+                <include name="global.config.xml"/>
+            </fileset>
+        </copy>
+    	<copy todir="${build.webinf.lib}">
+            <fileset dir="WEB-INF/lib"/>
+        </copy>
+        <copy todir="${build.webinf.tld}">
+            <fileset dir="WEB-INF/tld"/>
+        </copy>
+        <copy todir="${build.webinf.xml}">
+            <fileset dir="WEB-INF/xml"/>
+        </copy>
+
+		<!-- 각 프로젝트의 WEB-INF/**/*.xml내의 경로 수정-->
+		<replace dir="${build.webinf}" token="C:/java/webapps" value="/data_in/webapps" encoding="EUC-KR">
+			<include name="**/*.xml"/>
+			<exclude name="web.xml"/>
+        </replace>
+    	<replace dir="${build.webinf}" token="C:/java/data_out" value="/data_out" encoding="UTF-8">
+			<include name="**/*.xml"/>
+			<exclude name="web.xml"/>
+	    </replace>
+		<replace dir="${build.webinf}" token="C:/java/webapps" value="/data_in/webapps" encoding="UTF-8">
+			<include name="web.xml"/>
+        </replace>
+	</target>
+    
+    <!-- ### COMPILE ### -->
+    <target name="compile" depends="init" description="JAVA Source Compile">
+        <echo>컴파일</echo>
+        <javac srcdir="WEB-INF/src"
+                destdir="${build.webinf.classes}"
+                encoding="MS949">
+            <exclude name="**/Test*.java"/>
+            <classpath refid="project.class.path"/>
+        </javac>
+    </target>
+	    
+    <!-- ### CLEAN ### -->
+    <target name="clean" description="ant build시 생성 자원 삭제">
+        <echo>전체 삭제</echo>
+        <delete dir="${build}"/>
+    	<delete dir="${dist}"/>
+    </target>
+
+    <!-- ### BUILD TARGET### -->
+    <target name="buildproject" depends="copystaticfiles, compile" description="개발기 반영 버전 생성(기존 build 자원을 유지)"/>
+    
+    <target name="cleanbuildproject" depends="clean, buildproject" description="개발기 반영 버전 생성(기존 build 자원을 삭제)"/>
+    
+	<!-- ### DISTRIBUTE TARGET ###-->
+	<target name="prepare_dist" description="운영기 반영 버전 생성">
+		<mkdir dir="${dist}"/>
+        <copy todir="${dist}">
+            <fileset dir="${build}"/>
+        </copy>
+		<replace dir="${dist.webinf}" token="127.0.0.1" value="192.168.123.247" encoding="EUC-KR">
+			<include name="global.config.xml"/>
+        </replace>
+		<!-- oz 설정 변경 start -->
+		<replace dir="${dist.webinf}" token="127.0.0.1" value="192.168.123.247" encoding="EUC-KR">
+			<include name="global.config.xml"/>
+        </replace>
+		<replace dir="${dist.webinf}" token="8181" value="8181" encoding="EUC-KR">
+			<include name="global.config.xml"/>
+        </replace>
+		<!-- oz 설정 변경 end -->
+		<replace dir="${dist.webinf}" token="127.0.0.1" value="192.168.123.247" encoding="EUC-KR">
+			<include name="global.config.xml"/>
+        </replace>
+		
+	</target>
+
+	<!-- ### DEPLOY TARGET(DEV)### -->
+	<target name="deploy_dev_imgs">    
+		<ftp server="${dev.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${dev.ftp.id}"
+	        password="${dev.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${build}">
+	        	<include name="imgs/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+
+	<target name="deploy_dev_css">    
+		<ftp server="${dev.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${dev.ftp.id}"
+	        password="${dev.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${build}">
+	        	<include name="css/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+
+	<target name="deploy_dev_html">    
+		<ftp server="${dev.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${dev.ftp.id}"
+	        password="${dev.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${build}">
+	        	<include name="html/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+	<target name="deploy_dev_js">
+		<ftp server="${dev.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${dev.ftp.id}"
+	        password="${dev.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${build}">
+	        	<include name="js/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+	<target name="deploy_dev_jsp">
+		<ftp server="${dev.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${dev.ftp.id}"
+	        password="${dev.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${build}">
+	        	<include name="jsp/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+	<target name="deploy_dev_classes">
+		<ftp server="${dev.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${dev.ftp.id}"
+	        password="${dev.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${build}">
+	        	<include name="WEB-INF/classes/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+	<target name="deploy_dev_xml">
+		<ftp server="${dev.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${dev.ftp.id}"
+	        password="${dev.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${build}">
+	        	<include name="WEB-INF/xml/**"/>
+	        	<include name="WEB-INF/*.xml"/>
+	        </fileset>
+	    </ftp>
+	</target>
+	<target name="deploy_dev_exclude_images" depends="deploy_dev_css, deploy_dev_html, deploy_dev_js, deploy_dev_jsp, deploy_dev_classes, deploy_dev_xml"
+		description="개발기 배포(imgs 제외)"/>
+	<target name="deploy_dev" depends="deploy_dev_imgs, deploy_dev_exclude_images" 
+		description="개발기 배포(전체파일)"/>
+	
+	<!-- ### DEPLOY TARGET(PROD)### -->
+	<target name="deploy_prod_imgs">    
+		<ftp server="${prod.online.ftp.ip}"
+	        remotedir="${remote.static.home}/${container.name}"
+	        userid="${prod.online.ftp.id}"
+	        password="${prod.online.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${dist}">
+	        	<include name="imgs/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+
+	<target name="deploy_prod_css">    
+		<ftp server="${prod.online.ftp.ip}"
+	        remotedir="${remote.static.home}/${container.name}"
+	        userid="${prod.online.ftp.id}"
+	        password="${prod.online.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${dist}">
+	        	<include name="css/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+
+	<target name="deploy_prod_html">    
+		<ftp server="${prod.online.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${prod.online.ftp.id}"
+	        password="${prod.online.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${dist}">
+	        	<include name="html/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+	<target name="deploy_prod_js">
+		<ftp server="${prod.online.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${prod.online.ftp.id}"
+	        password="${prod.online.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${dist}">
+	        	<include name="js/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+	<target name="deploy_prod_jsp">
+		<ftp server="${prod.online.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${prod.online.ftp.id}"
+	        password="${prod.online.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${dist}">
+	        	<include name="jsp/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+	<target name="deploy_prod_classes">
+		<ftp server="${prod.online.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${prod.online.ftp.id}"
+	        password="${prod.online.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${dist}">
+	        	<include name="WEB-INF/classes/**"/>
+	        </fileset>
+	    </ftp>
+	</target>
+	<target name="deploy_prod_xml">
+		<ftp server="${prod.online.ftp.ip}"
+	        remotedir="${remote.ap.home}/${container.name}"
+	        userid="${prod.online.ftp.id}"
+	        password="${prod.online.ftp.pwd}"
+	        binary="yes"
+	        verbose="yes"
+	        depends="no">
+	        <fileset dir="${dist}">
+	        	<include name="WEB-INF/xml/**"/>
+	        	<include name="WEB-INF/*.xml"/>
+	        </fileset>
+	    </ftp>
+	</target>
+	<target name="deploy_prod_exclude_images" depends="deploy_prod_css, deploy_prod_html, deploy_prod_js, deploy_prod_jsp, deploy_prod_classes, deploy_prod_xml"
+		description="운영기 배포(imgs 제외)"/>
+	<target name="deploy_prod" depends="deploy_prod_imgs, deploy_prod_exclude_images" 
+		description="운영기 배포(전체)"/>
+
+	<!--  ============= 업무 프로세스 처리를 하는 js, jsp, class를 
+	                    upload 하기 위한 프로그램 ID를 입력 받음 ============== -->
+    <target name="input_biz_program" description="업무처리용 프로그램ID 입력">
+        <echo>+---------------------------------------------------+</echo>        
+    	<echo>|                                                   |</echo>
+        <echo>|            D-Cube System Uploader...              |</echo>
+    	<echo>|                                                   |</echo>
+        <echo>|               Written by FKL                      |</echo>
+        <echo>|                                                   |</echo>
+        <echo>+---------------------------------------------------+</echo>
+    	<input addproperty="biz.program.id" message="단위 프로그램 ID를 입력하세요( 예:CCom900, DBri101등):" />
+        <condition property="do.abort">
+            <equals arg1="${biz.program.id}" arg2="" trim="true"/>
+        </condition>
+        <fail if="do.abort">Program ID is not Valid...</fail>
+    </target>
+
+	<!--  ============= 업무 프로세스와 관계없이 특정 기능을  처리를 하는 js, jsp, class를 
+	                    upload 하기 위한 파일명을 입력 받음 ============== -->
+    <target name="input_function_program" description="기능성(유틸리티) 프로그램명 입력">
+        <echo>+---------------------------------------------------+</echo>        
+    	<echo>|                                                   |</echo>
+        <echo>|            D-Cube System Uploader...              |</echo>
+    	<echo>|                                                   |</echo>
+        <echo>|               Written by FKL                      |</echo>
+        <echo>|                                                   |</echo>
+        <echo>+---------------------------------------------------+</echo>
+    	<input addproperty="func.program.id" message="확장자를 제외한 프로그램명을 입력하세요(cookie, jquery-1.6.1 ... 등):" />
+        <condition property="do.abort">
+            <equals arg1="${func.program.id}" arg2="" trim="true"/>
+        </condition>
+        <fail if="do.abort">Function ID is not Valid...</fail>
+    </target>
+	<!--  ============= JavaScript Upload To DEV============== -->
+	<target name="deploy_biz_js_to_dev" description="개발기에 업무처리용 JavaScript 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to dev...        |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${dev.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${dev.ftp.id}" password="${dev.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${build}" casesensitive="NO">
+				<include name="js/**/${biz.program.id}*.js" />
+			</fileset>
+		</ftp>		
+	</target>	
+	<!--  ============= JSP Upload To DEV============== -->
+	<target name="deploy_biz_jsp_to_dev" description="개발기에 업무처리용 JSP 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to dev...        |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${dev.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${dev.ftp.id}" password="${dev.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${build}" casesensitive="NO">
+				<include name="jsp/**/${biz.program.id}*.jsp" />						
+			</fileset>
+		</ftp>		
+	</target>	
+	<!--  ============= Class Upload To DEV============== -->
+	<target name="deploy_biz_action_class_to_dev" description="개발기에 업무처리용 Action Class 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to dev...        |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${dev.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${dev.ftp.id}" password="${dev.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${build}" casesensitive="NO">
+				<include name="WEB-INF/classes/**/action/${biz.program.id}*.class" />
+			</fileset>
+		</ftp>		
+	</target>	
+
+	<!--  ============= Class Upload To DEV============== -->
+	<target name="deploy_biz_dao_class_to_dev" description="개발기에 업무처리용 Dao Class 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to dev...        |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${dev.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${dev.ftp.id}" password="${dev.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${build}" casesensitive="NO">
+				<include name="WEB-INF/classes/**/dao/${biz.program.id}*.class" />
+			</fileset>
+		</ftp>		
+	</target>	
+
+	<!--  ============= JavaScript Upload To DEV============== -->
+	<target name="deploy_function_js_to_dev" description="개발기에 기능성(유틸리티) JavaScript 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to dev...        |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${dev.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${dev.ftp.id}" password="${dev.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${build}" casesensitive="NO">
+				<include name="js/**/${func.program.id}.js" />
+			</fileset>
+		</ftp>		
+	</target>	
+	<!--  ============= JSP Upload To DEV============== -->
+	<target name="deploy_function_jsp_to_dev" description="개발기에 기능성(유틸리티) JSP 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to dev...        |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${dev.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${dev.ftp.id}" password="${dev.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${build}" casesensitive="NO">
+				<include name="jsp/**/${func.program.id}.jsp" />						
+			</fileset>
+		</ftp>		
+	</target>	
+	<!--  ============= Class Upload To DEV============== -->
+	<target name="deploy_function_class_to_dev" description="개발기에 기능성(유틸리티) Class 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to dev...        |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${dev.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${dev.ftp.id}" password="${dev.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${build}" casesensitive="NO">
+				<include name="WEB-INF/classes/**/${func.program.id}.class" />
+			</fileset>
+		</ftp>		
+	</target>	
+
+	
+	<target name="deploy_config_files_to_dev" depends="input_service_xml, input_config_xml, deploy_service_xml_to_dev, deploy_config_xml_to_dev, end_dev"
+		description="개발기에 *_service, *_config xml 파일 배포"/>	
+	<!--  ============= config를 upload 하기 위한 업무 ID를 입력 ============== -->
+    <target name="input_service_xml" description="업무처리용 XML ID 입력">
+        <echo>+---------------------------------------------------+</echo>        
+    	<echo>|                                                   |</echo>
+    	<echo>|              DCube System Uploader...             |</echo>
+    	<echo>|                                                   |</echo>
+        <echo>|               Written by FKL                      |</echo>
+        <echo>|                                                   |</echo>
+        <echo>+---------------------------------------------------+</echo>
+        <input addproperty="service.id" message="Input Service XML ID( 예:tcom001 등):" />
+    	<condition property="do.abort">
+    	    <equals arg1="${service.id}" arg2="" trim="true"/>
+    	</condition>
+        <fail if="do.abort">Service XML ID is not Valid...</fail>
+	</target>
+	<target name="input_config_xml" description="Config용 XML ID 입력">
+        <echo>+---------------------------------------------------+</echo>        
+    	<echo>|                                                   |</echo>
+    	<echo>|              DCube System Uploader...             |</echo>
+    	<echo>|                                                   |</echo>
+        <echo>|               Written by FKL                      |</echo>
+        <echo>|                                                   |</echo>
+        <echo>+---------------------------------------------------+</echo>
+        <input addproperty="config.id" message="Input Config ID( 예:OABO_config 등):" />
+    	<condition property="do.abort">
+    	    <equals arg1="${config.id}" arg2="" trim="true"/>
+    	</condition>
+        <fail if="do.abort">config ID is not Valid...</fail>
+    </target>
+
+	<!--  ============= Config File Upload ============== -->
+	<target name="deploy_service_xml_to_dev" description="개발기에 업무처리용 XML 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|              Send Config FILES to dev...          |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+		<replace dir="${build.webinf}" token="C:/java/webapps" value="/data_in/webapps">
+			<include name="**/*.xml"/>
+		</replace>	
+		<ftp server="${dev.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${dev.ftp.id}" password="${dev.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${build}" casesensitive="NO">
+				<include name="WEB-INF/**/${service.id}*.xml" />
+			</fileset>						
+		</ftp>
+	</target>
+	<target name="deploy_config_xml_to_dev" description="개발기에 Config용 XML 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|              Send Config FILES to dev...          |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+		<replace dir="${build.webinf}" token="C:/java/webapps" value="/data_in/webapps">
+			<include name="**/*.xml"/>
+		</replace>	
+		<ftp server="${dev.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${dev.ftp.id}" password="${dev.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${build}" casesensitive="NO">
+				<include name="WEB-INF/**/${config.id}.xml" />
+			</fileset>						
+		</ftp>
+	</target>
+	
+	<target name="end_dev">
+		<echo>+---------------------------------------------------+</echo>        
+    	<echo>|                                                   |</echo>
+        <echo>|               Send Complete To DEV!!              |</echo>   
+		<echo>|                                                   |</echo>
+		<echo>|                       FKL                         |</echo>
+		<echo>|                                                   |</echo>
+        <echo>+---------------------------------------------------+</echo>
+	</target>	
+
+	<!--  ============= JavaScript Upload To PROD SERVER============== -->
+	<target name="deploy_biz_js_to_PROD" description="운영기에 업무처리용 JavaScript 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to PROD...       |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${dist}" casesensitive="NO">
+				<include name="js/**/${biz.program.id}*.js" />
+			</fileset>
+		</ftp>		
+	</target>	
+	<!--  ============= JSP Upload To PROD SERVER============== -->
+	<target name="deploy_biz_jsp_to_PROD" description="운영기에 업무처리용JSP 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to PROD...       |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${dist}" casesensitive="NO">
+				<include name="jsp/**/${biz.program.id}*.jsp" />						
+			</fileset>
+		</ftp>		
+	</target>	
+	<!--  ============= Class Upload To PROD SERVER============== -->
+	<target name="deploy_biz_action_class_to_PROD" description="운영기에 업무처리용 Action Class 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to PROD...       |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${dist}" casesensitive="NO">
+				<include name="WEB-INF/classes/**/action/${biz.program.id}*.class" />
+			</fileset>
+		</ftp>		
+	</target>	
+
+	<target name="deploy_biz_dao_class_to_PROD" description="운영기에 업무처리용 Dao Class 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to PROD...       |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${dist}" casesensitive="NO">
+				<include name="WEB-INF/classes/**/dao/${biz.program.id}*.class" />
+			</fileset>
+		</ftp>		
+	</target>	
+
+	<!--  ============= JavaScript Upload To PROD============== -->
+	<target name="deploy_function_js_to_PROD" description="운영기에 기능성(유틸리티) JavaScript 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to PROD...       |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${dist}" casesensitive="NO">
+				<include name="js/**/${func.program.id}.js" />
+			</fileset>
+		</ftp>		
+	</target>	
+	<!--  ============= JSP Upload To PROD============== -->
+	<target name="deploy_function_jsp_to_PROD" description="운영기에 기능성(유틸리티) JSP 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to PROD...       |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${dist}" casesensitive="NO">
+				<include name="jsp/**/${func.program.id}.jsp" />						
+			</fileset>
+		</ftp>		
+	</target>	
+	<!--  ============= Class Upload To PROD============== -->
+	<target name="deploy_function_class_to_PROD"  description="운영기에 기능성(유틸리티)Class 파일 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|       Send Web Application FILES to PROD...       |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+	
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${dist}" casesensitive="NO">
+				<include name="WEB-INF/classes/**/${func.program.id}.class" />
+			</fileset>
+		</ftp>		
+	</target>	
+	
+	<target name="deploy_config_files_to_PROD" depends="input_service_xml, input_config_xml, deploy_service_xml_to_PROD, deploy_config_xml_to_PROD, end_PROD"/>	
+	<!--  ============= Config File Upload To PROD SERVER============== -->
+	<target name="deploy_service_xml_to_PROD" description="운영기에 업무처리용 XML 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|                 Send Config FILES...              |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+		<replace dir="${dist.webinf}" token="C:/java/webapps" value="/data_in/webapps">
+			<include name="**/*.xml"/>
+		</replace>	
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${dist}" casesensitive="NO">
+				<include name="WEB-INF/**/${service.id}*.xml" />
+			</fileset>						
+		</ftp>
+	</target>
+	<target name="deploy_config_xml_to_PROD" description="운영기에 Config용 XML 배포">
+		<echo>+---------------------------------------------------+</echo>	
+		<echo>|                                                   |</echo>
+		<echo>|                 Send Config FILES...              |</echo>				
+		<echo>|                                                   |</echo>
+		<echo>+---------------------------------------------------+</echo>
+		<replace dir="${dist.webinf}" token="C:/java/webapps" value="/data_in/webapps">
+			<include name="**/*.xml"/>
+		</replace>	
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" verbose="yes">
+			<fileset dir="${dist}" casesensitive="NO">
+				<include name="WEB-INF/**/${config.id}.xml" />
+			</fileset>						
+		</ftp>
+	</target>
+	
+	<target name="end_PROD">
+		<echo>+---------------------------------------------------+</echo>        
+    	<echo>|                                                   |</echo>
+        <echo>|               Send Complete To PROD!!             |</echo>   
+		<echo>|                                                   |</echo>
+		<echo>|                       FKL                         |</echo>
+		<echo>|                                                   |</echo>
+        <echo>+---------------------------------------------------+</echo>
+	</target>	
+
+	<!-- start deploy_edi_with_listfile_to_dev -->
+	<target name="deploy_edi_with_listfile_to_dev" description="개발기배포(파일목록이용)">
+    	<input addproperty="edi.list.file" message="배포목록파일명을 입력하세요(예:C:/temp/deploy_file.txt):" />
+        <condition property="do.abort">
+            <equals arg1="${edi.list.file}" arg2="" trim="true"/>
+        </condition>
+        <fail if="do.abort">Program ID is not Valid...</fail>
+		<echo>edi.list.file : ${edi.list.file}</echo> 
+		<loadfile property="edi.lists" srcFile="${edi.list.file}">
+			<filterchain>
+				<linecontains>
+				  <contains value="edi"/>
+				</linecontains>
+				<tokenfilter>
+					<filetokenizer/>
+					<replaceregex pattern="(\r\n)" replace="," flags="g"/>
+					<replacestring from="/edi/" to=""/>
+					<replaceregex pattern="(\r\n)" replace=""  flags="g"/>
+				</tokenfilter>
+			</filterchain>
+		</loadfile>
+		<echo message="${edi.lists}"/>
+		<!-- ftp 속성 설정-->
+		<property name="edi.container.name" value="edi"/>
+		<echo>${edi.container.name}</echo>
+		
+		<!--ftp 전송 --> 
+		<ftp server="${dev.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${dev.ftp.id}" password="${dev.ftp.pwd}" binary="true" passive="yes" verbose="yes">
+			<fileset dir="${build}" includes="${edi.lists}" casesensitive="NO" />
+		</ftp>
+		
+	</target>
+	<!--end deploy_edi_with_listfile_to_dev -->	
+
+	<!--start deploy_edi_with_listfile_to_PROD -->	
+	<target name="deploy_edi_with_listfile_to_PROD" description="운영기배포(파일목록이용)">
+		<!-- edi 프로젝트 -->
+    	<input addproperty="edi.list.file" message="배포목록파일명을 입력하세요(예:C:/temp/deploy_file.txt):" />
+        <condition property="do.abort">
+            <equals arg1="${edi.list.file}" arg2="" trim="true"/>
+        </condition>
+        <fail if="do.abort">배포파일명이 입력되지 않았습니다...</fail>
+		<echo>edi.list.file : ${edi.list.file}</echo> 
+		<!-- /data_in 경로에 전송 -->
+		<!-- js 전송 -->
+		<loadfile property="edi.lists.js" srcFile="${edi.list.file}">
+			<filterchain>
+				<linecontains>
+				  <contains value="edi"/>
+				  <contains value="js/"/>
+				</linecontains>
+				<tokenfilter>
+					<filetokenizer/>
+					<replaceregex pattern="(\r\n)" replace="," flags="g"/>
+					<replacestring from="/edi/" to="" />
+					<replaceregex pattern="(\r\n)" replace="" flags="g"/>
+				</tokenfilter>
+			</filterchain>
+		</loadfile>
+		<echo message="${edi.lists.js}"/>
+		<!-- ftp 속성 설정-->
+		<echo>${container.name}</echo>
+		
+		<!--ftp 전송 --> 
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" passive="yes" verbose="yes">
+			<fileset dir="${dist}" includes="${edi.lists.js}" casesensitive="NO" />
+		</ftp>
+		
+		<!-- jsp 전송 -->
+		<loadfile property="edi.lists.jsp" srcFile="${edi.list.file}">
+			<filterchain>
+				<linecontains>
+				  <contains value="edi"/>
+				  <contains value="jsp/"/>
+				</linecontains>
+				<tokenfilter>
+					<filetokenizer/>
+					<replaceregex pattern="(\r\n)" replace="," flags="g"/>
+					<replacestring from="/edi/" to="" />
+					<replaceregex pattern="(\r\n)" replace="" flags="g"/>
+				</tokenfilter>
+			</filterchain>
+		</loadfile>
+		<echo message="${edi.lists.jsp}"/>
+		<!-- ftp 속성 설정-->
+		<echo>${container.name}</echo>
+		
+		<!--ftp 전송 --> 
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" passive="yes" verbose="yes">
+			<fileset dir="${dist}" includes="${edi.lists.jsp}" casesensitive="NO" />
+		</ftp>
+
+		<!-- html 전송 -->
+		<loadfile property="edi.lists.html" srcFile="${edi.list.file}">
+			<filterchain>
+				<linecontains>
+				  <contains value="edi"/>
+				  <contains value="html/"/>
+				</linecontains>
+				<tokenfilter>
+					<filetokenizer/>
+					<replaceregex pattern="(\r\n)" replace="," flags="g"/>
+					<replacestring from="/edi/" to="" />
+					<replaceregex pattern="(\r\n)" replace="" flags="g"/>
+				</tokenfilter>
+			</filterchain>
+		</loadfile>
+		<echo message="${edi.lists.html}"/>
+		<!--ftp 전송 --> 
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" passive="yes" verbose="yes">
+			<fileset dir="${dist}" includes="${edi.lists.html}" casesensitive="NO" />
+		</ftp>
+
+		<!-- classes 전송 -->
+		<loadfile property="edi.lists.classes" srcFile="${edi.list.file}">
+			<filterchain>
+				<linecontains>
+				  <contains value="edi"/>
+				  <contains value="classes/"/>
+				</linecontains>
+				<tokenfilter>
+					<filetokenizer/>
+					<replaceregex pattern="(\r\n)" replace="," flags="g"/>
+					<replacestring from="/edi/" to="" />
+					<replaceregex pattern="(\r\n)" replace="" flags="g"/>
+				</tokenfilter>
+			</filterchain>
+		</loadfile>
+		<echo message="${edi.lists.classes}"/>
+		<!--ftp 전송 --> 
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" passive="yes" verbose="yes">
+			<fileset dir="${dist}" includes="${edi.lists.classes}" casesensitive="NO" />
+		</ftp>
+
+		<!-- xml 전송 -->
+		<loadfile property="edi.lists.xml" srcFile="${edi.list.file}">
+			<filterchain>
+				<linecontains>
+				  <contains value="edi"/>
+				  <contains value="xml/"/>
+				</linecontains>
+				<tokenfilter>
+					<filetokenizer/>
+					<replaceregex pattern="(\r\n)" replace="," flags="g"/>
+					<replacestring from="/edi/" to="" />
+					<replaceregex pattern="(\r\n)" replace="" flags="g"/>
+				</tokenfilter>
+			</filterchain>
+		</loadfile>
+		<echo message="${edi.lists.xml}"/>
+		<!--ftp 전송 --> 
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.ap.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" passive="yes" verbose="yes">
+			<fileset dir="${dist}" includes="${edi.lists.xml}" casesensitive="NO" />
+		</ftp>
+
+		<!-- /data_out 경로에 전송 -->
+		<!-- css 전송 -->
+		<loadfile property="edi.lists.css" srcFile="${edi.list.file}">
+			<filterchain>
+				<linecontains>
+				  <contains value="edi"/>
+				  <contains value="css/"/>
+				</linecontains>
+				<tokenfilter>
+					<filetokenizer/>
+					<replaceregex pattern="(\r\n)" replace="," flags="g"/>
+					<replacestring from="/edi/" to="" />
+					<replaceregex pattern="(\r\n)" replace="" flags="g"/>
+				</tokenfilter>
+			</filterchain>
+		</loadfile>
+		<echo message="${edi.lists.css}"/>
+		<!-- ftp 속성 설정-->
+		<echo>${container.name}</echo>
+		
+		<!--ftp 전송 --> 
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.static.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" passive="yes" verbose="yes">
+			<fileset dir="${dist}" includes="${edi.lists.css}" casesensitive="NO" />
+		</ftp>
+		
+		<!-- imgs 전송 -->
+		<loadfile property="edi.lists.imgs" srcFile="${edi.list.file}">
+			<filterchain>
+				<linecontains>
+				  <contains value="edi"/>
+				  <contains value="imgs/"/>
+				</linecontains>
+				<tokenfilter>
+					<filetokenizer/>
+					<replaceregex pattern="(\r\n)" replace="," flags="g"/>
+					<replacestring from="/edi/" to="" />
+					<replaceregex pattern="(\r\n)" replace="" flags="g"/>
+				</tokenfilter>
+			</filterchain>
+		</loadfile>
+		<echo message="${edi.lists.imgs}"/>
+		<!-- ftp 속성 설정-->
+		<echo>${container.name}</echo>
+		
+		<!--ftp 전송 --> 
+		<ftp server="${prod.online.ftp.ip}" remotedir="${remote.static.home}/${container.name}" userid="${prod.online.ftp.id}" password="${prod.online.ftp.pwd}" binary="true" passive="yes" verbose="yes">
+			<fileset dir="${dist}" includes="${edi.lists.imgs}" casesensitive="NO" />
+		</ftp>
+	</target>
+	<!-- end deploy_edi_with_listfile_to_PROD -->
+</project>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김정민
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.05.16
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  협력사 EDI 법률자문 Q&A리스트
+ -->
+<service name="/medi105.md">
+
+    <!-- 협력사 EDI Q&A 관리  -->
+    <gauce name="H_MASTER" >
+        <column colName="SEQ_NO"        colType="TB_STRING" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TITLE"         colType="TB_STRING" size="50" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ORG_NAME"      colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"   colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DT"        colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIMES"         colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="STR_CD"        colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                        
+    </gauce>
+    <!-- 협력사 EDI Q&A 관리 팝업 상세  -->
+    <gauce name="H_POPUPDETAIL"> 
+        <column colName="TITLE"         colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONTEN"        colType="TB_STRING" size="2000" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ANS_CONTENT"   colType="TB_STRING" size="2000" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"        colType="TB_STRING" size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DT"        colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 협력사 EDI Q&A 조회   -->
+     <query name="SEL_QNA">
+        <![CDATA[
+              SELECT A.SEQ_NO
+				   , TITLE
+				   , ORG_NAME
+				   , PUMBUN_NAME
+				   , REG_DT
+				   , TIMES
+				   , STR_CD
+				FROM ( SELECT LPAD(A.SEQ_NO, 3, 0) AS SEQ_NO
+				            , A.TITLE  || CASE WHEN  A.ANS_CONTENT IS NULL THEN ' ' ELSE '[답변]' END  AS TITLE
+				            , C.ORG_NAME AS ORG_NAME
+				            , B.PUMBUN_NAME AS PUMBUN_NAME
+				            , A.REG_DT AS REG_DT
+				            , A.TIME AS TIMES 
+				            , A.STR_CD
+				         FROM MSS.ET_LAWQNA A, DPS.PC_STRPBN B, DPS.PC_ORGMST C
+				        WHERE A.STR_CD = B.STR_CD                        
+				          AND A.PUMBUN_CD = B.PUMBUN_CD
+				          AND B.SALE_ORG_CD = C.ORG_CD
+				          AND A.TITLE LIKE '%' || ? || '%'
+				          AND A.STR_CD LIKE ? || '%'
+				          AND A.REG_DT >= ?
+				          AND A.REG_DT <= ?
+				     ORDER BY A.SEQ_NO DESC,A.REG_DT DESC ) A
+        ]]>
+    </query>
+    <!-- 협력사 EDI Q&A 관리 (ROWNUM )  -->
+     <query name="SEL_ROWNUM">
+        <![CDATA[
+                 WHERE ROWNUM <= ?
+        ]]>
+    </query>  
+ 
+    <!-- 협력사 EDI Q&A 관리 (상세팝업)  -->
+     <query name="SEL_POPQNA">
+        <![CDATA[
+            SELECT A.TITLE  AS TITLE
+			     , B.PUMBUN_NAME AS PUMBUN_NM
+			     , A.CONTENT AS CONTEN
+			     , A.ANS_CONTENT AS ANS_CONTENT
+			     , A.SEQ_NO AS SEQ_NO
+			     , A.REG_DT AS REG_DT 
+			  FROM MSS.ET_LAWQNA A, DPS.PC_PBNMST B
+			 WHERE A.PUMBUN_CD = B.PUMBUN_CD
+			   AND A.STR_CD = ?                                              
+			   AND A.SEQ_NO = TO_NUMBER(?)
+			   AND A.REG_DT = ?
+        ]]>
+    </query>    
+    
+    <!-- 협력사 EDI Q&A 관리 (수정)  -->
+     <query name="UPD_QNA">
+        <![CDATA[
+            UPDATE MSS.ET_LAWQNA 
+			   SET ANS_CONTENT = ?
+                 , ANS_REG_ID = ?
+			     , MOD_ID = ?
+			     , MOD_DATE = SYSDATE                                                     
+			 WHERE STR_CD = ?
+			   AND SEQ_NO = TO_NUMBER(?)
+			   AND REG_DT = ?
+        ]]>
+    </query>    
+     
+</service>

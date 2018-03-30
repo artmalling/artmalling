@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.06.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영계획 조회 및 확정
+ -->
+<service name="/meis042.me">
+
+    <!-- 점별 헤더  -->
+    <gauce name="H_SEL_STORE">
+        <column colName="CHECK_FLAG"    colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_PLAN_YEAR" colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"        colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_YN"       colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 항목별 헤더  -->
+    <gauce name="H_SEL_BIZ_CD">
+        <column colName="BIZ_PLAN_YEAR" colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLAN_AMT"      colType="TB_DECIMAL" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 조직별 헤더  -->
+    <gauce name="H_SEL_ORG">
+        <column colName="BIZ_PLAN_YEAR" colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_FLAG"      colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"        colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLAN_AMT"      colType="TB_DECIMAL" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 월별 헤더  -->
+    <gauce name="H_SEL_MONTH">
+        <column colName="MONTH"         colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLAN_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 점별 조회-->
+    <query name="SEL_BY_STORE">
+        <![CDATA[
+        SELECT 'F'                           AS CHECK_FLAG
+             , BIZ_PLAN_YEAR
+             , STR_CD
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+             , CONF_YN
+          FROM MSS.ME_BIZPLANRPT RPT
+         WHERE BIZ_PLAN_YEAR = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BY_STORE_WHERE_STR">
+        <![CDATA[
+           AND STR_CD        = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BY_STORE_WHERE_CFM">
+        <![CDATA[
+           AND CONF_YN       = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BY_STORE_GROUP_BY">
+        <![CDATA[
+         GROUP BY
+               BIZ_PLAN_YEAR
+             , STR_CD    
+             , CONF_YN
+         ORDER BY STR_CD
+        ]]>
+    </query>
+    
+    <!-- 항목별 조회-->
+    <query name="SEL_BY_BIZ_CD">
+        <![CDATA[
+        SELECT BIZ_PLAN_YEAR
+             , STR_CD
+             , CONF_YN
+             , RPT.BIZ_CD
+             , BIZ.BIZ_CD_NM
+             , SUM(PLAN_AMT) AS PLAN_AMT
+          FROM MSS.ME_BIZPLANRPT RPT
+             , MSS.ME_BIZCDMST   BIZ
+         WHERE RPT.BIZ_CD    = BIZ.BIZ_CD
+           AND BIZ_PLAN_YEAR = ?
+           AND STR_CD        = ?
+           AND CONF_YN       = ?
+        HAVING SUM(PLAN_AMT) >0
+         GROUP BY
+               BIZ_PLAN_YEAR
+             , STR_CD    
+             , CONF_YN
+             , RPT.BIZ_CD
+             , BIZ.BIZ_CD_NM
+         ORDER BY RPT.BIZ_CD
+        ]]>
+    </query>
+    
+    <!-- 조직별 조회-->
+    <query name="SEL_BY_ORG">
+        <![CDATA[
+        SELECT BIZ_PLAN_YEAR
+             , RPT.STR_CD
+             , CONF_YN
+             , RPT.BIZ_CD
+             , ORG.ORG_FLAG
+             , RPT.ORG_CD
+             , ORG.ORG_NAME
+             , SUM(PLAN_AMT) AS PLAN_AMT
+          FROM MSS.ME_BIZPLANRPT RPT
+             , DPS.PC_ORGMST     ORG
+         WHERE RPT.ORG_CD    = ORG.ORG_CD
+           AND BIZ_PLAN_YEAR = ?
+           AND RPT.STR_CD    = ?
+           AND RPT.BIZ_CD    = ?
+           AND CONF_YN       = ?
+         GROUP BY
+               BIZ_PLAN_YEAR
+             , RPT.STR_CD    
+             , CONF_YN
+             , RPT.BIZ_CD
+             , ORG.ORG_FLAG
+             , RPT.ORG_CD
+             , ORG.ORG_NAME
+         ORDER BY RPT.ORG_CD
+        ]]>
+    </query>
+    
+    <!-- 월별 조회-->
+    <query name="SEL_BY_MONTH">
+        <![CDATA[
+        SELECT SUBSTR(BIZ_PLAN_YM, 5,2)|| '월' AS MONTH
+             , SUM(PLAN_AMT)                   AS PLAN_AMT
+          FROM MSS.ME_BIZPLANRPT
+         WHERE BIZ_PLAN_YEAR = ?
+           AND STR_CD        = ?
+           AND BIZ_CD        = ?
+           AND ORG_CD        = ?
+           AND CONF_YN       = ?
+         GROUP BY
+               BIZ_PLAN_YM
+             , STR_CD
+             , BIZ_CD
+             , ORG_CD
+             , BIZ_PLAN_YEAR
+         ORDER BY BIZ_PLAN_YM
+        ]]>
+    </query>
+    
+    <!-- 확정/취소 처리-->
+    <query name="UPD_REPORT">
+        <![CDATA[
+        UPDATE MSS.ME_BIZPLANRPT
+           SET CONF_YN       = ?
+             , MOD_DATE      = SYSDATE
+             , MOD_ID        = ?
+         WHERE BIZ_PLAN_YEAR = ?
+           AND STR_CD        = ?
+        ]]>
+    </query>
+    
+</service>

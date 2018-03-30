@@ -1,0 +1,480 @@
+<%/*******************************************************************************
+* 시스템명 : 아트몰링 통합정보시스템
+* 작 성 일 : 2010.12.12
+* 작 성 자 : 정지인
+* 수 정 자 :
+* 파 일 명 : mainFrame.jsp
+* 버    전 : 1.0
+* 개    요 : 메인 화면
+* 이    력 :
+******************************************************************************/%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"  pageEncoding="UTF-8"
+ import="kr.fujitsu.ffw.base.BaseProperty,kr.fujitsu.ffw.util.String2,kr.fujitsu.ffw.control.ActionForm" %>
+<%@ page import="ecom.util.Util" %>
+<%@ page import="java.util.*" %>
+<%@ page import="sun.misc.FormattedFloatingDecimal.Form"%>
+<%@ page import="ecom.vo.SessionInfo2"%>
+<%@ taglib uri="/WEB-INF/tld/c.tld" prefix="c"%>
+<%@ taglib uri="/WEB-INF/tld/ajax-lib.tld" prefix="ajax"%>
+<%
+	String dir = request.getContextPath();
+
+	SessionInfo2 sessionInfo = (SessionInfo2) session.getAttribute("sessionInfo2");
+	String userid = sessionInfo.getUSER_ID(); //사용자아이디
+	String strcd = sessionInfo.getSTR_CD(); //점코드
+	String strNm = sessionInfo.getSTR_NM(); //점명
+	String vencd = sessionInfo.getVEN_CD(); //협력사코드
+	String venNm = sessionInfo.getVEN_NAME(); //협력사명
+	String gb = sessionInfo.getGB(); //1. 협력사     2.브랜드
+%>
+
+<ajax:library />
+
+<!--*************************************************************************-->
+<!--* A. 로그인 유무, 기본설정												*-->
+<!--*************************************************************************-->
+<loginChk:islogin />
+
+<HTML>
+<HEAD>
+<title>아트몰링 </title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="pragma" content="no-cache">
+<link href="/edi/css/ds.css" rel="stylesheet" type="text/css" />
+<script language="javascript"  src="/edi/js/common.js"  type="text/javascript"></script>
+<script language="javascript"  src="/edi/js/message.js" type="text/javascript"></script>
+<script language="javascript"  src="/edi/js/gauce.js"   type="text/javascript"></script>
+<script language="javascript"  src="/edi/js/global.js"  type="text/javascript"></script>
+<script language="javascript"  src="/edi/js/ajax.js"    type="text/javascript"></script>
+</HEAD>
+
+<script type="text/javascript">
+var STR_CD = '<%=strcd%>';       //점코드
+var cnt = 0;
+var USERID = '<%=userid%>';
+var GB = '<%=gb%>';
+var VENCD = '<%=vencd%>';
+var VENNM = '<%=venNm%>';
+var g_pre_row = -1;
+var g_last_row = -1;
+
+function onLoad() {
+	//초기 로드시 파일다운로드 비활성화
+	enableControl(IMG_FILE_LINK,false);
+	if(GB == "1") {
+		document.getElementById("Notice").style.display = "block";
+		//로딩시 공지사항조회
+		notice_click();
+
+		//매출현황
+		//sale_amt();
+
+		//대금현황
+		//bill_mst();
+	}
+	else {
+		document.getElementById("Notice").style.display = "none";
+		//top.mainFrame.location.href="/eord105.eo?goTo=list";
+	}
+}
+
+/**
+ * 공지 사항 조회
+ */
+function notice_click() {
+	var strFrom = getTodayFormat("YYYYMM01");
+	var strTo = getTodayFormat("YYYYMMDD");
+	var strPumbun = "";
+	var param = "&goTo=getMasterMain" + "&strcd=" + STR_CD + "&vencd=" + VENCD + "&pumbun" + strPumbun + "&title=" + "" + "&read_cnt=" + 10 + "&sDate=" + strFrom + "&eDate=" + strTo;
+
+	<ajax:open callback="on_loadedXML" param="param" method="POST" urlvalue="/edi/ecmn101.em"/>
+
+	<ajax:callback function="on_loadedXML">
+		var content = "";
+		if( rowsNode.length > 0 ){
+
+			content += "<table width='795' border='0' cellspacing='0' cellpadding='0' class='g_table'>";
+
+			for( i = 0; i < rowsNode.length; i++ ){
+				var node0 = rowsNode[i].childNodes[0].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[0].childNodes[0].nodeValue;
+				var node1 = rowsNode[i].childNodes[1].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[1].childNodes[0].nodeValue;
+				var node2 = rowsNode[i].childNodes[2].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[2].childNodes[0].nodeValue;
+				var node3 = rowsNode[i].childNodes[3].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[3].childNodes[0].nodeValue;
+				var node4 = rowsNode[i].childNodes[4].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[4].childNodes[0].nodeValue;
+				var node5 = rowsNode[i].childNodes[5].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[5].childNodes[0].nodeValue;
+				var node6 = rowsNode[i].childNodes[6].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[6].childNodes[0].nodeValue;
+				var node7 = rowsNode[i].childNodes[7].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[7].childNodes[0].nodeValue;
+				var node8 = rowsNode[i].childNodes[8].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[8].childNodes[0].nodeValue;
+				var node9 = rowsNode[i].childNodes[9].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[9].childNodes[0].nodeValue;
+				var node10 = rowsNode[i].childNodes[10].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[10].childNodes[0].nodeValue;
+
+				var pumbunNm = rowsNode[i].childNodes[6].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[6].childNodes[0].nodeValue;
+				var title = rowsNode[i].childNodes[8].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[8].childNodes[0].nodeValue;
+
+				if( node6.length > 5 ){
+					node6 = node6.substring(0, 5) + " ..";
+				}
+
+				if( node8.length > 17 ){
+					node8 = node8.substring(0, 17) + " ..";
+				}
+
+				if( node9.length > 8 ){
+					node9 = node9.substring(0, 8) + " ..";
+				}
+
+				//content += "<tr onclick='getDetail("+node1+", "+node4+", "+node3+");' style='cursor:hand;' onMouseOver='chBak("+i+");' onMouseOut='reBak("+i+");'>";
+				content += "<tr onclick='chBak("+i+");getDetail("+node1+", "+node4+", "+node3+");' style='cursor:hand;'>";
+				content += "<td class='r1' id='1tdId"+i+"' width='35'>"+(i+1)+"</td>";
+				content += "<td class='r3' id='2tdId"+i+"' width='85'>"+node2+"</td>";
+				content += "<td class='r1' id='3tdId"+i+"' width='45'>"+node4+"</td>";
+				content += "<td class='r1' id='4tdId"+i+"' width='85'>"+getDateFormat(node3)+"</td>";
+				content += "<td class='r1' id='5tdId"+i+"' width='55'>"+node7+"</td>";
+				content += "<td class='r3' id='6tdId"+i+"' width='223' title='"+title+"'>"+node8+"</td>";
+				content += "<td class='r3' id='7tdId"+i+"' width='85'>"+node9+"</td>";
+				content += "<td class='r4' id='8tdId"+i+"' width='62'>"+node10+"</td>";
+				content += "</tr>";
+			}
+			content += "</table>";
+
+		}else {
+
+		}
+
+		document.getElementById("DETAIL_CONTETN").innerHTML = content;
+		setPorcCount("SELECT", rowsNode.length);
+	</ajax:callback>
+
+}
+
+function getDetail( strcd, seqNo, reg_dt ){
+	var param = "";
+	param = "&goTo=getDetail&strcd=" + strcd + "&seqNo=" + seqNo + "&reg_dt=" + reg_dt;
+
+	<ajax:open callback="on_loadedXML" param="param" method="POST" urlvalue="/edi/ecmn101.em"/>
+
+	<ajax:callback function="on_loadedXML">
+		if( rowsNode.length ){
+			document.getElementById("em_io_title").value = rowsNode[0].childNodes[0].childNodes[0].nodeValue == "null" ? "" : rowsNode[0].childNodes[0].childNodes[0].nodeValue;
+			document.getElementById("content").value = rowsNode[0].childNodes[1].childNodes[0].nodeValue == "null" ? "" : rowsNode[0].childNodes[1].childNodes[0].nodeValue;
+			document.getElementById("em_io_file").value = rowsNode[0].childNodes[3].childNodes[0].nodeValue == "null" ? "" : rowsNode[0].childNodes[3].childNodes[0].nodeValue;
+		}
+
+		//파일다운로드 버튼 활성/비활성화
+		if (document.getElementById("em_io_file").value == "") {
+			enableControl(IMG_FILE_LINK,false);
+		} else {
+			enableControl(IMG_FILE_LINK,true);
+		}
+	</ajax:callback>
+
+}
+
+
+/**
+ * 매출 현황 조회
+ */
+function sale_amt(){
+
+	 var strIlja = getTodayFormat("YYYYMMDD");
+
+		var param = "&goTo=getSale" + "&strcd=" + STR_CD + "&vencd=" + VENCD + "&strIlja=" + strIlja;
+
+		<ajax:open callback="on_loadedXML" param="param" method="POST" urlvalue="/edi/ecom002.ec"/>
+		//alert();
+		<ajax:callback function="on_loadedXML">
+			var content = "";
+			if( rowsNode.length > 0 ){
+
+				content += "<table width='382' border='0' cellspacing='0' cellpadding='0' class='g_table'>";
+
+				for( i = 0; i < rowsNode.length; i++ ){
+					var node0 = rowsNode[i].childNodes[0].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[0].childNodes[0].nodeValue;
+					var node1 = rowsNode[i].childNodes[1].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[1].childNodes[0].nodeValue;
+					var node2 = rowsNode[i].childNodes[2].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[2].childNodes[0].nodeValue;
+					var node3 = rowsNode[i].childNodes[3].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[3].childNodes[0].nodeValue;
+					var node4 = rowsNode[i].childNodes[4].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[4].childNodes[0].nodeValue;
+					var node5 = rowsNode[i].childNodes[5].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[5].childNodes[0].nodeValue;
+					var node6 = rowsNode[i].childNodes[6].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[6].childNodes[0].nodeValue;
+
+					content += "<td class='r1' id='1tdId"+i+"' width='60'>"+getDateFormat(node0)+"</td>";
+					content += "<td class='r3' id='2tdId"+i+"' width='85'>"+node2+"</td>";
+					content += "<td class='r3' id='3tdId"+i+"' width='90'>"+node4+"</td>";
+					content += "<td class='r4' id='4tdId"+i+"' width='70'>"+convAmt(node5)+"</td>";
+					content += "<td class='r4' id='5tdId"+i+"' width='70'>"+convAmt(node6)+"</td>";
+					content += "</tr>";
+				}
+				content += "</table>";
+
+			}else {
+
+			}
+			document.getElementById("SALE_CONTETN").innerHTML = content;
+			//setPorcCount("SELECT", rowsNode.length);
+		</ajax:callback>
+}
+
+/**
+ * 대금현황
+ */
+function bill_mst(){
+
+	var strIlja = getTodayFormat("YYYYMMDD");
+
+	 var param = "&goTo=getbillmst" + "&strcd=" + STR_CD + "&vencd=" + VENCD + "&strIlja=" + strIlja;
+
+	<ajax:open callback="on_loadedXML" param="param" method="POST" urlvalue="/edi/ecom002.ec"/>
+
+	<ajax:callback function="on_loadedXML">
+		var content = "";
+		if( rowsNode.length > 0 ){
+
+			content += "<table width='645' border='0' cellspacing='0' cellpadding='0' class='g_table'>";
+
+			for( i = 0; i < rowsNode.length; i++ ){
+
+				var node0 = rowsNode[i].childNodes[0].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[0].childNodes[0].nodeValue;
+				var node1 = rowsNode[i].childNodes[1].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[1].childNodes[0].nodeValue;
+				var node2 = rowsNode[i].childNodes[2].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[2].childNodes[0].nodeValue;
+				var node3 = rowsNode[i].childNodes[3].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[3].childNodes[0].nodeValue;
+				var node4 = rowsNode[i].childNodes[4].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[4].childNodes[0].nodeValue;
+				var node5 = rowsNode[i].childNodes[5].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[5].childNodes[0].nodeValue;
+				var node6 = rowsNode[i].childNodes[6].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[6].childNodes[0].nodeValue;
+				var node7 = rowsNode[i].childNodes[7].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[7].childNodes[0].nodeValue;
+				var node8 = rowsNode[i].childNodes[8].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[8].childNodes[0].nodeValue;
+				var node9 = rowsNode[i].childNodes[9].childNodes[0].nodeValue == "null" ? "" : rowsNode[i].childNodes[9].childNodes[0].nodeValue;
+
+				content += "<td class='r1' id='1tdId"+i+"' width='60'>"+getDateFormat(node0)+"</td>";
+				content += "<td class='r3' id='2tdId"+i+"' width='80'>"+node2+"</td>";
+				content += "<td class='r3' id='3tdId"+i+"' width='80'>"+node4+"</td>";
+				content += "<td class='r4' id='4tdId"+i+"' width='85'>"+convAmt(node5)+"</td>";
+				content += "<td class='r4' id='5tdId"+i+"' width='85'>"+convAmt(node6)+"</td>";
+				content += "<td class='r4' id='6tdId"+i+"' width='80'>"+convAmt(node5)+"</td>";
+				content += "<td class='r4' id='7tdId"+i+"' width='80'>"+convAmt(node6)+"</td>";
+				content += "<td class='r4' id='8tdId"+i+"' width='80'>"+convAmt(node5)+"</td>";
+				content += "</tr>";
+			}
+			content += "</table>";
+
+		}else {
+
+		}
+		document.getElementById("AMT_CONTETN").innerHTML = content;
+		// setPorcCount("SELECT", rowsNode.length);
+	</ajax:callback>
+}
+
+function chBak(val) {
+	g_last_row = val;
+	if (g_pre_row != g_last_row){
+		for(i=1;i<9;i++) {
+			document.getElementById(i+"tdId"+val).style.backgroundColor="#fff56E";
+			//alert("1");
+			if (g_pre_row != -1) {
+				document.getElementById(i+"tdId"+g_pre_row).style.backgroundColor="#ffffff";
+			}
+		}
+	}
+	g_pre_row = g_last_row;
+}
+
+function scrollAll(){
+	document.all.DETAIL_TITLE.scrollLeft = document.all.DETAIL_CONTETN.scrollLeft;
+}
+
+function scrollAll3(){
+	document.all.AMT_TITLE.scrollLeft = document.all.AMT_CONTETN.scrollLeft;
+}
+
+
+/**
+ * saveAsFiles()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2011.07.20
+ * 개    요 : 값체크(저장)
+ * return값 :
+ */
+function saveAsFiles() {
+	var strPath   = "upload/";
+	var strFileNm = document.getElementById("em_io_file").value;
+	if( strFileNm != null  ) {
+		iFrame.location.href="/edi/jsp/fileDownload.jsp?strPath="+strPath+"&strFileNm="+encodeURI(encodeURIComponent(strFileNm));
+	}
+}
+
+</script>
+
+</head>
+<body  class="PL10 PR07 PT15" onload="onLoad();" >
+<iframe id=iFrame name=iFrame src="about:blank" width=0 height=0></iframe>
+<div id="Notice" >
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+	<tr>
+		<td>
+			<img src="<%=dir%>/imgs/login/edi_main_title_01.gif" width="104" height="37" />
+		</td>
+	</tr>
+	<tr valign="top"  >
+		<td>
+			<table width="100%"  border="0" cellspacing="0" cellpadding="0" class="BD4A">
+				<tr valign="top">
+					<td>
+						<div id="DETAIL_TITLE" style=" width:815px;  overflow:hidden;">
+							<table width="815" border="0" cellspacing="0" cellpadding="0" class="g_table">
+								<tr>
+									<th width="35">NO</th>
+									<th width="85">점</th>
+									<th width="45">순번</th>
+									<th width="85">일자</th>
+									<th width="55">시간</th>
+									<th width="223">제목</th>
+									<th width="85">등록자</th>
+									<th width="62">조회수</th>
+									<th width="12">&nbsp;</th>
+								</tr>
+							</table>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<div id="DETAIL_CONTETN" style="width:815px;height:112px;overflow-y:scroll" onscroll="scrollAll();">
+							<table width="795" border="0" cellspacing="0" cellpadding="0" class="g_table">
+							</table>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="dot"></td>
+				</tr>
+				<tr>
+					<td>
+						<table width="100%" border="0" cellspacing="0" cellpadding="0">
+							<tr>
+								<td colspan="2">
+									<img src="<%=dir%>/imgs/login/notice_title_02.gif" height="6" width="813" style="margin: 0px 0px 0px 0px; vertical-align: bottom" />
+								</td>
+							</tr>
+							<tr style="vertical-align: top">
+								<td style="vertical-align:top; background-image: url(<%=dir%>/imgs/login/notice_title_01.gif);width: 6px; height: 20px;"></td>
+								<td style="vertical-align:top; background-image: url(<%=dir%>/imgs/login/notice_title_03.gif);width: 809px; height: 20px;">
+									<input type="hidden" name="em_io_file" id="em_io_file"/>
+									<input type="text" name="em_io_title" id="em_io_title" class="no-border" size="117" style="background-color: transparent;" readonly />
+									&nbsp;<img id="IMG_FILE_LINK" alt="첨부파일 다운로드" align="absmiddle" onclick="javascript:saveAsFiles();" src="<%=dir%>/imgs/btn/file_down.gif" />
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td class="dot"></td>
+				</tr>
+				<tr>
+					<td>
+						<table width="100%" border="0" cellspacing="0" cellpadding="0" >
+							<tr>
+								<td colspan = "2">
+									<img src="<%=dir%>/imgs/login/notice_notice_02.gif" height="6"  width="815" style="margin: 0px 0px 0px 0px; vertical-align:bottom" />
+								</td>
+							</tr>
+							<tr style="vertical-align:top;">
+								<td style="vertical-align:top; height: 129px">
+									<img src="<%=dir%>/imgs/login/notice_notice_01.gif" height="129"  width="6" style="margin: 0px 0px 0px 0px"/>
+								</td>
+								<td style="vertical-align:top">
+									<textarea name="content" id="content" class="no-border" readOnly="readOnly" style="background-image: url(<%=dir%>/imgs/login/notice_notice_03.gif); border-width:0; width: 809px; height:129px" cols="140" rows="20" ></textarea>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+<!-- 
+	<tr>
+		<td class="PT10">
+			<table width="100%"  border="0" cellspacing="0" cellpadding="0" >
+				<tr>
+					<td>
+						<img src="<%=dir%>/imgs/login/main_sale.png" height="25" />
+					</td>
+					<td>
+						<img src="<%=dir%>/imgs/login/main_amt.png"  height="25" />
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<td>
+						<table width="50%"  border="0" cellspacing="0" cellpadding="0" class="BD4A">
+							<tr valign="top">
+								<td>
+									<div id="SALE_TITLE" style=" width:400px;  overflow:hidden;">
+										<table width="400" border="0" cellspacing="0" cellpadding="0" class="g_table">
+											<tr>
+												<th width="60">년월</th>
+												<th width="85">점</th>
+												<th width="90">브랜드</th>
+												<th width="75">총매출</th>
+												<th width="75">순매출</th>
+												<th width="12">&nbsp;</th>
+											</tr>
+										</table>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div id="SALE_CONTETN" style="width:400px;height:150px;overflow-y:scroll" onscroll="scrollAll();">
+										<table width="350" border="0" cellspacing="0" cellpadding="0" class="g_table">
+										</table>
+									</div>
+								</td>
+							</tr>
+						 </table>
+					</td>
+					<td>
+						<table width="50%"  border="0" cellspacing="0" cellpadding="0" class="BD4A">
+							<tr valign="top">
+								<td>
+									<div id="AMT_TITLE" style=" width:400px;  overflow:hidden;">
+										<table width="659" border="0" cellspacing="0" cellpadding="0" class="g_table">
+											<tr>
+												<th width="60">년월</th>
+												<th width="80">지불주기</th>
+												<th width="80">지불회차</th>
+												<th width="85">지불대상액</th>
+												<th width="85">지불보류액</th>
+												<th width="85">지불공제액</th>
+												<th width="85">선급금액</th>
+												<th width="85">실지불액</th>
+												<th width="12">&nbsp;</th>
+											</tr>
+										</table>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div id="AMT_CONTETN" style="width:400px;height:150px;overflow:scroll" onscroll="scrollAll3();">
+										<table width="645" border="0" cellspacing="0" cellpadding="0" class="g_table">
+										</table>
+									</div>
+								</td>
+							</tr>
+						 </table>
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+	-->
+</table>
+</div>
+</body>
+</html>

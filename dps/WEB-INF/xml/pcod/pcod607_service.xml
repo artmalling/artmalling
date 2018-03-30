@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.04.15
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  긴급매가를 수정한다.
+ -->
+<service name="/pcod607.pc">
+    <!-- 긴급매가가격 그리드 -->
+    <gauce name="H_SEL_MASTER">
+        <column colName="CHECK"                 colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"                colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"                colType="TB_STRING"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"              colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_NAME"             colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"              colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"                colType="TB_INT"     size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"              colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"              colType="TB_STRING"  size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"            colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMG_COST_PRC"          colType="TB_INT"     size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMG_SALE_PRC"          colType="TB_INT"     size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMG_MG_RATE"           colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_YN"               colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_TYPE"               colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 긴급매가 마스터 조회 -->
+    <query name="SEL_MASTER">    
+        <![CDATA[
+             SELECT 'F' AS CHECK_FLAG
+                 , EMG.STR_CD
+                 , SKU.SKU_CD
+                 , SKU.SKU_NAME
+                 , SKU.RECP_NAME
+                 , EMG.APP_S_DT
+                 , EMG.SEQ_NO
+                 , EMG.APP_E_DT
+                 , EMG.EVENT_CD
+                 , EVT.EVENT_NAME
+                 , EMG.EMG_COST_PRC
+                 , EMG.EMG_SALE_PRC
+                 , EMG.EMG_MG_RATE
+                 , CASE WHEN EMG.CONF_FLAG = '1' THEN 'N'
+                        ELSE 'Y'
+                   END                AS CONF_YN
+                 , PBM.BIZ_TYPE  
+              FROM DPS.PC_SKUMST    SKU
+                 , DPS.PC_EMGPRICE  EMG
+                 , DPS.PC_EVTMST    EVT
+                 , DPS.PC_PBNMST    PBM
+             WHERE SKU.SKU_CD    = EMG.SKU_CD
+               AND EMG.EVENT_CD  = EVT.EVENT_CD(+)
+               AND SKU.PUMBUN_CD = PBM.PUMBUN_CD
+               AND EMG.STR_CD    = ?
+               AND SKU.PUMBUN_CD = ?
+               AND EMG.APP_S_DT  = ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_CONF_N">
+        <![CDATA[
+               AND EMG.CONF_FLAG =  '1'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_CONF_Y">
+        <![CDATA[
+               AND EMG.CONF_FLAG <> '1'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_SKU_CD">
+        <![CDATA[
+               AND SKU.SKU_CD      LIKE ?||'%'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_SKU_NAME">
+        <![CDATA[
+               AND SKU.SKU_NAME    LIKE '%'||?||'%'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_EVENT_CD">
+        <![CDATA[
+               AND EVT.EVENT_CD    LIKE ?||'%'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_EVENT_NAME">
+        <![CDATA[
+               AND EVT.EVENT_NAME  LIKE '%'||?||'%'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_ORDER">
+        <![CDATA[
+             ORDER BY EMG.STR_CD, EMG.SKU_CD, EMG.APP_S_DT, EMG.SEQ_NO
+        ]]>
+    </query>
+    
+    <!-- 긴급매가 확정 여부조회-->
+    <query name="SEL_EMG_CONF_FLAG">
+        <![CDATA[
+            SELECT CONF_FLAG
+              FROM DPS.PC_EMGPRICE
+             WHERE STR_CD    = ?
+               AND SKU_CD    = ?
+               AND EVENT_CD  = ?
+               AND APP_S_DT  = ?
+               AND SEQ_NO    = ? 
+        ]]>
+    </query>
+    <!-- 긴급매가 확정-->
+    <query name="UPD_EMGPRICE">
+        <![CDATA[
+            UPDATE DPS.PC_EMGPRICE
+               SET CONF_FLAG    = ?
+                 , CONF_DATE    = SYSDATE
+                 , CONF_ID      = ?
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?
+             WHERE STR_CD       = ?
+               AND SKU_CD       = ?
+               AND EVENT_CD     = ?
+               AND APP_S_DT     = ?
+               AND SEQ_NO       = ? 
+        ]]>
+    </query>
+    
+    <!-- 정상마진율 체크  MARIO OUTLET START 2011-08-11 -->
+    <query name="SEL_PC_MARGINMST_CHECK">
+        <![CDATA[
+            SELECT  COUNT(*) AS CNT
+              FROM DPS.PC_MARGINMST
+             WHERE STR_CD = ?
+               AND PUMBUN_CD = (SELECT PUMBUN_CD FROM DPS.PC_SKUMST SKU WHERE SKU_CD = ?)
+               AND NORM_MG_RATE = ?
+               AND MG_FLAG    = '0'
+               AND EVENT_CD   = '00000000000'    
+               AND ? BETWEEN APP_S_DT AND APP_E_DT
+        ]]>
+    </query>
+    
+    <!-- 행사마진율 체크  MARIO OUTLET START 2011-08-11 -->
+    <query name="SEL_PC_MARGINMST_CHECK_HANGSA">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_MARGINMST
+             WHERE STR_CD       = ?
+               AND PUMBUN_CD    = (SELECT PUMBUN_CD FROM DPS.PC_SKUMST SKU WHERE SKU_CD = ?)
+               AND NORM_MG_RATE = ?
+               --AND ((MG_FLAG <> '0') OR
+               --     (MG_FLAG  = '0' AND EVENT_RATE <> '00'))
+               AND ? >= APP_S_DT 
+               AND ? <= APP_E_DT
+        ]]>
+    </query>
+    
+    
+    
+    
+    <!-- 긴급전송 표기용 2017.01.26 -->
+    <query name="INS_ITF_DATA">
+        <![CDATA[
+            INSERT INTO POS.ITF_DATA
+                (
+                  TABLE_NAME
+                , CRD_DT
+                , SEQ_NO
+                , EXE_TYPE
+                , ITF_DATA
+                )
+           VALUES
+                (
+                  ?
+                , TO_CHAR(SYSDATE,'YYYYMMDD')		 -- 생성일자
+	            , ( SELECT NVL(MAX(SEQ_NO),0) + 1    -- 일련번호 채번
+	                  FROM POS.ITF_HEAD
+	                 WHERE TABLE_NAME = ?
+	                   AND CRD_DT = TO_CHAR(SYSDATE,'YYYYMMDD')  -- 생성일자
+	              )
+                , 'I'
+                , ''
+                )
+        ]]>
+    </query>
+    
+    
+    <!-- 긴급전송 표기용 2017.01.26 -->
+    <query name="INS_ITF_HEAD">
+        <![CDATA[
+            INSERT INTO POS.ITF_HEAD
+                (
+                  STR_CD
+                , TABLE_NAME
+                , CRD_DT
+                , SEQ_NO
+                , ITF_FLAG
+                , CRD_DATE
+                ) VALUES (
+                  ?
+                , ?
+                , TO_CHAR(SYSDATE,'YYYYMMDD')		 -- 생성일자
+	            , ( SELECT NVL(MAX(SEQ_NO),0) + 1   -- 일련번호 채번
+	                  FROM POS.ITF_HEAD
+	                 WHERE TABLE_NAME = ?
+	                   AND CRD_DT = TO_CHAR(SYSDATE,'YYYYMMDD')  -- 생성일자
+	              )    
+                , '0'
+                , SYSDATE
+                )
+        ]]>
+    </query>
+    
+</service>

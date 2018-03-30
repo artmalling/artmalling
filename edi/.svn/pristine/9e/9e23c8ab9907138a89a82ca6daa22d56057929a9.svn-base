@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal102.es">
+    
+   
+    <!-- 일매출 현황 조회 -->
+    <query name="SEL_DAYPBN">
+        <![CDATA[
+        SELECT C.STR_CD 
+             , NVL(DECODE(GROUPING_ID(C.STR_CD, C.PUMBUN_CD, C.EVENT_FLAG, C.EVENT_RATE), 15, '합 계', 7, '점별 소계',
+                   DECODE(GROUPING_ID(C.STR_CD, C.PUMBUN_CD, C.EVENT_FLAG, C.EVENT_RATE), 0, DPS.FN_GET_STORE_NAME(C.STR_CD), ' ')), ' ')  AS STR_NM 
+                   
+             , NVL(DECODE(GROUPING_ID(C.STR_CD, C.PUMBUN_CD, C.EVENT_FLAG, C.EVENT_RATE), 0, C.PUMBUN_CD, ' '), ' ')  AS PUMBUN_CD 
+                                                                        
+             , NVL(DECODE(GROUPING_ID(C.STR_CD, C.PUMBUN_CD, C.EVENT_FLAG, C.EVENT_RATE), 3, '브랜드별 소계', 
+                   DECODE(GROUPING_ID(C.STR_CD, C.PUMBUN_CD, C.EVENT_FLAG, C.EVENT_RATE), 0, DPS.FN_GET_PUMBUN_NAME(C.PUMBUN_CD), ' ')), ' ')   AS PUMBUN_NAME 
+                
+             , NVL(DECODE(GROUPING_ID(C.STR_CD, C.PUMBUN_CD, C.EVENT_FLAG, C.EVENT_RATE), 1, '행사구분별 소계', 
+                   DECODE(GROUPING_ID(C.STR_CD, C.PUMBUN_CD, C.EVENT_FLAG, C.EVENT_RATE), 0, C.EVENT_FLAG, ' ')), ' ')  AS  EVENT_FLAG
+             , C.EVENT_RATE  
+             , SUM(C.CUST_CNT)      AS CUST_CNT
+             , SUM(C.SALE_QTY)      AS SALE_QTY
+             , SUM(C.TOT_SALE_AMT) - SUM(C.DC_AMT) AS SALE_AMT
+             , SUM(C.DC_AMT)        AS DC_AMT  
+             , SUM(C.NET_SALE_AMT)  AS NET_SALE_AMT
+             , SUM(C.REDU_AMT)      AS REDU_AMT
+             , SUM(C.TOT_SALE_AMT)  AS TOT_SALE_AMT
+             , GROUPING_ID(C.STR_CD, C.PUMBUN_CD, C.EVENT_FLAG, C.EVENT_RATE) NO
+          FROM DPS.PC_STRPBN B
+             , DPS.PS_DAYMGPBN C
+         WHERE C.STR_CD = B.STR_CD
+           AND C.PUMBUN_CD = B.PUMBUN_CD 
+           AND B.PUMBUN_TYPE      IN ('0', '4', 'B')
+           AND C.STR_CD = ?
+           AND B.VEN_CD = ?
+           AND C.PUMBUN_CD LIKE ? || '%' 
+           AND C.SALE_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+          -- AND C.SALE_DT = '20111004' -- 테스트 용
+      GROUP BY ROLLUP(C.STR_CD, C.PUMBUN_CD, C.EVENT_FLAG, C.EVENT_RATE) 
+      ORDER BY C.STR_CD 
+        ]]>
+    </query>       
+      
+    
+    
+
+</service>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif608.mg">
+    <!-- 가맹점 정산조회 -->
+ <gauce name="H_MASTER"> 
+     <column colName="CAL_YM"            colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="STR_CD"            colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="STR_NM"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="VEN_CD"            colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="VEN_NM"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="BOND_AMT"          colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="BOND_AMT2"         colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="REAL_PAY_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+     <column colName="FEE_RATE"          colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+     <column colName="FEE_SUP_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="FEE_VAT_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     <column colName="FEE_TOT_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+     <column colName="CAL_AMT"           colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+ </gauce>
+    
+    <!-- 가맹점 정산조회 -->
+ <query name="SEL_JOINCAL_MST">
+     <![CDATA[
+     SELECT CAL_YM       
+          , STR_CD
+          , DPS.FN_GET_STORE_NAME(STR_CD)                             AS STR_NM
+          , VEN_CD    
+          , DPS.FN_GET_VENDOR_NAME(VEN_CD)                               AS VEN_NM
+          , BOND_AMT     
+          , BOND_AMT2    
+          , REAL_PAY_AMT 
+          , FEE_RATE     
+          , FEE_SUP_AMT  
+          , FEE_VAT_AMT  
+          , FEE_TOT_AMT  
+          , CAL_AMT         
+       FROM MSS.MG_VENCAL
+      WHERE CAL_TYPE = '2'
+        AND CAL_YM BETWEEN ? AND ?
+        AND STR_CD LIKE ? || '%'
+        AND VEN_CD LIKE ? || '%'
+   ORDER BY CAL_YM, STR_CD, VEN_CD 
+     ]]>
+ </query>   
+
+</service>

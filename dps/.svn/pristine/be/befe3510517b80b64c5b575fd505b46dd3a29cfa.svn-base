@@ -1,0 +1,2853 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/pstk312.pt">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="BIZ_TAX_FLAG" colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG"         colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"          colType="TB_DECIMAL"     size="13"       dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+   	
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 당초팀별월매출계획 조회 쿼리  -->
+   
+    <query name="SEL_MASTER">        
+        <![CDATA[
+ SELECT BIZ_TAX_FLAG
+      , FLAG
+      , AMT
+  FROM (
+		 SELECT '전체'				AS BIZ_TAX_FLAG
+		      , '기초재고 점출액'		AS FLAG
+		      , 1                   AS SEQ_NO
+		      , SUM(A.CAO_SALE_AMT)	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'					AS BIZ_TAX_FLAG
+		      , '기초재고 점출차액'		AS FLAG
+		      , 2						AS SEQ_NO
+		      , SUM(A.CAO_PROFIT_AMT)	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'					AS BIZ_TAX_FLAG
+		      , '기초재고 점출부가세'		AS FLAG
+		      , 3						AS SEQ_NO
+		      , SUM(A.CAO_TAX_AMT)		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%' 
+		 UNION ALL
+		 SELECT '전체'						AS BIZ_TAX_FLAG
+		      , '기초재고 점출액(세제외)'		AS FLAG
+		      , 4							AS SEQ_NO
+		      , SUM(A.CAO_EX_VAT_SALE_AMT)	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		 SELECT '전체'							AS BIZ_TAX_FLAG
+		      , '기초재고 점출차액(세제외)'		AS FLAG
+		      , 5								AS SEQ_NO
+		      , SUM(A.CAO_EX_VAT_PROFIT_AMT)	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		 SELECT '전체'							AS BIZ_TAX_FLAG
+		      , '매입 점출액'						AS FLAG
+		      , 6								AS SEQ_NO
+		      , SUM(A.BUY_SALE_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		 SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '매입 점출차액'						AS FLAG
+		      , 7									AS SEQ_NO
+		      , SUM(A.BUY_PROFIT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'
+		 UNION ALL
+		 SELECT '전체'							AS BIZ_TAX_FLAG
+		      , '반품 점출액'						AS FLAG
+		      , 8								AS SEQ_NO
+		      , SUM(A.RFD_SALE_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'
+		 UNION ALL
+		 SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '반품 점출차액'						AS FLAG
+		      , 9									AS SEQ_NO
+		      , SUM(A.RFD_PROFIT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'
+		 UNION ALL        
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '대입 점출액'							AS FLAG
+		      , 10									AS SEQ_NO
+		      , SUM(A.BORROW_SALE_AMT)        		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		 SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '대입 점출차액'						AS FLAG
+		      , 11									AS SEQ_NO
+		      , SUM(A.BORROW_PROFIT_AMT)			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '대출 점출액'							AS FLAG
+		      , 12									AS SEQ_NO
+		      , SUM(A.LEND_SALE_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		 SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '대출 점출차액'						AS FLAG
+		      , 13									AS SEQ_NO
+		      , SUM(A.LEND_PROFIT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '점입 점출액'							AS FLAG
+		      , 14									AS SEQ_NO
+		      , SUM(A.STRI_SALE_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '점입 점출차액'						AS FLAG
+		      , 15									AS SEQ_NO
+		      , SUM(A.STRI_PROFIT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '점출 점출액'							AS FLAG
+		      , 16									AS SEQ_NO
+		      , SUM(A.STRO_SALE_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '점출 점출차액'						AS FLAG
+		      , 17									AS SEQ_NO
+		      , SUM(A.STRO_PROFIT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '매가 인하'							AS FLAG
+		      , 18									AS SEQ_NO
+		      , SUM(A.SALE_PRC_UP_BF_AMT)			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '매가 인상'							AS FLAG
+		      , 19									AS SEQ_NO
+		      , SUM(A.SALE_PRC_DOWN_AF_AMT)			AS AMT   
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '재고조정 점출액'						AS FLAG
+		      , 20									AS SEQ_NO
+		      , SUM(A.STK_ADJ_SALE_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '재고조정 점출차액'					AS FLAG
+		      , 21									AS SEQ_NO
+		      , SUM(A.STK_ADJ_PROFIT_AMT)			AS AMT 
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '당월매입 점출액'						AS FLAG
+		      , 22									AS SEQ_NO
+		      , SUM(A.DW_BUY_SALE_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		 SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '당월매입 점출차액'					AS FLAG
+		      , 23									AS SEQ_NO
+		      , SUM(A.DW_BUY_PROFIT_AMT)			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '매입합계 점출액'						AS FLAG
+		      , 24									AS SEQ_NO
+		      , SUM(A.BUY_TOT_SALE_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '매입합계 점출차액'					AS FLAG
+		      , 25									AS SEQ_NO
+		      , SUM(A.BUY_TOT_PROFIT_AMT)			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '매입합계 점출부가세'					AS FLAG
+		      , 26									AS SEQ_NO
+		      , SUM(A.BUY_TOT_TAX_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '매입합계 점출액(세제외)'				AS FLAG
+		      , 27									AS SEQ_NO
+		      , SUM(A.BUY_TOT_EX_VAT_SALE_AMT)		AS AMT  
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '매입합계 점출차액(세제외)'			AS FLAG
+		      , 28									AS SEQ_NO
+		      , SUM(A.BUY_TOT_EX_VAT_PROFIT_AMT)	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '총매출액(세포함)'					AS FLAG
+		      , 29									AS SEQ_NO
+		      , SUM(A.SALE_SALE_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '에누리(세포함)'						AS FLAG
+		      , 30									AS SEQ_NO
+		      , SUM(A.SALE_DC_AMT)					AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '총매출액(세제외)'					AS FLAG
+		      , 31									AS SEQ_NO
+		      , SUM(A.SALE_EX_VAT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '순매출'								AS FLAG
+		      , 32									AS SEQ_NO
+		      , SUM(A.SALE_DC_EX_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		 SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '순매출부가세'						AS FLAG
+		      , 33									AS SEQ_NO
+		      , SUM(A.SALE_VAT_AMT)					AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		 
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '세제외순매출액'						AS FLAG
+		      , 34									AS SEQ_NO
+		      , SUM(A.SALE_NET_SALE_AMT)			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '월말재고 점출액'						AS FLAG
+		      , 35									AS SEQ_NO
+		      , SUM(A.DW_SALE_AMT)					AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL       
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '월말재고 점출차액'					AS FLAG
+		      , 36									AS SEQ_NO
+		      , SUM(A.DW_PROFIT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '월말재고 점출부가세'					AS FLAG
+		      , 37									AS SEQ_NO
+		      , SUM(A.DW_TAX_AMT)					AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '월말재고 점출액(세제외)'				AS FLAG
+		      , 38									AS SEQ_NO
+		      , SUM(A.DW_EX_VAT_SALE_AMT)			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '월말재고 점출차액(세제외)'			AS FLAG
+		      , 39									AS SEQ_NO
+		      , SUM(A.DW_EX_VAT_PROFIT_AMT)			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '세제외점출차익율'	   		        AS FLAG
+		      , 40								AS SEQ_NO
+		      , CASE WHEN SUM(A.BUY_TOT_EX_VAT_SALE_AMT) = 0 THEN 0
+		             ELSE SUM(A.BUY_TOT_EX_VAT_PROFIT_AMT)/SUM(A.BUY_TOT_EX_VAT_SALE_AMT) * 100	
+		        END									AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '원가율'	   		        			AS FLAG
+		      , 41								AS SEQ_NO
+		      , 100 - CASE WHEN SUM(A.BUY_TOT_EX_VAT_SALE_AMT) = 0 THEN 0
+		                   ELSE SUM(A.BUY_TOT_EX_VAT_PROFIT_AMT)/SUM(A.BUY_TOT_EX_VAT_SALE_AMT) * 100	
+		              END							AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 
+		 UNION ALL 
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '매출원가'							AS FLAG
+		      , 42									AS SEQ_NO
+		      , SUM(A.LM_MC_COST_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '상품매출이익'						AS FLAG
+		      , 43									AS SEQ_NO
+		      , SUM(A.LM_MC_PROFIT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '순매출이익율'						AS FLAG
+		      , 44									AS SEQ_NO
+		      , CASE WHEN SUM(A.SALE_NET_SALE_AMT) = 0 THEN 0
+		             ELSE SUM(A.LM_MC_PROFIT_AMT)/SUM(A.SALE_NET_SALE_AMT) * 100
+		        END									AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%' 
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '매입원가'							AS FLAG
+		      , 45									AS SEQ_NO
+		      , SUM(A.LM_COST_AMT)					AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 UNION ALL
+		SELECT '전체'								AS BIZ_TAX_FLAG
+		      , '원가재고'							AS FLAG
+		      , 46									AS SEQ_NO
+		      , SUM(A.LM_STK_COST_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		 
+		 UNION ALL 
+		 SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		             WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '기초재고 점출액'						AS FLAG
+		      , 1									AS SEQ_NO
+		      , SUM(A.CAO_SALE_AMT)					AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'           THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'           THEN '특정 계'
+		        END 								AS BIZ_TAX_FLAG
+		      , '기초재고 점출차액'					AS FLAG
+		      , 2									AS SEQ_NO
+		      , SUM(A.CAO_PROFIT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'           THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'           THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '기초재고 점출부가세'					AS FLAG
+		      , 3									AS SEQ_NO
+		      , SUM(A.CAO_TAX_AMT)					AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL        
+		SELECT CASE WHEN A.BIZ_TYPE = '1'           THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'           THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '기초재고 점출액(세제외)'				AS FLAG
+		      , 4									AS SEQ_NO
+		      , SUM(A.CAO_EX_VAT_SALE_AMT)			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'           THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'           THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '기초재고 점출차액(세제외)'			AS FLAG
+		      , 5									AS SEQ_NO
+		      , SUM(A.CAO_EX_VAT_PROFIT_AMT)		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '매입 점출액'							AS FLAG
+		      , 6									AS SEQ_NO
+		      , SUM(A.BUY_SALE_AMT)					AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '매입 점출차액'						AS FLAG
+		      , 7									AS SEQ_NO
+		      , SUM(A.BUY_PROFIT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '반품 점출액'							AS FLAG
+		      , 8									AS SEQ_NO
+		      , SUM(A.RFD_SALE_AMT)					AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '반품 점출차액'						AS FLAG
+		      , 9									AS SEQ_NO
+		      , SUM(A.RFD_PROFIT_AMT)				AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL        
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '대입 점출액'							AS FLAG
+		      , 10									AS SEQ_NO
+		      , SUM(A.BORROW_SALE_AMT)        		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '대입 점출차액'						AS FLAG
+		      , 11									AS SEQ_NO
+		      , SUM(A.BORROW_PROFIT_AMT)      		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '대출 점출액'							AS FLAG
+		      , 12									AS SEQ_NO
+		      , SUM(A.LEND_SALE_AMT)          		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END 								AS BIZ_TAX_FLAG
+		      , '대출 점출차액'						AS FLAG
+		      , 13									AS SEQ_NO
+		      , SUM(A.LEND_PROFIT_AMT)        		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '점입 점출액'							AS FLAG
+		      , 14									AS SEQ_NO
+		      , SUM(A.STRI_SALE_AMT)           		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '점입 점출차액'						AS FLAG
+		      , 15									AS SEQ_NO
+		      , SUM(A.STRI_PROFIT_AMT)          	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END 								AS BIZ_TAX_FLAG
+		      , '점출 점출액'							AS FLAG
+		      , 16									AS SEQ_NO
+		      , SUM(A.STRO_SALE_AMT)             	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END 								AS BIZ_TAX_FLAG
+		      , '점출 점출차액'						AS FLAG
+		      , 17									AS SEQ_NO
+		      , SUM(A.STRO_PROFIT_AMT)          	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '매가 인하'							AS FLAG
+		      , 18									AS SEQ_NO
+		      , SUM(A.SALE_PRC_UP_BF_AMT)        	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END									AS BIZ_TAX_FLAG
+		      , '매가 인상'							AS FLAG
+		      , 19									AS SEQ_NO
+		      , SUM(A.SALE_PRC_DOWN_AF_AMT)      	AS AMT   
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END 								AS BIZ_TAX_FLAG
+		      , '재고조정 점출액'						AS FLAG
+		      , 20									AS SEQ_NO
+		      , SUM(A.STK_ADJ_SALE_AMT)          	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '재고조정 점출차액'					AS FLAG
+		      , 21									AS SEQ_NO
+		      , SUM(A.STK_ADJ_PROFIT_AMT)        	AS AMT 
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '당월매입 점출액'						AS FLAG
+		      , 22									AS SEQ_NO
+		      , SUM(A.DW_BUY_SALE_AMT)           	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '당월매입 점출차액'					AS FLAG
+		      , 23									AS SEQ_NO
+		      , SUM(A.DW_BUY_PROFIT_AMT)         	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '매입합계 점출액'						AS FLAG
+		      , 24									AS SEQ_NO
+		      , SUM(A.BUY_TOT_SALE_AMT)          	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '매입합계 점출차액'					AS FLAG
+		      , 25									AS SEQ_NO
+		      , SUM(A.BUY_TOT_PROFIT_AMT)        	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '매입합계 점출부가세'					AS FLAG
+		      , 26									AS SEQ_NO
+		      , SUM(A.BUY_TOT_TAX_AMT)           	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '매입합계 점출액(세제외)'				AS FLAG
+		      , 27									AS SEQ_NO
+		      , SUM(A.BUY_TOT_EX_VAT_SALE_AMT)   	AS AMT  
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '매입합계 점출차액(세제외)'			AS FLAG
+		      , 28									AS SEQ_NO
+		      , SUM(A.BUY_TOT_EX_VAT_PROFIT_AMT) 	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '총매출액(세포함)'					AS FLAG
+		      , 29									AS SEQ_NO
+		      , SUM(A.SALE_SALE_AMT)             	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '에누리(세포함)'						AS FLAG
+		      , 30									AS SEQ_NO
+		      , SUM(A.SALE_DC_AMT)               	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '총매출액(세제외)'					AS FLAG
+		      , 31									AS SEQ_NO
+		      , SUM(A.SALE_EX_VAT_AMT)           	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '순매출'								AS FLAG
+		      , 32									AS SEQ_NO
+		      , SUM(A.SALE_DC_EX_AMT)            	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '순매출부가세'						AS FLAG
+		      , 33									AS SEQ_NO
+		      , SUM(A.SALE_VAT_AMT)              	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '세제외순매출액'						AS FLAG
+		      , 34									AS SEQ_NO
+		      , SUM(A.SALE_NET_SALE_AMT)         	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '월말재고 점출액'						AS FLAG
+		      , 35									AS SEQ_NO
+		      , SUM(A.DW_SALE_AMT)               	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL       
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '월말재고 점출차액'					AS FLAG
+		      , 36									AS SEQ_NO
+		      , SUM(A.DW_PROFIT_AMT)             	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '월말재고 점출부가세'					AS FLAG
+		      , 37									AS SEQ_NO
+		      , SUM(A.DW_TAX_AMT)                	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '월말재고 점출액(세제외)'				AS FLAG
+		      , 38									AS SEQ_NO
+		      , SUM(A.DW_EX_VAT_SALE_AMT)        	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '월말재고 점출차액(세제외)'			AS FLAG
+		      , 39									AS SEQ_NO
+		      , SUM(A.DW_EX_VAT_PROFIT_AMT)      	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '세제외점출차익율'	   		        AS FLAG
+		      , 40									AS SEQ_NO
+		      , CASE WHEN SUM(A.BUY_TOT_EX_VAT_SALE_AMT) = 0 THEN 0
+		             ELSE SUM(A.BUY_TOT_EX_VAT_PROFIT_AMT)/SUM(A.BUY_TOT_EX_VAT_SALE_AMT) * 100	
+		        END									AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '원가율'	   		        			AS FLAG
+		      , 41									AS SEQ_NO
+		      , 100 - CASE WHEN SUM(A.BUY_TOT_EX_VAT_SALE_AMT) = 0 THEN 0
+		                   ELSE SUM(A.BUY_TOT_EX_VAT_PROFIT_AMT)/SUM(A.BUY_TOT_EX_VAT_SALE_AMT) * 100	
+		              END							AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'    
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '매출원가'							AS FLAG
+		      , 42									AS SEQ_NO
+		      , SUM(A.LM_MC_COST_AMT)      			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '상품매출이익'						AS FLAG
+		      , 43									AS SEQ_NO
+		      , SUM(A.LM_MC_PROFIT_AMT)      		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		        
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '순매출이익율'						AS FLAG
+		      , 44									AS SEQ_NO
+		      , CASE WHEN SUM(A.SALE_NET_SALE_AMT) = 0 THEN 0
+		             ELSE SUM(A.LM_MC_PROFIT_AMT)/SUM(A.SALE_NET_SALE_AMT) * 100
+		        END									AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%' 
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '매입원가'							AS FLAG
+		      , 45									AS SEQ_NO
+		      , SUM(A.LM_COST_AMT)      			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE = '1'          THEN '직영 계'
+		            WHEN A.BIZ_TYPE = '2'          THEN '특정 계'
+		        END AS BIZ_TAX_FLAG
+		      , '원가재고'							AS FLAG
+		      , 46									AS SEQ_NO
+		      , SUM(A.LM_STK_COST_AMT)      		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		 
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'            
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '기초재고 점출액'						AS FLAG
+		      , 1									AS SEQ_NO
+		      , SUM(A.CAO_SALE_AMT)          		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '기초재고 점출차액'					AS FLAG
+		      , 2									AS SEQ_NO
+		      , SUM(A.CAO_PROFIT_AMT)         		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '기초재고 점출부가세'					AS FLAG
+		      , 3									AS SEQ_NO
+		      , SUM(A.CAO_TAX_AMT)            		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '기초재고 점출액(세제외)'				AS FLAG
+		      , 4									AS SEQ_NO
+		      , SUM(A.CAO_EX_VAT_SALE_AMT)    		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '기초재고 점출차액(세제외)'			AS FLAG
+		      , 5									AS SEQ_NO
+		      , SUM(A.CAO_EX_VAT_PROFIT_AMT)  		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매입 점출액'							AS FLAG
+		      , 6									AS SEQ_NO
+		      , SUM(A.BUY_SALE_AMT)           		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매입 점출차액'						AS FLAG
+		      , 7									AS SEQ_NO
+		      , SUM(A.BUY_PROFIT_AMT)         		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '반품 점출액'							AS FLAG
+		      , 8									AS SEQ_NO
+		      , SUM(A.RFD_SALE_AMT)          	 	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '반품 점출차액'						AS FLAG
+		      , 9									AS SEQ_NO
+		      , SUM(A.RFD_PROFIT_AMT)         		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '대입 점출액'							AS FLAG
+		      , 10									AS SEQ_NO
+		      , SUM(A.BORROW_SALE_AMT)       	 	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '대입 점출차액'						AS FLAG
+		      , 11									AS SEQ_NO
+		      , SUM(A.BORROW_PROFIT_AMT)      		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '대출 점출액'							AS FLAG
+		      , 12									AS SEQ_NO
+		      , SUM(A.LEND_SALE_AMT)          		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '대출 점출차액'						AS FLAG
+		      , 13									AS SEQ_NO
+		      , SUM(A.LEND_PROFIT_AMT)        		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '점입 점출액'							AS FLAG
+		      , 14									AS SEQ_NO
+		      , SUM(A.STRI_SALE_AMT)            	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '점입 점출차액'						AS FLAG
+		      , 15									AS SEQ_NO
+		      , SUM(A.STRI_PROFIT_AMT)          	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '점출 점출액'							AS FLAG
+		      , 16									AS SEQ_NO
+		      , SUM(A.STRO_SALE_AMT)             	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '점출 점출차액'						AS FLAG
+		      , 17									AS SEQ_NO
+		      , SUM(A.STRO_PROFIT_AMT)           	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매가 인하'							AS FLAG
+		      , 18									AS SEQ_NO
+		      , SUM(A.SALE_PRC_UP_BF_AMT)        	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매가 인상'							AS FLAG
+		      , 19									AS SEQ_NO
+		      , SUM(A.SALE_PRC_DOWN_AF_AMT)      	AS AMT   
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '재고조정 점출액'						AS FLAG
+		      , 20									AS SEQ_NO
+		      , SUM(A.STK_ADJ_SALE_AMT)          	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '재고조정 점출차액'					AS FLAG
+		      , 21									AS SEQ_NO
+		      , SUM(A.STK_ADJ_PROFIT_AMT)        	AS AMT 
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '당월매입 점출액'						AS FLAG
+		      , 22									AS SEQ_NO
+		      , SUM(A.DW_BUY_SALE_AMT)           	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '당월매입 점출차액'					AS FLAG
+		      , 23									AS SEQ_NO
+		      , SUM(A.DW_BUY_PROFIT_AMT)         	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매입합계 점출액'						AS FLAG
+		      , 24									AS SEQ_NO
+		      , SUM(A.BUY_TOT_SALE_AMT)          	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매입합계 점출차액'					AS FLAG
+		      , 25									AS SEQ_NO
+		      , SUM(A.BUY_TOT_PROFIT_AMT)        	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매입합계 점출부가세'					AS FLAG
+		      , 26									AS SEQ_NO
+		      , SUM(A.BUY_TOT_TAX_AMT)           	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매입합계 점출액(세제외)'				AS FLAG
+		      , 27									AS SEQ_NO
+		      , SUM(A.BUY_TOT_EX_VAT_SALE_AMT)   	AS AMT  
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매입합계 점출차액(세제외)'			AS FLAG
+		      , 28									AS SEQ_NO
+		      , SUM(A.BUY_TOT_EX_VAT_PROFIT_AMT) 	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '총매출액(세포함)'					AS FLAG
+		      , 29									AS SEQ_NO
+		      , SUM(A.SALE_SALE_AMT)             	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '에누리(세포함)'						AS FLAG
+		      , 30									AS SEQ_NO
+		      , SUM(A.SALE_DC_AMT)               	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '총매출액(세제외)'					AS FLAG
+		      , 31									AS SEQ_NO
+		      , SUM(A.SALE_EX_VAT_AMT)           	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '순매출'								AS FLAG
+		      , 32									AS SEQ_NO
+		      , SUM(A.SALE_DC_EX_AMT)            	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '순매출부가세'						AS FLAG
+		      , 33									AS SEQ_NO
+		      , SUM(A.SALE_VAT_AMT)              	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '세제외순매출액'						AS FLAG
+		      , 34									AS SEQ_NO
+		      , SUM(A.SALE_NET_SALE_AMT)         	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '월말재고 점출액'						AS FLAG
+		      , 35									AS SEQ_NO
+		      , SUM(A.DW_SALE_AMT)               	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '월말재고 점출차액'					AS FLAG
+		      , 36									AS SEQ_NO
+		      , SUM(A.DW_PROFIT_AMT)             	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '월말재고 점출부가세'					AS FLAG
+		      , 37									AS SEQ_NO
+		      , SUM(A.DW_TAX_AMT)                	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '월말재고 점출액(세제외)'				AS FLAG
+		      , 38									AS SEQ_NO
+		      , SUM(A.DW_EX_VAT_SALE_AMT)        	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '월말재고 점출차액(세제외)'			AS FLAG
+		      , 39									AS SEQ_NO
+		      , SUM(A.DW_EX_VAT_PROFIT_AMT)      	AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '세제외점출차익율'	   		        AS FLAG
+		      , 40									AS SEQ_NO
+		      , CASE WHEN SUM(A.BUY_TOT_EX_VAT_SALE_AMT) = 0 THEN 0
+		             ELSE SUM(A.BUY_TOT_EX_VAT_PROFIT_AMT)/SUM(A.BUY_TOT_EX_VAT_SALE_AMT) * 100	
+		        END									AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '원가율'	   		        			AS FLAG
+		      , 41									AS SEQ_NO
+		      , 100 - CASE WHEN SUM(A.BUY_TOT_EX_VAT_SALE_AMT) = 0 THEN 0
+		                   ELSE SUM(A.BUY_TOT_EX_VAT_PROFIT_AMT)/SUM(A.BUY_TOT_EX_VAT_SALE_AMT) * 100	
+		              END							AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'    
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매출원가'							AS FLAG
+		      , 42									AS SEQ_NO
+		      , SUM(A.LM_MC_COST_AMT)      			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '상품매출이익'						AS FLAG
+		      , 43									AS SEQ_NO
+		      , SUM(A.LM_MC_PROFIT_AMT)      		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		 UNION ALL
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '순매출이익율'						AS FLAG
+		      , 44									AS SEQ_NO
+		      , CASE WHEN SUM(A.SALE_NET_SALE_AMT) = 0 THEN 0
+		             ELSE SUM(A.LM_MC_PROFIT_AMT)/SUM(A.SALE_NET_SALE_AMT) * 100
+		        END									AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%' 
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '매입원가'							AS FLAG
+		      , 45									AS SEQ_NO
+		      , SUM(A.LM_COST_AMT)      			AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+		
+		 UNION ALL
+		        
+		SELECT CASE WHEN A.BIZ_TYPE || A.TAX_FLAG = '11'          THEN '직영 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '직영 면세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG = '21'          THEN '특정 과세'
+		            WHEN A.BIZ_TYPE || A.TAX_FLAG IN ('12', '13') THEN '특정 면세'
+		        END AS BIZ_TAX_FLAG
+		      , '원가재고'							AS FLAG
+		      , 46									AS SEQ_NO
+		      , SUM(A.LM_STK_COST_AMT)      		AS AMT
+		   FROM DPS.PT_PBNMONPROFIT A
+		      , DPS.PC_ORGMST       B
+		      , DPS.PC_STRPBN       C
+		  WHERE A.STR_CD    = ?
+		    AND A.YYYYMM    = ?
+		    AND C.STR_CD    = A.STR_CD
+		    AND C.PUMBUN_CD = A.PUMBUN_CD
+		    AND (CASE WHEN ? = '1' THEN C.SALE_ORG_CD ELSE C.BUY_ORG_CD        END)      = B.ORG_CD
+		    AND B.DEPT_CD  LIKE ?||'%'     
+		    AND B.TEAM_CD  LIKE ?||'%'     
+		    AND B.PC_CD    LIKE ?||'%'     
+		  GROUP BY
+		        A.BIZ_TYPE
+		      , A.TAX_FLAG
+       )
+  ORDER BY
+        SEQ_NO
+      , FLAG
+	    ]]>        
+    </query>    
+</service>

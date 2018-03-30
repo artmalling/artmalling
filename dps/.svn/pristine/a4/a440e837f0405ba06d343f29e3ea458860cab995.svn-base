@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.13
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  의류잡화 단품별 장부재고 현황을 조회한다.
+ -->
+<service name="/pstk111.pt">
+  
+  <gauce name="H_SEL_MASTER">        
+        <column colName="PUMMOK_CD"        colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_CD"           colType="TB_STRING"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                  
+        <column colName="BASE_QTY"         colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BASE_AMT"         colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_TOT_QTY"      colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BUY_TOT_SALE_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="SALE_QTY"         colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_SALE_AMT"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_ADJ_QTY"      colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="STK_ADJ_SALE_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SRVY_E_QTY"       colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="SRVY_E_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="STYLE_CD"         colType="TB_STRING"  size="54" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STYLE_NAME"       colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="COLOR_CD"         colType="TB_STRING"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SIZE_CD"          colType="TB_STRING"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+  </gauce> 
+  
+  <!-- 품번정보조회 -->
+    <gauce name="H_SEL_PBNINF">        
+        <column colName="ORG_NAME"         colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                             
+    </gauce>
+  
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->    
+    <query name="SEL_MASTER">
+        <![CDATA[
+            SELECT A.PUMMOK_CD
+                 , (SELECT PUMMOK_NAME
+                      FROM DPS.PC_PMKMST X
+                     WHERE A.PUMMOK_CD = X.PUMMOK_CD)       AS PUMMOK_NAME
+                 , A.SKU_CD
+                 , (SELECT SKU_NAME
+                      FROM DPS.PC_SKUMST X
+                     WHERE A.SKU_CD = X.SKU_CD)             AS SKU_NAME
+                 , SUM(NVL(A.BASE_QTY,0))                   AS BASE_QTY
+                 , SUM(NVL(A.BASE_AMT,0))                   AS BASE_AMT 
+                 , SUM(NVL(A.BUY_TOT_QTY,0))                AS BUY_TOT_QTY 
+                 , SUM(NVL(A.BUY_TOT_SALE_AMT,0))           AS BUY_TOT_SALE_AMT  
+                 , SUM(NVL(A.SALE_QTY,0))                   AS SALE_QTY 
+                 , SUM(NVL(A.SALE_SALE_AMT,0)) - SUM(NVL(A.REDU_AMT,0))             AS SALE_SALE_AMT 
+                 , SUM(NVL(A.STK_ADJ_QTY,0))                AS STK_ADJ_QTY
+                 , SUM(NVL(A.STK_ADJ_SALE_AMT,0))           AS STK_ADJ_SALE_AMT
+                 , SUM(NVL(A.BASE_QTY,0)) + SUM(NVL(A.BUY_TOT_QTY,0)) - SUM(NVL(A.SALE_QTY,0)) + SUM(NVL(A.STK_ADJ_QTY,0))                AS  SRVY_E_QTY
+                 , SUM(NVL(A.BASE_AMT,0)) + SUM(NVL(A.BUY_TOT_SALE_AMT,0)) - (SUM(NVL(A.SALE_SALE_AMT,0)) - SUM(NVL(A.REDU_AMT,0))) + SUM(NVL(A.STK_ADJ_SALE_AMT,0)) AS SRVY_E_AMT
+                 , SKU.STYLE_CD
+                 , (SELECT STYLE_NAME
+                      FROM DPS.PC_STYLEMST X
+                     WHERE SKU.STYLE_CD = X.STYLE_CD
+                       AND A.PUMBUN_CD = X.PUMBUN_CD)  AS STYLE_NAME
+                 , SKU.COLOR_CD
+                 , SKU.SIZE_CD
+              FROM DPS.PC_STRSKUMST SKU
+                 , DPS.PC_PBNMST    PBN
+                 , (SELECT STR_CD                         
+                         , PUMBUN_CD
+                         , PUMMOK_CD 
+                         , SKU_CD
+                         , SUM(NVL(CAO_QTY,0))         AS BASE_QTY
+                         , SUM(NVL(CAO_SALE_AMT,0))    AS BASE_AMT
+                         , 0                           AS BUY_TOT_QTY
+                         , 0                           AS BUY_TOT_SALE_AMT
+                         , 0                           AS SALE_QTY
+                         , 0                           AS SALE_SALE_AMT
+                         , 0                           AS REDU_AMT
+                         , 0                           AS STK_ADJ_QTY
+                         , 0                           AS STK_ADJ_SALE_AMT
+                      FROM DPS.PT_SKUMONTH
+                     WHERE STR_CD = ?
+                       AND STK_YM = ?
+                       GROUP BY STR_CD                              
+                              , PUMBUN_CD
+                              , PUMMOK_CD
+                              , SKU_CD
+                    UNION ALL
+                    SELECT STR_CD                         
+                         , PUMBUN_CD
+                         , PUMMOK_CD
+                         , SKU_CD
+                         , 0                           AS BASE_QTY
+                         , 0                           AS BASE_AMT
+                         , SUM(BUY_TOT_QTY)            AS BUY_TOT_QTY
+                         , SUM(BUY_TOT_SALE_AMT)       AS BUY_TOT_SALE_AMT
+                         , SUM(SALE_QTY)               AS SALE_QTY
+                         , SUM(SALE_SALE_AMT)          AS SALE_SALE_AMT
+                         , SUM(REDU_AMT)               AS REDU_AMT
+                         , SUM(STK_ADJ_QTY)            AS STK_ADJ_QTY
+                         , SUM(STK_ADJ_SALE_AMT)       AS STK_ADJ_SALE_AMT
+                      FROM DPS.PT_SKUDAY
+                     WHERE STR_CD       = ?
+                       AND STK_DT BETWEEN ? AND ?
+                     GROUP BY STR_CD                            
+                            , PUMBUN_CD
+                            , PUMMOK_CD
+                            , SKU_CD
+                      ) A
+             WHERE PBN.PUMBUN_CD = A.PUMBUN_CD
+               AND PBN.PUMBUN_TYPE <> '2'
+               AND SKU.STR_CD = A.STR_CD
+               AND SKU.SKU_CD = A.SKU_CD
+               AND A.PUMBUN_CD  = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_PUMMOK_CD">
+        <![CDATA[
+               AND A.PUMMOK_CD  = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_STYLE_CD">
+        <![CDATA[
+               AND SKU.STYLE_CD = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_GROUP">
+        <![CDATA[
+            GROUP BY A.PUMMOK_CD
+                   , A.SKU_CD 
+                   , SKU.STYLE_CD
+                   , SKU.COLOR_CD
+                   , SKU.SIZE_CD 
+                   , A.PUMBUN_CD
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_ORDER">
+        <![CDATA[
+            ORDER BY A.PUMMOK_CD
+                   , A.SKU_CD  
+        ]]>    
+    </query>
+    
+    <!-- 품번정보조회  -->
+    <query name="SEL_PBNINF">
+        <![CDATA[
+            SELECT ORG.ORG_SHORT_NAME AS ORG_NAME
+              FROM DPS.PC_STRPBN STP
+                 , DPS.PC_ORGMST ORG
+            WHERE STP.SALE_ORG_CD = ORG.ORG_CD 
+              AND STP.STR_CD    = ?
+              AND STP.PUMBUN_CD = ?
+        ]]>    
+    </query>
+    
+</service>

@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.10
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  관리비항목내역
+ -->
+<service name="/mren102.mr">
+    <!-- 관리비항목내역 -->
+    <gauce name="H_SEL_MR_MNTNITEM">
+        <column colName="STR_CD"        colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_ITEM_CD"  colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_ITEM_NM"  colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_TYPE"     colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MNTN_FLAG"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_CD"        colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_TYPE"      colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AREA_UNIT_PRC" colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUB_APP_RATE"  colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAX_INV_FLAG"  colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SORT_NO"       colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AUTO_DIV_YN"   colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AUTO_DIV_ITEM" colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUPCHK"        colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUPCHK2"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"        colType="TB_STRING"  size="200" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <gauce name="H_SEL_DUP_KEYVALUE">
+        <column colName="DUPVALUE"      colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GBNFLAG"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 조회 Query  -->
+    <query name="SEL_MR_MNTNITEM"> 
+        <![CDATA[   
+            SELECT MNT.STR_CD
+                 , MNT.MNTN_ITEM_CD
+                 , MNT.MNTN_ITEM_NM
+                 , MNT.MNTN_TYPE
+                 , MNT.MNTN_FLAG
+                 , MNT.CAL_CD
+                 , MNT.CAL_TYPE
+                 , MNT.AREA_UNIT_PRC
+                 , NVL(MNT.PUB_APP_RATE, 100) AS PUB_APP_RATE
+                 , MNT.TAX_INV_FLAG
+                 , MNT.SORT_NO
+                 , MNT.AUTO_DIV_YN
+                 , MNT.AUTO_DIV_ITEM
+                 , USE_YN
+                 , 'N' AS DUPCHK
+                 , 'N' AS DUPCHK2
+                 , REMARK
+              FROM MSS.MR_MNTNITEM    MNT
+             WHERE MNT.STR_CD = ?
+               AND MNT.MNTN_TYPE LIKE ?||'%'
+               AND MNT.MNTN_FLAG LIKE ?||'%'
+             ORDER BY  MNT.STR_CD, MNT.MNTN_ITEM_CD
+        ]]>        
+    </query>
+    
+    <!-- 등록(저장) Query  -->
+    <query name="INS_MR_MNTNITEM"> 
+        <![CDATA[   
+			INSERT 
+			  INTO MSS.MR_MNTNITEM
+			     ( STR_CD
+			     , MNTN_ITEM_CD
+			     , MNTN_ITEM_NM
+			     , MNTN_TYPE
+			     , MNTN_FLAG
+			     , CAL_CD
+			     , CAL_TYPE
+			     , AREA_UNIT_PRC
+			     , PUB_APP_RATE
+			     , TAX_INV_FLAG
+			     , SORT_NO
+			     , AUTO_DIV_YN
+			     , AUTO_DIV_ITEM
+			     , USE_YN
+			     , REG_ID
+			     , REG_DATE
+			     , MOD_ID
+			     , MOD_DATE
+			     , REMARK
+			     )
+			VALUES 
+			     ( ?, ?, ?, ?, ?
+			     , ?, ?, NVL(?,0), NVL(?,100), ?
+			     , ?, ?, ? , ?
+			     , ?, SYSDATE, ?, SYSDATE
+			     , ?
+			     )
+        ]]>        
+    </query>
+    
+    <!-- 등록(수정) Query  -->
+    <query name="UPD_MR_MNTNITEM"> 
+        <![CDATA[   
+			UPDATE MSS.MR_MNTNITEM
+			   SET MNTN_ITEM_NM  = ?
+			     , MNTN_TYPE     = ?
+			     , MNTN_FLAG     = ?
+			     , CAL_CD        = ?
+			     , CAL_TYPE      = ?
+			     , AREA_UNIT_PRC = NVL(?,0)
+			     , PUB_APP_RATE  = NVL(?,100)
+			     , TAX_INV_FLAG  = ?
+			     , SORT_NO       = ?
+			     , AUTO_DIV_YN   = ?
+			     , AUTO_DIV_ITEM = ?
+			     , USE_YN        = ?
+			     , MOD_ID        = ?
+			     , MOD_DATE      = SYSDATE
+			     , REMARK        = ?
+			 WHERE STR_CD        = ?
+			   AND MNTN_ITEM_CD  = ?
+        ]]>        
+    </query>
+    
+    <!-- 삭제 Query  -->
+    <query name="DEL_MR_MNTNITEM"> 
+        <![CDATA[ 
+			DELETE MSS.MR_MNTNITEM
+			 WHERE STR_CD = ?
+			   AND MNTN_ITEM_CD = ?
+        ]]>        
+    </query>
+    
+
+    <!-- 키값체크 Query  -->
+    <query name="SEL_DUP_KEYVALUE"> 
+        <![CDATA[ 
+        SELECT DISTINCT DUPVALUE, GBNFLAG
+          FROM (
+        ]]>        
+    </query>
+    <!-- 키값체크1 Query  -->
+    <query name="SEL_SUB_DUP_KEYVALUE1"> 
+        <![CDATA[ 
+            SELECT STR_CD||MNTN_ITEM_CD AS DUPVALUE
+                 , '1' AS GBNFLAG
+              FROM MSS.MR_MNTNITEM
+             WHERE STR_CD       = ?
+               AND MNTN_ITEM_CD = ?
+        ]]>        
+    </query>
+    <!-- 키값체크2 Query  -->
+    <query name="SEL_SUB_DUP_KEYVALUE2"> 
+        <![CDATA[ 
+            SELECT STR_CD||MNTN_TYPE||MNTN_FLAG||CAL_CD||USE_YN AS DUPVALUE
+                 , '2' AS GBNFLAG
+              FROM MSS.MR_MNTNITEM
+             WHERE STR_CD       = ?
+               AND MNTN_TYPE    = ?
+               AND MNTN_FLAG    = ?
+               AND CAL_CD       = ?
+               AND USE_YN       = ?
+        ]]>        
+    </query>
+    <query name="SEL_SUB_DUP_KEYVALUE2_UPD"> 
+        <![CDATA[ 
+               AND MNTN_ITEM_CD <> ?
+        ]]>        
+    </query>
+    <query name="SEL_DUP_UNIONALL"> 
+                UNION ALL
+    </query>
+    <query name="SEL_DUP_CLOSE"> 
+        )
+    </query>
+    
+    <gauce name="H_SEL_TC_COMMCODE">
+        <column colName="CODE"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RCODE1"    colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RCODE2"    colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RCODE3"    colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 조회 Query -->
+    <query name="SEL_TC_COMMCODE"> 
+        <![CDATA[   
+            SELECT COMM_CODE    AS CODE
+                 , COMM_NAME1   AS NAME
+		         , SUBSTR(REFER_CODE,1,1) AS RCODE1
+		         , SUBSTR(REFER_CODE,2,1) AS RCODE2
+		         , SUBSTR(REFER_CODE,3,1) AS RCODE3
+              FROM COM.TC_COMMCODE
+             WHERE SYS_PART  = 'D'
+               AND COMM_PART = ?
+               AND USE_YN = 'Y'
+             ORDER BY CODE
+        ]]>        
+    </query>
+</service>

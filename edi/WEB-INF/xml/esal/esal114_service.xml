@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal114.es">
+	
+	<!-- 입금내역비교 헤드_장비별 -->
+	<query name="SEL_MASTER_HEAD">
+   	    <![CDATA[
+		SELECT SALE_DT
+			 , POS_NO
+		     , POS_NM
+		     , CAL_01
+		     , NORM_01
+		     , CAL_01 - NORM_01 AS DIFF_01
+		     , CAL_11
+		     , NORM_11
+		     , CAL_11 - NORM_11 AS DIFF_11
+		     , CAL_21
+		     , NORM_21
+		     , CAL_21 - NORM_21 AS DIFF_21
+ 
+        ]]>
+    </query>
+    
+    <!-- 입금내역비교 헤드_장비합산 -->
+    <query name="SEL_MASTER_HEAD_GRP">
+   	    <![CDATA[
+		SELECT SALE_DT  
+			 , ? 						AS POS_NO
+		     , DPS.FN_GET_PUMBUN_NAME(?) AS POS_NM
+		     , SUM(CAL_01)				AS CAL_01
+		     , SUM(NORM_01)				AS NORM_01
+		     , SUM(CAL_01) - SUM(NORM_01) AS DIFF_01
+		     , SUM(CAL_11)				AS CAL_11
+		     , SUM(NORM_11)				AS NORM_11
+		     , SUM(CAL_11) - SUM(NORM_11) AS DIFF_11
+		     , SUM(CAL_21)				AS CAL_21
+		     , SUM(NORM_21)				AS NORM_21
+		     , SUM(CAL_21) -SUM(NORM_21) AS DIFF_21
+		      
+        ]]>
+    </query>       
+           
+    <!-- 입금내역비교 BODY -->
+    <query name="SEL_MASTER_BODY">
+        <![CDATA[
+
+		     FROM 
+		   	(
+                SELECT A.STR_CD
+				     , A.POS_NO
+				     , MIN(B.POS_NAME) AS POS_NM
+                     , SUM(DECODE(A.COMM_CODE,'01',CAL_AMT,0)) AS CAL_01        -- 현금 입금금액
+                     , SUM(DECODE(A.COMM_CODE,'01',NORM_TRAN_AMT,0)) AS NORM_01 -- 현금 정산 금액
+                     , SUM(DECODE(A.COMM_CODE,'11',CAL_AMT,0)) AS CAL_11        -- 자사상품권 입금금액
+                     , SUM(DECODE(A.COMM_CODE,'11',NORM_TRAN_AMT,0)) AS NORM_11 -- 자사상품권 정산 금액
+                     , SUM(DECODE(A.COMM_CODE,'21',CAL_AMT,0)) AS CAL_21        -- 타사상품권 입금금액
+                     , SUM(DECODE(A.COMM_CODE,'21',NORM_TRAN_AMT,0)) AS NORM_21 -- 타사상품권 정산 금액
+	                 , A.SALE_DT
+				  FROM (
+				        -- 정산기
+				        SELECT ?                     AS STR_CD 
+				             , A.POS_NO               AS POS_NO
+				             , B.COMM_CODE            AS COMM_CODE      /* 정산항목(D132)  */
+				             , B.COMM_NAME1           AS COMM_NAME
+				             , NVL(A.CAL_AMT, 0)      AS CAL_AMT        /* 정산금액  */
+				             , 0                      AS NORM_TRAN_AMT 
+	                         , A.SALE_DT
+				          FROM DPS.PS_VALEXCAL A
+				             , (
+				                SELECT SYS_PART
+				                     , COMM_PART 
+				                     , COMM_CODE 
+				                     , COMM_NAME1 
+				                     , USE_YN
+				                  FROM COM.TC_COMMCODE
+				                 WHERE COMM_PART = 'D132'
+				                   AND SYS_PART  = 'D'
+				                   AND USE_YN    = 'Y'
+				               ) B
+				         WHERE 1 = 1
+				           AND A.STR_CD  = ?
+				           AND A.SALE_DT BETWEEN ? AND ?
+				           AND A.POS_NO IN (  SELECT POS_NO FROM DPS.PC_POSMST
+                                                WHERE STR_CD = A.STR_CD
+                                                 AND RSPNS_NAME = ?
+                                           )
+                           
+				           AND A.CAL_CD(+) = B.COMM_CODE
+				
+				        -- 시스템
+				         UNION ALL
+				        SELECT A.STR_CD 
+				             , A.POS_NO
+				             , B.COMM_CODE
+				             , B.COMM_NAME1
+				             , 0
+				             , A.NORM_TRAN_AMT
+	                         , A.SALE_DT
+				          FROM (
+								SELECT A.STR_CD
+								     , A.SALE_DT
+								     , A.POS_NO
+								     , A.COMM_CODE
+								     , SUM(A.NORM_TRAN_AMT) AS NORM_TRAN_AMT
+								  FROM (
+								        SELECT STR_CD 
+								             , SALE_DT
+								             --, SUBSTR(POS_NO, 1, 3) || '1' AS POS_NO
+								             , POS_NO
+								             , BALANCE_FLAG
+								             , CASE WHEN BALANCE_FLAG IN ('101', '102', '113', '116') THEN '01' /* 현금       */
+								                    WHEN BALANCE_FLAG IN ('111', '112', '115')        THEN '11' /* 자사상품권 */
+								                    WHEN BALANCE_FLAG IN ('114')                      THEN '21' /* 타사상품권 */
+								               END COMM_CODE
+								             , CASE WHEN BALANCE_FLAG IN ('102', '113', '116', '112', '115') THEN NVL(A.NORM_TRAN_AMT, 0) * (-1)
+								                                                                             ELSE NVL(A.NORM_TRAN_AMT, 0)
+								               END AS NORM_TRAN_AMT
+								          FROM DPS.PS_TRTOTAL A
+						                 WHERE A.STR_CD     = ?
+						                   AND A.SALE_DT    BETWEEN ? AND ?
+				                            AND A.POS_NO IN (  SELECT POS_NO FROM DPS.PC_POSMST
+                                                WHERE STR_CD = A.STR_CD
+                                                 AND RSPNS_NAME = ?
+                                           )
+						                   AND A.TOTAL_FLAG = '02'	-- 02로 바꿔야됨
+								       ) A
+								 WHERE A.COMM_CODE IN ('01', '11', '21')
+								 GROUP BY A.STR_CD
+								        , A.SALE_DT
+								        , A.POS_NO
+								        , A.COMM_CODE
+				               ) A
+				             , (
+				                SELECT SYS_PART
+				                     , COMM_PART 
+				                     , COMM_CODE 
+				                     , COMM_NAME1 
+				                     , USE_YN
+				                  FROM COM.TC_COMMCODE
+				                 WHERE COMM_PART = 'D132'
+				                   AND SYS_PART  = 'D'
+				                   AND USE_YN    = 'Y'
+				               ) B
+				         WHERE 1 = 1
+				           AND A.COMM_CODE(+) = B.COMM_CODE
+				       ) A 
+				       , DPS.PC_POSMST B
+				   WHERE A.STR_CD = B.STR_CD
+				     AND A.POS_NO = B.POS_NO
+				     AND A.POS_NO NOT IN ('8001', '8002', '8003', '9001', '9002')
+				GROUP BY A.STR_CD
+	                   , A.SALE_DT
+				       , A.POS_NO
+                       )
+        ]]>
+    </query>
+    
+ 	<!-- 입금내역비교 GROUP BY  -->
+    <query name="SEL_MASTER_TAIL_GRP">
+        <![CDATA[
+    				GROUP BY SALE_DT
+    				       
+        ]]>
+    </query>    		   
+    
+    <!-- 입금내역비교 ORDER -->
+    <query name="SEL_MASTER_ORD">
+        <![CDATA[
+    				ORDER BY SALE_DT
+    				       , 2
+        ]]>
+    </query>    				           
+	                   
+	                      
+      
+    
+    
+
+</service>

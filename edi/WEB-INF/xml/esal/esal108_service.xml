@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal108.es">
+    
+   
+    <!-- 일일거래현황 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+	        SELECT     A.SALE_DT                                                                                                                    AS SALE_DT
+				     , A.POS_NO||'-'||DPS.FN_GET_POS_NAME(A.STR_CD, A.POS_NO)                                                                       AS POS_NAME
+				     , A.TRAN_NO                                                                                                                    AS TRAN_CD
+				     , SUBSTR(C.SALE_TIME, 1, 2)||':'||SUBSTR(C.SALE_TIME, 3, 2)||':'||SUBSTR(C.SALE_TIME, 5, 2)                                    AS SALE_TIME
+				     --, COM.FN_GET_COMM_NAME('D', 'P611', C.TRAN_MODE)                                                                               AS TRAN_MODE
+				     , DECODE(A.REJCT_FLAG,1,'지정취소',COM.FN_GET_COMM_NAME('D', 'P611', C.TRAN_MODE))                                            AS TRAN_MODE
+				     , DECODE(C.TRAN_FLAG, '1', '반품', '2', '오타', '정상')                                                                        AS TRAN_FLAG
+				     --, DECODE(C.TRAN_MODE, '92', 0, DECODE(C.TRAN_FLAG, '1', -A.SALE_AMT-A.DC_PRC, '2', -A.SALE_AMT-A.DC_PRC, A.SALE_AMT+A.DC_PRC)) AS AMT
+				     , DECODE(A.REJCT_FLAG,1,0,DECODE(C.TRAN_MODE, '92', 0, DECODE(C.TRAN_FLAG, '1', -A.SALE_AMT-A.DC_PRC, '2', -A.SALE_AMT-A.DC_PRC, A.SALE_AMT+A.DC_PRC))) AS AMT
+				     , DECODE(C.O_POS_NO, NULL, ' ', C.O_POS_NO||'-'||DPS.FN_GET_POS_NAME(C.STR_CD, C.O_POS_NO))                                    AS O_POS_NO
+				     , C.O_SALE_DT
+				     , C.O_TRAN_NO
+				     , C.DC_TOT_AMT
+				  FROM DPS.PS_TRITEM A
+				     , DPS.PC_PBNMST B
+				     , DPS.PS_TRHEADER C
+				 WHERE A.PUMBUN_CD = B.PUMBUN_CD
+				       AND C.SALE_DT = A.SALE_DT
+				       AND C.STR_CD = A.STR_CD
+				       AND C.POS_NO = A.POS_NO
+				       AND C.TRAN_NO = A.TRAN_NO
+				       AND A.SALE_DT BETWEEN ? AND ?
+				       AND A.STR_CD = ?
+				       AND A.PUMBUN_CD LIKE ?||'%' 
+				       AND A.VEN_CD = ?
+				       AND B.PUMBUN_TYPE IN ('0', '4', 'B')
+		    /* 일괄취소까지 보고 싶지 않을때  주석 풀기 */
+		    --AND C.TRAN_MODE NOT IN ('92')
+		 ORDER BY 1,2,3
+        ]]>
+    </query>       
+      
+    
+    
+
+</service>

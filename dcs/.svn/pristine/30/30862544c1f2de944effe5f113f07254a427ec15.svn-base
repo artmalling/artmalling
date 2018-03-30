@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.19
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  클럽코드 관리
+ -->
+<service name="/dctm131.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="CLUB_ID"       colType="TB_STRING"  size="2"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CLUB_NAME"     colType="TB_STRING"  size="40"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CLUB_INFO"     colType="TB_STRING"  size="200"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REG_DATE"      colType="TB_STRING"  size="10"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>  
+     
+    <gauce name="H_DETAIL"> 
+        <column colName="CLUB_ID"       colType="TB_STRING"  size="2"    dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CLUB_NAME"     colType="TB_STRING"  size="40"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CLUB_INFO"     colType="TB_STRING"  size="200"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>       
+     
+    <!-- 클럽코드 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[       
+            SELECT A.CLUB_ID
+                 , A.CLUB_NAME
+                 , A.CLUB_INFO  
+                 , A.REG_DATE
+              FROM DCS.DM_CLUB A
+             ORDER BY A.CLUB_ID
+        ]]>        
+    </query>      
+    
+    <!-- 클럽코드 상세 -->
+    <query name="SEL_DETAIL">   
+        <![CDATA[       
+            SELECT A.CLUB_ID
+                 , A.CLUB_NAME
+                 , A.CLUB_INFO
+              FROM DCS.DM_CLUB A
+             WHERE A.CLUB_ID = ?
+        ]]>        
+    </query>   
+    
+    <!-- 클럽코드 정보 등록 -->
+    <query name="INS_CLUB">        
+        <![CDATA[
+            INSERT INTO DCS.DM_CLUB (
+                        CLUB_ID 
+                      , CLUB_NAME
+                      , CLUB_INFO
+                      , REG_DATE 
+                      , REG_ID   
+                      , MOD_DATE
+                      , MOD_ID
+                      ) VALUES (  
+                        ?
+                      , ?
+                      , ?
+                      , SYSDATE
+                      , ?
+                      , SYSDATE
+                      , ?                    
+                      )
+         ]]>   
+    </query>  
+    
+    <!-- 클럽코드 정보 수정 -->
+    <query name="UPD_CLUB"> 
+        <![CDATA[   
+            UPDATE DCS.DM_CLUB
+               SET CLUB_NAME  = ?
+                 , CLUB_INFO  = ?
+                 , MOD_DATE   = SYSDATE  
+                 , MOD_ID     = ?                  
+             WHERE CLUB_ID    = ?
+        ]]>   
+    </query>      
+</service>

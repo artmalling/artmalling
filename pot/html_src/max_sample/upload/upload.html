@@ -1,0 +1,128 @@
+<html>
+<head>
+<title>FILE UPLOAD ::: SAMPLE</title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr">
+
+
+
+<script>
+
+// 화면 로딩후 파일 첨부용 데이터셋를 초기화 한다.
+function fcOnLoad() {
+	DS.setDataHeader("FILE_NAME:STRING,FILE_URL:URL");
+}
+
+
+/**
+ * 트랜젝션 수행.
+ */
+function fcSave() {
+	TR.KeyValue  = "JSP(I:UPLOAD=DS)";
+	TR.action = "/fileUpload.bf";
+	TR.post();
+}
+
+
+/**
+ * 파일 첨부.
+ */
+function fcAttached() {
+	DS.addrow();
+	FILE.open();
+	oFileName.value = FILE.value;
+}
+
+
+function valid() {
+	var cnt = DS.CountRow;
+	for(i=1; i<=cnt; i++) {
+		DS.RowPosition = i;
+		var size = FILE.FileInfo("size");
+		if (size =="") {
+			alert("잘못된 파일이 첨부 되었습니다.");
+			return;
+		}
+
+	}
+}
+</script>
+</head>
+
+<!--
+**************************************************************
+* 가우스 컴포넌트 선언 및 이벤트 (트랜젝션, 데이터셋) : (Visible : X)
+**************************************************************
+-->
+<!-- 파일 첨부시 사용되는 데이터셋 -->
+<object id="DS" classid="clsid:2506B38B-0FF7-4249-BA3E-8BC1DC399FBB">
+	<param name="Syncload" value="true">
+</object>
+
+<!-- Transaction Component (파일럿 트랜젝션) & 이벤트 -->
+<object id="TR" classid="clsid:78E24950-4295-43d8-9B1A-1F41CD7130E5">
+	<param name="KeyName"	value="Toinb_dataid">
+	<param name="TimeOut"		value="20000000000">
+</object>
+
+
+
+<!-- 트랜젝션 실패한 경우 -->
+<script language="javascript" for="TR" event="OnFail()">
+	alert(this.ErrorMsg);
+</script>
+
+
+
+<!--
+**************************************************************
+* BODY START
+**************************************************************
+-->
+<body leftmargin="0" topmargin="0" onload="fcOnLoad()">
+<input type=button value="검증"  onclick="valid()">
+<br><br>
+			<table width="600" border="0" cellpadding="1" cellspacing="0"  bordercolorlight="#C7BFB7"  bordercolordark="#FFFFFF">
+				<tr> 
+					<td>&nbsp;</td>
+					<td align=right valign=middle>
+						<span style="position:relative;left:-110;top:-5">
+								<input name="oFileName" type="text" class="inputA_a" id="oFileName" style="width:360;position:relative;top:-1;left:-1" readOnly>
+								<input type=button value="File Attach" onclick="fcAttached()" class=inputB style="height:18;width:60;padding:0;top:-1;position:relative">
+								<input type=button value="Save" onclick="fcSave()" class=inputB style="height:18;width:60;padding:0;top:-1;position:relative">
+						</span>
+						
+					</td>
+				</tr>
+			</table>
+
+
+			<!-- 가우스 파일 오브젝트 -->
+			<object id=FILE classid=CLSID:C722848E-C7EE-4dc6-947E-C2CD49BBA9DE class="root" style="display:none" >
+				<param name="Text"		value='첨부파일'>
+				<param name="Enable"	value="true">
+			</object>
+
+			<!-- 파일명 표시용 그리드 :: 파일 첨부 -->
+			<object	id="GRID" classid="clsid:EA8B6EE6-3DD8-4534-B4BB-27148CF0042B" style="width:491px;height:100px;">
+				<param name="DataID"		value="DS">
+				<param name="EdiTABLE"		value="true">
+				<param name="DragDropEnable" value="true">
+				<param name=SortView  value="Left">
+				 <param name="VIEWSUMMARY"        value=0>
+				<param name="Format"		value="
+					<C> id='FILE_URL'				width=457		name='Attached Files',			align=left</C>
+					">
+			</object>
+
+</body>
+
+
+</html>
+
+<!-- 파일 첨부를 위한 바인딩 컴포넌트 -->
+<object id="BIND" classid="CLSID:4A35BB2C-B831-4199-A486-FEA332D085D9">
+	<Param Name="DataID",   Value="DS">
+	<Param Name="BindInfo", Value='
+		<C>Col=FILE_NAME,    Ctrl=FILE, Param=Value</C>
+		<C>Col=FILE_URL,     Ctrl=FILE, Param=Value</C>'>
+</object>

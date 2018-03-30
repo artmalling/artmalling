@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal410.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="NUM"                     colType="TB_DECIMAL"     size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"               colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PRC"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AVG_QTY"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AVG_AMT"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DAYS"                    colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_BEST_WORST_ASC">        
+        <![CDATA[    
+	        SELECT A.NUM
+                 , A.PUMMOK_CD
+                 , A.PUMMOK_NAME
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.SALE_PRC
+                 , A.SALE_QTY
+                 , A.TOT_SALE_AMT
+                 , A.AVG_QTY
+                 , A.AVG_AMT
+                 , A.DAYS
+              FROM (
+                    SELECT A.NUM
+                         , A.PUMMOK_CD
+                         , B.PUMMOK_NAME
+                         , A.PUMBUN_CD
+                         , C.PUMBUN_NAME
+                         , A.SALE_PRC
+                         , A.SALE_QTY
+                         , A.TOT_SALE_AMT
+                         , A.AVG_QTY
+                         , A.AVG_AMT
+                         , A.DAYS
+                      FROM (
+                            SELECT ROW_NUMBER() OVER(ORDER BY    SUM(A.NORM_SALE_AMT) DESC) AS  NUM		-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , A.PUMMOK_CD
+                                 , A.PUMBUN_CD
+                                 , ''                            AS SALE_PRC
+                                 , SUM(A.SALE_QTY)               AS SALE_QTY
+                                 , SUM(A.NORM_SALE_AMT)           AS TOT_SALE_AMT		-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , ROUND(SUM(A.SALE_QTY)/C.DAYS,0)     AS AVG_QTY
+                                 , ROUND(SUM(A.NORM_SALE_AMT)/C.DAYS,0) AS AVG_AMT		-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , A.STR_CD
+                                 , C.DAYS
+                              FROM DPS.PS_DAYPBN A
+                                 , DPS.PC_ORGMST B
+                                 , (SELECT STR_CD, PUMBUN_CD, COUNT(SALE_DT) DAYS
+                                      FROM (SELECT DISTINCT A.STR_CD, A.PUMBUN_CD, A.SALE_DT
+                                              FROM DPS.PS_DAYPBN A
+                                                 , DPS.PC_ORGMST B
+                                                 , DPS.PC_STRPBN C
+                                             WHERE A.STR_CD     = C.STR_CD
+                                               AND A.PUMBUN_CD = C.PUMBUN_CD
+                                               AND B.ORG_CD = C.SALE_ORG_CD
+                                               AND B.STR_CD     = ?
+                                               AND B.DEPT_CD    = ?
+                                               AND B.TEAM_CD    = ?
+                                               AND B.PC_CD      LIKE ? || '%'
+                                               AND A.PUMBUN_CD  LIKE ? || '%'
+                                               AND A.SALE_DT    >= ?
+                                               AND A.SALE_DT    <= ?
+                                               AND EXISTS ( SELECT MYORG.USER_ID
+                                                              FROM COM.V_MYORG MYORG
+                                                             WHERE MYORG.STR_CD      = A.STR_CD
+                                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                               AND MYORG.PC_CD       = B.PC_CD
+                                                               AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                                               AND MYORG.USER_ID     = ?
+                                                          )
+                                            )
+                                     GROUP BY
+                                           STR_CD, PUMBUN_CD
+                                 ) C
+                                 , DPS.PC_STRPBN D
+                             WHERE A.STR_CD = D.STR_CD
+                               AND A.PUMBUN_CD = D.PUMBUN_CD
+                               AND B.ORG_CD      = D.SALE_ORG_CD
+                               AND A.STR_CD     = C.STR_CD
+                               AND A.PUMBUN_CD  = C.PUMBUN_CD
+                               AND B.STR_CD     = ?
+                               AND B.DEPT_CD    = ?
+                               AND B.TEAM_CD    = ?
+                               AND B.PC_CD      LIKE ? || '%'
+                               AND A.PUMBUN_CD  LIKE ? || '%'
+                               AND A.SALE_DT    >= ?
+                               AND A.SALE_DT    <= ?
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = B.STR_CD
+                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                                               AND MYORG.PC_CD       = B.PC_CD
+                                               AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                               AND MYORG.USER_ID     = ?
+                                          )
+                             GROUP BY
+                                   A.PUMMOK_CD
+                                 , A.PUMBUN_CD
+                                 , A.STR_CD
+                                 , C.DAYS
+                            ) A
+                          , DPS.PC_PMKMST B
+                          , DPS.PC_STRPBN C
+                      WHERE A.PUMMOK_CD = B.PUMMOK_CD
+                        AND A.PUMBUN_CD = C.PUMBUN_CD
+                        AND A.STR_CD    = C.STR_CD
+                      ORDER BY
+                            NUM ASC
+                   ) A
+             WHERE NUM <= ?
+        ]]>        
+    </query>
+    <query name="SEL_BEST_WORST_ASC2">        
+        <![CDATA[ 
+        	 SELECT A.NUM
+                 , A.PUMMOK_CD
+                 , A.PUMMOK_NAME
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.SALE_PRC
+                 , A.SALE_QTY
+                 , A.TOT_SALE_AMT
+                 , A.AVG_QTY
+                 , A.AVG_AMT
+                 , A.DAYS
+              FROM (
+                    SELECT A.NUM
+                         , A.PUMMOK_CD
+                         , B.PUMMOK_NAME
+                         , A.PUMBUN_CD
+                         , C.PUMBUN_NAME
+                         , A.SALE_PRC
+                         , A.SALE_QTY
+                         , A.TOT_SALE_AMT
+                         , A.AVG_QTY
+                         , A.AVG_AMT
+                         , A.DAYS
+                      FROM (
+                            SELECT ROW_NUMBER() OVER(ORDER BY    SUM(A.NORM_SALE_AMT) DESC) AS  NUM	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , A.PUMMOK_CD
+                                 , A.PUMBUN_CD
+                                 , ''                            AS SALE_PRC
+                                 , SUM(A.SALE_QTY)               AS SALE_QTY
+                                 , SUM(A.NORM_SALE_AMT)           AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , ROUND(SUM(A.SALE_QTY)/C.DAYS,0)     AS AVG_QTY
+                                 , ROUND(SUM(A.NORM_SALE_AMT)/C.DAYS,0) AS AVG_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , A.STR_CD
+                                 , C.DAYS
+                              FROM DPS.PS_DAYPBN A
+                                 , DPS.PC_ORGMST B
+                                 , (SELECT STR_CD, PUMBUN_CD, COUNT(SALE_DT) DAYS
+                                      FROM (SELECT DISTINCT A.STR_CD, A.PUMBUN_CD, A.SALE_DT
+                                              FROM DPS.PS_DAYPBN A
+                                                 , DPS.PC_ORGMST B
+                                                 , DPS.PC_STRPBN C
+                                             WHERE A.STR_CD     = C.STR_CD
+                                               AND A.PUMBUN_CD = C.PUMBUN_CD
+                                               AND B.ORG_CD = C.BUY_ORG_CD
+                                               AND B.STR_CD     = ?
+                                               AND B.DEPT_CD    = ?
+                                               AND B.TEAM_CD    = ?
+                                               AND B.PC_CD      LIKE ? || '%'
+                                               AND A.PUMBUN_CD  LIKE ? || '%'
+                                               AND A.SALE_DT    >= ?
+                                               AND A.SALE_DT    <= ?
+                                               AND EXISTS ( SELECT MYORG.USER_ID
+                                                              FROM COM.V_MYORG MYORG
+                                                             WHERE MYORG.STR_CD      = A.STR_CD
+                                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                               AND MYORG.PC_CD       = B.PC_CD
+                                                               AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                                               AND MYORG.USER_ID     = ?
+                                                          )
+                                            )
+                                     GROUP BY
+                                           STR_CD, PUMBUN_CD
+                                 ) C
+                                 , DPS.PC_STRPBN D
+                             WHERE A.STR_CD = D.STR_CD
+                               AND A.PUMBUN_CD = D.PUMBUN_CD
+                               AND B.ORG_CD      = D.BUY_ORG_CD
+                               AND A.STR_CD     = C.STR_CD
+                               AND A.PUMBUN_CD  = C.PUMBUN_CD
+                               AND B.STR_CD     = ?
+                               AND B.DEPT_CD    = ?
+                               AND B.TEAM_CD    = ?
+                               AND B.PC_CD      LIKE ? || '%'
+                               AND A.PUMBUN_CD  LIKE ? || '%'
+                               AND A.SALE_DT    >= ?
+                               AND A.SALE_DT    <= ?
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = B.STR_CD
+                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                                               AND MYORG.PC_CD       = B.PC_CD
+                                               AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                               AND MYORG.USER_ID     = ?
+                                          )
+                             GROUP BY
+                                   A.PUMMOK_CD
+                                 , A.PUMBUN_CD
+                                 , A.STR_CD
+                                 , C.DAYS
+                            ) A
+                          , DPS.PC_PMKMST B
+                          , DPS.PC_STRPBN C
+                      WHERE A.PUMMOK_CD = B.PUMMOK_CD
+                        AND A.PUMBUN_CD = C.PUMBUN_CD
+                        AND A.STR_CD    = C.STR_CD
+                      ORDER BY
+                            NUM ASC
+                   ) A
+             WHERE NUM <= ?
+        
+        ]]>        
+    </query>
+    
+    <query name="SEL_BEST_WORST_DESC2">        
+        <![CDATA[
+        	 SELECT A.NUM
+                 , A.PUMMOK_CD
+                 , A.PUMMOK_NAME
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.SALE_PRC
+                 , A.SALE_QTY
+                 , A.TOT_SALE_AMT
+                 , A.AVG_QTY
+                 , A.AVG_AMT
+                 , A.DAYS
+              FROM (
+                    SELECT A.NUM
+                         , A.PUMMOK_CD
+                         , B.PUMMOK_NAME
+                         , A.PUMBUN_CD
+                         , C.PUMBUN_NAME
+                         , A.SALE_PRC
+                         , A.SALE_QTY
+                         , A.TOT_SALE_AMT
+                         , A.AVG_QTY
+                         , A.AVG_AMT
+                         , A.DAYS
+                      FROM (
+                            SELECT ROW_NUMBER() OVER(ORDER BY    SUM(A.NORM_SALE_AMT) ASC) AS  NUM	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , A.PUMMOK_CD
+                                 , A.PUMBUN_CD
+                                 , ''                            AS SALE_PRC
+                                 , SUM(A.SALE_QTY)               AS SALE_QTY
+                                 , SUM(A.NORM_SALE_AMT)           AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , ROUND(SUM(A.SALE_QTY)/C.DAYS,0)    AS AVG_QTY
+                                 , ROUND(SUM(A.NORM_SALE_AMT)/C.DAYS,0)AS AVG_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , A.STR_CD
+                                 , C.DAYS
+                              FROM DPS.PS_DAYPBN A
+                                 , DPS.PC_ORGMST B
+                                 , (SELECT STR_CD, PUMBUN_CD, COUNT(SALE_DT) DAYS
+                                      FROM (SELECT DISTINCT A.STR_CD, A.PUMBUN_CD, A.SALE_DT
+                                              FROM DPS.PS_DAYPBN A
+                                                 , DPS.PC_ORGMST B
+                                                 , DPS.PC_STRPBN C
+                                              WHERE A.STR_CD     = C.STR_CD
+                                               AND A.PUMBUN_CD = C.PUMBUN_CD
+                                               AND B.ORG_CD = C.BUY_ORG_CD
+                                               AND B.STR_CD     = ?
+                                               AND B.DEPT_CD    = ?
+                                               AND B.TEAM_CD    = ?
+                                               AND B.PC_CD      LIKE ? || '%'
+                                               AND A.PUMBUN_CD  LIKE ? || '%'
+                                               AND A.SALE_DT    >= ?
+                                               AND A.SALE_DT    <= ?
+                                               AND EXISTS ( SELECT MYORG.USER_ID
+                                                              FROM COM.V_MYORG MYORG
+                                                             WHERE MYORG.STR_CD      = A.STR_CD
+                                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                                                               AND MYORG.PC_CD       = B.PC_CD
+                                                               AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                                               AND MYORG.USER_ID     = ?
+                                                          )
+                                            )
+                                     GROUP BY
+                                           STR_CD, PUMBUN_CD
+                                 ) C
+                                  , DPS.PC_STRPBN D
+                             WHERE A.STR_CD = D.STR_CD
+                               AND A.PUMBUN_CD = D.PUMBUN_CD
+                               AND B.ORG_CD      = D.BUY_ORG_CD
+                               AND A.STR_CD     = C.STR_CD
+                               AND A.PUMBUN_CD  = C.PUMBUN_CD
+                               AND B.STR_CD     = ?
+                               AND B.DEPT_CD    = ?
+                               AND B.TEAM_CD    = ?
+                               AND B.PC_CD      LIKE ? || '%'
+                               AND A.PUMBUN_CD  LIKE ? || '%'
+                               AND A.SALE_DT    >= ?
+                               AND A.SALE_DT    <= ?
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = B.STR_CD
+                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                                               AND MYORG.PC_CD       = B.PC_CD
+                                               AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                               AND MYORG.USER_ID     = ?
+                                          )
+                             GROUP BY
+                                   A.PUMMOK_CD
+                                 , A.PUMBUN_CD
+                                 , A.STR_CD
+                                 , C.DAYS
+                            ) A
+                          , DPS.PC_PMKMST B
+                          , DPS.PC_STRPBN C
+                      WHERE A.PUMMOK_CD = B.PUMMOK_CD
+                        AND A.PUMBUN_CD = C.PUMBUN_CD
+                        AND A.STR_CD    = C.STR_CD
+                      ORDER BY
+                            NUM ASC
+                   ) A
+             WHERE NUM <= ?
+        ]]>        
+    </query>
+    <query name="SEL_BEST_WORST_DESC">        
+        <![CDATA[    
+            SELECT A.NUM
+                 , A.PUMMOK_CD
+                 , A.PUMMOK_NAME
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.SALE_PRC
+                 , A.SALE_QTY
+                 , A.TOT_SALE_AMT
+                 , A.AVG_QTY
+                 , A.AVG_AMT
+	             , A.DAYS
+              FROM (
+                    SELECT A.NUM
+                         , A.PUMMOK_CD
+                         , B.PUMMOK_NAME
+                         , A.PUMBUN_CD
+                         , C.PUMBUN_NAME
+                         , A.SALE_PRC
+                         , A.SALE_QTY
+                         , A.TOT_SALE_AMT
+                         , A.AVG_QTY
+                         , A.AVG_AMT
+	                     , A.DAYS
+                      FROM (
+                            SELECT ROW_NUMBER() OVER(ORDER BY    SUM(A.NORM_SALE_AMT) ASC) AS  NUM	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , A.PUMMOK_CD
+                                 , A.PUMBUN_CD
+                                 , ''                            AS SALE_PRC
+                                 , SUM(A.SALE_QTY)               AS SALE_QTY
+                                 , SUM(A.NORM_SALE_AMT)           AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , ROUND(SUM(A.SALE_QTY)/C.DAYS,0)    AS AVG_QTY
+                                 , ROUND(SUM(A.NORM_SALE_AMT)/C.DAYS,0)AS AVG_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+                                 , A.STR_CD
+	                             , C.DAYS
+                              FROM DPS.PS_DAYPBN A
+                                 , DPS.PC_ORGMST B
+                                 , (SELECT STR_CD, PUMBUN_CD, COUNT(SALE_DT) DAYS
+                                      FROM (SELECT DISTINCT A.STR_CD, A.PUMBUN_CD, A.SALE_DT
+                                              FROM DPS.PS_DAYPBN A
+                                                 , DPS.PC_ORGMST B
+                                                 , DPS.PC_STRPBN C
+                                              WHERE A.STR_CD     = C.STR_CD
+                                               AND A.PUMBUN_CD = C.PUMBUN_CD
+                                               AND B.ORG_CD = C.SALE_ORG_CD
+	                                           AND B.STR_CD     = ?
+                                               AND B.DEPT_CD    = ?
+                                               AND B.TEAM_CD    = ?
+                                               AND B.PC_CD      LIKE ? || '%'
+                                               AND A.PUMBUN_CD  LIKE ? || '%'
+                                               AND A.SALE_DT    >= ?
+                                               AND A.SALE_DT    <= ?
+				                               AND EXISTS ( SELECT MYORG.USER_ID
+				                                              FROM COM.V_MYORG MYORG
+				                                             WHERE MYORG.STR_CD      = A.STR_CD
+				                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+				                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+				                                               AND MYORG.PC_CD       = B.PC_CD
+				                                               AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+				                                               AND MYORG.USER_ID     = ?
+				                                          )
+                                            )
+                                     GROUP BY
+                                           STR_CD, PUMBUN_CD
+                                 ) C
+                                  , DPS.PC_STRPBN D
+                             WHERE A.STR_CD = D.STR_CD
+                               AND A.PUMBUN_CD = D.PUMBUN_CD
+                               AND B.ORG_CD      = D.SALE_ORG_CD
+                               AND A.STR_CD     = C.STR_CD
+                               AND A.PUMBUN_CD  = C.PUMBUN_CD
+	                           AND B.STR_CD     = ?
+                               AND B.DEPT_CD    = ?
+                               AND B.TEAM_CD    = ?
+                               AND B.PC_CD      LIKE ? || '%'
+                               AND A.PUMBUN_CD  LIKE ? || '%'
+                               AND A.SALE_DT    >= ?
+                               AND A.SALE_DT    <= ?
+                               AND EXISTS ( SELECT MYORG.USER_ID
+                                              FROM COM.V_MYORG MYORG
+                                             WHERE MYORG.STR_CD      = B.STR_CD
+                                               AND MYORG.DEPT_CD     = B.DEPT_CD
+                                               AND MYORG.TEAM_CD     = B.TEAM_CD
+                                               AND MYORG.PC_CD       = B.PC_CD
+                                               AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                               AND MYORG.USER_ID     = ?
+                                          )
+                             GROUP BY
+                                   A.PUMMOK_CD
+                                 , A.PUMBUN_CD
+                                 , A.STR_CD
+                                 , C.DAYS
+                            ) A
+                          , DPS.PC_PMKMST B
+                          , DPS.PC_STRPBN C
+                      WHERE A.PUMMOK_CD = B.PUMMOK_CD
+                        AND A.PUMBUN_CD = C.PUMBUN_CD
+                        AND A.STR_CD    = C.STR_CD
+                      ORDER BY
+                            NUM ASC
+                   ) A
+             WHERE NUM <= ?
+        ]]>        
+    </query>
+    
+    
+</service>

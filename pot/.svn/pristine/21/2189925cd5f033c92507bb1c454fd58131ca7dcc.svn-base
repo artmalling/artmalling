@@ -1,0 +1,844 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.15
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 점, 부문, 팀, PC 공통 콤보
+ -->
+<service name="/ccom901.cc">	
+
+    <!-- 코드/명 조회 --> 
+    <gauce name="H_COMBO">
+      <column colName="CODE"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GBN"         colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+     <!-- 코드/명 조회 --> 
+    <gauce name="H_COMBO_01">
+      <column colName="CODE"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+         <!-- 점코드조회 SQL : 전체  -->
+    <query name="SEL_ALLGB_STR">
+        <![CDATA[
+           SELECT '%'           AS CODE 
+                , '전체'        AS NAME 
+                , ''            AS GBN
+             FROM DUAL
+           UNION ALL
+        ]]>
+    </query>
+    <!-- 점코드조회 SQL : 전체  -->
+    <query name="SEL_ALLGB_STR2">
+        <![CDATA[
+           SELECT '%'           AS CODE 
+                , '전체'        AS NAME 
+                , ''            AS GBN
+             FROM DUAL
+           UNION ALL
+        ]]>
+    </query>
+     <!-- 점코드조회 SQL : 전체  -->
+    <query name="SEL_ALLGB">
+        <![CDATA[
+           SELECT '%'           AS CODE 
+                , '전체'        AS NAME 
+             FROM DUAL
+           UNION ALL
+        ]]>
+    </query>
+    <!-- 점코드조회 SQL : 전체  -->
+    <query name="SEL_ALLGB2">
+        <![CDATA[
+           SELECT '%'           AS CODE 
+                , '전체'        AS NAME 
+             FROM DUAL
+           UNION ALL
+        ]]>
+    </query>
+    <!-- 점코드조회 SQL : 권한 적용-->     <!--체크         하자~!!!!!!!!!!!!!!       AND A.USE_YN = 'N' -->
+    <query name="SEL_STORE">
+        <![CDATA[
+            SELECT DISTINCT 
+                   A.STR_CD     AS CODE
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD)   AS NAME
+                 , STR_FLAG AS GBN
+              FROM COM.V_MYORG A, DPS.PC_STRMST B
+             WHERE A.STR_CD = B.STR_CD
+               AND A.USE_YN = 'Y'                      
+               AND A.FCL_FLAG = '1'
+               AND USER_ID = ?
+               AND STR_FLAG LIKE ? || '%'
+        ]]>
+    </query>
+    <!-- 점코드조회 SQL : 권한 적용-->     <!--체크         하자~!!!!!!!!!!!!!!       AND A.USE_YN = 'N' -->
+    <query name="SEL_STORE2">
+        <![CDATA[
+            SELECT DISTINCT 
+                   A.STR_CD     AS CODE
+                 , DPS.FN_GET_STORE_NAME(A.STR_CD)   AS NAME
+                 , STR_FLAG AS GBN
+              FROM COM.V_MYORG A, DPS.PC_STRMST B
+             WHERE A.STR_CD = B.STR_CD
+               AND A.USE_YN = 'Y'                      
+               AND A.FCL_FLAG = '1'
+               AND USER_ID = ?
+               AND STR_FLAG LIKE ? || '%'
+        ]]>
+    </query>
+     <!-- 점코드조회 SQL : 권한 적용 _ 매입, 매장권한 조건-->
+    <query name="SEL_STORE_ORG_FLAG">
+        <![CDATA[
+               AND ORG_FLAG = ?
+        ]]>
+    </query>
+    <!-- 점코드조회 SQL : 권한 적용 _ 매입, 매장권한 조건-->
+    <query name="SEL_STORE_ORG_FLAG2">
+        <![CDATA[
+               AND ORG_FLAG = ?
+        ]]>
+    </query>
+    <!-- 점코드조회 SQL : 권한 적용 안함 -->
+    <query name="SEL_ALL_STORE">
+        <![CDATA[
+            SELECT STR_CD     AS CODE
+                 , STR_NAME   AS NAME
+                 , STR_FLAG AS GBN
+              FROM DPS.PC_STRMST
+             WHERE FCL_FLAG = '1'
+               AND USE_YN = 'Y'
+               AND STR_FLAG LIKE ? || '%'
+        ]]>
+    </query>
+    <!-- 점코드조회 SQL : 권한 적용 안함 -->
+    <query name="SEL_ALL_STORE2">
+        <![CDATA[
+            SELECT STR_CD     AS CODE
+                 , STR_NAME   AS NAME
+                 , STR_FLAG AS GBN
+              FROM DPS.PC_STRMST
+             WHERE FCL_FLAG = '1'
+               AND USE_YN = 'Y'
+               AND STR_FLAG LIKE ? || '%'
+        ]]>
+    </query>
+    <!-- 부문코드조회 SQL : 권한 적용 -->
+    <query name="SEL_DEPT">
+        <![CDATA[
+           SELECT DISTINCT 
+                  A.DEPT_CD         AS CODE
+                , ORG_SHORT_NAME    AS NAME
+             FROM COM.V_MYORG A, DPS.PC_ORGMST B
+            WHERE A.STR_CD = B.STR_CD
+              AND A.DEPT_CD = B.DEPT_CD
+              AND ORG_LEVEL = '2' 
+              AND A.USE_YN = 'Y'
+              AND USER_ID = ?
+              AND A.ORG_FLAG = ?
+              AND A.STR_CD = ?
+        ]]>
+    </query>
+    <!-- 부문코드조회 SQL : 권한 적용 -->
+    <query name="SEL_DEPT2">
+        <![CDATA[
+           SELECT DISTINCT 
+                  A.DEPT_CD         AS CODE
+                , ORG_SHORT_NAME    AS NAME
+             FROM COM.V_MYORG A, DPS.PC_ORGMST B
+            WHERE A.STR_CD = B.STR_CD
+              AND A.DEPT_CD = B.DEPT_CD
+              AND ORG_LEVEL = '2' 
+              AND A.USE_YN = 'Y'
+              AND USER_ID = ?
+              AND A.ORG_FLAG = ?
+              AND A.STR_CD = ?
+        ]]>
+    </query>
+    <!-- 부문코드조회 SQL : 권한 미 적용-->
+    <query name="SEL_ALL_DEPT">
+        <![CDATA[
+            SELECT DISTINCT DEPT_CD     AS CODE
+                 , ORG_SHORT_NAME       AS NAME
+              FROM DPS.PC_ORGMST A
+              WHERE ORG_LEVEL = '2' 
+                AND ORG_FLAG = ?
+                AND A.STR_CD = ?
+        ]]>
+    </query>
+     <!-- 부문코드조회 SQL : 권한 미 적용-->
+    <query name="SEL_ALL_DEPT2">
+        <![CDATA[
+            SELECT DISTINCT DEPT_CD     AS CODE
+                 , ORG_SHORT_NAME       AS NAME
+              FROM DPS.PC_ORGMST A
+              WHERE ORG_LEVEL = '2' 
+                AND ORG_FLAG = ?
+                AND A.STR_CD = ?
+        ]]>
+    </query>
+        <!-- 관리조직 여부 조건 추가-->
+    <query name="ADD_MNG_ORG_YN">
+        <![CDATA[
+                AND MNG_ORG_YN LIKE ? || '%'
+        ]]>
+    </query>
+    <!-- 관리조직 여부 조건 추가-->
+    <query name="ADD_MNG_ORG_YN2">
+        <![CDATA[
+                AND MNG_ORG_YN LIKE ? || '%'
+        ]]>
+    </query>
+    <!-- 팀코드조회 SQL : 권한 적용 -->
+    <query name="SEL_TEAM">
+        <![CDATA[
+			SELECT DISTINCT 
+                  A.TEAM_CD         AS CODE
+                , ORG_SHORT_NAME    AS NAME
+             FROM COM.V_MYORG A, DPS.PC_ORGMST B
+            WHERE A.STR_CD = B.STR_CD
+              AND A.DEPT_CD = B.DEPT_CD
+              AND A.TEAM_CD = B.TEAM_CD
+              AND ORG_LEVEL = '3' 
+              AND A.USE_YN = 'Y'
+              AND USER_ID = ?
+              AND A.ORG_FLAG = ?
+              AND A.STR_CD = ?
+        ]]>
+    </query>
+    <!-- 팀코드조회 SQL : 권한 적용 -->
+    <query name="SEL_TEAM2">
+        <![CDATA[
+			SELECT DISTINCT 
+                  A.TEAM_CD         AS CODE
+                , ORG_SHORT_NAME    AS NAME
+             FROM COM.V_MYORG A, DPS.PC_ORGMST B
+            WHERE A.STR_CD = B.STR_CD
+              AND A.DEPT_CD = B.DEPT_CD
+              AND A.TEAM_CD = B.TEAM_CD
+              AND ORG_LEVEL = '3' 
+              AND A.USE_YN = 'Y'
+              AND USER_ID = ?
+              AND A.ORG_FLAG = ?
+              AND A.STR_CD = ?
+        ]]>
+    </query>
+    <!-- 팀코드조회 SQL 권한 미적용-->
+    <query name="SEL_ALL_TEAM">
+        <![CDATA[
+            SELECT DISTINCT TEAM_CD      AS CODE 
+                 , ORG_SHORT_NAME        AS NAME
+              FROM DPS.PC_ORGMST A 
+             WHERE ORG_LEVEL = '3' 
+               AND ORG_FLAG = ?
+               AND A.STR_CD = ?
+        ]]>
+    </query>
+    <!-- 팀코드조회 SQL 권한 미적용-->
+    <query name="SEL_ALL_TEAM2">
+        <![CDATA[
+            SELECT DISTINCT TEAM_CD      AS CODE 
+                 , ORG_SHORT_NAME        AS NAME
+              FROM DPS.PC_ORGMST A 
+             WHERE ORG_LEVEL = '3' 
+               AND ORG_FLAG = ?
+               AND A.STR_CD = ?
+        ]]>
+    </query>
+    <!-- PC코드조회 SQL : 권한 적용-->
+    <query name="SEL_PC">
+        <![CDATA[
+		SELECT DISTINCT 
+               A.PC_CD              AS CODE
+             , ORG_SHORT_NAME       AS NAME
+          FROM COM.V_MYORG A, DPS.PC_ORGMST B
+         WHERE A.STR_CD = B.STR_CD
+           AND A.DEPT_CD = B.DEPT_CD
+           AND A.TEAM_CD = B.TEAM_CD
+           AND A.PC_CD = B.PC_CD
+           AND ORG_LEVEL = '4' 
+           AND A.USE_YN = 'Y'
+           AND USER_ID = ?
+           AND A.ORG_FLAG = ?
+           AND A.STR_CD = ?
+        ]]>
+    </query>
+    <!-- PC코드조회 SQL : 권한 적용-->
+    <query name="SEL_PC2">
+        <![CDATA[
+		SELECT DISTINCT 
+               A.PC_CD              AS CODE
+             , ORG_SHORT_NAME       AS NAME
+          FROM COM.V_MYORG A, DPS.PC_ORGMST B
+         WHERE A.STR_CD = B.STR_CD
+           AND A.DEPT_CD = B.DEPT_CD
+           AND A.TEAM_CD = B.TEAM_CD
+           AND A.PC_CD = B.PC_CD
+           AND ORG_LEVEL = '4' 
+           AND A.USE_YN = 'Y'
+           AND USER_ID = ?
+           AND A.ORG_FLAG = ?
+           AND A.STR_CD = ?
+        ]]>
+    </query>
+    <!-- PC코드조회 SQL : 권한 미적용-->
+    <query name="SEL_ALL_PC">
+        <![CDATA[
+        SELECT DISTINCT PC_CD         AS CODE 
+             , ORG_SHORT_NAME         AS NAME
+          FROM DPS.PC_ORGMST A
+         WHERE ORG_LEVEL = '4' 
+           AND ORG_FLAG = ?
+           AND A.STR_CD = ?
+        ]]>
+    </query>
+    <!-- PC코드조회 SQL : 권한 미적용-->
+    <query name="SEL_ALL_PC2">
+        <![CDATA[
+        SELECT DISTINCT PC_CD         AS CODE 
+             , ORG_SHORT_NAME         AS NAME
+          FROM DPS.PC_ORGMST A
+         WHERE ORG_LEVEL = '4' 
+           AND ORG_FLAG = ?
+           AND A.STR_CD = ?
+        ]]>
+    </query>
+    <!-- 부문코드조회 SQL 부문 조건-->
+    <query name="SEL_CONDI_DEPT">
+        <![CDATA[
+           AND A.DEPT_CD = ?
+        ]]>
+    </query>
+    <!-- 부문코드조회 SQL 부문 조건-->
+    <query name="SEL_CONDI_DEPT2">
+        <![CDATA[
+           AND A.DEPT_CD = ?
+        ]]>
+    </query>
+      <!-- 부문코드조회 SQL 부문 조건-->
+    <query name="SEL_CONDI_DEPT_LIKE">
+        <![CDATA[
+           AND A.DEPT_CD LIKE ? || '%'
+        ]]>
+    </query>
+     <!-- 부문코드조회 SQL 부문 조건-->
+    <query name="SEL_CONDI_DEPT_LIKE2">
+        <![CDATA[
+           AND A.DEPT_CD LIKE ? || '%'
+        ]]>
+    </query>
+    <!-- 부문코드조회 SQL 팀 조건-->
+    <query name="SEL_CONDI_TEAM">
+        <![CDATA[
+           AND A.TEAM_CD = ?
+        ]]>
+    </query>
+    <!-- 부문코드조회 SQL 팀 조건-->
+    <query name="SEL_CONDI_TEAM2">
+        <![CDATA[
+           AND A.TEAM_CD = ?
+        ]]>
+    </query>
+    <!-- 부문코드조회 SQL 팀 조건-->
+    <query name="SEL_CONDI_TEAM_LIKE">
+        <![CDATA[
+           AND A.TEAM_CD LIKE ? || '%'
+        ]]>
+    </query>
+    <!-- 부문코드조회 SQL 팀 조건-->
+    <query name="SEL_CONDI_TEAM_LIKE2">
+        <![CDATA[
+           AND A.TEAM_CD LIKE ? || '%'
+        ]]>
+    </query>
+    
+      <!-- 코너조회 SQL -->
+    <query name="SEL_CORNER">
+        <![CDATA[
+         SELECT DISTINCT 
+		       CORNER_CD AS CODE
+		     , ORG_NAME AS NAME
+		  FROM DPS.PC_ORGMST
+		 WHERE STR_CD = ?
+		   AND DEPT_CD = ?
+		   AND TEAM_CD = ?
+		   AND PC_CD = ?
+        ]]>
+    </query>
+    <!-- 코너조회 SQL -->
+    <query name="SEL_CORNER2">
+        <![CDATA[
+         SELECT DISTINCT 
+		       CORNER_CD AS CODE
+		     , ORG_NAME AS NAME
+		  FROM DPS.PC_ORGMST
+		 WHERE STR_CD = ?
+		   AND DEPT_CD = ?
+		   AND TEAM_CD = ?
+		   AND PC_CD = ?
+        ]]>
+    </query>
+          <!-- 쿼리 시작 SQL -->
+    <query name="SEL_STR_HEADER">
+        <![CDATA[
+        SELECT CODE
+             , NAME
+             , GBN 
+          FROM (
+        ]]>
+    </query>
+    <!-- 쿼리 시작 SQL -->
+    <query name="SEL_STR_HEADER2">
+        <![CDATA[
+        SELECT CODE
+             , NAME
+             , GBN 
+          FROM (
+        ]]>
+    </query>
+        <!-- 쿼리 시작 SQL -->
+    <query name="SEL_HEADER">
+        <![CDATA[
+        SELECT CODE
+             , NAME
+          FROM (
+        ]]>
+    </query>
+    <!-- 쿼리 시작 SQL -->
+    <query name="SEL_HEADER2">
+        <![CDATA[
+        SELECT CODE
+             , NAME
+          FROM (
+        ]]>
+    </query>
+       <!-- 쿼리 종료 SQL -->
+    <query name="SEL_TAIL">
+        <![CDATA[
+        )
+               ORDER BY CODE
+        ]]>
+    </query>
+    <!-- 쿼리 종료 SQL -->
+    <query name="SEL_TAIL2">
+        <![CDATA[
+        )
+               ORDER BY CODE
+        ]]>
+    </query>
+    
+    <!-- 시설구분(임대관리 시설) --> 
+    <gauce name="H_SEL_FCL">
+      <column colName="CODE"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="MNTN_CAL_YN" colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="HUSE_FLAG"   colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="FCL_FLAG"    colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+     <!-- 시설구분(임대관리 시설) : 전체  -->
+    <query name="SEL_FCL_ALLGB">
+        <![CDATA[
+           SELECT '%'       AS CODE 
+                , '전체'     AS NAME 
+                , ''        AS MNTN_CAL_YN
+                , ''        AS HUSE_FLAG
+                , ''        AS FCL_FLAG
+             FROM DUAL
+            UNION ALL
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 전체  -->
+    <query name="SEL_FCL_ALLGB2">
+        <![CDATA[
+           SELECT '%'       AS CODE 
+                , '전체'     AS NAME 
+                , ''        AS MNTN_CAL_YN
+                , ''        AS HUSE_FLAG
+                , ''        AS FCL_FLAG
+             FROM DUAL
+            UNION ALL
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 권한 적용-->
+    <query name="SEL_FCL_AUTH">
+        <![CDATA[
+            SELECT DISTINCT 
+                   ST.STR_CD        AS CODE
+                 , ST.STR_NAME      AS NAME
+                 /*, FC.MNTN_CAL_YN   AS MNTN_CAL_YN*/
+                 , FC.HUSE_FLAG     AS HUSE_FLAG
+                 , ST.FCL_FLAG      AS FCL_FLAG
+              FROM MSS.MR_FCLMST    FC
+                 , COM.V_MYORG      MY
+                 , DPS.PC_STRMST    ST
+             WHERE FC.STR_CD = MY.STR_CD 
+               AND FC.STR_CD = ST.STR_CD 
+               AND ST.USE_YN = 'Y'
+               AND MY.USER_ID = ?
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 권한 적용-->
+    <query name="SEL_FCL_AUTH2">
+        <![CDATA[
+            SELECT DISTINCT 
+                   ST.STR_CD        AS CODE
+                 , ST.STR_NAME      AS NAME
+                 /*, FC.MNTN_CAL_YN   AS MNTN_CAL_YN*/
+                 , FC.HUSE_FLAG     AS HUSE_FLAG
+                 , ST.FCL_FLAG      AS FCL_FLAG
+              FROM MSS.MR_FCLMST    FC
+                 , COM.V_MYORG      MY
+                 , DPS.PC_STRMST    ST
+             WHERE FC.STR_CD = MY.STR_CD 
+               AND FC.STR_CD = ST.STR_CD 
+               AND ST.USE_YN = 'Y'
+               AND MY.USER_ID = ?
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 권한 적용 안함 -->
+    <query name="SEL_FCL">
+        <![CDATA[
+            SELECT DISTINCT 
+                   ST.STR_CD        AS CODE
+                 , ST.STR_NAME      AS NAME
+                 /*, FC.MNTN_CAL_YN   AS MNTN_CAL_YN*/
+                 , FC.HUSE_FLAG     AS HUSE_FLAG
+                 , ST.FCL_FLAG      AS FCL_FLAG
+              FROM MSS.MR_FCLMST    FC
+                 , DPS.PC_STRMST    ST
+             WHERE FC.STR_CD = ST.STR_CD 
+               AND ST.USE_YN = 'Y'
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 권한 적용 안함 -->
+    <query name="SEL_FCL2">
+        <![CDATA[
+            SELECT DISTINCT 
+                   ST.STR_CD        AS CODE
+                 , ST.STR_NAME      AS NAME
+                 /*, FC.MNTN_CAL_YN   AS MNTN_CAL_YN*/
+                 , FC.HUSE_FLAG     AS HUSE_FLAG
+                 , ST.FCL_FLAG      AS FCL_FLAG
+              FROM MSS.MR_FCLMST    FC
+                 , DPS.PC_STRMST    ST
+             WHERE FC.STR_CD = ST.STR_CD 
+               AND ST.USE_YN = 'Y'
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설)_기준정보 : 권한 적용-->
+    <query name="SEL_FCL_AUTH_COM">
+        <![CDATA[
+            SELECT DISTINCT 
+                   ST.STR_CD        AS CODE
+                 , ST.STR_NAME      AS NAME
+                 , ''               AS MNTN_CAL_YN
+                 , ''               AS HUSE_FLAG
+                 , ST.FCL_FLAG      AS FCL_FLAG
+              FROM DPS.PC_STRMST    ST
+                 , COM.V_MYORG      MY
+             WHERE MY.STR_CD = ST.STR_CD
+               AND ST.USE_YN = 'Y'
+               AND MY.USER_ID = ?
+        ]]>
+    </query>
+     <!-- 시설구분(임대관리 시설)_기준정보 : 권한 적용-->
+    <query name="SEL_FCL_AUTH_COM2">
+        <![CDATA[
+            SELECT DISTINCT 
+                   ST.STR_CD        AS CODE
+                 , ST.STR_NAME      AS NAME
+                 , ''               AS MNTN_CAL_YN
+                 , ''               AS HUSE_FLAG
+                 , ST.FCL_FLAG      AS FCL_FLAG
+              FROM DPS.PC_STRMST    ST
+                 , COM.V_MYORG      MY
+             WHERE MY.STR_CD = ST.STR_CD
+               AND ST.USE_YN = 'Y'
+               AND MY.USER_ID = ?
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설)_기준정보: 권한 적용 안함 -->
+    <query name="SEL_FCL_COM">
+        <![CDATA[
+            SELECT DISTINCT 
+                   ST.STR_CD        AS CODE
+                 , ST.STR_NAME      AS NAME
+                 , ''               AS MNTN_CAL_YN
+                 , ''               AS HUSE_FLAG
+                 , ST.FCL_FLAG      AS FCL_FLAG
+              FROM DPS.PC_STRMST    ST
+             WHERE ST.USE_YN = 'Y'
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설)_기준정보: 권한 적용 안함 -->
+    <query name="SEL_FCL_COM2">
+        <![CDATA[
+            SELECT DISTINCT 
+                   ST.STR_CD        AS CODE
+                 , ST.STR_NAME      AS NAME
+                 , ''               AS MNTN_CAL_YN
+                 , ''               AS HUSE_FLAG
+                 , ST.FCL_FLAG      AS FCL_FLAG
+              FROM DPS.PC_STRMST    ST
+             WHERE ST.USE_YN = 'Y'
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 주거(CES만) -->
+    <query name="SEL_FCL_WHERE_CES">
+        <![CDATA[
+               AND ST.FCL_FLAG = '5'
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 주거(CES만) -->
+    <query name="SEL_FCL_WHERE_CES2">
+        <![CDATA[
+               AND ST.FCL_FLAG = '5'
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 주거 -->
+    <query name="SEL_FCL_WHERE_J">
+        <![CDATA[
+               AND ST.FCL_FLAG IN ('5','6')
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 주거 -->
+    <query name="SEL_FCL_WHERE_J2">
+        <![CDATA[
+               AND ST.FCL_FLAG IN ('5','6')
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 비주거 -->
+    <query name="SEL_FCL_WHERE_B">
+        <![CDATA[
+               AND ST.FCL_FLAG IN ('1','2','3','4')
+        ]]>
+    </query>
+    <!-- 시설구분(임대관리 시설) : 비주거 -->
+    <query name="SEL_FCL_WHERE_B2">
+        <![CDATA[
+               AND ST.FCL_FLAG IN ('1','2','3','4')
+        ]]>
+    </query>
+    <!-- 점구분 : STR_FLAG(0:본사, 1:점포) -->
+    <query name="SEL_FCL_WHERE_STR_FLAG">
+        <![CDATA[
+               AND ST.STR_FLAG = ?
+        ]]>
+    </query>
+    <!-- 점구분 : STR_FLAG(0:본사, 1:점포) -->
+    <query name="SEL_FCL_WHERE_STR_FLAG2">
+        <![CDATA[
+               AND ST.STR_FLAG = ?
+        ]]>
+    </query>
+    <!-- 점구분 : STR_FLAG(0:본사, 1:점포) -->
+    <query name="SEL_FCL_WHERE_CES_YN">
+        <![CDATA[
+               AND ST.FCL_FLAG <> '5'
+        ]]>
+    </query>
+    <!-- 점구분 : STR_FLAG(0:본사, 1:점포) -->
+    <query name="SEL_FCL_WHERE_CES_YN2">
+        <![CDATA[
+               AND ST.FCL_FLAG <> '5'
+        ]]>
+    </query>
+       <!-- 쿼리 종료 SQL -->
+    <query name="SEL_FCL_ORDER">
+        <![CDATA[
+             ORDER BY CODE
+        ]]>
+    </query> 
+     <!-- 쿼리 종료 SQL -->
+    <query name="SEL_FCL_ORDER2">
+        <![CDATA[
+             ORDER BY CODE
+        ]]>
+    </query> 
+    <!-- 매입사코드 SQL -->
+    <query name="SEL_BCOMP_CODE">
+        <![CDATA[
+             SELECT CCOMP_CD AS CODE
+                 , SUBSTRB(CCOMP_NM,0,4) AS NAME
+              FROM DPS.PD_CARDCOMP A
+             WHERE BCOMP_YN = 'Y'
+             ORDER BY CODE
+        ]]>
+    </query>       
+    <!-- 매입사코드 SQL -->
+    <query name="SEL_BCOMP_CODE2">
+        <![CDATA[
+             SELECT CCOMP_CD AS CODE
+                 , SUBSTRB(CCOMP_NM,0,4) AS NAME
+              FROM DPS.PD_CARDCOMP A
+             WHERE BCOMP_YN = 'Y'
+             ORDER BY CODE
+        ]]>
+    </query>   
+    <!-- 발급사코드 SQL -->
+    <query name="SEL_CCOMP_CODE">
+        <![CDATA[
+             SELECT CCOMP_CD AS CODE
+                 , SUBSTRB(CCOMP_NM,0,4) AS NAME
+              FROM DPS.PD_CARDCOMP A
+             ORDER BY CODE
+        ]]>
+    </query>       
+    <!-- 발급사코드 SQL -->
+    <query name="SEL_CCOMP_CODE2">
+        <![CDATA[
+             SELECT CCOMP_CD AS CODE
+                 , SUBSTRB(CCOMP_NM,0,4) AS NAME
+              FROM DPS.PD_CARDCOMP A
+             ORDER BY CODE
+        ]]>
+    </query>   
+    <!--  포인트카드 SQL -->
+    <query name="SEL_DCARD_CODE">
+        <![CDATA[
+            SELECT DISTINCT 
+                   DCARD_TYPE AS CODE
+                 , COM.FN_GET_COMM_NAME('D', 'D038', A.DCARD_TYPE) AS NAME
+              FROM DPS.PD_CARDBIN A
+             ORDER BY CODE
+        ]]>
+    </query>        
+     <!--  포인트카드 SQL -->
+    <query name="SEL_DCARD_CODE2">
+        <![CDATA[
+            SELECT DISTINCT 
+                   DCARD_TYPE AS CODE
+                 , COM.FN_GET_COMM_NAME('D', 'D038', A.DCARD_TYPE) AS NAME
+              FROM DPS.PD_CARDBIN A
+             ORDER BY CODE
+        ]]>
+    </query>   
+    <!-- 밴사카드종류 SQL -->
+    <query name="SEL_VCARD_CODE">
+        <![CDATA[
+             SELECT DISTINCT 
+                   VCARD_TYPE AS CODE
+                 , COM.FN_GET_COMM_NAME('D', 'D032', A.VCARD_TYPE) VCARD_NAME
+              FROM DPS.PD_CARDBIN A
+             ORDER BY CODE
+        ]]>
+    </query>     
+    <!-- 밴사카드종류 SQL -->
+    <query name="SEL_VCARD_CODE2">
+        <![CDATA[
+             SELECT DISTINCT 
+                   VCARD_TYPE AS CODE
+                 , COM.FN_GET_COMM_NAME('D', 'D032', A.VCARD_TYPE) VCARD_NAME
+              FROM DPS.PD_CARDBIN A
+             ORDER BY CODE
+        ]]>
+    </query>     
+    <!-- 밴사카드종류 SQL -->
+    <query name="SEL_CHRG_CODE">
+        <![CDATA[
+            SELECT 'Y' AS CODE
+                 , '청구' AS NAME
+              FROM DUAL
+             UNION 
+            SELECT 'N' AS CODE
+                 , '미청구' AS NAME
+              FROM DUAL 
+        ]]>
+    </query>         
+	<!-- 밴사카드종류 SQL -->
+    <query name="SEL_CHRG_CODE2">
+        <![CDATA[
+            SELECT 'Y' AS CODE
+                 , '청구' AS NAME
+              FROM DUAL
+             UNION 
+            SELECT 'N' AS CODE
+                 , '미청구' AS NAME
+              FROM DUAL 
+        ]]>
+    </query>   
+
+
+    <!-- 객수관리 GATE HEAD --> 
+    <gauce name="H_SEL_GATE">
+      <column colName="CODE"        colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"        colType="TB_STRING" size="30"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>      
+    
+    
+    <!-- 밴사카드종류 SQL -->
+    <query name="SEL_GATE_LIST">
+        <![CDATA[
+            SELECT '%'             CODE
+                 , '전체'          NAME
+              FROM DUAL
+             UNION ALL  
+            SELECT A.CODE
+                 , A.NAME 
+              FROM (
+                    SELECT GATE_CD         CODE
+                         , GATE_NM         NAME
+                      FROM DPS.PS_GATEMST
+                     WHERE STR_CD   = ?
+                       AND BLOCK_CD = ?
+                       AND USE_YN   = 'Y'
+                    ORDER BY TO_NUMBER(GATE_CD)
+                   ) A
+	    ]]>
+    </query>         
+        
+    
+    <!-- 객수관리 BLOCK HEAD --> 
+    <gauce name="H_SEL_BLOCK">
+      <column colName="CODE"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"        colType="TB_STRING" size="30"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMBUN_CD"   colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>      
+    
+    
+    <!-- 밴사카드종류 SQL -->
+    <query name="SEL_BLOCK_LIST">
+        <![CDATA[
+            SELECT BLOCK_CD    AS CODE
+                 , BLOCK_NM    AS NAME
+                 , PUMBUN_CD   AS PUMBUN_CD
+              FROM DPS.PS_BLOCKMST
+             WHERE USE_YN = 'Y'
+               AND STR_CD = ?
+             ORDER BY TO_NUMBER(BLOCK_CD)
+        ]]>
+    </query>         
+    
+    <!-- 코드/명 조회 --> 
+    <gauce name="H_COMBO_VEN">
+      <column colName="CODE"        colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    
+    <!-- 협력사조회 SQL -->
+    <query name="SEL_VEN_LIST">
+        <![CDATA[
+			SELECT A.CODE
+			     , A.NAME 
+			 FROM (
+			          SELECT DISTINCT
+			                 VEN.VEN_CD AS CODE
+			               , VEN.VEN_NAME AS NAME
+			            FROM DPS.PC_VENMST    VEN
+			               , DPS.PC_STRVENMST STR
+			           WHERE VEN.VEN_CD = STR.VEN_CD
+			             AND STR.STR_CD         =  ?
+			             AND VEN.BUY_SALE_FLAG  = '2'
+			             AND VEN.BIZ_TYPE     IN  ('3','4','5')
+			             AND STR.POS_CAL_FLAG IN  ('1','3')
+			          ORDER BY CODE 
+			      ) A 
+        ]]>
+    </query>
+</service>

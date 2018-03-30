@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.02.22
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  :  거래선코드 공통 XML
+ -->
+<service name="/ccom001.cc">	
+
+    <!-- 코드/명 조회 -->
+    <gauce name="H_ACCVEN">
+        <column colName="SEL"                colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_VEN_CD"         colType="TB_STRING"   size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME1"              colType="TB_STRING"   size="105"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME2"              colType="TB_STRING"   size="105"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SORTL"              colType="TB_STRING"   size="30"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STCD1"              colType="TB_STRING"   size="16"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STCD2"              colType="TB_STRING"   size="11"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STCD3"              colType="TB_STRING"   size="18"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_1KFTIND"          colType="TB_STRING"   size="90"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_1KFTBUS"          colType="TB_STRING"   size="90"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="J_1KFREPRE"         colType="TB_STRING"   size="30"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PSTLZ"              colType="TB_STRING"   size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORT01"              colType="TB_STRING"   size="105"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STRAS"              colType="TB_STRING"   size="105"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SPERR"              colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOEVM"              colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SPERR2"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOEVM2"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TELF1"              colType="TB_STRING"   size="16"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TELFX"              colType="TB_STRING"   size="31"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_SALE_FLAG"      colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>  
+    
+    <!-- 거래선 가상테이블 생성 SQL -->
+    <query name="WITH_ACCVEN">
+        <![CDATA[                                        
+            WITH WITH_ACC_VEN AS(
+                SELECT '2'     AS ACC_VEN_FLAG   /*매입매출구분 1:매입,2:매출*/
+                     , KUNNR   AS ACC_VEN_CD 
+                     , NAME1    , NAME2      , SORTL      , STCD1      , STCD2 
+                     , STCD3    , J_1KFTIND  , J_1KFTBUS  , J_1KFREPRE , PSTLZ   
+                     , ORT01    , STRAS      , SPERR      , LOEVM      , SPERR2
+                     , LOEVM2   , '' AS TELF1, '' AS TELFX
+                  FROM DPS.V_XICUST
+                 UNION ALL
+                SELECT '1'     AS ACC_VEN_FLAG   /*매입매출구분 1:매입,2:매출*/
+                     , LIFNR   AS ACC_VEN_CD 
+                     , NAME1    , NAME2      , SORTL      , STCD1      , STCD2 
+                     , STCD3    , J_1KFTIND  , J_1KFTBUS  , J_1KFREPRE , PSTLZ   
+                     , ORT01    , STRAS      , SPERR      , LOEVM      , SPERR2
+                     , LOEVM2   , TELF1      , TELFX
+                  FROM DPS.V_XIVEND
+            )
+        ]]>
+    </query>
+    <query name="SEL_ACCVEN">
+        <![CDATA[                                        
+            SELECT 'F'           AS SEL
+                 , ACC_VEN_CD , NAME1    , NAME2      , SORTL      , STCD1
+                 , STCD2      , STCD3    , J_1KFTIND  , J_1KFTBUS  , J_1KFREPRE
+                 , PSTLZ      , ORT01    , STRAS      , SPERR      , LOEVM
+                 , SPERR2     , LOEVM2   , TELF1      , TELFX      , ACC_VEN_FLAG
+              FROM WITH_ACC_VEN
+             WHERE ACC_VEN_FLAG   = ?  /*매입매출구분 1:매입,2:매출*/
+        ]]>
+    </query>
+    <query name="SEL_ACCVEN_WHERE_ACC_VEN_CD">
+        <![CDATA[
+               AND ACC_VEN_CD   = ?
+        ]]>
+    </query>
+    <query name="SEL_ACCVEN_WHERE_LIKE_ACC_VEN_CD">
+        <![CDATA[
+               AND ACC_VEN_CD   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_ACCVEN_WHERE_NAME1">
+        <![CDATA[
+               AND NAME1        LIKE '%' || ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_ACCVEN_WHERE_STCD2">
+        <![CDATA[
+               AND STCD2        = ?
+        ]]>
+    </query>
+    <query name="SEL_ACCVEN_ORDER">
+        <![CDATA[
+             ORDER BY ACC_VEN_CD
+        ]]>
+    </query>
+</service>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 조형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  클럽별로 가입 회원을 조회한다.
+ -->
+<service name="/dctm134.dc">
+    <!-- 클럽회원조회 - 전체 -->
+    <gauce name="H_MASTER"> 
+		<column colName="CLUB_ID"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CLUB_NAME"           colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CLUB_INFO"           colType="TB_STRING"  size="200" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IN_CNT"              colType="TB_DECIMAL"  size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="OUT_CNT"             colType="TB_DECIMAL"  size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_CNT"            colType="TB_DECIMAL"  size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 클럽회원조회 - 상세 -->
+    <gauce name="H_DETAIL"> 
+		<column colName="CLUB_ID"           colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CLUB_NAME"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_ID"           colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CUST_NAME"         colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="PROC_NAME"         colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="CONF_DATE"         colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 클럽회원조회 - 전체 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT A.CLUB_ID
+		     , A.CLUB_NAME
+		     , A.CLUB_INFO
+		     , B.IN_CNT
+		     , B.OUT_CNT
+		     , C.CUST_CNT  
+		  FROM DCS.DM_CLUB A
+		     , ( SELECT M.CLUB_ID
+		              , COUNT(DECODE(PROC_FLAG, '0', 1)) IN_CNT
+		              , COUNT(DECODE(PROC_FLAG, '1', 1)) OUT_CNT
+		           FROM DCS.DM_CLUB_HIST M
+		              , DCS.DM_CUSTOMER N
+		          WHERE M.CUST_ID = N.CUST_ID
+		            AND M.CONF_DATE BETWEEN  TO_DATE((? || '000001'), 'YYYYMMDDHH24MISS')
+		                                AND  TO_DATE((? || '235959'), 'YYYYMMDDHH24MISS')
+		            AND N.CUST_NAME    LIKE  '%' 
+		            AND N.SCED_PROC_DT   IS  NULL
+		          GROUP BY CLUB_ID
+		       ) B
+		     , ( SELECT CLUB_ID, COUNT(*) CUST_CNT
+		           FROM DCS.DM_CLUB_CUST M
+		              , DCS.DM_CUSTOMER  N
+		          WHERE M.CUST_ID  =  N.CUST_ID
+		            AND N.SCED_PROC_DT   IS  NULL
+		          GROUP BY CLUB_ID
+		       ) C   
+		 WHERE A.CLUB_ID = B.CLUB_ID(+)
+		   AND A.CLUB_ID = C.CLUB_ID(+)
+		 ORDER BY A.CLUB_ID
+        ]]>        
+    </query>
+    
+    
+    
+    <!-- 클럽회원조회 - 상세 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT A.CLUB_ID
+		     , B.CLUB_NAME
+		     , A.CUST_ID
+		     , C.CUST_NAME
+		     , COM.FN_GET_COMM_NAME('D', 'D063', A.PROC_FLAG) PROC_NAME
+		     , TO_CHAR(A.CONF_DATE, 'YYYY/MM/DD HH24:MI:SS') CONF_DATE
+		  FROM DCS.DM_CLUB_HIST A
+		     , DCS.DM_CLUB B
+		     , DCS.DM_CUSTOMER C
+		 WHERE A.CLUB_ID     =    B.CLUB_ID
+		   AND A.CUST_ID     =    C.CUST_ID
+		   AND C.CUST_NAME   LIKE ? || '%' 
+		   AND A.CLUB_ID     LIKE ? || '%'
+		   AND A.CONF_DATE   BETWEEN TO_DATE(? || '000001', 'YYYYMMDDHH24MISS')
+		                         AND TO_DATE(? || '235959', 'YYYYMMDDHH24MISS')
+		   AND A.PROC_FLAG   LIKE ? || '%'                       
+		 ORDER BY A.CLUB_ID, A.CUST_ID, A.CONF_DATE DESC
+        ]]>        
+    </query>
+    
+</service>

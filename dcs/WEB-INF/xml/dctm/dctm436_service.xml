@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 강진실
+ * 작 성 일 : 2014.05.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : VIP 커피 증정 조회
+ -->
+<service name="/dctm436.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="EXCH_TIME"   	colType="TB_STRING"  	size="30"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_ID"   	colType="TB_STRING"  	size="30"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CARD_NO"   	colType="TB_STRING"  	size="30"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"   	colType="TB_STRING"  	size="30"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="USER_NAME"     colType="TB_STRING" 	size="20"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="EXCH_CNT"     	colType="TB_DECIMAL"  	size="12"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"   colType="TB_DECIMAL"  	size="12"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+     
+    <!-- 코드/명 조회 -->
+    <gauce name="H_COMMON">
+      <column colName="CODE"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"       colType="TB_STRING" size="30"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SORT"       colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>       
+
+    <!-- VIP 커피 증정 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[   
+            SELECT A.EXCH_TIME
+                 , A.CUST_ID 
+                 , DCS.SC_Crypto_FUN('DEC', A.CARD_NO) AS CARD_NO
+                 , B.CUST_NAME
+                 , E.USER_NAME
+                 , A.EXCH_CNT
+                 , SUM(CASE WHEN A.RK = '1' THEN TOT_SALE_AMT ELSE 0 END) TOT_SALE_AMT
+            FROM (SELECT A.STR_CD
+                       , A.EXCH_DT
+                       , A.EXCH_TYPE
+                       , B.COMM_NAME1
+                       , A.EXCH_CNT
+                       , A.CUST_ID
+                       , TO_CHAR(A.REG_DATE, 'YYYYMMDDHH24MISS') EXCH_TIME
+                       , A.REG_ID
+                       , A.CARD_NO
+                       , RANK() OVER (PARTITION BY  A.CUST_ID, A.EXCH_DT  ORDER BY A.REG_DATE) AS RK
+                  FROM (SELECT * FROM COM.TC_COMMCODE WHERE SYS_PART = 'D' AND COMM_PART = 'D123') B
+                       ,DCS.DO_VIP_GIFT A 
+                  WHERE EXCH_DT BETWEEN ? AND ?
+                        AND STR_CD = '01'
+                        AND A.EXCH_TYPE = '01'
+                        AND A.REG_ID LIKE  ? || '%'                    
+                        AND A.EXCH_TYPE = B.COMM_CODE) A, 
+                        DCS.DM_CUSTOMER B,
+                        DPS.PS_DAYCUST C,
+                        DCS.DM_CARD D,
+                        (SELECT USER_NAME, USER_ID FROM COM.TC_USRMST) E
+            WHERE A.CUST_ID = B.CUST_ID
+              AND A.STR_CD = C.STR_CD(+)
+              AND A.EXCH_DT = C.SALE_DT(+)
+              AND A.CUST_ID = C.CUST_NO(+)
+              AND B.CUST_ID = D.CUST_ID
+              AND A.REG_ID = E.USER_ID
+              AND A.CARD_NO = D.CARD_NO
+             GROUP BY A.EXCH_TIME,A.CUST_ID,A.CARD_NO,B.CUST_NAME,e.USER_NAME,A.EXCH_CNT,A.EXCH_DT
+            ORDER BY A.EXCH_TIME    
+        ]]>        
+    </query>      
+    
+    <query name="SEL_ETC_CODE">   
+        <![CDATA[    
+             SELECT '%' CODE
+                  , '전체' AS NAME
+                  , '0'  AS SORT 
+             FROM DUAL
+             UNION
+             SELECT USER_ID
+                   , A.USER_NAME
+                   , '1' AS SORT
+             FROM COM.TC_USRMST A
+             WHERE USER_ID LIKE 'CAFE%'
+             ORDER BY SORT, NAME        
+        ]]>        
+    </query>       
+</service>

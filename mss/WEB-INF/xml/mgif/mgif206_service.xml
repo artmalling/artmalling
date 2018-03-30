@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif206.mg">
+     <!-- 지점 입고 내역 마스터  조회  -->
+    <gauce name="H_MASTER"> 
+       <column colName="REQ_STR"                colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REQ_STR_NM"         colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REQ_DT"                colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="IN_CONF_DT"         colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="REQ_SLIP_NO"        colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="OUT_QTY_SUM"        colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="OUT_AMT_SUM"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 지점 입고 내역 디테일  조회  -->
+    <gauce name="H_DETAIL"> 
+       <column colName="GIFT_TYPE_NAME"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_AMT_NAME"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFTCERT_AMT"       colType="TB_DECIMAL" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_S_NO"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="GIFT_E_NO"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="OUT_QTY"            colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="OUT_AMT"            colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+	<!-- 지점 입고내역 마스터  조회 -->
+	 <query name="SEL_OUTREQCONF_MASTER">
+	     <![CDATA[
+		      SELECT TA.REQ_STR,                 --신청점코드
+		             DPS.FN_GET_STORE_NAME(TA.REQ_STR) AS REQ_STR_NM,  --신청점명                
+		             TA.REQ_DT,                      --신청일자
+		             TA.IN_CONF_DT,                   --입고일자
+                     TA.REQ_SLIP_NO,                  --순번
+		             SUM(NVL(TA.OUT_QTY,0)) AS OUT_QTY_SUM, --수량
+		             SUM(NVL(TA.OUT_QTY,0) * NVL(TB.GIFTCERT_AMT,0)) AS OUT_AMT_SUM --입고금액
+			     FROM MSS.MG_OUTREQCONF TA,
+			          MSS.MG_GIFTAMTMST TB
+			    WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+			      AND TA.ISSUE_TYPE = TB.ISSUE_TYPE
+			      AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE
+			      AND TA.IN_CONF = 'Y'
+			      AND TA.REQ_STR = ?
+			      AND TA.IN_CONF_DT BETWEEN ? AND ?
+		      GROUP BY TA.REQ_STR,                      
+		             TA.REQ_DT,                      
+		             TA.REQ_SLIP_NO,                  
+		             TA.IN_CONF_DT
+		   
+	     ]]>
+	 </query>  
+	   
+	   <!-- 지점 입고내역 디테일  조회 -->
+     <query name="SEL_OUTREQCONF_DETAIL">
+         <![CDATA[
+            SELECT TC.GIFT_TYPE_NAME,          --상품권 종류
+			       TB.GIFT_AMT_NAME,                       --금종명
+			       NVL(TB.GIFTCERT_AMT,0) AS GIFTCERT_AMT, --상품권금액
+			       TA.GIFT_S_NO,                           --시작번호
+			       TA.GIFT_E_NO,                           --종료번호
+			       SUM(NVL(TA.OUT_QTY,0)) AS OUT_QTY,           --수량
+			       SUM(NVL(TA.OUT_QTY,0) * NVL(TB.GIFTCERT_AMT,0)) AS OUT_AMT --입고금액
+			  FROM MSS.MG_OUTREQCONF TA,
+			       MSS.MG_GIFTAMTMST TB,
+			       MSS.MG_GIFTTPMST TC
+			 WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+			   AND TA.ISSUE_TYPE = TB.ISSUE_TYPE
+			   AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE
+			   AND TA.GIFT_TYPE_CD = TC.GIFT_TYPE_CD
+			   AND TA.REQ_STR = ?
+			   AND TA.IN_CONF_DT = ?
+			   AND TA.REQ_SLIP_NO = ?
+			   AND TA.IN_CONF = 'Y'
+		  GROUP BY TC.GIFT_TYPE_NAME,          --상품권 종류
+                   TB.GIFT_AMT_NAME,                       --금종명
+                   TB.GIFTCERT_AMT,
+                   TA.GIFT_S_NO,                           --시작번호
+                   TA.GIFT_E_NO
+         ]]>
+     </query>        
+</service>

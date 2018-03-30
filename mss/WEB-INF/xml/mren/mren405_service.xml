@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  관리비입금내역등록
+ -->
+<service name="/mren405.mr">
+    <gauce name="H_SEL_MR_CALPAY">
+	    <column colName="STR_CD"           colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_YM"           colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_TYPE"         colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_ID"          colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_CD"           colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"           colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_DT"           colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_SEQ_NO"       colType="TB_STRING"   size="3"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REAL_CHAREG_AMT"  colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REAL_MNTN"        colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REAL_RENT"        colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_RENT_AMT"     colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CLOSE_YN"         colType="TB_STRING"   size="10"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <gauce name="H_SEL_MR_CALPAY_TMP">
+        <column colName="VEN_CD"           colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_DT"           colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_RENT_AMT"     colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MR_CALPAY">
+        <![CDATA[
+            SELECT CNT.STR_CD
+                 , CAP.CAL_YM
+                 , CAM.CAL_TYPE
+                 , CAM.CNTR_ID
+                 , CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , CAP.PAY_DT
+                 , CAP.PAY_SEQ_NO
+                 , CAM.REAL_CHAREG_AMT
+                 , (CAM.REAL_CHAREG_AMT-(CAM.RENT_AMT+CAM.RENT_VAT_AMT)) AS REAL_MNTN
+                 , (CAM.RENT_AMT+CAM.RENT_VAT_AMT) AS REAL_RENT  
+                 , CAP.PAY_AMT
+                 , CAP.PAY_RENT_AMT
+                 , DPS.FN_GET_CLOSECHECK( ? , CAP.CAL_YM , 'MREN' , '48' , '0' , 'M' ) AS CLOSE_YN
+              FROM MSS.MR_CALPAY    CAP
+                 , MSS.MR_CALMST    CAM
+                 , MSS.MR_CNTRMST   CNT
+                 , DPS.PC_VENMST    VEN
+             WHERE CAP.CAL_YM   = CAM.CAL_YM
+               AND CAP.CNTR_ID  = CAM.CNTR_ID
+               AND CAP.CAL_TYPE = CAM.CAL_TYPE
+               AND CAM.CNTR_ID  = CNT.CNTR_ID
+               AND CNT.VEN_CD   = VEN.VEN_CD
+               AND CNT.RENT_TYPE LIKE ?||'%'
+               AND CNT.VEN_CD LIKE ?||'%'
+               AND CAP.CAL_YM BETWEEN ? AND ?
+               AND CNT.STR_CD = ?
+             ORDER BY CAP.CAL_YM, CAM.CNTR_ID, CAP.PAY_SEQ_NO
+        ]]>
+    </query>
+    
+    <query name="INS_MR_CALPAY">
+       <![CDATA[   
+            INSERT 
+              INTO MSS.MR_CALPAY
+                 ( CAL_YM
+                 , CNTR_ID
+                 , CAL_TYPE
+                 , PAY_SEQ_NO
+                 , PAY_DT
+                 , PAY_AMT
+                 , PAY_RENT_AMT
+                 , REMARK
+                 , SAP_IF_FLAG
+                 , REG_ID
+                 , REG_DATE
+                 , MOD_ID
+                 , MOD_DATE)
+            VALUES
+                 ( ?
+                 , ?
+                 , ?
+                 , (SELECT NVL((MAX(PAY_SEQ_NO)+1), 1) 
+                      FROM MSS.MR_CALPAY
+                     WHERE CAL_TYPE = ?
+                       AND CNTR_ID = ?
+                       AND CAL_YM = ?)
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , '0' /*SAP전송상태 0:미전송, 1:전송, 2:처리완료*/
+                 , ?
+                 , SYSDATE
+                 , ?
+                 , SYSDATE)
+        ]]>
+    </query>
+        
+    <query name="UPD_MR_CALPAY">
+       <![CDATA[   
+            UPDATE MSS.MR_CALPAY
+               SET PAY_DT   = ? 
+                 , PAY_AMT  = ?
+                 , PAY_RENT_AMT  = ?
+                 , REMARK   = ?
+                 , MOD_ID   = ?
+                 , MOD_DATE = SYSDATE
+             WHERE PAY_SEQ_NO = ?
+               AND CAL_TYPE = ?
+               AND CNTR_ID = ?
+               AND CAL_YM = ?
+        ]]>
+    </query>
+    
+    <query name="DEL_MR_CALPAY">
+       <![CDATA[   
+            DELETE MSS.MR_CALPAY
+             WHERE PAY_SEQ_NO = ?
+               AND CAL_TYPE = ?
+               AND CNTR_ID = ?
+               AND CAL_YM = ?
+        ]]>
+    </query>
+    
+    <!-- 2010.06.08 미사용중 -->
+    <query name="INS_MR_CALPAY_MERGE">
+       <![CDATA[   
+            MERGE INTO MSS.MR_CALPAY CAL
+            USING (SELECT ? AS CAL_YM      
+                        , ? AS CNTR_ID     
+                        , ? AS CAL_TYPE    
+                        , (SELECT NVL((MAX(PAY_SEQ_NO)+1), 1) 
+                             FROM MSS.MR_CALPAY
+                            WHERE CAL_TYPE = ?
+                              AND CNTR_ID = ?
+                              AND CAL_YM = ?) AS PAY_SEQ_NO
+                        , ?       AS PAY_DT  
+                        , ?       AS PAY_AMT 
+                        , ?       AS REMARK  
+                        , ?       AS REG_ID  
+                        , ?       AS MOD_ID)
+                     FROM DUAL  )  DUL
+               ON ( CAL.CAL_YM = DUL.CAL_YM AND
+                    CAL.CNTR_ID = DUL.CNTR_ID AND
+                    CAL.CAL_TYPE = DUL.CAL_TYPE AND
+                    CAL.PAY_SEQ_NO = DUL.PAY_SEQ_NO )
+             WHEN MATCHED THEN UPDATE SET PAY_DT    = DUL.PAY_DT      
+                                        , PAY_AMT   = DUL.PAY_AMT              
+                                        , REMARK    = DUL.REMARK              
+                                        , MOD_ID    = DUL.MOD_ID
+                                        , MOD_DATE  = SYSDATE
+         WHEN NOT MATCHED THEN INSERT (   CAL_YM
+                                        , CNTR_ID
+                                        , CAL_TYPE
+                                        , PAY_SEQ_NO
+                                        , PAY_DT
+                                        , PAY_AMT
+                                        , REMARK
+                                        , REG_ID
+                                        , REG_DATE
+                                        , MOD_ID
+                                        , MOD_DATE)
+                                VALUES (  DUL.CAL_YM
+                                        , DUL.CNTR_ID
+                                        , DUL.CAL_TYPE
+                                        , DUL.PAY_SEQ_NO
+                                        , DUL.PAY_DT
+                                        , DUL.PAY_AMT
+                                        , DUL.REMARK
+                                        , DUL.REG_ID
+                                        , SYSDATE
+                                        , DUL.MOD_ID
+                                        , SYSDATE)
+        ]]>
+    </query>
+    
+    <query name="UPD_PAY_FLAG">
+       <![CDATA[   
+			UPDATE MSS.MR_CALMST 
+			   SET PAY_FLAG = (SELECT CASE WHEN NVL(SUM(PAY_AMT+PAY_RENT_AMT), 0) = 0 THEN '0' /*입금상태 : 미입금*/  
+			                          ELSE CASE WHEN ? <= NVL(SUM(PAY_AMT+PAY_RENT_AMT), 0) THEN '2' /*입금상태 : 입금완료*/ 
+			                                    ELSE '1' /*입금상태 : 부분입금*/  
+			                                    END
+			                          END 
+			                     FROM MSS.MR_CALPAY 
+			                    WHERE CAL_TYPE = ?
+			                      AND CNTR_ID  = ?
+			                      AND CAL_YM   = ?) 
+			 WHERE CAL_TYPE = ?
+			   AND CNTR_ID  = ?
+			   AND CAL_YM   = ?
+        ]]>
+    </query>
+   
+    <gauce name="H_SEL_VENINFO">
+        <column colName="CHK"               colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VEN_CD"            colType="TB_STRING"   size="6"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VEN_NM"            colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="REAL_CHAREG_AMT"   colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="REAL_MNTN"         colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="REAL_RENT"         colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CNTR_ID"           colType="TB_STRING"   size="8"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CAL_TYPE"          colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_FLAG"          colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- POPUP SEARCH DATE -->
+    <query name="SEL_VENINFO">
+        <![CDATA[  
+            SELECT 'F'  AS CHK
+                 , CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , CAM.REAL_CHAREG_AMT
+                 , (CAM.REAL_CHAREG_AMT-(CAM.RENT_AMT+CAM.RENT_VAT_AMT)) AS REAL_MNTN
+                 , (CAM.RENT_AMT+CAM.RENT_VAT_AMT) AS REAL_RENT
+                 , CNT.CNTR_ID
+                 , CAM.CAL_TYPE
+                 , CAM.PAY_FLAG
+              FROM MSS.MR_CNTRMST   CNT
+                 , DPS.PC_VENMST    VEN
+                 , MSS.MR_CALMST    CAM
+             WHERE CNT.VEN_CD = VEN.VEN_CD
+               AND CNT.CNTR_ID = CAM.CNTR_ID
+               AND CNT.CNTR_ID LIKE ?||'%'
+               AND CNT.VEN_CD  LIKE ?||'%'
+               AND CNT.STR_CD = ?
+               AND CAM.CAL_YM = ?
+             ORDER BY CNT.VEN_CD
+        ]]>
+    </query> 
+</service>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김재겸
+ * 회 사 명 : TANINE
+ * 작 성 일 : 2010.03.17
+ * 변 경 일 :
+ * 변경내용 :
+ * 개    요 : CCS 콤보 코드 공통 XML
+ -->
+<service name="/ccom600.cc">
+
+    <!-- 코드/이름 조회 -->
+    <gauce name="H_COMBO">
+      <column colName="CODE"   colType="TB_STRING" size="3"  dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="NAME"   colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="" />
+      <column colName="STR_CD" colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="" />
+    </gauce>  
+    <!-- //코드/이름 조회 -->
+    
+    <!-- 센터코드 조회 HEADER -->
+    <query name="SEL_HEADER">
+        <![CDATA[
+            SELECT CODE
+                 , NAME
+                 , STR_CD
+              FROM (
+        ]]>
+    </query>
+    <!-- //센터코드 조회 쿼리 -->
+    
+    <!-- 센터코드 조회 쿼리 : 전체 -->
+    <query name="SEL_ALL_YN">
+        <![CDATA[
+           SELECT '%'    AS CODE
+                , '전체' AS NAME
+                , ''     AS STR_CD
+            FROM DUAL
+           UNION ALL
+        ]]>
+    </query>
+    <!-- //센터코드 조회 쿼리 : 전체 -->
+    
+    <!-- 센터코드 조회 쿼리 : 전점 -->
+    <query name="SEL_ALL_CENTER_YN">
+        <![CDATA[
+           SELECT '000'  AS CODE
+                , '전점' AS NAME
+                , ''     AS STR_CD
+             FROM DUAL
+            UNION ALL
+        ]]>
+    </query>
+    <!-- //센터코드 조회 쿼리 : 전점 -->
+    
+    <!-- 센터코드 조회 쿼리 -->
+    <query name="SEL_CNTRMST">
+        <![CDATA[
+            SELECT CNTR_CD     AS CODE
+                 , CNTR_NM_KOR AS NAME
+                 , STR_CD
+              FROM CCS.CD_CNTRMST
+        ]]>
+    </query>
+    <!-- //센터코드 조회 쿼리 -->
+    
+    <!-- 센터코드 권한 조회 쿼리 -->
+    <query name="SEL_CNTRMST_AUTH">
+        <![CDATA[
+            SELECT CNTR_CD     AS CODE
+                 , CNTR_NM_KOR AS NAME
+                 , STR_CD
+              FROM CCS.CD_CNTRMST
+             WHERE USE_YN = 'Y'
+               AND EXISTS ( SELECT 1 FROM COM.TC_USRMST WHERE USER_ID = ? )
+        ]]>
+    </query>
+<!-- 2010.07.06 IMSI 추후 적용
+            SELECT DISTINCT B.CNTR_CD AS CODE
+                 , B.CNTR_NM_KOR      AS NAME
+                 , B.STR_CD
+              FROM COM.V_MYORG    A
+                 , CCS.CD_CNTRMST B
+             WHERE A.STR_CD   = B.STR_CD
+               AND A.USE_YN   = 'Y'
+               AND A.FCL_FLAG = '1'
+               AND B.USE_YN   = 'Y'
+               AND USER_ID    = ?
+-->
+    
+    <!-- //센터코드 권한 조회 쿼리 -->
+    
+    <!-- 콤보 센터코드 사용여부 -->
+    <query name="SEL_COMBO_USE_YN">
+        <![CDATA[
+            WHERE USE_YN = 'Y'
+        ]]>
+    </query>
+    <!-- //콤보 센터코드 사용여부 -->
+    
+    <!-- 센터코드 조회 쿼리 TAIL -->
+    <query name="SEL_TAIL">
+        <![CDATA[
+            )
+            ORDER BY CODE
+        ]]>
+    </query>
+    <!-- //센터코드 조회 쿼리 TAIL -->
+
+</service>

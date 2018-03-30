@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 
+ * 작 성 일    : 2010.02.25
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개          요 :  회원정보조회
+ -->
+<service name="/dcom100.cc"> 
+    <!-- 회원정보 -->
+    <gauce name="H_COMMON"> 
+        <column colName="CUST_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH1"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH2"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH3"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="MOBILE_PH1"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"         colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_ADDR"     colType="TB_STRING"  size="406" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT"         colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OCCURS_POINT"  colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="EMAIL1"        colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMAIL2"        colType="TB_STRING"  size="248" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRADE_NAME"    colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH1"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH2"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OFFI_PH3"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"       colType="TB_STRING"  size="64"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_TYPE_NM"  colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SUM_POINT"  	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTR_DT"  		colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>    
+
+    <!-- 회원정보 -->
+    <gauce name="H_CUSTINFO"> 
+        <column colName="CUST_ID"       colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SS_NO"         colType="TB_STRING"  size="32"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"       colType="TB_STRING"  size="64"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 가맹점 권한 Header-->
+    <gauce name="H_GET_USER_AUTH">
+      <column colName="USER_AUTH"       colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    <!-- STR_CD Header-->
+    <gauce name="H_G_STR_CD">
+      <column colName="G_STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+    
+    <!-- 코드/명 조회 -->
+    <gauce name="H_CLUB_CODE">
+      <column colName="CODE"       colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"       colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="SORT"       colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    
+    <!-- 회원정보 조회 -->
+    <query name="SEL_CUSTINFO">        
+        <![CDATA[
+            SELECT A.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH1) AS HOME_PH1
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH2) AS HOME_PH2
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH3) AS HOME_PH3
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1) AS MOBILE_PH1
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2) AS MOBILE_PH2 
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3) AS MOBILE_PH3
+                 , DCS.SC_Crypto_FUN('DEC', A.SS_NO) AS SS_NO
+                 , DECODE(NULL, '', A.HOME_ZIP_CD1 ||'-'|| A.HOME_ZIP_CD2 ||' '|| A.HOME_ADDR1 ||' '|| A.HOME_ADDR2) HOME_ADDR
+                 , C.POINT
+                 , C.OCCURS_POINT                 
+                 , DCS.SC_Crypto_FUN('DEC',A.EMAIL1) AS EMAIL1
+                 , DCS.SC_Crypto_FUN('DEC',A.EMAIL2) AS EMAIL2
+                 , COM.FN_GET_COMM_NAME('D', 'D011', B.CUST_GRADE) GRADE_NAME
+                 , A.OFFI_PH1
+                 , A.OFFI_PH2
+                 , A.OFFI_PH3
+                 , (SELECT MAX(DCS.SC_Crypto_FUN('DEC',CARD_NO)) KEEP(DENSE_RANK FIRST ORDER BY MOD_DATE DESC) AS CARD_NO 
+                      FROM DCS.DM_CARD 
+                     WHERE CUST_ID      = A.CUST_ID
+                       AND CARD_STAT_CD = '0') AS CARD_NO
+                 , COM.FN_GET_COMM_NAME('D', 'D115', D.CUST_TYPE) CUST_TYPE_NM --2012.05.03 강진 유형추가
+				 , C.POINT + C.OCCURS_POINT AS SUM_POINT --2012.08.17 강진 추가       
+				 , A.ENTR_DT AS ENTR_DT               
+              FROM DCS.DM_CUSTOMER A
+                 --, DCS.DO_CUST_GRADE B
+                 , DCS.V_DO_CUST_GRADE_CURR B
+                 , DCS.DO_CUST_TPOINT C
+                 --, DCS.DO_CUST_TYPE D
+                 , DCS.V_DO_CUST_TYPE_CURR D
+             WHERE A.CUST_ID = B.CUST_ID
+               AND A.CUST_ID = C.CUST_ID(+)
+               AND A.CUST_ID = D.CUST_ID
+               AND B.BRCH_ID = D.BRCH_ID
+               AND A.COMP_PERS_FLAG = ?
+               --AND B.BRCH_ID        = X
+               AND A.CUST_ID = ( 
+                                 SELECT UNIQUE A.CUST_ID 
+                                   FROM DCS.DM_CARD A
+                                      , DCS.DM_CUSTOMER B
+                                  WHERE A.CUST_ID  =  B.CUST_ID
+        ]]>        
+    </query>  
+    
+    <query name="SEL_CUSTINFO_SS_NO">
+        <![CDATA[
+        	AND B.SS_NO   = DCS.SC_Crypto_FUN('ENC',?)
+         ]]>
+    </query>
+    <query name="SEL_CUSTINFO_CUST_ID">
+        <![CDATA[
+        	AND A.CUST_ID = ?
+         ]]>
+    </query>
+    <query name="SEL_CUSTINFO_CARD_NO">
+        <![CDATA[
+        	AND A.CARD_NO = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC',?))
+         ]]>
+    </query>
+    
+    <query name="SEL_CUSTINFO_ORDER">
+        <![CDATA[        	 
+                       )    
+         ]]>
+    </query>  
+
+    <!-- 회원정보 조회 법인/단체-->
+    <query name="SEL_CUSTINFO_COM">        
+        <![CDATA[
+            SELECT A.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH1) AS HOME_PH1
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH2) AS HOME_PH2
+                 , DCS.SC_Crypto_FUN('DEC', A.HOME_PH3) AS HOME_PH3
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH1) AS MOBILE_PH1 
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH2) AS MOBILE_PH2 
+                 , DCS.SC_Crypto_FUN('DEC', A.MOBILE_PH3) AS MOBILE_PH3
+                 , DCS.SC_Crypto_FUN('DEC', A.SS_NO) AS SS_NO
+                 , DECODE(NULL, '', A.HOME_ZIP_CD1 ||'-'|| A.HOME_ZIP_CD2 ||' '|| A.HOME_ADDR1 ||' '|| A.HOME_ADDR2) HOME_ADDR
+                 , C.POINT
+                 , C.OCCURS_POINT                 
+                 , DCS.SC_Crypto_FUN('DEC', A.EMAIL1) AS EMAIL1
+                 , DCS.SC_Crypto_FUN('DEC', A.EMAIL2) AS EMAIL2
+                 , COM.FN_GET_COMM_NAME('D', 'D011', B.CUST_GRADE) GRADE_NAME
+                 , A.OFFI_PH1
+                 , A.OFFI_PH2
+                 , A.OFFI_PH3
+                 , (SELECT MAX(DCS.SC_Crypto_FUN('DEC',CARD_NO)) KEEP(DENSE_RANK FIRST ORDER BY MOD_DATE DESC) AS CARD_NO 
+                      FROM DCS.DM_CARD 
+                     WHERE CUST_ID      = A.CUST_ID
+                       AND CARD_STAT_CD = '0') AS CARD_NO
+                 , COM.FN_GET_COMM_NAME('D', 'D115', D.CUST_TYPE) CUST_TYPE_NM --2012.05.03 강진 유형추가
+                 , C.POINT + C.OCCURS_POINT AS SUM_POINT --2012.08.17 강진 추가        
+              FROM DCS.DM_CUSTOMER A
+                 --, DCS.DO_CUST_GRADE B
+                 , DCS.V_DO_CUST_GRADE_CURR B
+                 , DCS.DO_CUST_TPOINT C
+                 --, DCS.DO_CUST_TYPE D
+                 , DCS.V_DO_CUST_TYPE_CURR D
+             WHERE A.CUST_ID = B.CUST_ID
+               AND A.CUST_ID = C.CUST_ID(+)
+			   AND A.CUST_ID = D.CUST_ID
+               AND B.BRCH_ID = D.BRCH_ID               
+               AND A.COMP_PERS_FLAG <> ?
+               --AND B.BRCH_ID        =  X
+               AND A.CUST_ID = ( 
+                                 SELECT UNIQUE A.CUST_ID 
+                                   FROM DCS.DM_CARD A
+                                      , DCS.DM_CUSTOMER B
+                                  WHERE A.CUST_ID  =  B.CUST_ID
+        ]]>        
+    </query>    
+    
+    <!-- 회원정보 조회 -->
+    <query name="SEL_CUSTSRCH_ONE">
+        <![CDATA[    
+            SELECT C.CUST_ID  
+                 , C.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', C.SS_NO) AS SS_NO   
+                 , DCS.SC_Crypto_FUN('DEC', C.CARD_NO) AS CARD_NO
+              FROM (
+                     SELECT A.CUST_ID
+                          , A.CUST_NAME 
+                          , A.SS_NO
+                          , B.CARD_NO
+                          , A.SCED_REQ_DT
+                       FROM DCS.DM_CUSTOMER A, DCS.DM_CARD B
+                      WHERE A.CUST_ID = B.CUST_ID
+                        AND A.COMP_PERS_FLAG LIKE ?||'%'
+         ]]>
+    </query> 
+    
+    <!-- 회원정보 조회 - 법인 단체 -->
+    <query name="SEL_CUSTSRCH_TWO">
+        <![CDATA[    
+            SELECT C.CUST_ID  
+                 , C.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', C.SS_NO) AS SS_NO   
+                 , DCS.SC_Crypto_FUN('DEC', C.CARD_NO) AS CARD_NO
+              FROM (
+                     SELECT A.CUST_ID
+                          , A.CUST_NAME 
+                          , A.SS_NO
+                          , B.CARD_NO
+                          , A.SCED_REQ_DT
+                       FROM DCS.DM_CUSTOMER A, DCS.DM_CARD B
+                      WHERE A.CUST_ID = B.CUST_ID
+                        AND A.COMP_PERS_FLAG <> ?
+                        --AND B.CARD_STAT_CD  = '0'
+         ]]>
+    </query> 
+    
+    <query name="SEL_CUSTSRCH_SS_NO">
+        <![CDATA[
+        	AND A.SS_NO   = DCS.SC_Crypto_FUN('ENC',?)
+         ]]>
+    </query>
+    <query name="SEL_CUSTSRCH_CUST_ID">
+        <![CDATA[
+        	AND A.CUST_ID = ?
+         ]]>
+    </query>
+    <query name="SEL_CUSTSRCH_CARD_NO">
+        <![CDATA[
+        	AND B.CARD_NO = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC',?))
+         ]]>
+    </query>
+    
+    <query name="SEL_CUSTSRCH_ORDER">
+        <![CDATA[        	 
+                      ORDER BY B.ISSUE_DT DESC
+                   ) C
+             WHERE ROWNUM = 1
+         ]]>
+    </query>
+    
+    <!-- 가맹점 권한 SQL -->
+    <query name="SEL_GET_USER_AUTH">
+        <![CDATA[
+           SELECT DCS.F_GET_USER_AUTH(?) AS USER_AUTH FROM DUAL
+        ]]>
+    </query>    
+    
+     <!-- STR_CD -->
+    <query name="SEL_G_STR_CD">
+        <![CDATA[
+           SELECT COM.FN_GET_COMM_NAME('D', 'D062', '2') AS G_STR_CD FROM DUAL
+        ]]>
+    </query>  
+    
+    
+    <!-- 클럽목록 조회 -->
+    <query name="SEL_CLUB_CODE">        
+        <![CDATA[    
+            SELECT '%' AS CODE 
+                 , '전체' AS NAME 
+                 , '0'  AS SORT FROM DUAL
+             UNION 
+            SELECT CLUB_ID AS CODE
+                 , CLUB_NAME AS NAME
+                 , '1' AS SORT
+              FROM DCS.DM_CLUB    
+             ORDER BY SORT, CODE   
+        ]]>        
+    </query> 
+    
+    <!-- 제휴신용카드사  조회 -->
+    <query name="SEL_CARD_CODE">        
+        <![CDATA[    
+            SELECT '%' AS CODE 
+                 , '전체' AS NAME 
+                 , '0'  AS SORT FROM DUAL
+             UNION 
+            SELECT BRCH_ID  AS CODE
+                 , BRCH_NAME AS NAME
+                 , '1' AS SORT
+              FROM DCS.DB_BRANCH
+             WHERE BRCH_TYPE = '51'
+          ORDER BY SORT, CODE              
+        ]]>        
+    </query>     
+</service>

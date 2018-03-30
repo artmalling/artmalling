@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.30
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  데이터변경이력조회
+ -->
+<service name="/dctm435.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="SEQ"      	     colType="TB_STRING"  size="9"    	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="GUBUN"          colType="TB_STRING"  size="2"   	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SEND_DT"        colType="TB_STRING"  size="8"   	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TITLE"          colType="TB_STRING"  size="200"   	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CONTENTS"       colType="TB_STRING"  size="4000"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="STAT_FLAG"      colType="TB_STRING"  size="1"   	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="TOTAL_CNT"      colType="TB_DECIMAL" size="9"    	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SUCCESS_CNT"    colType="TB_DECIMAL" size="9"    	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="FAIL_CNT"       colType="TB_DECIMAL" size="9"    	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>    
+     
+     
+     <gauce name="H_DETAIL"> 
+        <column colName="SEQ"      	     colType="TB_DECIMAL" size="9"    	dec="0"  keyType="TB_KEY"     roundMode="ROUND" />
+        <column colName="SEQ_NO"  	     colType="TB_DECIMAL" size="9"    	dec="0"  keyType="TB_KEY"     roundMode="ROUND" />
+        <column colName="EMAIL"          colType="TB_STRING"  size="200"   	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="STAT_FLAG"      colType="TB_STRING"  size="1"   	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>    
+     
+     
+     <gauce name="H_SEND"> 
+        <column colName="SEQ"      	     colType="TB_DECIMAL" size="9"    	dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>    
+
+
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT  
+			    SEQ,
+			    GUBUN,
+			    SEND_DT,
+			    TITLE,
+			    CONTENTS,
+			    STAT_FLAG,
+			    TOTAL_CNT,
+			    SUCCESS_CNT,
+			    FAIL_CNT
+			FROM DCS.DO_EMAIL_SENDMST
+			WHERE SEND_DT BETWEEN ? AND ?
+      	ORDER BY SEQ DESC
+        ]]>        
+    </query>
+    
+    <query name="SEL_DETAIL">   
+        <![CDATA[    
+            SELECT  
+			    SEQ,
+			    SEQ_NO,
+			    EMAIL,
+			    (SELECT STAT_FLAG FROM DCS.DO_EMAIL_SENDMST A WHERE A.SEQ = Z.SEQ) STAT_FLAG
+			FROM DCS.DO_EMAIL_SENDDTL Z
+			WHERE SEQ = ? 
+      	ORDER BY SEQ_NO
+        ]]>        
+    </query>
+    
+    <query name="INS_MASTER">   
+        <![CDATA[    
+            INSERT INTO DCS.DO_EMAIL_SENDMST (
+            				SEQ,
+            				GUBUN,
+            				SEND_DT,
+            				TITLE,
+            				CONTENTS,
+            				STAT_FLAG,
+            				REG_ID,
+            				REG_DATE) VALUES (
+            				(SELECT NVL(MAX(SEQ),0)+1 FROM DCS.DO_EMAIL_SENDMST),
+            				?,
+            				?,
+            				?,
+            				?,
+            				?,
+            				?,
+            				SYSDATE)
+            				
+        ]]>        
+    </query>
+    
+    <query name="INS_DETAIL">   
+        <![CDATA[    
+            INSERT INTO DCS.DO_EMAIL_SENDDTL (
+            				SEQ,
+            				SEQ_NO,
+            				EMAIL,
+            				REG_ID,
+            				REG_DATE) VALUES (
+            				DECODE(?,'0',(SELECT NVL(MAX(SEQ),0) FROM DCS.DO_EMAIL_SENDMST),?),
+            				?,
+            				?,
+            				?,
+            				SYSDATE)
+            				
+            	
+        ]]>        
+    </query>
+    
+    
+    <query name="UPD_MASTER">   
+        <![CDATA[    
+            UPDATE DCS.DO_EMAIL_SENDMST
+            	SET GUBUN 	= 	?,
+            	    SEND_DT =	?,
+            	    TITLE	=	?,
+            	    CONTENTS	=	?,
+            	    MOD_ID	=	?,
+            	    MOD_DATE = SYSDATE
+           	WHERE SEQ = ?
+        ]]>        
+    </query>
+    
+    <query name="UPD_DETAIL">   
+        <![CDATA[    
+            UPDATE DCS.DO_EMAIL_SENDDTL
+            	SET EMAIL 	= 	?,
+            	    MOD_ID	=	?,
+            	    MOD_DATE = SYSDATE
+           	WHERE SEQ = ?
+           	 AND  SEQ_NO = ?
+        ]]>        
+    </query>
+    
+    
+    
+    <query name="DEL_MASTER">   
+        <![CDATA[    
+            DELETE DCS.DO_EMAIL_SENDMST
+           	WHERE SEQ = ?
+        ]]>        
+    </query>
+    
+    
+    <query name="DEL_DETAIL">   
+        <![CDATA[    
+            DELETE DCS.DO_EMAIL_SENDDTL
+           	WHERE SEQ = ?
+           	 AND  SEQ_NO = ?
+        ]]>        
+    </query>
+
+        
+</service>

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  CMS쿠폰을 관리한다.
+ -->
+<service name="/pcod809.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="SEL"                colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_CD"             colType="TB_STRING"   size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"             colType="TB_STRING"   size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_QTY"            colType="TB_INT"      size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_AMT"            colType="TB_INT"      size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"           colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"           colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EDIT_YN"            colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="END_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ORG_APP_S_DT"       colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />    
+        <column colName="ERROR_YN"           colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />        
+    </gauce>
+    <gauce name="H_SEL_EXCEL">
+        <column colName="CPN_CD"             colType="TB_STRING"   size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"             colType="TB_STRING"   size="13"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_QTY"            colType="TB_INT"      size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CPN_AMT"            colType="TB_INT"      size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"           colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"           colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />       
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- CMS쿠폰 마스터 조회 쿼리  -->
+    <query name="SEL_CMSCPNMST">
+        <![CDATA[
+            SELECT 'F'        AS SEL
+                 , CCM.STR_CD
+                 , CCM.CPN_CD
+                 , CCM.CPN_NAME
+                 , CCM.SKU_CD
+                 , DPS.FN_GET_SKU_NAME_BY_BARCODE(CCM.STR_CD,CCM.SKU_CD) AS SKU_NAME
+                 , CCM.CPN_QTY
+                 , CCM.CPN_AMT
+                 , CCM.APP_S_DT
+                 , CCM.APP_E_DT
+                 , CASE WHEN CCM.APP_S_DT > TO_CHAR(SYSDATE,'YYYYMMDD')
+                        THEN 'Y'
+                        ELSE 'N'
+                   END                 AS EDIT_YN
+                 , CASE WHEN CCM.APP_E_DT < TO_CHAR(SYSDATE,'YYYYMMDD')
+                        THEN 'Y'
+                        ELSE 'N'
+                   END                 AS END_YN
+                 , CCM.APP_S_DT        AS ORG_APP_S_DT
+                 , 'N'                 AS ERRER_YN
+              FROM DPS.PC_CMSCPNMST CCM
+             WHERE CCM.STR_CD     = ?
+               AND CCM.APP_E_DT  >= ?
+               AND CCM.APP_S_DT  <= ?
+        ]]>
+    </query>
+    <query name="SEL_CMSCPNMST_WHERE">
+        <![CDATA[
+               AND EXISTS (SELECT BAR.BARCODE
+                             FROM DPS.PC_SKUMST   SKU
+                                , DPS.PC_BARCDMST BAR
+                                , DPS.PC_STRPBN   SPBN
+                                , DPS.PC_VENMST   VEN
+                            WHERE SKU.SKU_CD    = BAR.SKU_CD
+                              AND BAR.STR_CD    = SPBN.STR_CD
+                              AND SKU.PUMBUN_CD = SPBN.PUMBUN_CD
+                              AND VEN.VEN_CD    = SPBN.VEN_CD
+                              AND CCM.STR_CD    = BAR.STR_CD
+                              AND CCM.SKU_CD    = BAR.BARCODE
+                              AND SPBN.VEN_CD   LIKE ?||'%'
+                              AND VEN.VEN_NAME  LIKE '%'||?||'%'
+                              AND BAR.BARCODE   LIKE ?||'%'
+                              AND SKU.SKU_NAME  LIKE '%'||?||'%'
+                          )
+        ]]>
+    </query>
+    <query name="SEL_CMSCPNMST_WHERE_CPN_CD">
+        <![CDATA[
+               AND CPN_CD  LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_CMSCPNMST_ORDER">
+        <![CDATA[
+             ORDER BY CPN_CD, SKU_CD, APP_S_DT
+        ]]>
+    </query>
+    <!-- CMS쿠폰 엑셀업로드 조회 쿼리  -->
+    <query name="SEL_EXCEL_CMSCPNMST">
+        <![CDATA[
+            SELECT 'F'             AS SEL
+                 , ECL.STR_CD
+                 , ECL.CPN_CD
+                 , ECL.CPN_NAME
+                 , ECL.SKU_CD
+                 , BSM.SKU_NAME
+                 , ECL.CPN_QTY
+                 , ECL.CPN_AMT
+                 , ECL.APP_S_DT
+                 , ECL.APP_E_DT
+                 , 'Y'             AS EDIT_YN
+                 , 'N'             AS END_YN
+                 , ''              AS ORG_APP_S_DT
+                 , CASE WHEN BSM.SKU_NAME IS NULL THEN 'Y'
+                        WHEN ECL.APP_S_DT < TO_CHAR(SYSDATE,'YYYYMMDD') THEN 'Y'
+                        WHEN ECL.CHECK_SUM_YN = 'N' THEN 'Y'
+                        ELSE 'N'
+                   END      AS ERROR_YN
+              FROM UPLOAD_EXCEL_DATA ECL
+                 , (SELECT DIStinct
+                           BAR.STR_CD
+                         , BAR.BARCODE
+                         , SKU.SKU_NAME
+                      FROM DPS.PC_SKUMST     SKU
+                         , DPS.PC_BARCDMST   BAR
+                     WHERE SKU.SKU_CD      = BAR.SKU_CD
+                       AND SKU.PUMBUN_TYPE = '0'
+                       AND SKU.SKU_TYPE    = '1'
+                   ) BSM
+             WHERE BSM.STR_CD(+)   = ECL.STR_CD
+               AND BSM.BARCODE(+)  = ECL.SKU_CD
+        ]]>
+    </query>
+    <!-- CMS쿠폰 마스터 단품 중복검사-->
+    <query name="SEL_CMSCPNMST_SKU_DUP_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT 
+             FROM DPS.PC_CMSCPNMST
+            WHERE STR_CD     =  ?
+              AND SKU_CD     =  ?
+              AND APP_E_DT   >= ?
+              AND APP_S_DT   <= ?
+              AND ROWNUM     <= 2
+        ]]>   
+    </query>
+    <!-- CMS쿠폰 코드 중복검사 -->
+    <query name="SEL_CMSCPNMST_CPN_CD_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_CMSCPNMST
+             WHERE STR_CD   = ?
+               AND SKU_CD   = ?
+               AND CPN_CD   = ?
+               AND APP_S_DT = ?
+        ]]>
+    </query>
+    <!-- CMS쿠폰 등록 -->
+    <query name="INS_CMSCPNMST">
+        <![CDATA[
+            INSERT INTO DPS.PC_CMSCPNMST(STR_CD
+                                       , CPN_CD
+                                       , CPN_NAME
+                                       , SKU_CD
+                                       , CPN_QTY
+                                       , CPN_AMT
+                                       , APP_S_DT
+                                       , APP_E_DT    
+                                       , REG_DATE
+                                       , REG_ID
+                                       , MOD_DATE
+                                       , MOD_ID
+                                        )
+                                  VALUES(?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , SYSDATE
+                                       , ?
+                                       , SYSDATE
+                                       , ?
+                                        )
+        ]]>   
+    </query>
+    <!-- CMS쿠폰 수정 -->
+    <query name="UPD_CMSCPNMST">
+        <![CDATA[
+            UPDATE DPS.PC_CMSCPNMST
+               SET CPN_NAME      = ?
+                 , CPN_QTY       = ?
+                 , CPN_AMT       = ?
+                 , APP_S_DT      = ?
+                 , APP_E_DT      = ?
+                 , MOD_DATE      = SYSDATE
+                 , MOD_ID        = ?
+             WHERE STR_CD        = ?
+               AND CPN_CD        = ?
+               AND SKU_CD        = ?
+               AND APP_S_DT      = ?
+        ]]>   
+    </query>
+    <!-- CMS쿠폰 삭제 -->
+    <query name="DEL_CMSCPNMST">
+        <![CDATA[
+            DELETE
+              FROM DPS.PC_CMSCPNMST
+             WHERE STR_CD        = ?
+               AND CPN_CD        = ?
+               AND SKU_CD        = ?
+               AND APP_S_DT      = ?
+        ]]>   
+    </query>
+</service>

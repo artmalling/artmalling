@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 강종엽
+ * 회 사 명 : 
+ * 작 성 일 : 2011.11.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  명동보리밥대출입전표생성
+ -->
+<service name="/pord123.ps">
+
+    <!-- 조회조건  리스트 -->
+    <gauce name="H_SEARCH"> 
+    <column colName="STR_CD"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />     
+    <column colName="PAY_YM"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+
+    <!-- 최종 매입 마감 월 + 1 -->
+    <gauce name="H_LASTMONTH"> 
+    <column colName="PAY_YM"         colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>  
+    
+    
+    <query name="SEL_LASTMONTH">
+        <![CDATA[
+         SELECT TO_CHAR(ADD_MONTHS(TO_DATE(MAX(CLOSE_YM), 'YYYYMM'), 1), 'YYYYMM') AS PAY_YM
+           FROM DPS.PC_MCLOSE
+          WHERE CLOSE_TASK_FLAG = 'PORD'
+            AND CLOSE_UNIT_FLAG = '42'
+            AND CLOSE_YN        = 'Y'  
+        ]]>
+    </query> 
+ </service>

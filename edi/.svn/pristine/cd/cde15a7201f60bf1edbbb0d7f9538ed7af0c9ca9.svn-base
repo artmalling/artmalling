@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 :
+ * 변경내용 :
+ * 개    요 :  로그인 체크
+ -->
+<service name="/ecom004.ec">	
+    
+    <!-- 브랜드 조회 -->
+    <query name="SEL_PUMBUN">
+        <![CDATA[
+        SELECT A.STR_CD AS STR_CD
+             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM
+             , A.USER_ID AS USER_ID
+             , A.PWD_NO AS PWD_NO
+             , A.PWD_REQ_DT AS PWD_REG_DT
+             , A.EMAIL AS EMAIL
+             , A.USE_END_DT AS USE_END_DT
+             , A.LAST_CONN_DT AS LAST_CONN_DT
+             , A.REG_ID AS REG_ID
+             , A.MOD_ID AS MOD_ID
+             , B.PUMBUN_CD AS PUMBUN_CD
+             , B.PUMBUN_NAME AS PUMBUN_NM
+             , B.VEN_CD AS VEN_CD
+             , C.VEN_NAME AS VEN_NAME
+             , C.BIZ_TYPE AS BIZ_TYPE
+             , B.CHAR_BUYER_CD AS CHAR_BUYER_CD
+             , A.PWD_CNT AS PWD_CNT
+             , '2' AS GB
+		  FROM MSS.EM_EDIUSER A, DPS.PC_STRPBN B, DPS.PC_VENMST C
+		 WHERE A.STR_CD = B.STR_CD
+		   AND A.USER_ID = B.PUMBUN_CD
+		   AND B.VEN_CD = C.VEN_CD
+		   AND A.USER_GUBN = '2'
+		   AND A.STR_CD = ? 
+		   AND A.USER_ID = ?
+		   AND (A.PWD_NO = ? OR A.PWD_NO = ?) 
+        ]]>
+    </query>
+    
+    <!-- 협력사 조회  -->
+    <query name="SEL_VEN">
+        <![CDATA[
+        SELECT A.STR_CD AS STR_CD
+             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM
+             , A.USER_ID AS USER_ID
+             , A.PWD_NO AS PWD_NO
+             , A.PWD_REQ_DT AS PWD_REG_DT
+             , A.EMAIL AS EMAIL
+             , A.USE_END_DT AS USE_END_DT
+             , A.LAST_CONN_DT AS LAST_CONN_DT
+             , A.REG_ID AS REG_ID
+             , A.MOD_ID AS MOD_ID
+             , B.VEN_CD AS VEN_CD
+             , B.VEN_NAME AS VEN_NAME
+             , B.BIZ_TYPE AS BIZ_TYPE
+             , A.PWD_CNT AS PWD_CNT
+             , '1' AS GB
+          FROM MSS.EM_EDIUSER A, 
+               DPS.PC_STRVENMST B
+         WHERE A.STR_CD = B.STR_CD
+           AND A.USER_ID = B.VEN_CD
+           AND A.USER_GUBN = '1'
+           AND A.USE_YN = 'Y'
+           AND A.STR_CD = ?
+           AND A.USER_ID = ?
+           AND (A.PWD_NO = ? OR A.PWD_NO = ?)
+     
+         UNION ALL
+        SELECT A.STR_CD AS STR_CD
+             , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STRNM
+             , A.USER_ID AS USER_ID
+             , A.PWD_NO AS PWD_NO
+             , A.PWD_REQ_DT AS PWD_REG_DT
+             , A.EMAIL AS EMAIL
+             , A.USE_END_DT AS USE_END_DT
+             , A.LAST_CONN_DT AS LAST_CONN_DT
+             , A.REG_ID AS REG_ID
+             , A.MOD_ID AS MOD_ID
+             , A.USER_ID AS VEN_CD
+             , '택발행대행사' AS VEN_NAME
+             , ' ' AS BIZ_TYPE
+             , A.PWD_CNT AS PWD_CNT
+             , '@' AS GB
+          FROM MSS.EM_EDIUSER A
+         WHERE A.USE_YN = 'Y'
+           AND A.USER_GUBN = '@'
+           AND A.STR_CD = ?
+           AND A.USER_ID = ?
+           AND (A.PWD_NO = ? OR A.PWD_NO = ?)
+        ]]>
+    </query>
+    
+     <!-- 비밀번호변경 확인 -->
+    <query name="SEL_PWDCH">
+        <![CDATA[
+        SELECT PWD_NO AS PWD_NO 
+             , LAST_CONN_DT AS LAST_CONN_DT
+          FROM MSS.EM_EDIUSER
+         WHERE STR_CD = ?
+           AND USER_ID = ?           
+        ]]>
+    </query>
+    
+        <!-- 로그인 실패시 1 증가 -->
+    <query name="UPD_USER_CNT">
+        <![CDATA[
+        UPDATE MSS.EM_EDIUSER 
+           SET PWD_CNT = NVL(PWD_CNT,0) + 1
+         WHERE STR_CD =  ?
+           AND USER_ID = ?           
+        ]]>
+    </query>
+   
+</service>

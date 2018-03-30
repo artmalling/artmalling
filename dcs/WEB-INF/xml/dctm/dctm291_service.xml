@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 
+ * 회 사 명    : 
+ * 작 성 일    : 2010.02.25
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개          요 :  연계카드등록
+ -->
+<service name="/dctm291.dm">
+    <!-- 개인카드 List -->
+    <gauce name="H_MASTER"> 
+        <column colName="ISSUE_DT"         colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"          colType="TB_STRING"  size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MAN_NM"           colType="TB_STRING"  size="30" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_STAT_CD"     colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STAT_NM"          colType="TB_STRING"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTR_PATH_CD"     colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_TYPE_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TYPE_NM"          colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"           colType="TB_STRING"  size="48" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POCARD_PREFIX"    colType="TB_STRING"  size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POCARD_PREFIX_NM" colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_DETAIL"> 
+        <column colName="LINK_CARD_NO"     colType="TB_STRING"  size="16" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_NO"          colType="TB_STRING"  size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POCARD_PREFIX"    colType="TB_STRING"  size="3" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CARD_TYPE_CD"     colType="TB_STRING"  size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DATE"         colType="TB_STRING"  size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_ID"           colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_DATE"         colType="TB_STRING"  size="64" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_ID"           colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 개인카드조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT A.ISSUE_DT
+                 , DCS.SC_Crypto_FUN('DEC', A.CARD_NO) AS CARD_NO
+                 , DCS.F_GET_CUST_NAME(C.HHOLD_MAN_ID) MAN_NM
+                 , A.CARD_STAT_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D017', A.CARD_STAT_CD) STAT_NM
+                 , A.ENTR_PATH_CD
+                 , DCS.F_GET_BRCH_NAME(A.ENTR_PATH_CD) BRCH_NAME
+                 , A.CARD_TYPE_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D005',A.CARD_TYPE_CD) TYPE_NM
+                 , DECODE(A.CARD_STAT_CD,'1',TO_CHAR(TO_DATE(A.LOSS_NOTI_DT,'YYYYMMDD'),'YYYY/MM/DD') ||', '||A.LOSS_NOTI_NM,'') REMARK
+                 , POCARD_PREFIX
+                 , COM.FN_GET_COMM_NAME('D', 'D104',A.POCARD_PREFIX) AS POCARD_PREFIX_NM
+              FROM DCS.DM_CARD A
+                 , DCS.DM_CUSTOMER B
+                 , DCS.DM_HOUSEHOLD C
+             WHERE A.CUST_ID        = B.CUST_ID
+               AND B.HHOLD_ID       = C.HHOLD_ID
+               AND B.COMP_PERS_FLAG = 'P'     
+               AND A.CUST_ID = ( 
+                                 SELECT UNIQUE X.CUST_ID
+                                   FROM DCS.DM_CARD X
+                                      , DCS.DM_CUSTOMER Y
+                                  WHERE X.CUST_ID  =  Y.CUST_ID
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER_CARD_NO">   
+        <![CDATA[
+                                    AND X.CARD_NO    = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_CUST_ID">   
+        <![CDATA[
+                                    AND X.CUST_ID    = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_SS_NO">   
+        <![CDATA[
+                                    AND Y.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>  
+    <query name="SEL_MASTER_ORDER">   
+        <![CDATA[
+                               )
+          ORDER BY A.REG_DATE DESC
+        ]]>        
+    </query>    
+    
+    <!-- 개인카드조회 -->
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+            SELECT 
+			         A.LINK_CARD_NO AS LINK_CARD_NO
+			        ,DCS.SC_Crypto_FUN('DEC', A.CARD_NO) AS CARD_NO
+			        ,A.POCARD_PREFIX
+			        ,B.CARD_TYPE_CD	AS CARD_TYPE_CD
+			        ,A.REG_DATE
+			        ,A.REG_ID
+			        ,A.MOD_DATE
+			        ,A.MOD_ID
+			FROM DCS.DM_LINK_CARD A
+                ,DCS.DM_CARD B
+			WHERE A.CARD_NO = B.CARD_NO(+)
+              AND A.CARD_NO = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>
+    
+    <query name="INS_DMLINKCARD">        
+        <![CDATA[
+    		INSERT INTO DCS.DM_LINK_CARD (  LINK_CARD_NO
+                                            ,CARD_NO
+                                            ,POCARD_PREFIX
+                                            ,REG_DATE
+                                            ,REG_ID
+                                            ,MOD_DATE
+                                            ,MOD_ID
+                                         )
+                                  VALUES ( ?
+                                         , DCS.SC_Crypto_FUN('ENC', ?)
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                 )
+    	]]>        
+    </query>
+    
+    <query name="UPD_DMLINKCARD">        
+        <![CDATA[
+    		UPDATE DCS.DM_LINK_CARD
+               SET POCARD_PREFIX             = ?
+                 , MOD_DATE                 = SYSDATE
+                 , MOD_ID                   = ?
+             WHERE LINK_CARD_NO                   = DCS.SC_Crypto_FUN('ENC', ?) 
+    	]]>        
+    </query>
+    
+    <query name="UPD_DMCARD">        
+        <![CDATA[
+    		UPDATE DCS.DM_CARD
+               SET POCARD_PREFIX             = ?
+                 , MOD_DATE                 = SYSDATE
+                 , MOD_ID                   = ?
+             WHERE CARD_NO                   = DCS.SC_Crypto_FUN('ENC', ?) 
+    	]]>        
+    </query>
+    
+    
+    <query name="DEL_DMLINKCARD">        
+        <![CDATA[
+    		DELETE FROM DCS.DM_LINK_CARD
+            WHERE LINK_CARD_NO                   = DCS.SC_Crypto_FUN('ENC', ?) 
+    	]]>        
+    </query>
+    
+</service>

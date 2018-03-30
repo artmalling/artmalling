@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.05.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영실적항목관리
+ -->
+<service name="/meis001.me">
+    
+    <!-- 경영실적항목 트리 헤더  -->
+    <gauce name="H_SEL_BIZ_TREE">
+        <column colName="BIZ_CD_ORI"   colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"       colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"    colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="V_BIZ_CD_NM"  colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_LEVEL" colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_L_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_L_NM"     colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_M_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_M_NM"     colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_S_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_S_NM"     colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_BIZ_CD"     colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_BIZ_NM"     colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RPT_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRT_SEQ"      colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 계정/예산항목정보 헤더  -->
+    <gauce name="H_SEL_BIZ_DTL">
+        <column colName="BIZ_CD"    colType="TB_STRING"  size="6"  dec="0" keyType="TB_KEY"     roundMode="ROUND" />
+        <column colName="ACC_FLAG"  colType="TB_STRING"  size="1"  dec="0" keyType="TB_KEY"     roundMode="ROUND" />
+        <column colName="ACC_CD"    colType="TB_STRING"  size="10"  dec="0" keyType="TB_KEY"     roundMode="ROUND" />
+        <column colName="ACC_CD_NM" colType="TB_STRING"  size="60" dec="0" keyType="TB_NOTNULL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 엑셀업로드 헤더  -->
+    <gauce name="H_BIZ_UPLOAD">
+        <column colName="PRT_SEQ"      colType="TB_INT"     size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"       colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"    colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_LEVEL" colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RPT_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_FLAG"     colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_CD"       colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_CD_NM"    colType="TB_STRING"  size="60" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_BIZ_CD"     colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHECK_FLAG"   colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ETC"          colType="TB_STRING"  size="90" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 출력순서 헤더  -->
+    <gauce name="H_SEL_BIZ_SEQ">
+        <column colName="PRT_SEQ"      colType="TB_DECIMAL" size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 경영실적항목 트리 조회쿼리-->
+    <query name="SEL_BIZ_TREE_START">
+        <![CDATA[
+        SELECT DISTINCT BIZ_CD                                                                                AS BIZ_CD_ORI
+             , BIZ_CD
+             , BIZ_CD_NM
+             , DECODE(BIZ_CD_LEVEL,1,'('||BIZ_L_CD||')',2,'('||BIZ_M_CD||')',3,'('||BIZ_S_CD||')')||BIZ_CD_NM AS V_BIZ_CD_NM
+             , BIZ_CD_LEVEL
+             , CASE BIZ_L_CD WHEN '00' THEN '' ELSE BIZ_L_CD END                                              AS BIZ_L_CD
+             , CASE BIZ_L_CD WHEN '00' THEN '' ELSE MSS.FN_GET_BIZ_NAME(BIZ_L_CD||'0000') END                 AS BIZ_L_NM
+             , CASE BIZ_M_CD WHEN '00' THEN '' ELSE BIZ_M_CD END                                              AS BIZ_M_CD
+             , CASE BIZ_M_CD WHEN '00' THEN '' ELSE MSS.FN_GET_BIZ_NAME(BIZ_L_CD||BIZ_M_CD||'00') END         AS BIZ_M_NM
+             , CASE BIZ_S_CD WHEN '00' THEN '' ELSE BIZ_S_CD END                                              AS BIZ_S_CD
+             , CASE BIZ_S_CD WHEN '00' THEN '' ELSE MSS.FN_GET_BIZ_NAME(BIZ_L_CD||BIZ_M_CD||BIZ_S_CD) END     AS BIZ_S_NM
+             , P_BIZ_CD
+             , MSS.FN_GET_BIZ_NAME(P_BIZ_CD)                                                                  AS P_BIZ_NM
+             , RPT_YN
+             , PRT_SEQ
+             , USE_YN
+          FROM ( SELECT BIZ_CD
+                      , BIZ_CD_NM
+                      , BIZ_CD_LEVEL
+                      , BIZ_L_CD
+                      , BIZ_M_CD
+                      , BIZ_S_CD
+                      , P_BIZ_CD
+                      , RPT_YN
+                      , PRT_SEQ
+                      , USE_YN
+                   FROM ( SELECT '000000' AS BIZ_CD
+                               , '전체'   AS BIZ_CD_NM
+                               , '0'      AS BIZ_CD_LEVEL
+                               , '00'     AS BIZ_L_CD
+                               , '00'     AS BIZ_M_CD
+                               , '00'     AS BIZ_S_CD
+                               , NULL     AS P_BIZ_CD
+                               , NULL     AS RPT_YN
+                               , NULL     AS PRT_SEQ
+                               , NULL     AS USE_YN
+                            FROM DUAL
+                           UNION ALL            
+                          SELECT BIZ_CD
+                               , BIZ_CD_NM
+                               , BIZ_CD_LEVEL
+                               , BIZ_L_CD
+                               , BIZ_M_CD
+                               , BIZ_S_CD
+                               , P_BIZ_CD
+                               , RPT_YN
+                               , PRT_SEQ
+                               , USE_YN
+                            FROM MSS.ME_BIZCDMST 
+                           WHERE 1 = 1
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_TREE_WHERE_LCD">
+        <![CDATA[
+                    AND BIZ_L_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_TREE_WHERE_MCD">
+        <![CDATA[
+                    AND BIZ_M_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_TREE_WHERE_SCD">
+        <![CDATA[
+                    AND BIZ_S_CD = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_TREE_END">
+        <![CDATA[
+                                      )
+                  START WITH 1 = 1
+                CONNECT BY PRIOR BIZ_CD = P_BIZ_CD
+               ) BIZMST
+         ORDER BY BIZ_CD
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목정보 조회쿼리-->
+    <query name="SEL_BIZ_DTL">
+        <![CDATA[
+        SELECT BIZ_CD
+             , ACC_FLAG
+             , ACC_CD
+             , ACC_CD_NM 
+          FROM MSS.ME_BIZCDDTL
+         WHERE BIZ_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 경영실적항목코드 중복체크-->
+    <query name="SEL_BIZ_CD">
+        <![CDATA[
+        SELECT BIZ_CD
+          FROM MSS.ME_BIZCDMST
+         WHERE BIZ_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 경영실적항목상세코드 중복체크-->
+    <query name="SEL_DTL_CD">
+        <![CDATA[
+        SELECT BIZ_CD
+          FROM MSS.ME_BIZCDDTL
+         WHERE BIZ_CD   = ?
+           AND ACC_FLAG = ?
+           AND ACC_CD   = ?
+        ]]>
+    </query>
+    
+    <!-- 경영실적항목마스터 신규등록-->
+    <query name="INS_BIZ_MST">
+        <![CDATA[
+        INSERT INTO MSS.ME_BIZCDMST( BIZ_CD
+                                   , BIZ_CD_NM
+                                   , BIZ_CD_LEVEL
+                                   , BIZ_L_CD
+                                   , BIZ_M_CD
+                                   , BIZ_S_CD
+                                   , P_BIZ_CD
+                                   , RPT_YN
+                                   , PRT_SEQ
+                                   , USE_YN
+                                   , REG_DATE
+                                   , REG_ID
+                                   , MOD_DATE
+                                   , MOD_ID) 
+                            VALUES ( ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , SYSDATE
+                                   , ?
+                                   , SYSDATE 
+                                   , ?)
+        ]]>
+    </query>
+    
+    <!-- 경영실적항목마스터 수정-->
+    <query name="UPD_BIZ_MST">
+        <![CDATA[
+        UPDATE MSS.ME_BIZCDMST
+           SET BIZ_CD_NM = ? 
+             , RPT_YN    = ?
+             , PRT_SEQ   = ?
+             , USE_YN    = ?
+             , MOD_DATE  = SYSDATE
+             , MOD_ID    = ?
+         WHERE BIZ_CD    = ?
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목정보 신규등록-->
+    <query name="INS_BIZ_DTL">
+        <![CDATA[
+        INSERT INTO MSS.ME_BIZCDDTL( BIZ_CD
+                                   , ACC_FLAG
+                                   , ACC_CD
+                                   , ACC_CD_NM
+                                   , REG_DATE
+                                   , REG_ID
+                                   , MOD_DATE
+                                   , MOD_ID) 
+                            VALUES ( ?
+                                   , ?
+                                   , ?
+                                   , ?
+                                   , SYSDATE
+                                   , ?
+                                   , SYSDATE 
+                                   , ? )
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목정보 수정-->
+    <query name="UPD_BIZ_DTL">
+        <![CDATA[
+        UPDATE MSS.ME_BIZCDDTL
+           SET ACC_CD_NM = ? 
+             , MOD_DATE  = SYSDATE
+             , MOD_ID    = ?
+         WHERE BIZ_CD    = ?
+           AND ACC_FLAG  = ?
+           AND ACC_CD    = ?
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목정보 삭제-->
+    <query name="DEL_BIZ_DTL">
+        <![CDATA[
+        DELETE 
+          FROM MSS.ME_BIZCDDTL
+         WHERE BIZ_CD    = ?
+           AND ACC_FLAG  = ?
+           AND ACC_CD    = ?
+        ]]>
+    </query>
+    
+    <!-- 경영실적항목마스터에 하위항목존재체크-->
+    <query name="SEL_P_BIZ_CD">
+        <![CDATA[
+        SELECT BIZ_CD
+          FROM MSS.ME_BIZCDMST
+         WHERE P_BIZ_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 월별경영실적항목마스터 데이터 존재여부체크-->
+    <query name="SEL_RESULT_MST">
+        <![CDATA[
+        SELECT BIZ_CD
+          FROM MSS.ME_BIZRSLTCDMST
+         WHERE BIZ_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 월별경영계획항목마스터 데이터 존재여부체크-->
+    <query name="SEL_PLAN_MST">
+        <![CDATA[
+        SELECT BIZ_CD
+          FROM MSS.ME_BIZPLANCDMST
+         WHERE BIZ_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 계정/예산항목정보 삭제-->
+    <query name="DEL_BIZ_DTL_BY_BIZ_CD">
+        <![CDATA[
+        DELETE 
+          FROM MSS.ME_BIZCDDTL
+         WHERE BIZ_CD    = ?
+        ]]>
+    </query>
+    
+    <!-- 경영실적항목마스터 데이터 삭제-->
+    <query name="DEL_BIZ_MST">
+        <![CDATA[
+        DELETE 
+          FROM MSS.ME_BIZCDMST
+         WHERE BIZ_CD    = ?
+        ]]>
+    </query>
+    
+    <!-- 출력순서-->
+    <query name="SEL_BIZ_SEQ">
+        <![CDATA[
+        SELECT NVL(MAX(PRT_SEQ), 0) + 1  AS PRT_SEQ
+          FROM MSS.ME_BIZCDMST
+         WHERE BIZ_CD_LEVEL = ?
+        ]]>
+    </query>
+    
+    <!-- 항목명체크-->
+    <query name="SEL_ACC_NAME">
+        <![CDATA[
+        SELECT ACC_CD_NM
+          FROM MSS.ME_BIZCDDTL
+         WHERE ACC_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 월별경영실적항목명세 데이터 존재여부체크-->
+    <query name="SEL_RESULT_DTL">
+        <![CDATA[
+        SELECT BIZ_CD
+          FROM MSS.ME_BIZRSLTCDDTL
+         WHERE BIZ_CD   = ?
+           AND ACC_FLAG = ?
+           AND ACC_CD   = ?
+         
+        ]]>
+    </query>
+    
+    <!-- 월별경영계획항목명세 데이터 존재여부체크-->
+    <query name="SEL_PLAN_DTL">
+        <![CDATA[
+        SELECT BIZ_CD
+          FROM MSS.ME_BIZPLANCDDTL
+         WHERE BIZ_CD   = ?
+           AND ACC_FLAG = ?
+           AND ACC_CD   = ?
+        ]]>
+    </query>
+    
+</service>

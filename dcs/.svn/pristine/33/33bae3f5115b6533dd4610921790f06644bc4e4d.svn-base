@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.05.30
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  지역별 회원 매출 현황(월)
+ -->
+<service name="/dbri321.db">
+    <!-- 월단위 포인트 현황  -->
+    <gauce name="H_MASTER"> 
+        <column colName="BUSI_AREA"      	colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUSI_AREA_NM"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"  		colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CUST"    		colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_CNT_CUST"    	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+    
+    <!-- 지역별 회원 매출 현황(월) -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			  SELECT  D.BUSI_AREA
+                   , D.BUSI_AREA_NM
+                   --, D.BUSI_AREA_SEQ
+                   --, SUM(B.POINT)    AS POINT  --현재보유포인트
+                   , SUM(C.NORM_SALE_AMT) AS SALE_AMT
+                   , COUNT(DISTINCT C.CUST_NO) AS SALE_CUST
+                   , COUNT(C.PUMBUN_CD) AS SALE_CNT_CUST
+                   FROM DCS.BUSI_AREA_POSTNO3 D LEFT OUTER JOIN DCS.DM_CUSTOMER A ON NVL(A.HOME_ZIP_CD1,'999') BETWEEN D.POST_ZIP_MIN AND D.POST_ZIP_MAX 
+                        LEFT OUTER JOIN DPS.PS_DAYCUST C ON C.CUST_NO = A.CUST_ID
+                   WHERE C.SALE_DT BETWEEN ? AND ?
+                   GROUP BY D.BUSI_AREA, D.BUSI_AREA_NM
+                   ORDER BY  D.BUSI_AREA, SALE_AMT DESC
+        ]]>        
+    </query>  
+</service>

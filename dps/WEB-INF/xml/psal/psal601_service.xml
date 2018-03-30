@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2010.04.15
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  사은품행사현황
+ -->
+<service name="/psal601.ps">
+    <!-- 사은품행사현황 MASTER 헤더  -->
+    <gauce name="H_SEL_GIFT_EVT_MST">
+        <column colName="STR_CD"      colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="DEPT_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TEAM_CD"     colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PC_CD"       colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="START_DT"    colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="END_DT"      colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FLAG_NAME"   colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PRSNT_CNT"   colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="DIV_AMT"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_AMT"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="POSSALE_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="EVENT_CD"    colType="TB_STRING"  size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 사은품행사현황 DETAIL 헤더  -->
+    <gauce name="H_SEL_GIFT_EVT_DTL">
+        <column colName="SALE_DT"     colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PRSNT_NO"    colType="TB_STRING"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PUMBUN_CD"   colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PUMBUN_NAME" colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="POS_NO"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TRAN_NO"     colType="TB_STRING"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="POSSALE_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SKU_NAME"    colType="TB_STRING"  size="40" dec="2" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_PRC"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 사은품행사현황 MASTER 팀별 조회쿼리 -->
+    
+    <query name="SEL_GIFT_EVT_MST_DEPT">
+        <![CDATA[
+        SELECT ?                       AS STR_CD
+             , NVL(C.DEPT_CD,'03')     AS DEPT_CD
+             , '%'                     AS TEAM_CD
+             , '%'                     AS PC_CD
+             , ?                       AS START_DT
+             , ?                       AS END_DT
+             , NVL(C.FLAG_NAME,'기타') AS FLAG_NAME
+             , COUNT(1)                AS PRSNT_CNT    -- 증정수량
+             , SUM(B.DIV_AMT)          AS DIV_AMT      -- 사은품비용
+             , SUM(A.SALE_AMT)         AS SALE_AMT     -- 인정매출액
+             , SUM(A.POSSALE_AMT)      AS POSSALE_AMT  -- POS매출금액
+             , ?                       AS EVENT_CD
+          FROM MSS.MC_PRSNTPBN    A
+             , MSS.MC_PRSNTRECP   B
+             , ( SELECT C.STR_CD
+                      , C.PUMBUN_CD
+                      , D.DEPT_CD
+                      , D.TEAM_CD
+                      , DPS.FN_GET_ORG_SHORT_NAME(C.STR_CD, D.DEPT_CD, '00', '00', '00') AS FLAG_NAME
+                      , D.ORG_CD
+                   FROM DPS.PC_STRPBN C
+                      , DPS.PC_ORGMST D
+                  WHERE C.STR_CD      = ?
+                    AND C.SALE_ORG_CD = D.ORG_CD(+)
+               ) C
+         WHERE A.PRSNT_DT    = B.PRSNT_DT
+           AND A.PRSNT_NO    = B.PRSNT_NO
+           AND A.STR_CD      = B.STR_CD
+           AND A.SEQ_NO      = B.SEQ_NO
+           AND A.PUMBUN_CD   = C.PUMBUN_CD(+)
+           AND ( A.PRSNT_DT, A.PRSNT_NO, A.STR_CD) IN ( SELECT PRSNT_DT, PRSNT_NO, STR_CD
+                                                          FROM MSS.MC_EVTSKUPRSNT
+                                                         WHERE STR_CD      = ?
+                                                           AND PRSNT_DT    BETWEEN ? AND ?
+                                                           AND PRSNT_FLAG  IN ( '1', '2' )
+                                                           AND CANCEL_GB   = '1' 
+                                                           AND EVENT_CD    LIKE ? || '%'
+                                                      )
+           AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD  = C.STR_CD
+                           AND MYORG.DEPT_CD = C.DEPT_CD
+                           AND MYORG.USER_ID = ? )                                           
+         GROUP BY 
+               C.DEPT_CD
+             , C.FLAG_NAME
+        ]]>
+    </query>
+    
+    <query name="SEL_GIFT_EVT_MST_TEAM">
+        <![CDATA[
+        SELECT ?                       AS STR_CD
+             , NVL(C.DEPT_CD,'03')     AS DEPT_CD
+             , NVL(C.TEAM_CD,'99')     AS TEAM_CD
+             , '%'                     AS PC_CD
+             , ?                       AS START_DT
+             , ?                       AS END_DT
+             , NVL(C.FLAG_NAME,'기타') AS FLAG_NAME
+             , COUNT(1)                AS PRSNT_CNT    -- 증정수량
+             , SUM(B.DIV_AMT)          AS DIV_AMT      -- 사은품비용
+             , SUM(A.SALE_AMT)         AS SALE_AMT     -- 인정매출액
+             , SUM(A.POSSALE_AMT)      AS POSSALE_AMT  -- POS매출금액
+             , ?                       AS EVENT_CD
+          FROM MSS.MC_PRSNTPBN    A
+             , MSS.MC_PRSNTRECP   B
+             , ( SELECT C.STR_CD
+                      , C.PUMBUN_CD
+                      , D.DEPT_CD
+                      , D.TEAM_CD
+                      , DPS.FN_GET_ORG_SHORT_NAME(C.STR_CD, D.DEPT_CD, D.TEAM_CD, '00', '00') AS FLAG_NAME
+                      , D.ORG_CD
+                   FROM DPS.PC_STRPBN C
+                      , DPS.PC_ORGMST D
+                  WHERE C.STR_CD      = ?
+                    AND D.DEPT_CD     = ?
+                    AND C.SALE_ORG_CD = D.ORG_CD(+)
+               ) C
+         WHERE A.PRSNT_DT    = B.PRSNT_DT
+           AND A.PRSNT_NO    = B.PRSNT_NO
+           AND A.STR_CD      = B.STR_CD
+           AND A.SEQ_NO      = B.SEQ_NO
+           AND A.PUMBUN_CD   = C.PUMBUN_CD(+)
+           AND ( A.PRSNT_DT, A.PRSNT_NO, A.STR_CD) IN ( SELECT PRSNT_DT, PRSNT_NO, STR_CD
+                                                          FROM MSS.MC_EVTSKUPRSNT
+                                                         WHERE STR_CD      = ?
+                                                           AND PRSNT_DT    BETWEEN ? AND ?
+                                                           AND PRSNT_FLAG  IN ( '1', '2' )
+                                                           AND CANCEL_GB   = '1' 
+                                                           AND EVENT_CD    LIKE ? || '%'
+                                                      )
+           AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD  = C.STR_CD
+                           AND MYORG.DEPT_CD = C.DEPT_CD
+                           AND MYORG.TEAM_CD = C.TEAM_CD 
+                           AND MYORG.USER_ID = ? )                                           
+         GROUP BY 
+               C.DEPT_CD
+             , C.TEAM_CD
+             , C.FLAG_NAME
+        ]]>
+    </query>
+    
+    <!-- 사은품행사현황 MASTER PC별 조회쿼리 -->
+    <query name="SEL_GIFT_EVT_MST_PC">
+        <![CDATA[
+        SELECT ?                       AS STR_CD
+             , NVL(C.DEPT_CD,'03')     AS DEPT_CD
+             , NVL(C.TEAM_CD,'99')     AS TEAM_CD
+             , NVL(C.PC_CD,'99')       AS PC_CD
+             , ?                       AS START_DT
+             , ?                       AS END_DT
+             , NVL(C.FLAG_NAME,'기타') AS FLAG_NAME
+             , COUNT(1)                AS PRSNT_CNT    -- 증정수량
+             , SUM(B.DIV_AMT)          AS DIV_AMT      -- 사은품비용
+             , SUM(A.SALE_AMT)         AS SALE_AMT     -- 인정매출액
+             , SUM(A.POSSALE_AMT)      AS POSSALE_AMT  -- POS매출금액
+             , ?                       AS EVENT_CD
+          FROM MSS.MC_PRSNTPBN    A
+             , MSS.MC_PRSNTRECP   B
+             , ( SELECT C.STR_CD
+                      , C.PUMBUN_CD
+                      , D.DEPT_CD
+                      , D.TEAM_CD
+                      , D.PC_CD
+                      , DPS.FN_GET_ORG_SHORT_NAME(C.STR_CD, D.DEPT_CD, D.TEAM_CD, D.PC_CD, '00') AS FLAG_NAME
+                      , D.ORG_CD
+                   FROM DPS.PC_STRPBN C
+                      , DPS.PC_ORGMST D
+                  WHERE C.STR_CD      = ?
+                    AND D.DEPT_CD     = ?
+                    AND D.TEAM_CD     = ?
+                    AND C.SALE_ORG_CD = D.ORG_CD(+)
+               ) C
+         WHERE A.PRSNT_DT    = B.PRSNT_DT
+           AND A.PRSNT_NO    = B.PRSNT_NO
+           AND A.STR_CD      = B.STR_CD
+           AND A.SEQ_NO      = B.SEQ_NO
+           AND A.PUMBUN_CD   = C.PUMBUN_CD(+)
+           AND ( A.PRSNT_DT, A.PRSNT_NO, A.STR_CD) IN ( SELECT PRSNT_DT, PRSNT_NO, STR_CD
+                                                          FROM MSS.MC_EVTSKUPRSNT
+                                                         WHERE STR_CD      = ?
+                                                           AND PRSNT_DT    BETWEEN ? AND ?
+                                                           AND PRSNT_FLAG  IN ( '1', '2' )
+                                                           AND CANCEL_GB   = '1' 
+                                                           AND EVENT_CD    LIKE ? || '%'
+                                                      )
+           AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD  = C.STR_CD
+                           AND MYORG.DEPT_CD = C.DEPT_CD
+                           AND MYORG.TEAM_CD = C.TEAM_CD
+                           AND MYORG.PC_CD   = C.PC_CD
+                           AND MYORG.USER_ID = ? )
+         GROUP BY 
+               C.DEPT_CD
+             , C.TEAM_CD
+             , C.PC_CD
+             , C.FLAG_NAME
+        ]]>
+    </query>
+    
+    <!-- 사은품행사현황 DETAIL 팀별 조회쿼리 -->
+    
+    <query name="SEL_GIFT_EVT_DTL_DEPT">
+        <![CDATA[
+        SELECT A.SALE_DT
+             , A.PRSNT_NO
+             , A.PUMBUN_CD
+             , ( SELECT X.PUMBUN_NAME
+                   FROM DPS.PC_PBNMST X
+                  WHERE X.PUMBUN_CD = A.PUMBUN_CD
+               )  AS PUMBUN_NAME
+             , A.POS_NO
+             , A.TRAN_NO
+             , A.POSSALE_AMT
+             , D.SKU_NAME
+             , D.SALE_PRC
+          FROM MSS.MC_PRSNTPBN A
+             , ( SELECT C.STR_CD
+                      , C.PUMBUN_CD
+                      , D.DEPT_CD
+                      , D.TEAM_CD
+                      , DPS.FN_GET_ORG_SHORT_NAME(C.STR_CD, D.DEPT_CD, '00', '00', '00') AS FLAG_NAME
+                      , D.ORG_CD
+                   FROM DPS.PC_STRPBN C
+                      , DPS.PC_ORGMST D
+                  WHERE C.STR_CD      = ?
+                    AND C.SALE_ORG_CD = D.ORG_CD(+)
+               ) B
+             , MSS.MC_EVTSKUPRSNT C
+             , DPS.PC_STRSKUMST   D
+         WHERE A.PRSNT_DT  = C.PRSNT_DT
+           AND A.PRSNT_NO  = C.PRSNT_NO
+           AND A.STR_CD    = C.STR_CD
+           AND C.STR_CD    = D.STR_CD
+           AND C.SKU_CD    = D.SKU_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD(+)
+           AND (A.PRSNT_DT, A.PRSNT_NO, A.STR_CD) IN ( SELECT PRSNT_DT, PRSNT_NO, STR_CD
+                                                         FROM MSS.MC_EVTSKUPRSNT
+                                                        WHERE STR_CD      = ?
+                                                          AND PRSNT_DT    BETWEEN ? AND ?
+                                                          AND PRSNT_FLAG  IN ( '1', '2' )
+                                                          AND CANCEL_GB   = '1' 
+                                                          AND EVENT_CD    LIKE ? || '%'
+                                                     )
+           AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD  = B.STR_CD
+                           AND MYORG.DEPT_CD = B.DEPT_CD
+                           AND MYORG.TEAM_CD = B.TEAM_CD 
+                           AND MYORG.USER_ID = ? ) 
+         ORDER BY 
+               A.SALE_DT
+             , A.PRSNT_NO
+             , A.POS_NO
+             , A.TRAN_NO
+             , A.SEQ_NO
+             , A.PUMBUN_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_GIFT_EVT_DTL_TEAM">
+        <![CDATA[
+        SELECT A.SALE_DT
+             , A.PRSNT_NO
+             , A.PUMBUN_CD
+             , ( SELECT X.PUMBUN_NAME
+                   FROM DPS.PC_PBNMST X
+                  WHERE X.PUMBUN_CD = A.PUMBUN_CD
+               )  AS PUMBUN_NAME
+             , A.POS_NO
+             , A.TRAN_NO
+             , A.POSSALE_AMT
+             , D.SKU_NAME
+             , D.SALE_PRC
+          FROM MSS.MC_PRSNTPBN A
+             , ( SELECT C.STR_CD
+                      , C.PUMBUN_CD
+                      , D.DEPT_CD
+                      , D.TEAM_CD
+                      , DPS.FN_GET_ORG_SHORT_NAME(C.STR_CD, D.DEPT_CD, D.TEAM_CD, '00', '00') AS FLAG_NAME
+                      , D.ORG_CD
+                   FROM DPS.PC_STRPBN C
+                      , DPS.PC_ORGMST D
+                  WHERE C.STR_CD      = ?
+                    AND D.DEPT_CD     = ?
+                    AND C.SALE_ORG_CD = D.ORG_CD(+)
+               ) B
+             , MSS.MC_EVTSKUPRSNT C
+             , DPS.PC_STRSKUMST   D
+         WHERE A.PRSNT_DT  = C.PRSNT_DT
+           AND A.PRSNT_NO  = C.PRSNT_NO
+           AND A.STR_CD    = C.STR_CD
+           AND C.STR_CD    = D.STR_CD
+           AND C.SKU_CD    = D.SKU_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD(+)
+           AND (A.PRSNT_DT, A.PRSNT_NO, A.STR_CD) IN ( SELECT PRSNT_DT, PRSNT_NO, STR_CD
+                                                         FROM MSS.MC_EVTSKUPRSNT
+                                                        WHERE STR_CD      = ?
+                                                          AND PRSNT_DT    BETWEEN ? AND ?
+                                                          AND PRSNT_FLAG  IN ( '1', '2' )
+                                                          AND CANCEL_GB   = '1' 
+                                                          AND EVENT_CD    LIKE ? || '%'
+                                                     )
+           AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD  = B.STR_CD
+                           AND MYORG.DEPT_CD = B.DEPT_CD
+                           AND MYORG.TEAM_CD = B.TEAM_CD 
+                           AND MYORG.USER_ID = ? ) 
+         ORDER BY 
+               A.SALE_DT
+             , A.PRSNT_NO
+             , A.POS_NO
+             , A.TRAN_NO
+             , A.SEQ_NO
+             , A.PUMBUN_CD
+        ]]>
+    </query>
+    
+    <!-- 사은품행사현황 DETAIL PC별 조회쿼리 -->
+    <query name="SEL_GIFT_EVT_DTL_PC">
+        <![CDATA[
+        SELECT A.SALE_DT
+             , A.PRSNT_NO
+             , A.PUMBUN_CD
+             , ( SELECT X.PUMBUN_NAME
+                   FROM DPS.PC_PBNMST X
+                  WHERE X.PUMBUN_CD = A.PUMBUN_CD
+               )  AS PUMBUN_NAME
+             , A.POS_NO
+             , A.TRAN_NO
+             , A.POSSALE_AMT
+             , D.SKU_NAME
+             , D.SALE_PRC
+          FROM MSS.MC_PRSNTPBN A
+             , ( SELECT C.STR_CD
+                      , C.PUMBUN_CD
+                      , D.DEPT_CD
+                      , D.TEAM_CD
+                      , D.PC_CD
+                      , DPS.FN_GET_ORG_SHORT_NAME(C.STR_CD, D.DEPT_CD, D.TEAM_CD, D.PC_CD, '00') AS FLAG_NAME
+                      , D.ORG_CD
+                   FROM DPS.PC_STRPBN C
+                      , DPS.PC_ORGMST D
+                  WHERE C.STR_CD      = ?
+                    AND D.DEPT_CD     = ?
+                    AND D.TEAM_CD     = ?
+                    AND C.SALE_ORG_CD = D.ORG_CD(+)
+               ) B
+             , MSS.MC_EVTSKUPRSNT C
+             , DPS.PC_STRSKUMST   D
+         WHERE A.PRSNT_DT  = C.PRSNT_DT
+           AND A.PRSNT_NO  = C.PRSNT_NO
+           AND A.STR_CD    = C.STR_CD
+           AND C.STR_CD    = D.STR_CD
+           AND C.SKU_CD    = D.SKU_CD
+           AND A.PUMBUN_CD = B.PUMBUN_CD(+)
+           AND (A.PRSNT_DT, A.PRSNT_NO, A.STR_CD) IN ( SELECT PRSNT_DT, PRSNT_NO, STR_CD
+                                                         FROM MSS.MC_EVTSKUPRSNT
+                                                        WHERE STR_CD     = ?
+                                                          AND PRSNT_DT   BETWEEN ? AND ?
+                                                          AND PRSNT_FLAG IN ( '1', '2' )
+                                                          AND CANCEL_GB  = '1' 
+                                                          AND EVENT_CD   LIKE ? || '%'
+                                                     )
+           AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD  = B.STR_CD
+                           AND MYORG.DEPT_CD = B.DEPT_CD
+                           AND MYORG.TEAM_CD = B.TEAM_CD 
+                           AND MYORG.PC_CD   = B.PC_CD
+                           AND MYORG.USER_ID = ? ) 
+         ORDER BY 
+               A.SALE_DT
+             , A.PRSNT_NO
+             , A.POS_NO
+             , A.TRAN_NO
+             , A.SEQ_NO
+             , A.PUMBUN_CD
+        ]]>
+    </query>
+    
+</service>

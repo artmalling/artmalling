@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  VAN사 승인내역 조회
+ -->
+<service name="/psal954.ps">
+    <gauce name="H_MASTER"> 
+        <column colName="APPR_DT"    colType="TB_STRING"    size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_NM"   colType="TB_STRING"    size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="JBRCH_NM"   colType="TB_STRING"    size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_CNT"    colType="TB_DECIMAL"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_AMT"    colType="TB_DECIMAL"   size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="STR_CD"     colType="TB_STRING"    size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APPR_NO"    colType="TB_STRING"    size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOMP_CD"   colType="TB_STRING"    size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JBRCH_ID"   colType="TB_STRING"    size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_TYPE"    colType="TB_STRING"    size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAY_TYPE_NM" colType="TB_STRING"    size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+    </gauce>
+     
+    <gauce name="H_DETAIL"> 
+        <column colName="POS_ANO"   colType="TB_STRING"    size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="POS_AMT"   colType="TB_DECIMAL"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_NO"   colType="TB_STRING"    size="16"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_CNT"  colType="TB_DECIMAL"   size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>    
+
+    <query name="SEL_MASTER">
+        <![CDATA[            
+             SELECT X.APPR_DT
+                  , DPS.FN_GET_CCOMP_NM(X.BCOMP_CD) BCOMP_NM
+                  , DPS.FN_GET_JBRCH_NM(X.JBRCH_ID) JBRCH_NM
+                  , SUM(POS_CNT) POS_CNT
+                  , SUM(POS_AMT) POS_AMT
+                  , MAX(X.STR_CD) AS STR_CD
+                  , MAX(X.APPR_NO) AS APPR_NO
+                  , X.BCOMP_CD
+                  , X.JBRCH_ID  
+                  , X.PAY_TYPE
+                  , COM.FN_GET_COMM_NAME('D','D010',X.PAY_TYPE) AS PAY_TYPE_NM
+               FROM (
+                    SELECT A.SALE_DT AS APPR_DT
+                         , C.PAY_DATA_07 AS BCOMP_CD
+                         , B.JBRCH_ID
+                         , COUNT(1)   POS_CNT
+                         , SUM(DECODE(A.TRAN_FLAG, '0', 1, -1) * C.PAY_VALUE_01) POS_AMT
+                         , MAX(A.STR_CD) AS STR_CD
+                         , MAX(C.PAY_DATA_03) AS APPR_NO
+                         , C.PAY_TYPE
+                      FROM DPS.PS_TRHEADER A
+                         , DPS.PD_BRANCH B
+                         , DPS.PS_TRPAID C
+                     WHERE A.STR_CD      =    C.STR_CD
+                       AND A.SALE_DT     =    C.SALE_DT
+                       AND A.POS_NO      =    C.POS_NO
+                       AND A.TRAN_NO     =    C.TRAN_NO
+                       AND C.STR_CD      =    B.STR_CD
+                       AND C.PAY_DATA_07 =    B.BCOMP_CD
+                       AND PAY_TYPE      IN   ('10','13')
+                       AND C.STR_CD      =    ?
+                       AND C.SALE_DT     BETWEEN ? AND ?
+                       AND C.PAY_DATA_07    LIKE ? || '%'
+                       AND B.JBRCH_ID    LIKE ? || '%'
+                       AND C.PAY_DATA_03     LIKE ? || '%'
+                       AND C.PAY_DATA_04 LIKE ? || '%'
+                     GROUP BY A.SALE_DT, C.PAY_DATA_07, B.JBRCH_ID, C.PAY_TYPE
+        ]]>        
+    </query>
+    
+    <query name="SEL_MASTER2">
+        <![CDATA[   
+                    UNION ALL
+                    SELECT 20 || A.APPR_DT APPR_DT
+                         , A.BCOMP_CD
+                         , A.JBRCH_ID
+                         , 0          POS_CNT
+                         , 0          POS_AMT
+                         , COUNT(1)   VAN_CNT
+                         , SUM(DECODE(A.APPR_FLAG, '1', 1, -1) * A.APPR_AMT) VAN_AMT
+                         , MAX(B.STR_CD) AS STR_CD
+                         , MAX(A.APPR_NO) AS APPR_NO                         
+                      FROM DPS.PD_VANAPPRD A
+                         , DPS.PD_BRANCH B
+                     WHERE A.JBRCH_ID    =    B.JBRCH_ID
+                       AND A.BCOMP_CD    =    B.BCOMP_CD  
+                       AND B.STR_CD      =    ?
+                       AND A.APPR_DT     BETWEEN ? AND ?
+                       AND A.BCOMP_CD    LIKE ? || '%'
+                       AND A.JBRCH_ID    LIKE ? || '%'
+                       AND A.APPR_NO     LIKE ? || '%'
+        ]]>   
+    </query>                                                
+     
+    <query name="SEL_DETAIL">
+        <![CDATA[            
+            SELECT X.POS_ANO
+                 , X.POS_AMT	AS  POS_AMT
+                 , X.RECP_NO	AS  RECP_NO  
+                 , 1			AS  RECP_CNT             
+              FROM (   
+                    SELECT '1'||TO_CHAR(TO_DATE(A.SALE_DT,'YYYYMMDD') ,'YYMMDD')|| A.POS_NO || A.TRAN_NO RECP_NO
+                         , C.PAY_DATA_03  POS_ANO
+                         , DECODE(A.TRAN_FLAG, '0', 1, -1) * C.PAY_VALUE_01 POS_AMT
+                      FROM DPS.PS_TRHEADER A
+                         , DPS.PD_BRANCH B
+                         , DPS.PS_TRPAID C  
+                     WHERE C.PAY_DATA_07    =   B.BCOMP_CD
+                       AND A.STR_CD      =   C.STR_CD   
+                       AND A.SALE_DT     =   C.SALE_DT 
+                       AND A.POS_NO      =   C.POS_NO  
+                       AND A.TRAN_NO     =   C.TRAN_NO 
+                       AND B.STR_CD      =   C.STR_CD
+                       AND PAY_TYPE      IN   ('10','13')
+                       AND C.STR_CD      =   ?
+                       AND C.SALE_DT     =   ? 
+                       AND C.PAY_DATA_03     LIKE   ? ||'%'
+                       AND C.PAY_DATA_07    =   ?
+                       AND B.JBRCH_ID    =   ?
+                       AND C.PAY_DATA_04 LIKE ? || '%'  
+                       AND C.PAY_TYPE    =   ?  
+        ]]>        
+    </query>    
+    
+    <query name="SEL_DETAIL2">
+        <![CDATA[            
+                    UNION ALL
+                    SELECT ''         RECP_NO
+                         , A.APPR_NO  POS_ANO
+                         , 0          POS_AMT
+                         , DECODE(A.APPR_FLAG, '1', 1, -1) * A.APPR_AMT VAN_AMT
+                      FROM DPS.PD_VANAPPRD A
+                         , DPS.PD_BRANCH B
+                     WHERE A.JBRCH_ID    =   B.JBRCH_ID
+                       AND A.BCOMP_CD    =   B.BCOMP_CD 
+                       AND ?             =   B.STR_CD
+                       AND A.APPR_DT     =   ?
+                       AND A.APPR_NO     LIKE   ? ||'%'
+                       AND A.BCOMP_CD    =   ?
+                       AND A.JBRCH_ID    =   ? 
+        ]]>        
+    </query>    
+</service>

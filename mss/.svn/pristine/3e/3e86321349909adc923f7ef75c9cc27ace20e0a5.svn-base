@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif611.mg">
+    <gauce name="H_MASTER">  
+        <column colName="CAL_YM"			colType="TB_STRING"   size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"			colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"      		colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+       	<column colName="VEN_CD"        	colType="TB_STRING"   size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="VEN_NM"      		colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_TYPE"    		colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PAYREC_FLAG"		colType="TB_STRING"   size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="PAYREC_FLAG_NM"	colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_FLAG"        	colType="TB_STRING"   size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="CAL_FLAG_NM"      	colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_AMT"      		colType="TB_DECIMAL"  size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PAY_AMT"       	colType="TB_DECIMAL"  size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FEE_PAY_AMT"       colType="TB_DECIMAL"  size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+    
+    <gauce name="H_DETAIL"> 
+        <column colName="PAY_DT"        	colType="TB_STRING"   size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        	colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"        	colType="TB_STRING"   size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="VEN_NM"      		colType="TB_STRING"   size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_YM"        	colType="TB_STRING"   size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAL_TYPE"    		colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="PAYREC_FLAG"    	colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="CAL_FLAG"    		colType="TB_STRING"   size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SEQ_NO"    		colType="TB_STRING"   size="5"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PAY_AMT"       	colType="TB_DECIMAL"  size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="FEE_PAY_AMT"   	colType="TB_DECIMAL"  size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce> 
+ 
+ <!-- 제휴상품권(쿠폰)조회 -MASTER -->
+    <query name="SEL_JOINCAL">
+        <![CDATA[ 
+        SELECT CAL_YM
+             , STR_CD
+             , DPS.FN_GET_STORE_NAME(STR_CD)               AS STR_NM
+             , VEN_CD
+             , DPS.FN_GET_VENDOR_NAME(VEN_CD)              AS VEN_NM
+             , CAL_TYPE
+             , PAYREC_FLAG
+             , COM.FN_GET_COMM_NAME('D', 'M109', PAYREC_FLAG) AS PAYREC_FLAG_NM
+             , CAL_FLAG
+             , COM.FN_GET_COMM_NAME('D', 'M110', CAL_FLAG) AS CAL_FLAG_NM
+             , CAL_AMT
+             , PAY_AMT
+             , FEE_PAY_AMT
+          FROM MSS.MG_VENCAL
+         WHERE CAL_TYPE = '1'
+           AND CAL_YM = ?
+           AND STR_CD = ?
+           AND VEN_CD LIKE ? || '%'
+      ORDER BY CAL_YM, VEN_CD
+        ]]>
+    </query> 
+ 
+    <!-- 제휴상품권(쿠폰)조회 -DETAIL -->
+    <query name="SEL_JOINPAY">
+        <![CDATA[ 
+		SELECT PAY_DT
+		     , STR_CD
+		     , VEN_CD
+		     , DPS.FN_GET_VENDOR_NAME(VEN_CD)              AS VEN_NM
+		     , CAL_YM
+		     , CAL_TYPE
+		     , PAYREC_FLAG
+		     , CAL_FLAG
+		     , SEQ_NO
+		     , PAY_AMT
+		     , FEE_PAY_AMT
+		  FROM MSS.MG_VENPAY
+		 WHERE CAL_YM = ?
+		   AND STR_CD = ?
+		   AND CAL_TYPE = '1'
+		   AND VEN_CD = ?
+		   AND PAYREC_FLAG = ?
+		   AND CAL_FLAG = ?
+	  ORDER BY SEQ_NO
+        ]]>
+    </query>
+    
+      <!-- JOINPAY(DETAIL) - 신규 -->
+    <query name="INS_JOINPAY">
+        <![CDATA[        
+		INSERT INTO MSS.MG_VENPAY ( CAL_YM
+			                      , PAY_DT
+			                      , STR_CD
+			                      , CAL_TYPE
+			                      , VEN_CD
+			                      , PAYREC_FLAG
+			                      , CAL_FLAG
+			                      , SEQ_NO
+			                      , PAY_AMT
+			                      , FEE_PAY_AMT
+			                      , REG_ID
+			                      , REG_DATE
+			                      , MOD_ID
+			                      , MOD_DATE)
+			               VALUES ( ?
+			                      , ?
+			                      , ?
+			                      , ?
+			                      , ?
+			                      , ?
+			                      , ?
+			                      , (SELECT NVL(MAX(SEQ_NO),0)+1
+			                          FROM MSS.MG_VENPAY 
+			                         WHERE CAL_YM = ?
+			                           AND PAY_DT = ?
+			                           AND STR_CD = ?
+			                           AND CAL_TYPE = ?
+			                           AND VEN_CD = ?
+			                           AND PAYREC_FLAG = ?
+			                           AND CAL_FLAG = ?)
+			                      , ?
+			                      , ?
+			                      , ?
+			                      , SYSDATE
+			                      , ?
+			                      , SYSDATE)
+        ]]> 
+    </query>
+    
+    <!-- JOINPAY(DETAIL) - 수정 -->
+    <query name="UPD_JOINPAY">
+        <![CDATA[        
+	    UPDATE MSS.MG_VENPAY 
+	     SET PAY_AMT = ?
+	       , FEE_PAY_AMT = ?
+	       , MOD_ID = ?
+	       , MOD_DATE = SYSDATE
+	   WHERE CAL_YM = ?
+	     AND PAY_DT = ?
+	     AND STR_CD = ?
+	     AND CAL_TYPE = ?
+	     AND VEN_CD = ?
+	     AND PAYREC_FLAG = ?
+	     AND CAL_FLAG = ?
+	     AND SEQ_NO = ?
+        ]]> 
+    </query>
+    
+      <!-- JOINCAL(MASTER) - 수정&신규 -->
+    <query name="UPD_JOINCAL">
+        <![CDATA[        
+		UPDATE MSS.MG_VENCAL
+		   SET PAY_AMT = ?
+		     , FEE_PAY_AMT  = ?
+		     , FINAL_BOND_AMT = BASIC_BOND_AMT + BOND_AMT - ? - ? - CONT_AMT
+		     , MOD_ID = ?
+		     , MOD_DATE = SYSDATE
+		 WHERE CAL_YM = ?
+		   AND STR_CD = ?
+		   AND CAL_TYPE = ?
+		   AND VEN_CD = ?
+		   AND PAYREC_FLAG = ?
+		   AND CAL_FLAG = ?
+        ]]> 
+    </query>
+    
+ <!-- ======================= 이전 정산 내용 사용하지 않음!!!======================================================================= -->
+    <!-- 제휴상품권(쿠폰)조회 -MASTER -->
+    <query name="SEL_JOINCAL_OLD">
+        <![CDATA[ 
+        SELECT CAL_YM
+             , STR_CD
+             , VEN_CD
+             , PAYREC_FLAG
+             , CAL_FLAG
+             , BASIC_BOND_AMT
+             , BOND_AMT
+             , MONTH_PAY_AMT
+             , PAY_AMT
+             , FEE_PAY_AMT
+             , FINAL_BOND_AMT
+        
+          FROM MSS.MG_VENCAL
+         WHERE CAL_TYPE = '1'
+           AND STR_CD = ?
+           AND CAL_YM = ?
+           AND VEN_CD LIKE ? || '%'
+      ORDER BY CAL_YM, VEN_CD 
+        ]]>
+    </query> 
+    
+    <!-- 제휴상품권(쿠폰)조회 -DETAIL -->
+    <query name="SEL_JOINPAY_OLD">
+        <![CDATA[ 
+            SELECT JOI.PAY_DT
+                 , JOI.STR_CD
+                 , LPAD(JOI.PAY_SEQ_NO,3,'0') AS PAY_SEQ_NO
+                 , JOI.VEN_CD
+                 , VEN.VEN_NAME
+                 , JOI.PAY_AMT
+                 , JOI.FEE_PAY_AMT
+              FROM MSS.MG_JOINPAY JOI, DPS.PC_VENMST VEN
+             WHERE JOI.VEN_CD = VEN.VEN_CD
+               AND JOI.PAY_FLAG = '2'
+               AND JOI.STR_CD = ?
+               AND JOI.PAY_DT BETWEEN ? AND ?
+               AND JOI.VEN_CD LIKE ? || '%'
+        ]]>
+    </query>
+    
+    <!-- 입금순번 조회 -->
+    <query name="SEL_SEQNO">
+        <![CDATA[        
+            SELECT LPAD(NVL(MAX(PAY_SEQ_NO), 0) + 1,3,'0') PAY_SEQ_NO
+              FROM MSS.MG_JOINPAY
+             WHERE STR_CD   = ?
+               AND PAY_DT   = ?  
+        ]]> 
+    </query>
+    
+     <!-- JOINPAY(DETAIL) - 신규 -->
+    <query name="INS_JOINPAY_OLD">
+        <![CDATA[        
+            INSERT INTO MSS.MG_JOINPAY
+			          ( PAY_DT
+			          , STR_CD
+			          , PAY_SEQ_NO
+			          , VEN_CD
+			          , PAY_AMT
+			          , FEE_PAY_AMT
+			          , PAY_FLAG
+			          , REG_ID
+			          , REG_DATE
+			          , MOD_ID
+			          , MOD_DATE )
+			   VALUES ( ?
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , '2'
+			          , ?
+			          , SYSDATE
+			          , ?
+			          , SYSDATE )
+        ]]> 
+    </query>
+    
+    <!-- JOINPAY(DETAIL) - 수정 -->
+    <query name="UPD_JOINPAY_OLD">
+        <![CDATA[        
+            UPDATE MSS.MG_JOINPAY
+		       SET PAY_AMT     = ?
+		         , FEE_PAY_AMT = ?
+		         , MOD_ID      = ?
+		         , MOD_DATE    = SYSDATE
+		     WHERE STR_CD      = ?
+		       AND PAY_DT      = ?
+		       AND PAY_SEQ_NO  = ?
+		       AND VEN_CD      = ?
+        ]]> 
+    </query>
+    
+    <!-- JOINCAL(MASTER) - 수정&신규 -->
+    <query name="UPD_JOINCAL_OLD">
+        <![CDATA[        
+            MERGE INTO MSS.MG_JOINCAL MST
+			     USING (SELECT ?              AS STR_CD
+			                 , ?              AS PAY_YMD
+			                 , SUBSTR(?, 1,6) AS PAY_DT
+			                 , ?              AS VEN_CD
+			                 , ?              AS PAY_AMT
+			                 , ?              AS FEE_PAY_AMT
+			                 , ?              AS SUM_PAY_AMT
+			                 , ?              AS SUM_FEE_AMT
+			                 , ?              AS USERID
+			              FROM DUAL) DTL
+			        ON (    MST.STR_CD = DTL.STR_CD
+			            AND MST.CAL_YM = DTL.PAY_DT
+			            AND MST.VEN_CD = DTL.VEN_CD)
+			WHEN MATCHED THEN
+			     UPDATE SET MST.PAY_AMT     = MST.PAY_AMT + DTL.PAY_AMT
+			              , MST.FEE_PAY_AMT = MST.FEE_PAY_AMT + DTL.FEE_PAY_AMT
+			              , MST.MOD_ID      = DTL.USERID
+			              , MST.MOD_DATE    = SYSDATE
+			WHEN NOT MATCHED THEN
+			    INSERT ( MST.CAL_YM
+			           , MST.STR_CD
+		               , MST.VEN_CD
+		               , MST.CAL_FLAG
+		               , MST.OUT_PAY_AMT
+		               , MST.PAY_FEE_AMT
+		               , MST.CPN_PAY_AMT
+		               , MST.CPN_PAYFEE_AMT
+		               , MST.CPN_PAYCAL_AMT
+		               , MST.CPN_REC_AMT
+		               , MST.CPN_RECFEE_AMT
+		               , MST.CPN_RECCAL_AMT
+		               , MST.GIFT_PAYCAL_AMT
+		               , MST.CAL_QTY
+		               , MST.CAL_AMT
+		               , MST.PAY_AMT
+		               , MST.FEE_PAY_AMT
+		               , MST.PREV_AMT
+		               , MST.CONF_FLAG
+		               , MST.REG_ID
+		               , MST.REG_DATE
+		               , MST.MOD_ID
+		               , MST.MOD_DATE )
+		        VALUES ( DTL.PAY_DT
+		               , DTL.STR_CD
+		               , DTL.VEN_CD
+		               , '3'
+		               , 0
+		               , 0
+		               , 0
+		               , 0
+		               , 0
+		               , 0
+		               , 0
+		               , 0
+		               , 0
+		               , 0
+		               , 0
+		               , DTL.PAY_AMT
+		               , DTL.FEE_PAY_AMT
+		               , NVL((SELECT PREV_AMT+CAL_AMT-PAY_AMT-FEE_PAY_AMT AS AMT 
+							    FROM MSS.MG_JOINCAL
+								WHERE CAL_FLAG = '3'
+								  AND CAL_YM = ( SELECT TO_CHAR(ADD_MONTHS(DTL.PAY_YMD, -1),'YYYYMM')
+								                   FROM DUAL)
+								  AND STR_CD = DTL.STR_CD
+								  AND VEN_CD = DTL.VEN_CD),0)
+		               , 'N'
+		               , DTL.USERID
+		               , SYSDATE
+		               , DTL.USERID
+		               , SYSDATE)
+        ]]> 
+    </query>
+ 
+<!-- ======================= 이전 정산 내용 사용하지 않음!!!======================================================================= -->
+</service>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.21
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  회원탈퇴취소 등록
+ -->
+<service name="/dctm110.dm">
+    <gauce name="H_MASTER"> 
+        <column colName="SAVE_CHK"       colType="TB_STRING"  size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="FLAG"           colType="TB_STRING"  size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_ID"        colType="TB_STRING"  size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CUST_NAME"      colType="TB_STRING"  size="40"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="SS_NO"          colType="TB_STRING"  size="32"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="CARD_NO"        colType="TB_STRING"  size="64"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SCED_REQ_DT"    colType="TB_STRING"  size="8"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REASON_CD"      colType="TB_STRING"  size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="REASON_NM"      colType="TB_STRING"  size="30"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SCED_TAKE_FLAG" colType="TB_STRING"  size="1"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="SCED_TAKE_NM"   colType="TB_STRING"  size="30"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+        <column colName="POINT"          colType="TB_DECIMAL" size="9"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />        
+        <column colName="REMARK"   colType="TB_STRING"  size="200"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />    
+        <column colName="SCED_REQ_TYPE"     colType="TB_STRING"  size="2"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" /> 
+        <column colName="SCED_REQ_TYPE_NM"  colType="TB_STRING"  size="30"   dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" /> 
+        <column colName="REMARK_SCED_REQ_TYPE"   colType="TB_STRING"  size="200"  dec="0"  keyType="TB_NORMAL"  roundMode="ROUND" />
+     </gauce>   
+
+    <!-- 회원탈퇴등록 리스트 조회 -->
+    <query name="SEL_MASTER">   
+        <![CDATA[    
+            SELECT 'F' AS SAVE_CHK
+                 , 'Y' FLAG
+                 , A.CUST_ID
+                 , A.CUST_NAME
+                 , DCS.SC_Crypto_FUN('DEC', A.SS_NO)
+                 , (SELECT MAX(DCS.SC_Crypto_FUN('DEC', CARD_NO)) FROM DCS.DM_CARD WHERE CUST_ID = A.CUST_ID) AS CARD_NO
+                 , A.SCED_REQ_DT
+                 , B.REASON_CD
+                 , COM.FN_GET_COMM_NAME('D', 'D019', B.REASON_CD) REASON_NM
+                 , A.SCED_TAKE_FLAG
+                 , COM.FN_GET_COMM_NAME('D', 'D018', A.SCED_TAKE_FLAG) SCED_TAKE_NM
+                 , B.POINT
+                 , B.REMARK                 
+                 , B.SCED_REQ_TYPE 
+                 , COM.FN_GET_COMM_NAME('D', 'D117', B.SCED_REQ_TYPE) SCED_REQ_TYPE_NM
+                 , B.REMARK_SCED_REQ_TYPE
+              FROM DCS.DM_CUSTOMER A
+                 , DCS.DM_SCED_HIST B
+                 , (SELECT CUST_ID, MAX(REG_DATE) REG_DATE
+                      FROM DCS.DM_SCED_HIST
+                     GROUP BY CUST_ID
+                   ) C  
+             WHERE A.CUST_ID        = B.CUST_ID
+               AND B.CUST_ID        = C.CUST_ID
+               AND B.REG_DATE       = C.REG_DATE 
+               AND A.CUST_STAT_FLAG = '1'
+               AND A.SCED_REQ_DT    IS NOT NULL
+               AND A.SCED_PROC_DT   IS NULL
+               AND A.CUST_ID IN ( SELECT M.CUST_ID 
+                                    FROM DCS.DM_CARD M
+                                       , DCS.DM_CUSTOMER N  
+                                   WHERE M.CUST_ID = N.CUST_ID
+        ]]>        
+    </query> 
+    
+    <query name="SEL_MASTER_CARD_NO">   
+        <![CDATA[
+                                    AND M.CARD_NO    = DCS.F_GET_POCARD_NO(DCS.SC_Crypto_FUN('ENC', ?))
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_CUST_ID">   
+        <![CDATA[
+                                    AND N.CUST_ID    = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_SS_NO">   
+        <![CDATA[
+                                    AND N.SS_NO      = DCS.SC_Crypto_FUN('ENC', ?)
+        ]]>        
+    </query>  
+    <query name="SEL_MASTER_END">   
+        <![CDATA[
+                               )
+        ]]>        
+    </query>     
+    
+   <!-- 회원탈퇴등록  -->
+    <query name="UPD_CUSTOMER">   
+        <![CDATA[       
+            UPDATE DCS.DM_CUSTOMER 
+               SET CUST_STAT_FLAG = '0'
+                 , SCED_REQ_DT    = NULL
+                 , SCED_TAKE_FLAG = NULL
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE CUST_ID = ?
+        ]]>        
+    </query>     
+    
+    <!-- 회원탈퇴등록  -->
+    <query name="UPD_CARD">   
+        <![CDATA[       
+            UPDATE DCS.DM_CARD 
+               SET CARD_STAT_CD   = '0'
+                 , SCED_REQ_DT    = NULL
+                 , MOD_DATE       = SYSDATE
+                 , MOD_ID         = ?
+             WHERE CUST_ID = ?
+               AND CARD_STAT_CD   = '2'
+        ]]>        
+    </query>     
+       
+    <!-- 회원탈퇴등록 -->
+    <query name="INS_SCEDHIST">   
+        <![CDATA[       
+            INSERT INTO DCS.DM_SCED_HIST (
+                                         CUST_ID
+                                       , REG_DATE
+                                       , PROC_FLAG
+                                       , SCED_REQ_DT
+                                       , REASON_CD
+                                       , POINT
+                                       , REG_ID
+                                       , SCED_REQ_TYPE
+                                         )
+                                  VALUES (
+                                         ?
+                                       , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+                                       , 'C'
+                                       , TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , ?
+                                         ) 
+        ]]>        
+    </query>   
+</service>

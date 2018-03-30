@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.04.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  임대협력사명판을 관리한다.
+ -->
+<service name="/pcod804.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="VEN_CD"             colType="TB_STRING"   size="6"    dec="0"  keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="VEN_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NAME"          colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NO"            colType="TB_STRING"   size="10"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADDR"               colType="TB_STRING"   size="120"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE1_NO"          colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE2_NO"          colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PHONE3_NO"          colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="EDIT_YN"            colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />     
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 임대협력사명판 마스터 조회 쿼리  -->
+    <query name="SEL_POSSTMPMST">
+        <![CDATA[
+            SELECT VEN_CD
+                 , DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VEN_NAME
+                 , COMP_NAME
+                 , COMP_NO
+                 , ADDR
+                 , REP_NAME
+                 , PHONE1_NO
+                 , PHONE2_NO
+                 , PHONE3_NO
+                 , USE_YN
+                 , CASE WHEN TO_CHAR(SYSDATE,'YYYYMMDD') = TO_CHAR(REG_DATE,'YYYYMMDD')
+                        THEN 'Y'
+                        ELSE 'N'
+                   END            AS EDIT_YN
+              FROM DPS.PC_POSSTMPMST 
+             WHERE 1 = 1
+        ]]>
+    </query>
+    <query name="SEL_POSSTMPMST_WHERE_COMP_NO">
+        <![CDATA[
+               AND COMP_NO    LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_POSSTMPMST_WHERE_VEN_CD">
+        <![CDATA[
+               AND VEN_CD    = ?
+        ]]>
+    </query>
+    <query name="SEL_POSSTMPMST_WHERE_COMP_NAME">
+        <![CDATA[
+               AND COMP_NAME  LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_POSSTMPMST_WHERE_USE_YN">
+        <![CDATA[
+               AND USE_YN     = ?
+        ]]>
+    </query>
+    <query name="SEL_POSSTMPMST_ORDER">
+        <![CDATA[
+             ORDER BY VEN_CD
+        ]]>
+    </query>
+    <!-- 임대협력사명판 중복검사 -->
+    <query name="SEL_POSSTMPMST_VEN_CD_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_POSSTMPMST
+             WHERE VEN_CD  = ?
+        ]]>
+    </query>
+    <!-- 임대협력사명판 삭제가능여부 조회-->
+    <query name="SEL_POSSTMPMST_REG_DATE">
+        <![CDATA[
+            SELECT CASE WHEN TO_CHAR(SYSDATE,'YYYYMMDD') = TO_CHAR(REG_DATE,'YYYYMMDD')
+                        THEN 'Y'
+                        ELSE 'N'
+                   END            AS EDIT_YN
+              FROM DPS.PC_POSSTMPMST
+             WHERE VEN_CD  = ?
+        ]]>
+    </query>
+    <!-- 임대협력사명판 마스터 등록 -->
+    <query name="INS_POSSTMPMST">
+        <![CDATA[
+            INSERT INTO DPS.PC_POSSTMPMST(VEN_CD
+                                        , REP_NAME
+                                        , COMP_NO
+                                        , COMP_NAME
+                                        , ADDR
+                                        , PHONE1_NO
+                                        , PHONE2_NO
+                                        , PHONE3_NO
+                                        , USE_YN
+                                        , REG_DATE
+                                        , REG_ID
+                                        , MOD_DATE
+                                        , MOD_ID
+                                         )
+                                  VALUES(?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , SYSDATE
+                                       , ?
+                                       , SYSDATE
+                                       , ?
+                                     )
+        ]]>   
+    </query>
+    <!-- 임대협력사명판 마스터 수정 -->
+    <query name="UPD_POSSTMPMST">
+        <![CDATA[
+            UPDATE DPS.PC_POSSTMPMST
+               SET REP_NAME      = ?          
+                 , COMP_NO       = ?          
+                 , COMP_NAME     = ?          
+                 , ADDR          = ?          
+                 , PHONE1_NO     = ?          
+                 , PHONE2_NO     = ?          
+                 , PHONE3_NO     = ?          
+                 , USE_YN        = ?
+                 , MOD_DATE      = SYSDATE
+                 , MOD_ID        = ?
+             WHERE VEN_CD        = ?
+        ]]>   
+    </query>
+    <!-- 임대협력사명판 마스터 삭제 -->
+    <query name="DEL_POSSTMPMST">
+        <![CDATA[
+            DELETE 
+              FROM DPS.PC_POSSTMPMST
+             WHERE VEN_CD        = ?
+        ]]>   
+    </query>
+</service>

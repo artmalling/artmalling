@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  점별품번을 조회한다.
+ -->
+<service name="/pcod204.pc">
+
+  <gauce name="H_SEL_MASTER">        
+        <column colName="STR_CD"             colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"           colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"          colType="TB_STRING" size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="PUMBUN_NAME"        colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="VEN_CD"             colType="TB_STRING" size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"           colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="BIZ_TYPE"           colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAX_FLAG"           colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_FLAG"        colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_TYPE"        colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_FLAG"           colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_TYPE"           colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="POS_CAL_FLAG"       colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHAR_BUYER_CD"      colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHAR_BUYER_NAME"    colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_ORG_CD"         colType="TB_STRING" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="BUY_ORG_NAME"       colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CHAR_SM_CD"         colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHAR_SM_NAME"       colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_ORG_CD"        colType="TB_STRING" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_ORG_NAME"      colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SALE_BUY_FLAG"      colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_YN"             colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COST_CAL_WAY"       colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="ADV_ORD_YN"         colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="LOW_MG_RATE"        colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLOR_CD"            colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="EDI_YN"             colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVALU_YN"           colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AREA_SIZE"          colType="TB_DECIMAL" size="7"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="APP_S_DT"           colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"           colType="TB_STRING" size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"             colType="TB_STRING" size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_STRPBN">
+        <![CDATA[
+            SELECT STR.STR_CD
+                 , STR.STR_NAME
+                 , STP.PUMBUN_CD      
+                 , STP.PUMBUN_NAME   
+                 , STP.VEN_CD  
+                 , VEN.VEN_NAME
+                 , STP.BIZ_TYPE
+                 , PBN.TAX_FLAG
+                 , PBN.PUMBUN_FLAG
+                 , STP.PUMBUN_TYPE        
+                 , STP.SKU_FLAG            
+                 , STP.SKU_TYPE 
+                 , STP.POS_CAL_FLAG   
+                 , STP.CHAR_BUYER_CD   
+                 , BUY.BUYER_NAME    AS CHAR_BUYER_NAME
+                 , STP.BUY_ORG_CD       
+                 , ORG.ORG_NAME      AS BUY_ORG_NAME  
+                 , STP.CHAR_SM_CD     
+                 , BUS.BUYER_NAME    AS CHAR_SM_NAME
+                 , STP.SALE_ORG_CD     
+                 , ORB.ORG_NAME      AS SALE_ORG_NAME   
+                 , STP.SALE_BUY_FLAG  
+                 , STP.CHK_YN          
+                 , STP.COST_CAL_WAY                  
+                 , STP.ADV_ORD_YN
+                 , STP.LOW_MG_RATE                 
+                 , STP.FLOR_CD
+                 , STP.EDI_YN         
+                 , STP.EVALU_YN      
+                 , STP.AREA_SIZE
+                 , STP.APP_S_DT
+                 , STP.APP_E_DT       
+                 , STP.USE_YN                               
+              FROM DPS.PC_STRPBN STP
+                 , DPS.PC_STRMST STR
+                 , DPS.PC_VENMST VEN
+                 , DPS.PC_PBNMST PBN
+                 , DPS.PC_BUYERMST BUY
+                 , DPS.PC_ORGMST ORG
+                 , DPS.PC_BUYERMST BUS
+                 , DPS.PC_ORGMST ORB
+             WHERE STP.STR_CD = STR.STR_CD
+               AND STP.VEN_CD = VEN.VEN_CD
+               AND STP.PUMBUN_CD = PBN.PUMBUN_CD
+               AND STP.CHAR_BUYER_CD = BUY.BUYER_CD(+)
+               AND STP.BUY_ORG_CD = ORG.ORG_CD(+)
+               AND STP.CHAR_SM_CD = BUS.BUYER_CD(+)
+               AND STP.SALE_ORG_CD = ORB.ORG_CD(+) 
+        ]]>           
+    </query>  
+    <query name="SEL_STRPBN_WHERE_STR_CD">
+        <![CDATA[
+               AND STP.STR_CD           = ? 
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_BIZ_TYPE">
+        <![CDATA[
+               AND STP.BIZ_TYPE         = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_SKU_FLAG">
+        <![CDATA[
+               AND STP.SKU_FLAG         = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_PUMBUN_TYPE">
+        <![CDATA[
+               AND STP.PUMBUN_TYPE      = ?
+        ]]> 
+    </query>
+    <query name="SEL_STRPBN_WHERE_PUMBUN_FLAG">
+        <![CDATA[
+               AND PBN.PUMBUN_FLAG      = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_SKU_TYPE">
+        <![CDATA[
+               AND STP.SKU_TYPE         = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_USE_YN">
+        <![CDATA[
+               AND STP.USE_YN           = ?
+        ]]>
+    </query>
+    <query name="SEL_STRPBN_WHERE_VEN_CD">
+        <![CDATA[
+               AND STP.VEN_CD       LIKE  ?||'%'
+        ]]>
+    </query>  
+    <query name="SEL_STRPBN_WHERE_LIKE_VEN_NAME">
+        <![CDATA[
+               AND VEN.VEN_NAME     LIKE  '%'||?||'%'
+        ]]>
+    </query> 
+    <query name="SEL_STRPBN_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND STP.PUMBUN_CD    LIKE  ?||'%'
+        ]]>
+    </query> 
+    <query name="SEL_STRPBN_WHERE_LIKE_PUMBUN_NAME">
+        <![CDATA[
+               AND STP.PUMBUN_NAME  LIKE  '%'||?||'%'
+        ]]>
+    </query> 
+    <query name="SEL_STRPBN_ORDER">
+        <![CDATA[
+            ORDER BY STP.STR_CD
+                   , STP.PUMBUN_CD
+        ]]>
+    </query>
+    
+</service>

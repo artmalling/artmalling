@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작  성  자  : 김영진
+ * 회  사  명  : 
+ * 작  성  일  : 2010.06.29
+ * 변  경  일  : 
+ * 변경내용 : 
+ * 개          요 : VIP 방문 등록
+ -->
+<service name="/dmbo711.do">
+
+    <gauce name="H_MASTER">
+        <column colName="BRCH_ID"         colType="TB_STRING"   size="10"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="BRCH_NAME"       colType="TB_STRING"   size="40"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="IN_DATE"         colType="TB_STRING"   size="8"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="IN_TIME"         colType="TB_STRING"   size="6"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="MEMBER_QTY"      colType="TB_STRING"   size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CUST_MEMO"       colType="TB_STRING"   size="400"   dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="VISIT_IN_DATE"   colType="TB_STRING"   size="14"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CUST_ID"         colType="TB_STRING"   size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    
+    <gauce name="H_DETAIL">
+        <column colName="BRCH_ID"         colType="TB_STRING"   size="10"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="BRCH_NAME"       colType="TB_STRING"   size="50"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="IN_DATE"         colType="TB_STRING"   size="14"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="MEMBER_QTY"      colType="TB_STRING"   size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CUST_MEMO"       colType="TB_STRING"   size="400"   dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CUST_ID"         colType="TB_STRING"   size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    
+    <gauce name="H_GRADE">
+        <column colName="CRM_GRADE"       colType="TB_STRING"   size="33"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="VIP_REASON"      colType="TB_STRING"   size="100"   dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MASTER">
+    <![CDATA[
+        SELECT BRCH_ID
+             , BRCH_ID || DCS.F_GET_BRCH_NAME(BRCH_ID) BRCH_NAME
+             , TO_CHAR(TO_DATE(VISIT_IN_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDD') IN_DATE
+             , TO_CHAR(TO_DATE(VISIT_IN_DATE, 'YYYYMMDDHH24MISS'), 'HH24MISS') IN_TIME
+             , MEMBER_QTY
+             , CUST_MEMO
+             , VISIT_IN_DATE
+             , CUST_ID
+          FROM DCS.DO_VIP_VISIT
+         WHERE CUST_ID IN (
+                             SELECT UNIQUE A.CUST_ID 
+                               FROM DCS.DM_CUSTOMER A
+                                  , DCS.DM_CARD B
+                              WHERE A.CUST_ID  =  B.CUST_ID
+                                AND A.CUST_STAT_FLAG = '0'
+                                AND A.CUST_ID  LIKE ? || '%'
+                                AND A.SS_NO    LIKE DCS.SC_Crypto_FUN('ENC', ?) || '%'
+                                AND  B.CARD_NO  LIKE DCS.SC_Crypto_FUN('ENC', ?) || '%'
+                           )      
+           AND BRCH_ID = ?
+         ORDER BY VISIT_IN_DATE DESC
+     ]]>
+    </query>
+
+    <query name="SEL_DETAIL">
+    <![CDATA[
+        SELECT BRCH_ID
+             , DCS.F_GET_BRCH_NAME(BRCH_ID) BRCH_NAME
+             , TO_CHAR(TO_DATE(VISIT_IN_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS') IN_DATE
+             , MEMBER_QTY
+             , CUST_MEMO
+             , CUST_ID
+          FROM DCS.DO_VIP_VISIT
+         WHERE CUST_ID       = ?
+           AND BRCH_ID       = ?
+           AND VISIT_IN_DATE = ?
+     ]]>
+    </query>
+    
+    <query name="SEL_GRADE">
+    <![CDATA[
+        SELECT CRM_GRADE || ' ' || CRM_GRADE_VAL CRM_GRADE 
+             , CASE WHEN A.GRADE_STND  IS NULL 
+                    THEN COM.FN_GET_COMM_NAME('D', 'D068', B.VIP_FLAG) 
+                    ELSE A.GRADE_STND                       
+               END VIP_REASON
+          FROM DCS.DO_CUST_GRADE A
+             , DCS.DO_VIP_REASON B
+         WHERE A.CUST_ID  = B.CUST_ID(+)
+           AND A.CUST_ID  IN (
+                             SELECT UNIQUE A.CUST_ID 
+                               FROM DCS.DM_CUSTOMER A
+                                  , DCS.DM_CARD B
+                              WHERE A.CUST_ID  =  B.CUST_ID
+                                AND A.CUST_STAT_FLAG = '0'
+                                AND A.CUST_ID  LIKE ? || '%'
+                                AND A.SS_NO    LIKE DCS.SC_Crypto_FUN('ENC', ?) || '%'
+                                AND B.CARD_NO  LIKE DCS.SC_Crypto_FUN('ENC', ?) || '%'
+                           )
+           AND A.BRCH_ID  = ?
+           AND A.APP_YEAR = TO_CHAR(SYSDATE, 'YYYY')
+     ]]>
+    </query>
+
+    <!-- 메모등록  -->
+    <query name="INS_VIP_VISIT">        
+        <![CDATA[
+            INSERT INTO DCS.DO_VIP_VISIT (
+                                          BRCH_ID
+                                        , CUST_ID
+                                        , VISIT_IN_DATE
+                                        , MEMBER_QTY
+                                        , CUST_MEMO
+                                        , REG_DATE
+                                        , REG_ID
+                                        , MOD_DATE
+                                        , MOD_ID
+                                         ) 
+                                  VALUES (
+                                          ?
+                                        , ?
+                                        , TO_CHAR(SYSDATE,'YYYYMMDDhh24miss')
+                                        , ?
+                                        , ?
+                                        , SYSDATE  
+                                        , ?
+                                        , SYSDATE
+                                        , ?               
+                                        )   
+         ]]>   
+    </query>  
+    
+    <!-- 메모 수정 -->
+    <query name="UPD_VIP_VISIT">
+        <![CDATA[
+            UPDATE DCS.DO_VIP_VISIT
+               SET CUST_MEMO     = ?  
+                 , MEMBER_QTY    = ?
+                 , MOD_DATE      = SYSDATE
+                 , MOD_ID        = ?
+             WHERE CUST_ID       = ?
+               AND VISIT_IN_DATE = ?  
+        ]]>
+    </query> 
+    
+    <!-- 회원등급 조회 -->
+    <query name="SEL_CUST_GRADE">
+        <![CDATA[    
+            SELECT DECODE(CUST_GRADE, (
+                                        SELECT MAX (COMM_CODE)
+                                          FROM COM.TC_COMMCODE
+                                         WHERE SYS_PART  = 'D'
+                                           AND COMM_PART = 'D011'
+                                           AND COMM_PART <> '0000'
+                                      ),'Y', 'N') CUST_GRADE 
+              FROM DCS.DO_CUST_GRADE   
+             WHERE BRCH_ID  = ?
+               AND APP_YEAR = TO_CHAR(SYSDATE,'YYYY')
+               AND CUST_ID  IN (
+                                 SELECT UNIQUE A.CUST_ID 
+                                   FROM DCS.DM_CUSTOMER A
+                                      , DCS.DM_CARD B
+                                  WHERE A.CUST_ID  =  B.CUST_ID
+                                    AND A.CUST_STAT_FLAG = '0'
+                                    AND A.CUST_ID  LIKE ? || '%'
+                                    AND A.SS_NO    LIKE DCS.SC_Crypto_FUN('ENC', ?) || '%'
+                                    AND B.CARD_NO  LIKE DCS.SC_Crypto_FUN('ENC', ?) || '%'
+                               )
+         ]]>
+    </query>  
+</service>

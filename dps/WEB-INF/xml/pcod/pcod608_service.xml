@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.04.19
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  긴급매가를 조회한다.
+ -->
+<service name="/pcod608.pc">
+    <!-- 긴급매가가격 그리드 -->
+    <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"                colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"                colType="TB_STRING"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"              colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RECP_NAME"             colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STYLE_CD"              colType="TB_STRING"  size="54" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COLOR_NAME"            colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SIZE_NAME"             colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"              colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"                colType="TB_INT"     size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"              colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"              colType="TB_STRING"  size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"            colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMG_COST_PRC"          colType="TB_INT"     size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMG_SALE_PRC"          colType="TB_INT"     size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EMG_MG_RATE"           colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_YN"               colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 긴급매가 마스터 조회 -->
+    <query name="SEL_MASTER">    
+        <![CDATA[
+            SELECT SSM.STR_CD
+                 , SKU.SKU_CD
+                 , SKU.SKU_NAME
+                 , SKU.RECP_NAME
+                 , SKU.STYLE_CD
+                 , COM.FN_GET_COMM_NAME('D','P062',SKU.COLOR_CD) AS COLOR_NM
+                 , COM.FN_GET_COMM_NAME('D','P026',SKU.SIZE_CD)  AS SIZE_NM
+                 , EMG.APP_S_DT
+                 , EMG.SEQ_NO
+                 , EMG.APP_E_DT
+                 , EMG.EVENT_CD
+                 , EVT.EVENT_NAME
+                 , EMG.EMG_COST_PRC
+                 , EMG.EMG_SALE_PRC
+                 , EMG.EMG_MG_RATE
+                 , CASE WHEN EMG.CONF_FLAG = '1' THEN 'N'
+                        ELSE 'Y'
+                   END                AS CONF_YN
+              FROM DPS.PC_SKUMST    SKU
+                 , DPS.PC_STRSKUMST SSM
+                 , DPS.PC_EMGPRICE  EMG
+                 , DPS.PC_EVTMST    EVT
+        ]]>
+    </query>
+    <query name="SEL_MASTER_STYLE">
+        <![CDATA[        
+               , (SELECT STYLE_CD  , STYLE_NAME , BRAND_CD , SUB_BRD_CD , PLAN_YEAR
+                       , SEASON_CD , ITEM_CD    , MNG_CD1  , MNG_CD2    , MNG_CD3
+                       , MNG_CD4   , MNG_CD5
+                    FROM DPS.PC_STYLEMST
+                   WHERE PUMBUN_CD = ?
+                 ) STY
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE">
+        <![CDATA[
+             WHERE SKU.SKU_CD    =  SSM.SKU_CD
+               AND SKU.SKU_CD    =  EMG.SKU_CD
+               AND SSM.STR_CD    =  EMG.STR_CD
+               AND EMG.EVENT_CD  =  EVT.EVENT_CD
+               AND SSM.STR_CD    =  ?
+               AND SKU.PUMBUN_CD =  ?   
+               AND EMG.APP_E_DT  >= ? 
+               AND EMG.APP_S_DT  <= ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_STYLE">
+        <![CDATA[
+        
+               AND SKU.STYLE_CD  = STY.STYLE_CD
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_CONF_N">
+        <![CDATA[
+               AND EMG.CONF_FLAG =  '1'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_CONF_Y">
+        <![CDATA[
+               AND EMG.CONF_FLAG <> '1'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_PUMMOK_CD">
+        <![CDATA[
+               AND SKU.PUMMOK_CD   = ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_SKU_CD">
+        <![CDATA[
+               AND SKU.SKU_CD      LIKE ?||'%'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_SKU_NAME">
+        <![CDATA[
+               AND SKU.SKU_NAME    LIKE '%'||?||'%'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_EVENT_CD">
+        <![CDATA[
+               AND EVT.EVENT_CD    LIKE ?||'%'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_EVENT_NAME">
+        <![CDATA[
+               AND EVT.EVENT_NAME  LIKE '%'||?||'%'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_STYLE_CD">
+        <![CDATA[
+               AND STY.STYLE_CD    LIKE ?||'%'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_STYLE_NAME">
+        <![CDATA[
+               AND STY.STYLE_NAME  LIKE '%'||?||'%'
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_BRAND_CD">
+        <![CDATA[
+               AND STY.BRAND_CD    = ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_SUB_BRD_CD">
+        <![CDATA[
+               AND STY.SUB_BRD_CD  = ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_PLAN_YEAR_CD">
+        <![CDATA[
+               AND STY.PLAN_YEAR   = ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_SEASON_CD">
+        <![CDATA[
+               AND STY.SEASON_CD   = ?
+        ]]>     
+    </query>
+    <query name="SEL_MASTER_WHERE_ITEM_CD">
+        <![CDATA[
+               AND STY.ITEM_CD     = ?
+        ]]>     
+    </query>
+    <query name="SEL_MASTER_WHERE_MNG_CD1">
+        <![CDATA[
+               AND STY.MNG_CD1     = ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_MNG_CD2">
+        <![CDATA[
+               AND STY.MNG_CD2     = ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_MNG_CD3">
+        <![CDATA[
+               AND STY.MNG_CD3     = ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_MNG_CD4">
+        <![CDATA[
+               AND STY.MNG_CD4     = ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_WHERE_MNG_CD5">
+        <![CDATA[
+               AND STY.MNG_CD5     = ?
+        ]]>    
+    </query>
+    <query name="SEL_MASTER_STYLE_ORDER">
+        <![CDATA[
+             ORDER BY STY.STYLE_CD, SKU.COLOR_CD, SKU.SIZE_CD, EMG.APP_S_DT, EMG.SEQ_NO
+        ]]>
+    </query>
+    <query name="SEL_MASTER_ORDER">
+        <![CDATA[
+             ORDER BY SKU.SKU_CD, EMG.APP_S_DT, EMG.SEQ_NO
+        ]]>
+    </query>
+</service>

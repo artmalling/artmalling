@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.01.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  리콜행사 대상회원 내역관리
+ -->
+<service name="/mcae109.mc">
+
+    <!-- 리콜행사 대상회원 마스터 내역 -->
+    <gauce name="H_SEL_PRMMENTY_MST">
+        <column colName="STR_CD"		colType="TB_STRING"  size="2"  dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"		colType="TB_STRING"  size="40" dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"		colType="TB_STRING"  size="11" dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NM"		colType="TB_STRING"  size="40" dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"	colType="TB_STRING"  size="8"  dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"	colType="TB_STRING"  size="8"  dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPL_NM"       colType="TB_STRING"  size="3"  dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPL_FLAG"     colType="TB_STRING"  size="1"  dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRG_CNT"       colType="TB_DECIMAL" size="7"  dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 리콜행사 대상회원 디테일 내역 -->
+    <gauce name="H_SEL_PRMMENTY_DTL">
+		<column colName="CARD_CUST_ID"	colType="TB_STRING"  size="64" dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"		colType="TB_STRING"  size="40" dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"		colType="TB_STRING"  size="9"  dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />   
+        <column colName="ERR_YN"		colType="TB_STRING"  size="2"  dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ERR_MSG"		colType="TB_STRING"  size="200" dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />           
+    </gauce>
+	
+	<!-- 회원ID 정합성 체크 -->
+	<gauce name="H_SEL_CARD_NO">
+        <column colName="CUST_NAME"		colType="TB_STRING"  size="40" dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_ID"		colType="TB_STRING"  size="9"  dec="0"	keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ERR_YN"		colType="TB_STRING"  size="2"  dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ERR_MSG"		colType="TB_STRING"  size="200" dec="0"	keyType="TB_NORMAL" roundMode="ROUND" />           
+    </gauce>    
+
+    <!-- 리콜행사 대상회원 마스터 내역조회 Query  -->
+    <query name="SEL_PRMMENTY_MST">
+        <![CDATA[   
+			SELECT 
+			       STR_CD
+			     , STR_NM
+			     , EVENT_CD
+			     , EVENT_NM
+			     , EVENT_S_DT
+			     , EVENT_E_DT
+			     --, CASE WHEN CNT > 0 THEN '완료' ELSE '미완료' END AS CMPL_NM
+			     --, CASE WHEN CNT > 0 THEN 'Y' ELSE 'N' END AS CMPL_FLAG
+			     , CASE WHEN EVENT_E_DT < TO_CHAR(SYSDATE,'YYYYMMDD') THEN '완료' ELSE '미완료' END AS CMPL_NM
+			     , CASE WHEN EVENT_E_DT < TO_CHAR(SYSDATE,'YYYYMMDD') THEN 'Y' ELSE 'N' END AS CMPL_FLAG
+			     , CNT
+			  FROM (
+			       SELECT 
+		                   SE.STR_CD        AS STR_CD
+		                 , SM.STR_NAME      AS STR_NM
+		                 , SE.EVENT_CD      AS EVENT_CD
+		                 , EM.EVENT_NAME    AS EVENT_NM
+		                 , SE.EVENT_S_DT    AS EVENT_S_DT
+		                 , SE.EVENT_E_DT    AS EVENT_E_DT
+		                 --, (SELECT COUNT(1) AS CNT 
+		                 --     FROM MSS.MC_PRMMWIN PW
+		                 --    WHERE PW.STR_CD = SE.STR_CD
+		                 --      AND PW.EVENT_CD = SE.EVENT_CD ) AS CNT
+		                 , (SELECT COUNT(1) AS CNT
+		                      FROM MSS.MC_EVTTRGCUST PW
+		                     WHERE PW.STR_CD = SE.STR_CD
+		                       AND PW.EVENT_CD = SE.EVENT_CD ) AS CNT
+					  FROM DPS.PC_STREVT SE
+					     , DPS.PC_EVTMST EM
+					     , DPS.PC_STRMST SM
+					 WHERE SE.EVENT_CD = EM.EVENT_CD
+					   AND EM.EVENT_TYPE = '7'
+					   AND SE.EVENT_CD LIKE ?||'%'
+					   AND SE.STR_CD = ?
+					   AND SE.STR_CD = SM.STR_CD
+                       AND ((? >= SE.EVENT_S_DT AND ? <= SE.EVENT_E_DT) OR
+                            (? >= SE.EVENT_S_DT AND ? <= SE.EVENT_E_DT) OR
+                            (SE.EVENT_S_DT >= ? AND SE.EVENT_S_DT <= ?) OR
+                            (SE.EVENT_E_DT >= ? AND SE.EVENT_E_DT <= ?) 
+                            )
+		            )
+        ]]>        
+    </query>
+    
+    <!-- 리콜행사 대상회원 디테일 내역조회 Query -->
+    <query name="SEL_PRMMENTY_DTL">
+        <![CDATA[           
+			SELECT DCS.SC_Crypto_FUN('DEC', A.CARD_CUST_ID)	AS CARD_CUST_ID 
+				 , B.CUST_NAME		AS CUST_NAME
+				 , A.CUST_ID		AS CUST_ID
+				 , 'N'				AS ERR_YN
+                 , ''				AS ERR_MSG
+			  FROM MSS.MC_EVTTRGCUST A 
+			     , DCS.DM_CUSTOMER B
+			 WHERE A.STR_CD			= ?
+			   AND A.EVENT_CD		= ?
+			   AND A.CUST_ID		= B.CUST_ID                   
+        ]]>        
+    </query>
+    
+    <!-- 리콜행사 대상회원 등록(신규) -->
+    <query name="INS_PRMMENTY_DTL">
+        <![CDATA[   
+			INSERT INTO	MSS.MC_EVTTRGCUST
+										( STR_CD
+										, EVENT_CD
+										, CARD_CUST_ID
+										, CUST_ID
+										, REG_DATE
+										, REG_ID
+										, MOD_DATE
+										, MOD_ID)
+								   SELECT ?
+										, ?
+										, CARD_NO
+										, CUST_ID
+										, SYSDATE
+										, ?
+										, SYSDATE
+										, ?
+									 FROM DCS.DM_CARD
+									WHERE CARD_NO = DCS.SC_Crypto_FUN('ENC', ?) 
+									  AND CUST_ID = ?
+        ]]>        
+    </query>
+    
+	<!-- 회원ID 정합성체크 -->
+	<query name="SEL_CHECK">
+		<![CDATA[
+			SELECT NVL(MIN(B.CUST_NAME),'***') AS CUST_NAME
+			     , NVL(MIN(A.CUST_ID),'*********') AS CUST_ID
+			     , GREATEST( NVL2(MIN(A.CUST_ID),'N','Y')
+			       ,CASE WHEN NVL(MIN(A.CARD_STAT_CD),'0') <> '0' THEN 'Y' ELSE 'N' END
+			       ,CASE WHEN NVL(MIN(B.CUST_STAT_FLAG),'0') <> '0' THEN 'Y' ELSE 'N' END )
+			       AS ERR_YN
+			     , TRIM(NVL2(MIN(A.CUST_ID),'','카드번호확인')
+			       ||CASE WHEN NVL(MIN(A.CARD_STAT_CD),'0') <> '0' THEN ' 카드상태확인' ELSE '' END
+			       --||CASE WHEN NVL(MIN(B.CUST_STAT_FLAG),'0') <> '0' THEN ' 회원상태확인' ELSE '' END
+			       ) AS ERR_MSG
+			FROM DCS.DM_CARD A
+			   , DCS.DM_CUSTOMER B
+			WHERE A.CUST_ID = B.CUST_ID
+			  AND A.CARD_NO = DCS.SC_Crypto_FUN('ENC', ?)         
+		]]>
+	</query> 
+	
+</service>

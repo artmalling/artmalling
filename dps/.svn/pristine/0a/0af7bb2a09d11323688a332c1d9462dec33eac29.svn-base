@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.06.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal438.ps">
+
+    <gauce name="H_SEL_FLOOR_PLAN"> 
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLOOR_CD"           colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FILENAME"           colType="TB_STRING"   size="200"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ROW_STATUS"         colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FILE_PATH"          colType="TB_URL"      size="200"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLOOR_CD"           colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"          colType="TB_STRING"   size="6"    dec="0"  keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"        colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SPOT_X"             colType="TB_INT"      size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SPOT_Y"             colType="TB_INT"      size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VIRE_YN"            colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RETAIL_VIEW_YN"     colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 
+    <query name="SEL_FLOOR_PLAN">        
+        <![CDATA[
+             SELECT STR_CD
+                  , FLOOR_CD
+                  , FILENAME
+                  , 'R'                 AS ROW_STATUS
+                  , ''                  AS FILE_PATH
+               FROM DPS.PS_FLOORPLAN
+              WHERE STR_CD   = ?
+                AND FLOOR_CD = ?
+        ]]>
+    </query>
+      -->
+    <!-- MARIO OUTLET 2011.08.17 -->  
+    <query name="SEL_FLOOR_PLAN">        
+        <![CDATA[
+             SELECT   NVL(A.STR_CD,TMP.STR_CD)                  AS STR_CD
+                    , NVL(A.FLOOR_CD,TMP.FLOOR_CD)              AS FLOOR_CD
+                    , A.FILENAME                                AS FILENAME    
+                    , DECODE(A.FLOOR_CD,NULL,'I','','I','R')    AS ROW_STATUS
+                    , ''                                        AS FILE_PATH
+               FROM DPS.PS_FLOORPLAN A
+                   ,(SELECT ?    AS STR_CD
+                           ,?    AS FLOOR_CD
+                     FROM DUAL) TMP                           
+              WHERE TMP.STR_CD = A.STR_CD(+)
+                AND TMP.FLOOR_CD = A.FLOOR_CD(+)
+                AND TMP.STR_CD   = ?
+                AND TMP.FLOOR_CD = ?
+        ]]>
+    </query>
+     
+    <query name="SEL_MASTER">        
+        <![CDATA[
+             SELECT STR_CD
+                  , FLOOR_CD
+                  , PUMBUN_CD
+                  , DPS.FN_GET_PUMBUN_NAME(PUMBUN_CD) AS PUMBUN_NAME
+                  , SPOT_X
+                  , SPOT_Y
+                  , VIRE_YN
+                  , RETAIL_VIEW_YN
+               FROM DPS.PS_FLOORPOSITION
+              WHERE STR_CD   = ?
+                AND FLOOR_CD = ?
+              ORDER BY SPOT_X, SPOT_Y
+        ]]>        
+    </query>    
+    
+    <query name="INS_FLOOR_PLAN">     
+        <![CDATA[   
+            INSERT INTO DPS.PS_FLOORPLAN(STR_CD
+                                       , FLOOR_CD
+                                       , FILENAME
+                                       , REG_ID
+                                       , REG_DATE
+                                       , MOD_ID
+                                       , MOD_DATE
+                                        )
+                                  VALUES(?
+                                       , ?
+                                       , ?
+                                       , ?
+                                       , SYSDATE
+                                       , ?
+                                       , SYSDATE
+                                        )
+        ]]>        
+    </query>
+    <query name="UPD_FLOOR_PLAN">     
+        <![CDATA[
+            UPDATE DPS.PS_FLOORPLAN
+               SET FILENAME = ?
+                 , MOD_ID   = ?
+                 , MOD_DATE = SYSDATE
+             WHERE STR_CD   = ?
+               AND FLOOR_CD = ?
+        ]]>        
+    </query>
+    <query name="DEL_FLOOR_PLAN">     
+        <![CDATA[
+            DELETE
+              FROM DPS.PS_FLOORPLAN
+             WHERE STR_CD   = ?
+               AND FLOOR_CD = ?
+        ]]>        
+    </query>
+    
+    <query name="INS_FLOOR_POSITION">     
+        <![CDATA[   
+            INSERT INTO DPS.PS_FLOORPOSITION(STR_CD
+                                           , FLOOR_CD
+                                           , PUMBUN_CD
+                                           , SPOT_X
+                                           , SPOT_Y
+                                           , VIRE_YN
+                                           , RETAIL_VIEW_YN
+                                           , REG_ID
+                                           , REG_DATE
+                                           , MOD_ID
+                                           , MOD_DATE
+                                            )
+                                      VALUES(?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , SYSDATE
+                                           , ?
+                                           , SYSDATE
+                                            )
+        ]]>        
+    </query>
+    <query name="UPD_FLOOR_POSITION">     
+        <![CDATA[
+            UPDATE DPS.PS_FLOORPOSITION
+               SET SPOT_X          = ?
+                 , SPOT_Y          = ?
+                 , VIRE_YN         = ?
+                 , RETAIL_VIEW_YN  = ?
+                 , MOD_ID          = ?
+                 , MOD_DATE        = SYSDATE
+             WHERE STR_CD          = ?
+               AND FLOOR_CD        = ?
+               AND PUMBUN_CD       = ?
+        ]]>        
+    </query>
+    <query name="DEL_FLOOR_POSITION">     
+        <![CDATA[
+            DELETE
+              FROM DPS.PS_FLOORPOSITION
+             WHERE STR_CD    = ?
+               AND FLOOR_CD  = ?
+               AND PUMBUN_CD = ?
+        ]]>        
+    </query>
+    <query name="DEL_FLOOR_POSITION_NOT_PUMBUN">     
+        <![CDATA[
+            DELETE
+              FROM DPS.PS_FLOORPOSITION
+             WHERE STR_CD    = ?
+               AND FLOOR_CD  = ?
+        ]]>        
+    </query>
+</service>

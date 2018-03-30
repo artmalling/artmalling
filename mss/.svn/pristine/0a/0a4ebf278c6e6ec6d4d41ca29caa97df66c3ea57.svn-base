@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상품권 판매 내역조회
+ -->
+<service name="/mgif305.mg">
+ 
+  <!-- 상품권 판매내역 마스터  조회  -->
+    <gauce name="H_GIFT_SALE_MST"> 
+       <column colName="STR_CD"           colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="STR_NM"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_DT"           colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_SLIP_NO"      colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_NO"             colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_FLAG_NM"             colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="CSTN_NO"             colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_QTY_SUM"             colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_AMT_SUM"             colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="REMARK"            colType="TB_STRING" size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    
+    </gauce>
+    
+     <!-- 상품권 금종 정보 조회  -->
+    <gauce name="H_GIFT_AMT_MST"> 
+       <column colName="GIFT_TYPE_CD"           colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="GIFT_TYPE_NAME"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="GIFT_AMT_TYPE"           colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="GIFT_AMT_NAME"      colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_QTY_SUM"             colType="TB_DECIMAL" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_AMT_SUM"             colType="TB_DECIMAL" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+ 
+     <!-- 상품권 정보 조회  -->
+    <gauce name="H_GIFT_SALE_DETAIL"> 
+       <column colName="GIFT_AMT_NAME"           colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="GIFTCARD_NO"            colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_QTY"             colType="TB_DECIMAL" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+       <column colName="SALE_AMT"             colType="TB_DECIMAL" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+ 
+ <!-- 상품권 판매내역 마스터  조회 -->
+ <query name="SEL_GIFT_SALE_MST">
+     <![CDATA[
+         WITH V_SALE_DTL AS 
+			 (
+		      SELECT STR_CD,
+		             SALE_DT,
+		             SALE_SLIP_NO,
+		             SUM(NVL(SALE_QTY,0)) AS SALE_QTY_SUM,
+		             SUM(NVL(SALE_AMT,0)) AS SALE_AMT_SUM
+		        FROM MSS.MG_SALEDTL
+		       WHERE STR_CD IN ( SELECT STR_CD 
+                                FROM COM.V_MYORG
+                               WHERE USE_YN = 'Y'
+                                 AND USER_ID = ?
+                                 AND ORG_FLAG = '1'   
+                                 AND STR_CD LIKE ?||'%'
+                                 GROUP BY STR_CD )
+		         AND SALE_DT BETWEEN ? AND ?
+		    GROUP BY STR_CD,
+		             SALE_DT,
+		             SALE_SLIP_NO
+			 )
+			SELECT TA.STR_CD, 
+			       DPS.FN_GET_STORE_NAME(TA.STR_CD) AS STR_NM,
+			       TA.SALE_DT,
+			       TA.SALE_SLIP_NO,
+			       TA.STR_CD||'-'||TA.SALE_DT||'-'||TA.SALE_SLIP_NO||SALE_CD AS SALE_NO,
+			       TB.COMM_NAME1 AS SALE_FLAG_NM,
+			       TA.CSTN_NO,
+			       DECODE(SUBSTR(TA.SALE_FLAG,1,1),'1',VA.SALE_QTY_SUM * -1,VA.SALE_QTY_SUM) AS SALE_QTY_SUM,
+                   DECODE(SUBSTR(TA.SALE_FLAG,1,1),'1',VA.SALE_AMT_SUM * -1,VA.SALE_AMT_SUM) AS SALE_AMT_SUM,
+                   REMARK
+			FROM MSS.MG_SALEMST TA,
+			     COM.TC_COMMCODE TB,
+			     ( SELECT * FROM V_SALE_DTL) VA
+			WHERE TA.SALE_FLAG = TB.COMM_CODE
+			AND TA.STR_CD = VA.STR_CD
+			AND TA.SALE_DT = VA.SALE_DT
+			AND TA.SALE_SLIP_NO = VA.SALE_SLIP_NO
+			AND TB.COMM_PART = 'M067'
+			AND TB.SYS_PART = 'D' 
+			AND TA.STR_CD IN ( SELECT STR_CD 
+                                FROM COM.V_MYORG
+                               WHERE USE_YN = 'Y'
+                                 AND USER_ID = ?
+                                 AND ORG_FLAG = '1'   
+                                 AND STR_CD LIKE ? ||'%'
+                                 GROUP BY STR_CD )
+			AND TA.SALE_DT BETWEEN ? AND ?
+			AND TA.SALE_FLAG LIKE ? ||'%'
+			--AND TA.SALE_FLAG IN ('01', '02', '03', '04')    -- 전체인경우에도 ... 이것들만.. 05:사은품지급판매
+	   ORDER BY TA.SALE_DT DESC,
+                TA.SALE_SLIP_NO DESC
+     ]]>
+ </query>   
+  
+  <!-- 상품권 금종  조회 -->
+ <query name="SEL_GIFT_AMT_MST">
+		 SELECT VA.GIFT_TYPE_CD,
+		       TB.GIFT_TYPE_NAME, --상품권 종류 명
+		       VA.GIFT_AMT_TYPE,  --금종
+		       TC.GIFT_AMT_NAME,   --금종명       
+		       TC.GIFTCERT_AMT,    --상품권 금액
+		       VA.SALE_QTY_SUM,
+		       VA.SALE_AMT_SUM
+		    FROM  (SELECT GIFT_TYPE_CD,
+		                   ISSUE_TYPE,
+		                   GIFT_AMT_TYPE,
+		                   SUM(NVL(SALE_QTY,0)) AS SALE_QTY_SUM,
+		                   SUM(NVL(SALE_AMT,0)) AS SALE_AMT_SUM
+		              FROM MSS.MG_SALEDTL
+		              WHERE STR_CD = ?
+		              AND SALE_DT = ?
+		              AND SALE_SLIP_NO = ?
+		              GROUP BY GIFT_TYPE_CD,
+		                   ISSUE_TYPE,
+		                   GIFT_AMT_TYPE) VA,
+		      MSS.MG_GIFTTPMST TB,
+		      MSS.MG_GIFTAMTMST TC
+		WHERE VA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+		AND VA.GIFT_TYPE_CD = TC.GIFT_TYPE_CD
+		AND VA.ISSUE_TYPE =TC.ISSUE_TYPE
+		AND VA.GIFT_AMT_TYPE = TC.GIFT_AMT_TYPE
+		ORDER BY VA.GIFT_TYPE_CD,
+		         GIFT_AMT_TYPE    
+ </query>
+ 
+  <!-- 상품권 정보 조회 -->
+ <query name="SEL_GIFT_AMT_DETAIL">
+    SELECT TB.GIFT_AMT_NAME,
+	       TA.GIFTCARD_NO,
+	       TA.SALE_QTY,
+	       TA.SALE_AMT 
+	FROM MSS.MG_SALEDTL TA,
+	     MSS.MG_GIFTAMTMST TB
+	WHERE TA.GIFT_TYPE_CD = TB.GIFT_TYPE_CD
+	AND TA.ISSUE_TYPE =TB.ISSUE_TYPE
+	AND TA.GIFT_AMT_TYPE = TB.GIFT_AMT_TYPE  
+	AND TA.STR_CD = ?
+	AND TA.SALE_DT = ?
+	AND TA.SALE_SLIP_NO = ?
+	AND TA.GIFT_AMT_TYPE = ?
+	ORDER BY TA.GIFTCARD_NO  
+ </query>
+</service>

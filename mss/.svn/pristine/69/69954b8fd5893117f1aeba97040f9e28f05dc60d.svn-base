@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.17
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상하수도요금표관리
+ -->
+<service name="/mren103.mr">
+    <!-- 상하수도요금표관리 내역 -->
+    <gauce name="H_SEL_MR_WATERPRC">
+        <column colName="AREA_FLAG"     colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WTR_TYPE"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="WTR_KIND_CD"   colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ"           colType="TB_DECIMAL" size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_S_QTY"     colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_E_QTY"     colType="TB_DECIMAL" size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT_PRC"      colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUPCHK"        colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <gauce name="H_SEL_DUP_KEYVALUE">
+        <column colName="DUPVALUE"      colType="TB_STRING"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 조회 Query  -->
+    <query name="SEL_MR_WATERPRC"> 
+        <![CDATA[   
+			SELECT AREA_FLAG 
+			     , WTR_TYPE 
+			     , WTR_KIND_CD 
+			     , SEQ 
+			     , USE_S_QTY 
+			     , USE_E_QTY 
+			     , UNIT_PRC 
+			     , 'N' AS DUPCHK 
+			  FROM MSS.MR_WATERPRC
+			 WHERE WTR_TYPE LIKE ?||'%'
+			   AND WTR_KIND_CD LIKE ?||'%'
+			   AND AREA_FLAG LIKE ?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 등록(저장) Query  -->
+    <query name="INS_MR_WATERPRC"> 
+        <![CDATA[   
+			INSERT 
+              INTO MSS.MR_WATERPRC
+                 ( AREA_FLAG 
+                 , WTR_TYPE 
+                 , WTR_KIND_CD 
+                 , SEQ
+                 , USE_S_QTY 
+                 , USE_E_QTY 
+                 , UNIT_PRC 
+                 , REG_ID 
+                 , REG_DATE 
+                 , MOD_ID 
+                 , MOD_DATE)
+            VALUES
+                 ( ?
+                 , ?
+                 , ?
+                 , (SELECT NVL(MAX(SEQ)+1, 1) AS SEQ
+                      FROM MSS.MR_WATERPRC
+                     WHERE AREA_FLAG = ?
+                       AND WTR_TYPE = ?
+                       AND WTR_KIND_CD = ?)
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , SYSDATE  
+                 , ?
+                 , SYSDATE 
+                 )
+        ]]>        
+    </query>
+    
+    <!-- 등록(수정) Query  -->
+    <query name="UPD_MR_WATERPRC"> 
+        <![CDATA[   
+            UPDATE MSS.MR_WATERPRC
+               SET USE_S_QTY    = ?
+                 , USE_E_QTY    = ?
+                 , UNIT_PRC     = ?
+                 , MOD_ID       = ?
+                 , MOD_DATE     = SYSDATE
+             WHERE AREA_FLAG    = ?
+               AND WTR_TYPE     = ?
+               AND WTR_KIND_CD  = ?
+               AND SEQ          = ?
+        ]]>        
+    </query>
+    
+    <!-- 삭제 Query  -->
+    <query name="DEL_MR_WATERPRC"> 
+        <![CDATA[ 
+			DELETE MSS.MR_WATERPRC
+             WHERE AREA_FLAG    = ?
+               AND WTR_TYPE     = ?
+               AND WTR_KIND_CD  = ?
+               AND SEQ          = ?
+        ]]>        
+    </query>
+
+
+    <!-- 키값체크 Query  -->
+    <query name="SEL_DUP_KEYVALUE"> 
+        <![CDATA[ 
+		SELECT DISTINCT DUPVALUE
+		  FROM (
+        ]]>        
+    </query>
+    <!-- 키값체크 Query  -->
+    <query name="SEL_SUB_DUP_KEYVALUE"> 
+        <![CDATA[ 
+			SELECT AREA_FLAG||WTR_TYPE||WTR_KIND_CD||?  AS DUPVALUE
+			  FROM MSS.MR_WATERPRC
+			 WHERE ROWNUM = 1
+			   AND ((? >= USE_S_QTY AND  ? <=USE_E_QTY) OR
+			        (? >= USE_S_QTY AND  ? <=USE_E_QTY))
+               AND AREA_FLAG    = ?
+               AND WTR_TYPE     = ?
+               AND WTR_KIND_CD  = ?
+        ]]>        
+    </query>
+    <query name="SEL_SUB_DUP_KEYVALUE_UPDATE"> 
+        <![CDATA[ 
+               AND SEQ  <> ?
+        ]]> 
+    </query>
+    <query name="SEL_DUP_UNIONALL"> 
+                UNION ALL
+    </query>
+    <query name="SEL_DUP_CLOSE"> 
+        )
+    </query>
+</service>

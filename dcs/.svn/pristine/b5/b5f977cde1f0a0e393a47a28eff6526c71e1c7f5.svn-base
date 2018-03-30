@@ -1,0 +1,493 @@
+/*
+ * Copyright (c) 2010 한국후지쯔. All rights reserved.
+ *
+ * This software is the confidential and proprietary information of 한국후지쯔.
+ * You shall not disclose such Confidential Information and shall use it
+ * only in accordance with the terms of the license agreement you entered into
+ * with 한국후지쯔
+ */
+
+package dctm.action;
+
+import java.net.URLEncoder;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import kr.fujitsu.ffw.control.ActionForm;
+import kr.fujitsu.ffw.control.ActionForward;
+import kr.fujitsu.ffw.control.ActionMapping;
+import kr.fujitsu.ffw.control.DispatchAction;
+import kr.fujitsu.ffw.control.cfg.svc.shift.GauceHelper2;
+import kr.fujitsu.ffw.control.cfg.svc.shift.MultiInput;
+import kr.fujitsu.ffw.model.ProcedureResultSet;
+import kr.fujitsu.ffw.util.String2;
+
+import org.apache.log4j.Logger;
+
+import com.gauce.GauceDataSet;
+import common.util.Util;
+import common.vo.SessionInfo;
+
+import dctm.dao.DCtm102DAO;
+
+/**
+ * <p>무기명회원 가입 신청서 등록</p>     
+ * 
+ * @created  on 1.0, 2010/02/12
+ * @created  by 김영진(FUJITSU KOREA LTD.)
+ * 
+ * @modified on 
+ * @modified by 
+ * @caused   by 
+ */
+
+public class DCtm102Action extends DispatchAction {
+    /*
+     * Java Pattern 에서 지원하는 logger를 사용할 수 있도록 객체를 선언
+     */
+    private Logger logger = Logger.getLogger(DCtm102Action.class);
+
+    /**
+     * <p>메뉴를 보여준다.</p>
+     * 
+     */
+    public ActionForward list(ActionMapping mapping, ActionForm form,
+            HttpServletRequest request, HttpServletResponse response)
+            throws Exception { 
+        String strGoTo = form.getParam("goTo"); // 분기할곳
+        try {
+
+            GauceHelper2.initialize(form, request, response);
+            
+            HttpSession session = request.getSession();
+            SessionInfo sessionInfo = (SessionInfo)session.getAttribute("sessionInfo");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("[list]", e);
+        }
+
+        return mapping.findForward(strGoTo);
+    }
+    
+    /**
+     * <p>회원 정보를 등록한다.</p>
+     * 
+     */
+    public ActionForward saveData(ActionMapping mapping, ActionForm form, 
+            HttpServletRequest request, HttpServletResponse response)
+            throws Exception { 
+        
+            GauceHelper2 helper = null;
+            GauceDataSet dSet = null;
+            DCtm102DAO dao   = null;      
+
+            String chk = "";
+            String ret = "";
+            String strGoTo = form.getParam("goTo"); // 분기할곳
+            
+            String strChksave  = String2.nvl(form.getParam("strChksave"));
+
+            try {                
+                helper = new GauceHelper2(request, response, form);
+                
+                dSet = helper.getDataSet("DS_IO_CUST");
+                helper.setDataSetHeader(dSet, "H_CUSTINFO2");
+                MultiInput mi = helper.getMutiInput(dSet);
+       
+                dao  = new DCtm102DAO();
+                //list = dao.searchCustinfo(form, request, response);
+                
+                //if(list.size()>0){
+                //	//helper.writeException("GAUCE", "002", "중복가입 불가");
+                //    throw new Exception("중복 가입 불가");
+                //}
+                
+                System.out.println("strChksave==== " + strChksave);
+                System.out.println("getColumnValue(61)==== " + dSet.getDataRow(0).getColumnValue(57).toString());
+                
+                System.out.println("strChksave==== " + strChksave);
+                
+                if(dSet.getDataRow(0).getColumnValue(61).toString().equals("12")){  //포인트카드
+                	if (strChksave.equals("I")) {
+                		chk  = dao.chkCardNo(form, mi, request, response);
+                	} else {
+                		chk = dSet.getDataRow(0).getColumnValue(97).toString();
+                    	mi.next();                    	
+                	}
+                }else{ //21 - 제휴신용카드
+                	chk = "21";
+                	mi.next();
+                }
+
+                System.out.println("chk==== " + chk);
+                
+                if(!chk.equals("Y")){
+                    System.out.println("chk====1 ");
+                	dao.addrCls(form, mi, request, response);
+                    System.out.println("chk====2 ");
+                    
+                    dSet = dao.saveData(form, mi, request, response, chk, dSet);
+                    ret  = mi.getString("CUST_ID") + "|" 
+                         + mi.getString("HHOLD_ID");
+                }
+                
+                /*
+                mi.next();
+                ret  = mi.getString("CUST_ID") + "|" 
+                        + mi.getString("HHOLD_ID");
+                */
+                
+                /*
+                 * 신규 회원가입시 SMS수신동의여부  
+                 * 작성일 : 2015.04.23
+                 * 작성자 : 전주원
+                 */
+                /*
+            	System.out.println("111111111111111111111111111 회원가입 광고수신여부 SMS 발송 111111111111111111111111111");
+                
+                Map<String, String> data = new HashMap<String, String>();
+                String mem_phone = mi.getString("MOBILE_PH1") + "" + mi.getString("MOBILE_PH2") + mi.getString("MOBILE_PH3");
+                
+                data.put("enc_type", "UTF-8");
+                data.put("user_id", "mario1");
+                data.put("mem_id", mem_phone);
+                data.put("mem_name", mem_phone);
+                data.put("mem_phone", mem_phone);
+                data.put("M1", Util.formatDate(new Date(), "yyyy.MM.dd"));
+                data.put("M2", "0808507115");
+                data.put("M3", "");
+                
+                String[] strSendSite = {"001"};
+                String[] strSendType = {""};
+                String[] strCustName = {mi.getString("CUST_NAME")};
+                String[] strCustId = {mi.getString("CUST_ID")};
+                String[] strCellPhoneService = {""};
+                String[] strMobilePh1 = {mi.getString("MOBILE_PH1")};
+                String[] strMobilePh2 = {mi.getString("MOBILE_PH2")};
+                String[] strMobilePh3 = {mi.getString("MOBILE_PH3")};
+                String[] strSMSMsg = {""};
+                String[] strHP = {mem_phone};
+                */
+                
+                /*
+                if ("Y".equalsIgnoreCase(mi.getString("SMS_YN"))) {
+                	// 수신동의
+                	data.put("mail_code", "S0248");
+                	data.put("auth_key", "H5R0FJ-EKU0PO-0124MI-RESYCS");
+                	
+                	strSendType[0] = "002"; // 수신동의
+                	strSMSMsg[0] = URLEncoder.encode("[형지 아트몰링] 귀하가 "+Util.formatDate(new Date(), "yyyy-MM-dd")+" 일에 요청하신 수신동의가 정상적으로 처리되었습니다.", "UTF-8") ;
+                } else {
+                	// 수신거부
+                	data.put("mail_code", "S0249");
+                	data.put("auth_key", "U7H1GA-23HAKM-8PMM29-7CJ3KB");
+                	
+                	strSendType[0] = "003"; // 수신거부
+                	strSMSMsg[0] = URLEncoder.encode("[형지 아트몰링] 귀하가 "+Util.formatDate(new Date(), "yyyy-MM-dd")+" 일에 요청하신 수신거부가 정상적으로 처리되었습니다", "UTF-8") ;
+                }
+                */
+                
+                /*
+                // 회원가입 시 광고수신 동의 sms 전송 - 마케팅 김동하 주임 요청 2015.06.26
+                data.put("mail_code", "S0273");
+            	data.put("auth_key", "LPLMSC-K8I7H7-47VJY0-RU5U09");
+            	
+            	strSendType[0] = "004"; // 수신동의
+            	strSMSMsg[0] = URLEncoder.encode("[형지 아트몰링] "+Util.formatDate(new Date(), "yyyy.MM.dd")+" 광고수신에 동의함. 무료수신거부:0808507115", "UTF-8") ;
+            	
+                
+                DCtm102DAO smsDao  = new DCtm102DAO();
+                //smsDao.sendSMS(data, "postman.co.kr", "/open/auto_message_sender.jsp", "UTF-8"); 20160218_sms발송업체 변경으로 인해 메시지 미전송_강연식
+                
+                System.out.println("2222222222222222222222222 SMS 발송 로그등록 222222222222222222222222222");
+                
+                form.setParam("strSendSite",  strSendSite);
+                form.setParam("strSendType",  strSendType);
+                form.setParam("strCustName",  strCustName);
+                form.setParam("strCustId",  strCustId);
+                form.setParam("strCellPhoneService",  strCellPhoneService);
+                form.setParam("strMobilePh1",  strMobilePh1);
+                form.setParam("strMobilePh2",  strMobilePh2);
+                form.setParam("strMobilePh3",  strMobilePh3);
+                form.setParam("strSMSMsg",  strSMSMsg);
+                form.setParam("strHP",  strHP);
+                smsDao.insRealMobile(form, request); //20160218_sms발송업체 변경으로 인해 메시지 미전송_강연식
+                
+                System.out.println("222222222222222222222222222222222222222222222222222222222222222222");
+                */
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.error("[updateProgram]", e);
+                helper.writeException("GAUCE", "002", e.getMessage());
+            } finally {
+                helper.close(dSet,ret+"|정상적으로 처리되었습니다.|");
+            }
+            return mapping.findForward(strGoTo);
+    }    
+    
+    /**
+     * <p>주민번호로 회원번호를 조회 한다.</p>
+     * 
+     */
+    public ActionForward searchMaster(ActionMapping mapping, ActionForm form,
+            HttpServletRequest request, HttpServletResponse response)
+            throws Exception {
+
+        List list = null;
+
+        GauceHelper2 helper = null;
+        GauceDataSet dSet = null;
+        DCtm102DAO dao = null; 
+
+        String strGoTo = form.getParam("goTo"); // 분기할곳
+        System.out.println("strGoTo : "+strGoTo);
+        try {
+        	
+            dao = new DCtm102DAO();
+            helper = new GauceHelper2(request, response, form);
+
+            dSet = helper.getDataSet("DS_IO_CUST"); 
+            helper.setDataSetHeader(dSet, "H_CUSTINFO");
+            list = dao.searchCustinfo(form, request, response);
+            if(list.size()>0){
+                helper.setListToDataset(list,  dSet);
+            }
+
+        } catch (Exception e) {
+            logger.error("", e);
+            helper.writeException("GAUCE", "002", e.getMessage());
+        } finally {
+            helper.close(dSet);
+        }
+        return mapping.findForward(strGoTo);
+    } 
+    
+
+    
+    public ActionForward getcardno(ActionMapping mapping, ActionForm form,
+            HttpServletRequest request, HttpServletResponse response)
+            throws Exception {
+
+    	List rst = null;
+        GauceHelper2 helper = null;
+        GauceDataSet dSet = null;
+        DCtm102DAO dao = null; 
+        System.out.println("getcardno  action1 :rst = "+ rst);
+
+        String strGoTo = form.getParam("goTo"); // 분기할곳
+
+        try {
+
+            dao = new DCtm102DAO();
+            helper = new GauceHelper2(request, response, form);
+           
+			dSet = helper.getDataSet("DS_O_CARD");
+			helper.setDataSetHeader(dSet, "H_CARD");
+			System.out.println("getcardno  action2 :rst = "+ rst);
+            rst = dao.getcardno(form, request, response);
+            System.out.println("getcardno  action3 :rst = "+ rst);
+            //request.setAttribute("strSSno", rst);
+            helper.setListToDataset(rst,  dSet);
+            
+        } catch (Exception e) {
+            logger.error("", e);
+            helper.writeException("GAUCE", "002", e.getMessage());
+        } finally {
+        	helper.close(dSet);
+        }
+        return mapping.findForward(strGoTo);
+    }
+    
+	/**
+	 * <p>가외국인번호 생성 팝업</p>
+	 * 
+	 */
+	public ActionForward creatAlienSsno(ActionMapping mapping, ActionForm form,
+			HttpServletRequest request, HttpServletResponse response)
+			throws Exception { 
+		String strGoTo = form.getParam("goTo"); // 분기할곳
+		try {
+
+			GauceHelper2.initialize(form, request, response);
+			
+			HttpSession session = request.getSession();
+            SessionInfo sessionInfo = (SessionInfo)session.getAttribute("sessionInfo");
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("", e);
+		}
+
+		return mapping.findForward(strGoTo);
+	}    
+    
+    /**
+     * <p>가외국인번호 생성.</p>
+     * 
+     */    
+    public ActionForward getSsno(ActionMapping mapping, ActionForm form,
+            HttpServletRequest request, HttpServletResponse response)
+            throws Exception {
+
+        String rst = "";
+        GauceHelper2 helper = null;
+        GauceDataSet dSet = null;
+        DCtm102DAO dao = null; 
+
+        String strGoTo = form.getParam("goTo"); // 분기할곳
+
+        try {
+
+            dao = new DCtm102DAO();
+            helper = new GauceHelper2(request, response, form);
+           
+            rst = dao.getSSno(form);
+            //request.setAttribute("strSSno", rst);
+            
+        } catch (Exception e) {
+            logger.error("", e);
+            helper.writeException("GAUCE", "002", e.getMessage());
+        } finally {
+            helper.close("rst:"+rst);
+        }
+        return mapping.findForward(strGoTo);
+    }
+    
+	/**
+	 * <p>실명확인 팝업</p>
+	 * 
+	 */
+	public ActionForward confRealName(ActionMapping mapping, ActionForm form,
+			HttpServletRequest request, HttpServletResponse response)
+			throws Exception { 
+		String strGoTo = form.getParam("goTo"); // 분기할곳
+		try {
+
+			GauceHelper2.initialize(form, request, response);
+			
+			HttpSession session = request.getSession();
+            SessionInfo sessionInfo = (SessionInfo)session.getAttribute("sessionInfo");
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("", e);
+		}
+
+		return mapping.findForward(strGoTo);
+	}     
+	
+	
+	/**
+	 * 작성일 : 2015.04.23
+	 * 작성자 : 전주원
+	 * <p>휴대폰인증 팝업</p>
+	 * 
+	 */
+	public ActionForward confRealMobile(ActionMapping mapping, ActionForm form,
+			HttpServletRequest request, HttpServletResponse response)
+			throws Exception { 
+		String strGoTo = form.getParam("goTo"); // 분기할곳
+		try {
+
+			GauceHelper2.initialize(form, request, response);
+			
+			HttpSession session = request.getSession();
+            SessionInfo sessionInfo = (SessionInfo)session.getAttribute("sessionInfo");
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("", e);
+		}
+
+		return mapping.findForward(strGoTo);
+	}
+	
+	/**
+	 * 작성일 : 2015.04.28
+	 * 작성자 : 전주원
+	 * <p>SMS발송 팝업</p>
+	 * 
+	 */
+	public ActionForward sendSMS(ActionMapping mapping, ActionForm form,
+			HttpServletRequest request, HttpServletResponse response)
+			throws Exception {
+		
+		String strGoTo = form.getParam("goTo"); // 분기할곳
+		try {
+
+			GauceHelper2.initialize(form, request, response);
+			
+			HttpSession session = request.getSession();
+            SessionInfo sessionInfo = (SessionInfo)session.getAttribute("sessionInfo");
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("", e);
+		}
+
+		return mapping.findForward(strGoTo);
+	}
+	
+	/**
+	 * 
+	 * 작성일 : 2015.04.23
+	 * 작성자 : 전주원
+	 * 
+	 * <p>SMS발송 로그</p>
+	 * 
+	 */
+	public ActionForward insRealMobile(ActionMapping mapping, ActionForm form,
+			HttpServletRequest request, HttpServletResponse response)
+			throws Exception {
+		
+        DCtm102DAO dao = null; 
+
+        String strGoTo = form.getParam("goTo"); // 분기할곳
+
+        try {
+            
+            dao = new DCtm102DAO();
+           
+            dao.insRealMobile(form, request);
+            
+        } catch (Exception e) {
+            logger.error("", e);
+        } 
+        return mapping.findForward(strGoTo);
+        
+	}
+	
+    
+    /**
+     * <p>실명확인 로그.</p>
+     * 
+     */    
+    public ActionForward insRealName(ActionMapping mapping, ActionForm form,
+            HttpServletRequest request, HttpServletResponse response)
+            throws Exception {
+
+        String rst = "";
+        DCtm102DAO dao = null; 
+
+        String strGoTo = form.getParam("goTo"); // 분기할곳
+
+        try {
+            
+            dao = new DCtm102DAO();
+           
+            rst = dao.insRealName(form, request);
+            
+        } catch (Exception e) {
+            logger.error("", e);
+        } 
+        return mapping.findForward(strGoTo);
+    }    
+}

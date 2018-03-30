@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.04.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : POS공지사항을 관리한다.
+ -->
+<service name="/pcod807.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="SEL"                colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NOTI_NO"            colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NOTI_TITLE"         colType="TB_STRING"   size="30"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NOTI_CONTENT"       colType="TB_STRING"   size="500"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NOTI_S_DT"          colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NOTI_E_DT"          colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_DT"             colType="TB_STRING"   size="8"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- POS공지사항 마스터 조회 쿼리  -->
+    <query name="SEL_POSNOTIMST">
+        <![CDATA[
+            SELECT 'F'                             AS SEL
+                 , NOTI_NO        
+                 , STR_CD      
+                 , DPS.FN_GET_STORE_NAME(STR_CD)   AS STR_NAME
+                 , NOTI_TITLE
+                 , NOTI_CONTENT        
+                 , NOTI_S_DT
+                 , NOTI_E_DT     
+                 , TO_CHAR(REG_DATE,'YYYYMMDD')    AS REG_DT
+              FROM DPS.PC_POSNOTIMST
+             WHERE 1 = 1
+        ]]>
+    </query>
+    <query name="SEL_POSNOTIMST_WHERE_REG_DT">
+        <![CDATA[
+               AND TO_CHAR(REG_DATE,'YYYYMMDD') BETWEEN  ? AND ?
+        ]]>
+    </query>
+    <query name="SEL_POSNOTIMST_WHERE_NOTI_NO">
+        <![CDATA[
+               AND NOTI_NO       = ?
+        ]]>
+    </query>
+    <query name="SEL_POSNOTIMST_WHERE_STR_CD">
+        <![CDATA[
+               AND STR_CD        = ?
+        ]]>
+    </query>
+    <query name="SEL_POSNOTIMST_WHERE_NOTI_TITLE">
+        <![CDATA[
+               AND NOTI_TITLE    LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_POSNOTIMST_WHERE_NOTI_DT">
+        <![CDATA[
+               AND NOTI_E_DT     >= ?
+               AND NOTI_S_DT     <= ?
+        ]]>
+    </query>
+    <query name="SEL_POSNOTIMST_ORDER">
+        <![CDATA[
+             ORDER BY NOTI_NO
+        ]]>
+    </query>
+    
+    <!-- POS공지사항 번호 생성-->
+    <query name="SEL_POSNOTIMST_NEW_NOTI_NO">
+        <![CDATA[
+            SELECT LPAD(DPS.SQ_PCPOSNOTINO.NEXTVAL,4,'0') AS NEW_NOTI_NO
+              FROM DUAL
+        ]]>
+    </query> 
+    
+    <!-- POS공지사항 마스터 등록 -->
+    <query name="INS_POSNOTIMST">
+        <![CDATA[
+            INSERT INTO DPS.PC_POSNOTIMST(NOTI_NO     
+                                        , STR_CD      
+                                        , NOTI_TITLE  
+                                        , NOTI_CONTENT      
+                                        , NOTI_S_DT        
+                                        , NOTI_E_DT 
+                                        , REG_DATE
+                                        , REG_ID
+                                        , MOD_DATE
+                                        , MOD_ID
+                                         )
+                                   VALUES(?        
+                                        , ? 
+                                        , ?
+                                        , ? 
+                                        , ?
+                                        , ?
+                                        , SYSDATE
+                                        , ?
+                                        , SYSDATE
+                                        , ?
+                                         )
+        ]]>   
+    </query>
+    <!-- POS공지사항 마스터 수정 -->
+    <query name="UPD_POSNOTIMST">
+        <![CDATA[
+            UPDATE DPS.PC_POSNOTIMST
+               SET STR_CD        = ?          
+                 , NOTI_TITLE    = ?          
+                 , NOTI_CONTENT  = ?          
+                 , NOTI_S_DT     = ?          
+                 , NOTI_E_DT     = ? 
+                 , MOD_DATE      = SYSDATE
+                 , MOD_ID        = ?
+             WHERE NOTI_NO       = ?
+        ]]>   
+    </query>
+    <!-- POS공지사항 마스터 삭제 -->
+    <query name="DEL_POSNOTIMST">
+        <![CDATA[
+            DELETE 
+              FROM DPS.PC_POSNOTIMST
+             WHERE NOTI_NO       = ?
+        ]]>   
+    </query>
+</service>

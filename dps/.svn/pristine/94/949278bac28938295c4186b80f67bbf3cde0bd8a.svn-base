@@ -1,0 +1,652 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.14
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal460.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="PUMBUN_CD"                    colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"                  colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"                    colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"                  colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"                     colType="TB_DECIMAL"     size="7"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPR_SALE_QTY"                colType="TB_DECIMAL"     size="7"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"                     colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPR_SALE_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CMPR_NET_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_IRATE"                   colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <gauce name="H_SEL_CMPRDT"> 
+        <column colName="CMPR_DT"                 colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>   
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 당초팀별월매출계획 조회 쿼리  -->
+   
+    <query name="SEL_PBN_PUMMOK_L-01">        
+        <![CDATA[            
+			SELECT A.PUMBUN_CD
+			     , C.PUMBUN_NAME
+				 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+                 , SUM(A.SALE_QTY)                    AS SALE_QTY
+                 , SUM(A.CMPR_SALE_QTY)               AS CMPR_SALE_QTY
+                 , SUM(A.TOT_SALE_AMT)                    AS TOT_SALE_AMT
+                 , SUM(A.CMPR_SALE_AMT)               AS CMPR_SALE_AMT
+                 , SUM(NVL(A.NET_SALE_AMT,0))         AS NET_SALE_AMT
+                 , SUM(NVL(A.CMPR_NET_SALE_AMT,0))    AS CMPR_NET_SALE_AMT
+                 , (CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0))  = 0 THEN 0 ELSE ( SUM(NVL(A.TOT_SALE_AMT,0)) - SUM(NVL(A.CMPR_SALE_AMT,0)) )/SUM(NVL(A.TOT_SALE_AMT,0))*100 END)  AS SALE_IRATE
+              FROM (
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '매출일'                        AS GUBUN
+                         , A.SALE_QTY
+                         , A.TOT_SALE_AMT                 AS TOT_SALE_AMT
+                         , A.NET_SALE_AMT
+                         , 0                              AS CMPR_SALE_QTY
+                         , 0                              AS CMPR_SALE_AMT
+                         , 0                              AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST B
+                         , DPS.PC_STRPBN C
+                     WHERE C.SALE_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+        ]]>        
+    </query>
+    
+
+                       
+    <query name="SEL_PBN_PUMMOK_L-02">        
+        <![CDATA[  
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                     UNION ALL  
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '대비일'                        AS GUBUN
+                         , 0                              AS SALE_QTY
+                         , 0                              AS TOT_SALE_AMT
+                         , 0                              AS NET_SALE_AMT
+                         , A.SALE_QTY                     AS CMPR_SALE_QTY
+                         , A.TOT_SALE_AMT                 AS CMPR_SALE_AMT
+                         , A.NET_SALE_AMT                 AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST  B
+                         , DPS.PC_STRPBN C
+                     WHERE C.SALE_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+        ]]>        
+    </query>
+                       
+
+                       
+    <query name="SEL_PBN_PUMMOK_L-03">        
+        <![CDATA[  
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                   )             A
+                 , DPS.PC_PMKMST B
+                 , DPS.PC_PBNMST C
+             WHERE A.PUMMOK_CD = B.PUMMOK_CD
+               AND A.PUMBUN_CD = C.PUMBUN_CD
+             GROUP BY
+                   A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+            ORDER BY
+                  A.PUMBUN_CD
+                , A.PUMMOK_CD
+            
+        ]]>        
+    </query>
+    
+     <query name="SEL_PBN_PUMMOK_L2-01">        
+        <![CDATA[            
+			SELECT A.PUMBUN_CD
+			     , C.PUMBUN_NAME
+				 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+                 , SUM(A.SALE_QTY)                    AS SALE_QTY
+                 , SUM(A.CMPR_SALE_QTY)               AS CMPR_SALE_QTY
+                 , SUM(A.TOT_SALE_AMT)                    AS TOT_SALE_AMT
+                 , SUM(A.CMPR_SALE_AMT)               AS CMPR_SALE_AMT
+                 , SUM(NVL(A.NET_SALE_AMT,0))         AS NET_SALE_AMT
+                 , SUM(NVL(A.CMPR_NET_SALE_AMT,0))    AS CMPR_NET_SALE_AMT
+                 , (CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0))  = 0 THEN 0 ELSE ( SUM(NVL(A.TOT_SALE_AMT,0)) - SUM(NVL(A.CMPR_SALE_AMT,0)) )/SUM(NVL(A.TOT_SALE_AMT,0))*100 END)  AS SALE_IRATE
+              FROM (
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '매출일'                        AS GUBUN
+                         , A.SALE_QTY
+                         , A.TOT_SALE_AMT                 AS TOT_SALE_AMT
+                         , A.NET_SALE_AMT
+                         , 0                              AS CMPR_SALE_QTY
+                         , 0                              AS CMPR_SALE_AMT
+                         , 0                              AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST B
+                         , DPS.PC_STRPBN C
+                     WHERE C.BUY_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+       ]]>        
+    </query>
+                       
+
+                       
+     <query name="SEL_PBN_PUMMOK_L2-02">        
+        <![CDATA[ 
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                     UNION ALL  
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '대비일'                        AS GUBUN
+                         , 0                              AS SALE_QTY
+                         , 0                              AS TOT_SALE_AMT
+                         , 0                              AS NET_SALE_AMT
+                         , A.SALE_QTY                     AS CMPR_SALE_QTY
+                         , A.TOT_SALE_AMT                 AS CMPR_SALE_AMT
+                         , A.NET_SALE_AMT                 AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST  B
+                         , DPS.PC_STRPBN C
+                     WHERE C.BUY_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+       ]]>        
+    </query>
+                       
+
+                       
+     <query name="SEL_PBN_PUMMOK_L2-03">        
+        <![CDATA[ 
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                   )             A
+                 , DPS.PC_PMKMST B
+                 , DPS.PC_PBNMST C
+             WHERE A.PUMMOK_CD = B.PUMMOK_CD
+               AND A.PUMBUN_CD = C.PUMBUN_CD
+             GROUP BY
+                   A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+            ORDER BY
+                  A.PUMBUN_CD
+                , A.PUMMOK_CD
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_PBN_PUMMOK_M-01">        
+        <![CDATA[            
+			SELECT A.PUMBUN_CD
+			     , C.PUMBUN_NAME
+				 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+                 , SUM(A.SALE_QTY)                    AS SALE_QTY
+                 , SUM(A.CMPR_SALE_QTY)               AS CMPR_SALE_QTY
+                 , SUM(A.TOT_SALE_AMT)                    AS TOT_SALE_AMT
+                 , SUM(A.CMPR_SALE_AMT)               AS CMPR_SALE_AMT
+                 , SUM(NVL(A.NET_SALE_AMT,0))         AS NET_SALE_AMT
+                 , SUM(NVL(A.CMPR_NET_SALE_AMT,0))    AS CMPR_NET_SALE_AMT
+                 , (CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0))  = 0 THEN 0 ELSE ( SUM(NVL(A.TOT_SALE_AMT,0)) - SUM(NVL(A.CMPR_SALE_AMT,0)) )/SUM(NVL(A.TOT_SALE_AMT,0))*100 END)  AS SALE_IRATE
+              FROM (
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '매출일'                        AS GUBUN
+                         , A.SALE_QTY
+                         , A.TOT_SALE_AMT                 AS TOT_SALE_AMT
+                         , A.NET_SALE_AMT
+                         , 0                              AS CMPR_SALE_QTY
+                         , 0                              AS CMPR_SALE_AMT
+                         , 0                              AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST B
+                         , DPS.PC_STRPBN C
+                     WHERE C.SALE_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+        ]]>        
+    </query>
+                       
+
+                       
+    <query name="SEL_PBN_PUMMOK_M-02">        
+        <![CDATA[
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                     UNION ALL  
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '대비일'                        AS GUBUN
+                         , 0                              AS SALE_QTY
+                         , 0                              AS TOT_SALE_AMT
+                         , 0                              AS NET_SALE_AMT
+                         , A.SALE_QTY                     AS CMPR_SALE_QTY
+                         , A.TOT_SALE_AMT                 AS CMPR_SALE_AMT
+                         , A.NET_SALE_AMT                 AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST  B
+                         , DPS.PC_STRPBN C
+                     WHERE C.SALE_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+        ]]>        
+    </query>
+                       
+
+                       
+    <query name="SEL_PBN_PUMMOK_M-03">        
+        <![CDATA[
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                   )             A
+                 , DPS.PC_PMKMST B
+                 , DPS.PC_PBNMST C
+             WHERE A.PUMMOK_CD = B.PUMMOK_CD
+               AND A.PUMBUN_CD = C.PUMBUN_CD
+             GROUP BY
+                   A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+            ORDER BY
+                  A.PUMBUN_CD
+                , A.PUMMOK_CD
+        ]]>        
+    </query>
+    <query name="SEL_PBN_PUMMOK_M2-01">        
+        <![CDATA[            
+			SELECT A.PUMBUN_CD
+			     , C.PUMBUN_NAME
+				 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+                 , SUM(A.SALE_QTY)                    AS SALE_QTY
+                 , SUM(A.CMPR_SALE_QTY)               AS CMPR_SALE_QTY
+                 , SUM(A.TOT_SALE_AMT)                    AS TOT_SALE_AMT
+                 , SUM(A.CMPR_SALE_AMT)               AS CMPR_SALE_AMT
+                 , SUM(NVL(A.NET_SALE_AMT,0))         AS NET_SALE_AMT
+                 , SUM(NVL(A.CMPR_NET_SALE_AMT,0))    AS CMPR_NET_SALE_AMT
+                 , (CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0))  = 0 THEN 0 ELSE ( SUM(NVL(A.TOT_SALE_AMT,0)) - SUM(NVL(A.CMPR_SALE_AMT,0)) )/SUM(NVL(A.TOT_SALE_AMT,0))*100 END)  AS SALE_IRATE
+              FROM (
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '매출일'                        AS GUBUN
+                         , A.SALE_QTY
+                         , A.TOT_SALE_AMT                 AS TOT_SALE_AMT
+                         , A.NET_SALE_AMT
+                         , 0                              AS CMPR_SALE_QTY
+                         , 0                              AS CMPR_SALE_AMT
+                         , 0                              AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST B
+                         , DPS.PC_STRPBN C
+                     WHERE C.BUY_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+                       
+        ]]>        
+    </query>
+                       
+    <query name="SEL_PBN_PUMMOK_M2-02">        
+        <![CDATA[
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                     UNION ALL  
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '대비일'                        AS GUBUN
+                         , 0                              AS SALE_QTY
+                         , 0                              AS TOT_SALE_AMT
+                         , 0                              AS NET_SALE_AMT
+                         , A.SALE_QTY                     AS CMPR_SALE_QTY
+                         , A.TOT_SALE_AMT                 AS CMPR_SALE_AMT
+                         , A.NET_SALE_AMT                 AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST  B
+                         , DPS.PC_STRPBN C
+                     WHERE C.BUY_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+        ]]>        
+    </query>
+                       
+                       
+    <query name="SEL_PBN_PUMMOK_M2-03">        
+        <![CDATA[
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                   )             A
+                 , DPS.PC_PMKMST B
+                 , DPS.PC_PBNMST C
+             WHERE A.PUMMOK_CD = B.PUMMOK_CD
+               AND A.PUMBUN_CD = C.PUMBUN_CD
+             GROUP BY
+                   A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+            ORDER BY
+                  A.PUMBUN_CD
+                , A.PUMMOK_CD
+        ]]>        
+    </query>
+    <query name="SEL_PBN_PUMMOK_S-01">        
+        <![CDATA[            
+			SELECT A.PUMBUN_CD
+			     , C.PUMBUN_NAME
+				 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+                 , SUM(A.SALE_QTY)                    AS SALE_QTY
+                 , SUM(A.CMPR_SALE_QTY)               AS CMPR_SALE_QTY
+                 , SUM(A.TOT_SALE_AMT)                    AS TOT_SALE_AMT
+                 , SUM(A.CMPR_SALE_AMT)               AS CMPR_SALE_AMT
+                 , SUM(NVL(A.NET_SALE_AMT,0))         AS NET_SALE_AMT
+                 , SUM(NVL(A.CMPR_NET_SALE_AMT,0))    AS CMPR_NET_SALE_AMT
+                 , (CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0))  = 0 THEN 0 ELSE ( SUM(NVL(A.TOT_SALE_AMT,0)) - SUM(NVL(A.CMPR_SALE_AMT,0)) )/SUM(NVL(A.TOT_SALE_AMT,0))*100 END)  AS SALE_IRATE
+              FROM (
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '매출일'                        AS GUBUN
+                         , A.SALE_QTY
+                         , A.TOT_SALE_AMT                 AS TOT_SALE_AMT
+                         , A.NET_SALE_AMT
+                         , 0                              AS CMPR_SALE_QTY
+                         , 0                              AS CMPR_SALE_AMT
+                         , 0                              AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST B
+                         , DPS.PC_STRPBN C
+                     WHERE C.SALE_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+        ]]>        
+    </query>
+                       
+                       
+                       
+    <query name="SEL_PBN_PUMMOK_S-02">        
+        <![CDATA[
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                     UNION ALL  
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '대비일'                        AS GUBUN
+                         , 0                              AS SALE_QTY
+                         , 0                              AS TOT_SALE_AMT
+                         , 0                              AS NET_SALE_AMT
+                         , A.SALE_QTY                     AS CMPR_SALE_QTY
+                         , A.TOT_SALE_AMT                 AS CMPR_SALE_AMT
+                         , A.NET_SALE_AMT                 AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST  B
+                         , DPS.PC_STRPBN C
+                     WHERE C.SALE_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+        ]]>        
+    </query>
+                       
+                       
+                       
+    <query name="SEL_PBN_PUMMOK_S-03">        
+        <![CDATA[
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                   )             A
+                 , DPS.PC_PMKMST B
+                 , DPS.PC_PBNMST C
+             WHERE A.PUMMOK_CD = B.PUMMOK_CD
+               AND A.PUMBUN_CD = C.PUMBUN_CD
+             GROUP BY
+                   A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+            ORDER BY
+                  A.PUMBUN_CD
+                , A.PUMMOK_CD
+        ]]>        
+    </query>
+     <query name="SEL_PBN_PUMMOK_S2-01">        
+        <![CDATA[            
+			SELECT A.PUMBUN_CD
+			     , C.PUMBUN_NAME
+				 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+                 , SUM(A.SALE_QTY)                    AS SALE_QTY
+                 , SUM(A.CMPR_SALE_QTY)               AS CMPR_SALE_QTY
+                 , SUM(A.TOT_SALE_AMT)                    AS TOT_SALE_AMT
+                 , SUM(A.CMPR_SALE_AMT)               AS CMPR_SALE_AMT
+                 , SUM(NVL(A.NET_SALE_AMT,0))         AS NET_SALE_AMT
+                 , SUM(NVL(A.CMPR_NET_SALE_AMT,0))    AS CMPR_NET_SALE_AMT
+                 , (CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0))  = 0 THEN 0 ELSE ( SUM(NVL(A.TOT_SALE_AMT,0)) - SUM(NVL(A.CMPR_SALE_AMT,0)) )/SUM(NVL(A.TOT_SALE_AMT,0))*100 END)  AS SALE_IRATE
+              FROM (
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '매출일'                        AS GUBUN
+                         , A.SALE_QTY
+                         , A.TOT_SALE_AMT                 AS TOT_SALE_AMT
+                         , A.NET_SALE_AMT
+                         , 0                              AS CMPR_SALE_QTY
+                         , 0                              AS CMPR_SALE_AMT
+                         , 0                              AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST B
+                         , DPS.PC_STRPBN C
+                     WHERE C.BUY_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+        ]]>        
+    </query>
+                       
+
+                       
+     <query name="SEL_PBN_PUMMOK_S2-02">        
+        <![CDATA[   
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                     UNION ALL  
+                    SELECT A.PUMBUN_CD
+                         , LPAD(A.PUMMOK_CD,6) ||'00' AS PUMMOK_CD
+                         , '대비일'                        AS GUBUN
+                         , 0                              AS SALE_QTY
+                         , 0                              AS TOT_SALE_AMT
+                         , 0                              AS NET_SALE_AMT
+                         , A.SALE_QTY                     AS CMPR_SALE_QTY
+                         , A.TOT_SALE_AMT                 AS CMPR_SALE_AMT
+                         , A.NET_SALE_AMT                 AS CMPR_NET_SALE_AMT
+                      FROM DPS.PS_DAYPBN A
+                         , DPS.PC_ORGMST  B
+                         , DPS.PC_STRPBN C
+                     WHERE C.BUY_ORG_CD    = B.ORG_CD
+                       AND A.STR_CD    = C.STR_CD
+                       AND A.PUMBUN_CD = C.PUMBUN_CD
+                       AND B.STR_CD    = ?
+        ]]>        
+    </query>
+                       
+
+                       
+     <query name="SEL_PBN_PUMMOK_S2-03">        
+        <![CDATA[   
+                       AND A.PUMMOK_CD LIKE ? || ? || ? || '%'
+                       AND A.SALE_DT            >= ?
+                       AND A.SALE_DT            <= ?
+                       AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = B.STR_CD
+                                 AND MYORG.DEPT_CD     = B.DEPT_CD
+                                 AND MYORG.TEAM_CD     = B.TEAM_CD
+                                 AND MYORG.PC_CD       = B.PC_CD
+                                 AND MYORG.USER_ID     = ?
+                            )
+                   )             A
+                 , DPS.PC_PMKMST B
+                 , DPS.PC_PBNMST C
+             WHERE A.PUMMOK_CD = B.PUMMOK_CD
+               AND A.PUMBUN_CD = C.PUMBUN_CD
+             GROUP BY
+                   A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.PUMMOK_CD
+                 , B.PUMMOK_NAME
+            ORDER BY
+                  A.PUMBUN_CD
+                , A.PUMMOK_CD
+        ]]>        
+    </query>
+    
+    	<query name="WHERE_DEPT_CD">        
+        <![CDATA[
+        				AND B.DEPT_CD  = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_TEAM_CD">        
+        <![CDATA[
+        				AND B.TEAM_CD  = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_PC_CD">        
+        <![CDATA[
+        				AND B.PC_CD    = ?
+        ]]>
+	</query>
+    
+   <query name="SEL_CMPRDT">        
+        <![CDATA[
+             SELECT NVL(MAX(CMPR_DT), TO_CHAR(ADD_MONTHS(TO_DATE(?, 'YYYYMMDD'),-12), 'YYYYMMDD'))
+              FROM DPS.PS_SCHEDULE
+             WHERE STR_CD  = ?
+               AND SALE_DT = ?
+        ]]>        
+    </query>    
+        
+</service>

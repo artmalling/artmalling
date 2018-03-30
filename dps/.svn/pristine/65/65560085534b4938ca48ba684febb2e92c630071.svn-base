@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.04.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  실사재고등록(비단품)을 관리한다.
+ -->
+<service name="/pstk206.pt">
+  
+  <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"            colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"         colType="TB_STRING"  size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"       colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"         colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"       colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_FLAG"        colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"        colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MG_RATE"           colType="TB_DECIMAL" size="5"    dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+  </gauce> 
+  
+    <!-- 재고스케쥴에 있는 정보 쿼리  -->
+  <gauce name="H_SEL_PBNSTK">
+        <column colName="SRVY_DT"         colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG"        colType="TB_STRING"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG_NAME"   colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SRVY_S_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_E_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_CD"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_YM"          colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+  </gauce>
+  
+  <!-- 품번정보조회 -->
+    <gauce name="H_SEL_PBNINF">        
+        <column colName="ORG_NAME"         colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                                   
+        <column colName="STR_NAME"         colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+   
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_PBNMONTH">
+        <![CDATA[
+            SELECT A.STR_CD
+                 , A.PUMBUN_CD
+                 , B.PUMBUN_NAME
+                 , C.PUMMOK_CD
+                 , D.PUMMOK_NAME
+                 , A.EVENT_FLAG
+                 , A.EVENT_RATE
+                 , A.NORM_MG_RATE
+              FROM DPS.PC_MARGINMST A
+                 , DPS.PC_STRPBN    B
+                 , DPS.PC_ORGMST    ORG
+                 , DPS.PC_PBNPMK    C
+                 , DPS.PC_PMKMST    D
+             WHERE A.STR_CD      = ?
+               AND A.EVENT_CD    = '00000000000'
+               AND ? BETWEEN A.APP_S_DT AND A.APP_E_DT
+               AND A.STR_CD      = B.STR_CD
+               AND A.PUMBUN_CD   = B.PUMBUN_CD
+               AND B.SKU_FLAG    = '2'
+               AND B.PUMBUN_TYPE <> '2'
+               AND ORG.STR_CD    = B.STR_CD
+               AND ORG.ORG_CD    = B.SALE_ORG_CD
+               AND C.PUMBUN_CD   = B.PUMBUN_CD
+               AND D.PUMMOK_CD   = C.PUMMOK_CD
+               AND ORG.DEPT_CD   = ?
+               AND ORG.TEAM_CD   = ?
+               AND ORG.PC_CD     = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_PBNMONTH_PUMBUN_CD">
+        <![CDATA[
+               AND A.PUMBUN_CD  = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_PBNMONTH_CORNER_CD">
+        <![CDATA[
+               AND ORG.CORNER_CD = ? 
+        ]]>    
+    </query>
+    
+    <query name="SEL_PBNMONTH_FLOR_CD">
+        <![CDATA[
+               AND B.FLOR_CD = ? 
+        ]]>    
+    </query>
+    
+    <query name="SEL_PBNMONTH_GROUP">
+        <![CDATA[
+               GROUP BY C.PUMBUN_CD
+                      , C.PUMMOK_CD
+                      , C.STR_CD
+                      , C.EVENT_FLAG
+                      , C.EVENT_RATE
+                      , C.MG_RATE 
+        ]]>    
+    </query>
+    <query name="SEL_PBNMONTH_ORDER">
+        <![CDATA[
+            ORDER BY B.PUMBUN_CD
+                   , C.PUMMOK_CD
+                   , A.EVENT_FLAG
+                   , A.EVENT_RATE
+                   , A.NORM_MG_RATE
+        ]]>    
+    </query>
+    
+    <!-- 재고실사 조회 쿼리  -->
+    <query name="SEL_PBNSTK">
+        <![CDATA[
+            SELECT SCH.SRVY_DT 
+                 , SCH.STK_FLAG
+                 , (SELECT X.COMM_NAME1
+                     FROM COM.TC_COMMCODE X
+                    WHERE X.SYS_PART = 'D'
+                      AND X.COMM_PART = 'P801'
+                      AND X.COMM_CODE = SCH.STK_FLAG) AS STK_FLAG_NAME
+                 , CASE WHEN NVL(SCH.CLOSE_DT,NULL) IS NULL THEN '진행' ELSE '마감' END AS CLOSE_DT
+                 , SCH.SRVY_S_DT
+                 , SCH.SRVY_E_DT
+                 , SCH.STR_CD
+                 , SCH.STK_YM
+              FROM DPS.PT_SCHEDULE SCH
+             WHERE SCH.STR_CD = ?
+               AND SCH.STK_YM = ?
+        ]]>    
+    </query>
+    
+    <!-- 품번정보조회  -->
+    <query name="SEL_PBNINF">
+        <![CDATA[
+            SELECT ORG.ORG_NAME
+                 , STR.STR_NAME                
+              FROM DPS.PC_STRPBN STP
+                 , DPS.PC_ORGMST ORG
+                 , DPS.PC_STRMST STR
+            WHERE STP.SALE_ORG_CD = ORG.ORG_CD
+              AND STP.STR_CD = STR.STR_CD 
+              AND STP.STR_CD = ?
+              AND STP.PUMBUN_CD = ?
+        ]]>    
+    </query>
+    
+</service>

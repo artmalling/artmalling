@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal448.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="NUM"                     colType="TB_DECIMAL"     size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_SALE_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AVG_QTY"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AVG_AMT"                 colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AREA_SIZE"               colType="TB_DECIMAL"     size="7"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AREA_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT"    	              colType="TB_DECIMAL"     size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_BEST_WORST_ASC">        
+        <![CDATA[    
+	        SELECT A.NUM
+	             , A.PUMBUN_CD
+	             , A.PUMBUN_NAME
+	             , A.SALE_QTY
+	             , A.NORM_SALE_AMT
+	             , A.AVG_QTY
+	             , A.AVG_AMT
+	             , A.AREA_SIZE
+                 , A.AREA_AMT
+                 , ? AS UNIT
+	          FROM (
+	                SELECT A.NUM
+	                     , A.PUMBUN_CD
+	                     , A.PUMBUN_NAME
+	                     , A.SALE_QTY
+	                     , A.NORM_SALE_AMT
+	                     , A.AVG_QTY
+	                     , A.AVG_AMT
+	                     , A.AREA_SIZE
+                         , A.AREA_AMT
+	                  FROM (
+	                        SELECT ROW_NUMBER() OVER(ORDER BY    SUM(A.NORM_SALE_AMT) DESC) AS  NUM
+	                             , A.PUMBUN_CD
+	                             , D.PUMBUN_NAME
+	                             , SUM(A.SALE_QTY)                  AS SALE_QTY
+	                             , SUM(A.NORM_SALE_AMT)             AS NORM_SALE_AMT
+	                             , ROUND(SUM(A.SALE_QTY)/?,0)       AS AVG_QTY
+	                             , ROUND(SUM(A.NORM_SALE_AMT)/?,0)  AS AVG_AMT
+	                             , A.STR_CD
+	                             , MAX(D.AREA_SIZE)                 AS AREA_SIZE
+                                 , DECODE(MAX(D.AREA_SIZE), 0, 0, ROUND(SUM(A.NORM_SALE_AMT)/MAX(D.AREA_SIZE))) AS AREA_AMT
+	                          FROM DPS.PS_DAYPBN A
+	                             , DPS.PC_ORGMST B
+				                 , (
+				                     SELECT DISTINCT STR_CD
+				                          , DEPT_CD
+				                          , TEAM_CD
+				                          , PC_CD
+				                          , PUMBUN_CD
+				                          , USER_ID
+				                       FROM COM.V_MYORG MYORG
+				                      WHERE MYORG.STR_CD      = ?
+				                        AND MYORG.DEPT_CD     LIKE ?  || '%'
+				                        AND MYORG.TEAM_CD     LIKE ?  || '%'
+				                        AND MYORG.PC_CD       LIKE ?  || '%'
+				                        AND MYORG.ORG_FLAG    = ?
+				                        AND MYORG.USER_ID     = ?
+				                   )       C
+				                 , DPS.PC_STRPBN  D
+	                         WHERE B.STR_CD     = C.STR_CD
+				               AND B.DEPT_CD    = C.DEPT_CD
+				               AND B.TEAM_CD    = C.TEAM_CD
+				               AND B.PC_CD      = C.PC_CD
+				               AND A.PUMBUN_CD  = C.PUMBUN_CD
+				               AND A.STR_CD     = D.STR_CD
+				               AND A.PUMBUN_CD  = D.PUMBUN_CD
+				               AND (CASE WHEN ? = '1' THEN D.SALE_ORG_CD ELSE D.BUY_ORG_CD END) = B.ORG_CD
+	                           AND B.STR_CD     = ?
+	                           AND B.DEPT_CD    LIKE ? || '%'
+	                           AND B.TEAM_CD    LIKE ? || '%'
+	                           AND B.PC_CD      LIKE ? || '%'
+	                           AND A.PUMBUN_CD  LIKE ?  || '%'
+	                           AND A.SALE_DT    BETWEEN ? AND ?
+	                         GROUP BY
+	                               A.PUMBUN_CD
+	                             , D.PUMBUN_NAME
+	                             , A.STR_CD
+	                        ) A
+	                  ORDER BY
+	                        NUM ASC
+	               ) A
+	         WHERE NUM <= ?
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_BEST_WORST_DESC">        
+        <![CDATA[    
+            SELECT A.NUM
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.SALE_QTY
+                 , A.NORM_SALE_AMT
+                 , A.AVG_QTY
+                 , A.AVG_AMT
+                 , A.AREA_SIZE
+                 , A.AREA_AMT
+                 , ? AS UNIT
+              FROM (
+                    SELECT A.NUM
+                         , A.PUMBUN_CD
+                         , A.PUMBUN_NAME
+                         , A.SALE_QTY
+                         , A.NORM_SALE_AMT
+                         , A.AVG_QTY
+                         , A.AVG_AMT
+                         , A.AREA_SIZE
+                         , A.AREA_AMT
+                      FROM (
+                            SELECT ROW_NUMBER() OVER(ORDER BY    SUM(A.NORM_SALE_AMT) ASC) AS  NUM
+                                 , A.PUMBUN_CD
+                                 , D.PUMBUN_NAME
+                                 , SUM(A.SALE_QTY)               AS SALE_QTY
+                                 , SUM(A.NORM_SALE_AMT)          AS NORM_SALE_AMT
+                                 , ROUND(SUM(A.SALE_QTY)/?,0)    AS AVG_QTY
+                                 , ROUND(SUM(A.NORM_SALE_AMT)/?,0)AS AVG_AMT
+                                 , A.STR_CD
+                                 , MAX(D.AREA_SIZE)                 AS AREA_SIZE
+                                 , DECODE(MAX(D.AREA_SIZE), 0, 0, ROUND(SUM(A.NORM_SALE_AMT)/MAX(D.AREA_SIZE))) AS AREA_AMT
+                              FROM DPS.PS_DAYPBN A
+                                 , DPS.PC_ORGMST B
+                                 , (
+                                     SELECT DISTINCT STR_CD
+                                          , DEPT_CD
+                                          , TEAM_CD
+                                          , PC_CD
+                                          , PUMBUN_CD
+                                          , USER_ID
+                                       FROM COM.V_MYORG MYORG
+                                      WHERE MYORG.STR_CD      = ?
+                                        AND MYORG.DEPT_CD     LIKE ?  || '%'
+                                        AND MYORG.TEAM_CD     LIKE ?  || '%'
+                                        AND MYORG.PC_CD       LIKE ?  || '%'
+                                        AND MYORG.ORG_FLAG    = ?
+                                        AND MYORG.USER_ID     = ?
+                                   )       C
+                                 , DPS.PC_STRPBN  D
+                             WHERE B.STR_CD     = C.STR_CD
+                               AND B.DEPT_CD    = C.DEPT_CD
+                               AND B.TEAM_CD    = C.TEAM_CD
+                               AND B.PC_CD      = C.PC_CD
+                               AND A.PUMBUN_CD  = C.PUMBUN_CD
+                               AND A.STR_CD     = D.STR_CD
+                               AND A.PUMBUN_CD  = D.PUMBUN_CD
+                               AND (CASE WHEN ? = '1' THEN D.SALE_ORG_CD ELSE D.BUY_ORG_CD END) = B.ORG_CD
+                               AND B.STR_CD     = ?
+                               AND B.DEPT_CD    LIKE ? || '%'
+                               AND B.TEAM_CD    LIKE ? || '%'
+                               AND B.PC_CD      LIKE ? || '%'
+                               AND A.PUMBUN_CD  LIKE ? || '%'
+                               AND A.SALE_DT    BETWEEN ? AND ?
+                             GROUP BY
+                                   A.PUMBUN_CD
+                                 , D.PUMBUN_NAME
+                                 , A.STR_CD
+                            ) A
+                      ORDER BY
+                            NUM ASC
+                   ) A
+             WHERE NUM <= ?
+            
+        ]]>        
+    </query>
+    
+    
+</service>

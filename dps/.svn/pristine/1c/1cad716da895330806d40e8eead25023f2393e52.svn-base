@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.04.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  재고조정확정(집계)관리.
+ -->
+<service name="/pstk214.pt">
+  
+  <gauce name="H_SEL_MASTER">
+        <column colName="CHECK1"         colType="TB_STRING"  size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FLAG"           colType="TB_STRING"  size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"        colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"        colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"          colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"      colType="TB_STRING"  size="6"    dec=""  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"    colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CONF_DT"        colType="TB_STRING"  size="8"    dec="8" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_ID"        colType="TB_STRING"  size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CONF_NAME"      colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="STK_QTY"        colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_AMT"        colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_QTY"       colType="TB_INT"     size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_AMT"       colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INFRR_QTY"      colType="TB_INT"     size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INFRR_AMT"      colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_QTY"       colType="TB_INT"     size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_AMT"       colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_QTY"       colType="TB_INT"     size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"       colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOSS_QTY"       colType="TB_INT"     size="7"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOSS_AMT"       colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOSS_RATE"      colType="TB_DECIMAL" size="5"    dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_LOSS_RATE"  colType="TB_DECIMAL" size="5"    dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOSS_ADD_AMT"   colType="TB_DECIMAL" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_YM"         colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_DT"        colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TODAY_DT"       colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+  </gauce>  
+  <!-- 재고실사 조회  -->
+  <gauce name="H_SEL_SRVY_DT">
+        <column colName="SRVY_DT"         colType="TB_STRING"  size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG_NAME"   colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+  </gauce>
+  <!-- 마진정보 조회  -->
+  <gauce name="H_SEL_EVENT_FLAG">
+        <column colName="EVENT_FLAG"      colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_RATE"      colType="TB_STRING"  size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NORM_MG_RATE"    colType="TB_DECIMAL" size="5"    dec="2" keyType="TB_NORMAL" roundMode="ROUND" />         
+  </gauce>  
+   
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_TOTAL_SKU">
+        <![CDATA[
+            SELECT A.CHECK1
+                 , A.SKU_FLAG AS FLAG
+                 , A.STR_CD
+                 , A.DEPT_CD
+                 , A.TEAM_CD
+                 , A.PC_CD                 
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME
+                 , A.CLOSE_DT AS CONF_DT
+                 , A.CLOSE_ID AS CONF_ID
+                 , (SELECT USER_NAME FROM COM.TC_USRMST X WHERE X.USER_ID = A.CLOSE_ID) AS CONF_NAME 
+                 , A.BOOK_QTY AS STK_QTY
+                 , A.BOOK_AMT AS STK_AMT     
+                 , A.NORM_QTY 
+                 , A.NORM_AMT
+                 , A.INFRR_QTY
+                 , A.INFRR_AMT
+                 , A.SRVY_QTY
+                 , A.SRVY_AMT
+                 , A.SALE_QTY
+                 , A.SALE_AMT
+                 , A.LOSS_QTY
+                 , A.LOSS_AMT
+                 , CASE WHEN A.SALE_AMT <> 0 THEN ROUND(A.LOSS_AMT / A.SALE_AMT * 100,2)
+                        ELSE 0
+                   END AS LOSS_RATE 
+                 , NVL(B.APP_LOSS_RATE, 0) AS APP_LOSS_RATE
+                 , CASE WHEN A.LOSS_AMT > ROUND(A.SALE_AMT * NVL(B.APP_LOSS_RATE, 0) / 100, 0) THEN A.LOSS_AMT - ROUND(A.SALE_AMT * NVL(B.APP_LOSS_RATE, 0) / 100, 0)
+                        ELSE 0 
+                   END AS LOSS_ADD_AMT
+                 , ? AS STK_YM                    -- 재고조사년월
+                 , (SELECT SRVY_DT
+                     FROM DPS.PT_SCHEDULE X
+                    WHERE X.STR_CD = X.STR_CD
+                      AND X.STK_YM = ?) AS SRVY_DT -- 재고조사년월
+                 , TO_CHAR(SYSDATE,'YYYYMMDD') AS TODAY_DT
+              FROM (
+                    SELECT STR_CD
+                         , PUMBUN_CD
+                         , PUMBUN_NAME
+                         , DEPT_CD
+                         , TEAM_CD
+                         , PC_CD
+                         , SKU_FLAG
+                         , CASE WHEN MAX(CLOSE_DT) IS NOT NULL THEN 'T'
+                                WHEN (SELECT 1 FROM DPS.PT_TOTALSKU WHERE PUMBUN_CD = X.PUMBUN_CD AND STK_YM = ? AND ROWNUM = 1) = 1 THEN 'T'
+                                ELSE 'F'
+                           END AS CHECK1
+                         , CASE WHEN MAX(CLOSE_DT) IS NOT NULL THEN MAX(CLOSE_DT)
+                                ELSE (SELECT TO_CHAR(REG_DATE, 'YYYYMMDD') FROM DPS.PT_TOTALSKU WHERE PUMBUN_CD = X.PUMBUN_CD AND STK_YM = ? AND ROWNUM = 1)
+                           END AS CLOSE_DT
+                         --, MAX(CLOSE_DT)   AS CLOSE_DT
+                         , MAX(CLOSE_ID)   AS CLOSE_ID
+                         , SUM(NORM_QTY)   AS NORM_QTY
+                         , SUM(NORM_AMT)   AS NORM_AMT
+                         , SUM(INFRR_QTY)  AS INFRR_QTY
+                         , SUM(INFRR_AMT)  AS INFRR_AMT
+                         , SUM(SRVY_QTY)   AS SRVY_QTY
+                         , SUM(SRVY_AMT)   AS SRVY_AMT
+                         , SUM(BASE_QTY)   AS BASE_QTY
+                         , SUM(BASE_AMT)   AS BASE_AMT
+                         , SUM(MAEIP_QTY)  AS MAEIP_QTY
+                         , SUM(MAEIP_AMT)  AS MAEIP_AMT
+                         , SUM(SALE_QTY)   AS SALE_QTY
+                         , SUM(SALE_AMT)   AS SALE_AMT
+                         , SUM(BASE_QTY + MAEIP_QTY - SALE_QTY) AS BOOK_QTY
+                         , SUM(BASE_AMT + MAEIP_AMT - SALE_AMT) AS BOOK_AMT
+                         , SUM(BASE_QTY + MAEIP_QTY - SALE_QTY - SRVY_QTY) AS LOSS_QTY
+                         , SUM(BASE_AMT + MAEIP_AMT - SALE_AMT - SRVY_AMT) AS LOSS_AMT
+                      FROM (
+                            SELECT STK.STR_CD
+                                 , STK.PUMBUN_CD
+                                 , PBN.PUMBUN_NAME
+                                 , MYORG.DEPT_CD
+                                 , MYORG.TEAM_CD
+                                 , MYORG.PC_CD
+                                 , PBN.SKU_FLAG
+                                 , MAX(STK.CLOSE_DT) CLOSE_DT
+                                 , MAX(STK.CLOSE_ID) CLOSE_ID
+                                 , SUM(STK.NORM_QTY)   AS NORM_QTY
+                                 , SUM(STK.NORM_AMT)   AS NORM_AMT
+                                 , SUM(STK.INFRR_QTY)  AS INFRR_QTY
+                                 , SUM(STK.INFRR_AMT)  AS INFRR_AMT
+                                 , SUM(STK.SRVY_QTY)   AS SRVY_QTY
+                                 , SUM(STK.SRVY_SALE_AMT) AS SRVY_AMT
+                                 , 0 BASE_QTY
+                                 , 0 BASE_AMT
+                                 , 0 MAEIP_QTY
+                                 , 0 MAEIP_AMT
+                                 , 0 SALE_QTY
+                                 , 0 SALE_AMT
+                              FROM DPS.PT_STKSKU STK
+                                 , DPS.PC_STRPBN PBN
+                                 , DPS.PC_ORGMST MYORG
+                             WHERE STK.STR_CD = ?                     -- 점코드
+                               AND STK.STK_YM = ?                     -- 재고조사년월 
+                               AND PBN.STR_CD = STK.STR_CD
+                               AND PBN.PUMBUN_CD = STK.PUMBUN_CD
+                               AND MYORG.STR_CD  = PBN.STR_CD
+                               AND MYORG.ORG_CD  = PBN.SALE_ORG_CD
+                               AND STK.STR_CD    = MYORG.STR_CD
+                               AND MYORG.STR_CD  = ?                  -- 점코드
+                               AND MYORG.DEPT_CD = ?                  -- 부문
+                               AND MYORG.TEAM_CD = ?                  -- 팀
+                               AND MYORG.PC_CD   = ?                  -- PC
+                               AND STK.PUMBUN_CD LIKE ?||'%'          -- 품번코드
+                             GROUP BY
+                                   STK.STR_CD
+                                 , STK.PUMBUN_CD
+                                 , PBN.PUMBUN_NAME
+                                 , MYORG.DEPT_CD
+                                 , MYORG.TEAM_CD
+                                 , MYORG.PC_CD
+                                 , PBN.SKU_FLAG
+                                 
+                             UNION ALL
+                            
+                            SELECT STK.STR_CD
+                                 , STK.PUMBUN_CD
+                                 , PBN.PUMBUN_NAME
+                                 , MYORG.DEPT_CD
+                                 , MYORG.TEAM_CD
+                                 , MYORG.PC_CD
+                                 , PBN.SKU_FLAG
+                                 , MAX(STK.CLOSE_DT) CLOSE_DT
+                                 , MAX(STK.CLOSE_ID) CLOSE_ID
+                                 , SUM(STK.NORM_QTY)   AS NORM_QTY
+                                 , SUM(STK.NORM_AMT)   AS NORM_AMT
+                                 , SUM(STK.INFRR_QTY)  AS INFRR_QTY
+                                 , SUM(STK.INFRR_AMT)  AS INFRR_AMT
+                                 , SUM(STK.SRVY_QTY)   AS SRVY_QTY
+                                 , SUM(STK.SRVY_SALE_AMT) AS SRVY_AMT
+                                 , 0 BASE_QTY
+                                 , 0 BASE_AMT
+                                 , 0 MAEIP_QTY
+                                 , 0 MAEIP_AMT
+                                 , 0 SALE_QTY
+                                 , 0 SALE_AMT
+                              FROM DPS.PT_STKPBN STK
+                                 , DPS.PC_STRPBN PBN
+                                 , DPS.PC_ORGMST MYORG
+                             WHERE STK.STR_CD = ?                     -- 점코드
+                               AND STK.STK_YM = ?                     -- 재고조사년월 
+                               AND PBN.STR_CD = STK.STR_CD
+                               AND PBN.PUMBUN_CD = STK.PUMBUN_CD
+                               AND MYORG.STR_CD  = PBN.STR_CD
+                               AND MYORG.ORG_CD  = PBN.SALE_ORG_CD
+                               AND STK.STR_CD    = MYORG.STR_CD
+                               AND MYORG.STR_CD  = ?                  -- 점코드
+                               AND MYORG.DEPT_CD = ?                  -- 부문
+                               AND MYORG.TEAM_CD = ?                  -- 팀
+                               AND MYORG.PC_CD   = ?                  -- PC
+                               AND STK.PUMBUN_CD LIKE ?||'%'          -- 품번코드
+                             GROUP BY
+                                   STK.STR_CD
+                                 , STK.PUMBUN_CD
+                                 , PBN.PUMBUN_NAME
+                                 , MYORG.DEPT_CD
+                                 , MYORG.TEAM_CD
+                                 , MYORG.PC_CD
+                                 , PBN.SKU_FLAG
+                               
+                             UNION ALL
+                             
+                             
+                             
+                            SELECT STK.STR_CD
+                                 , STK.PUMBUN_CD
+                                 , PBN.PUMBUN_NAME
+                                 , MYORG.DEPT_CD
+                                 , MYORG.TEAM_CD
+                                 , MYORG.PC_CD
+                                 , PBN.SKU_FLAG
+                                 , '' CLOSE_DT
+                                 , '' CLOSE_ID
+                                 , 0 AS NORM_QTY
+                                 , 0 AS NORM_AMT
+                                 , 0 AS INFRR_QTY
+                                 , 0 AS INFRR_AMT
+                                 , 0 AS SRVY_QTY
+                                 , 0 AS SRVY_AMT
+                                 , SUM(CAO_QTY)      BASE_QTY
+                                 , SUM(CAO_SALE_AMT) BASE_AMT
+                                 , 0 MAEIP_QTY
+                                 , 0 MAEIP_AMT
+                                 , 0 SALE_QTY
+                                 , 0 SALE_AMT
+                              FROM DPS.PT_PBNMONTH STK
+                                 , DPS.PC_STRPBN PBN
+                                 , DPS.PC_ORGMST MYORG
+                                 , DPS.PT_SCHEDULE SCH
+                             WHERE SCH.STR_CD    = ?                     -- 점코드
+                               AND SCH.STK_YM    = ?                     -- 재고조사년월 
+                               AND STK.STR_CD    = SCH.STR_CD
+                               AND STK.STK_YM    = SUBSTR(SCH.STK_S_DT, 1, 6)
+                               AND PBN.STR_CD    = STK.STR_CD
+                               AND PBN.PUMBUN_CD = STK.PUMBUN_CD
+                               AND MYORG.STR_CD  = PBN.STR_CD
+                               AND MYORG.ORG_CD  = PBN.SALE_ORG_CD
+                               AND STK.STR_CD    = MYORG.STR_CD
+                               AND MYORG.STR_CD  = ?                  -- 점코드
+                               AND MYORG.DEPT_CD = ?                  -- 부문
+                               AND MYORG.TEAM_CD = ?                  -- 팀
+                               AND MYORG.PC_CD   = ?                  -- PC
+                               AND STK.PUMBUN_CD LIKE ?||'%'          -- 품번코드
+                             GROUP BY
+                                   STK.STR_CD
+                                 , STK.PUMBUN_CD
+                                 , PBN.PUMBUN_NAME
+                                 , MYORG.DEPT_CD
+                                 , MYORG.TEAM_CD
+                                 , MYORG.PC_CD
+                                 , PBN.SKU_FLAG
+                                 
+                                 
+                            UNION ALL
+                            
+                            SELECT STK.STR_CD
+                                 , STK.PUMBUN_CD
+                                 , PBN.PUMBUN_NAME
+                                 , MYORG.DEPT_CD
+                                 , MYORG.TEAM_CD
+                                 , MYORG.PC_CD
+                                 , PBN.SKU_FLAG
+                                 , '' CLOSE_DT
+                                 , '' CLOSE_ID
+                                 , 0 AS NORM_QTY
+                                 , 0 AS NORM_AMT
+                                 , 0 AS INFRR_QTY
+                                 , 0 AS INFRR_AMT
+                                 , 0 AS SRVY_QTY
+                                 , 0 AS SRVY_AMT
+                                 , SUM(CASE WHEN STK.STK_DT BETWEEN SUBSTR(SCH.STK_S_DT, 1, 6)||'01' AND TO_CHAR(TO_DATE(SCH.STK_S_DT, 'YYYYMMDD')-1, 'YYYYMMDD') THEN (BUY_TOT_QTY      - SALE_QTY      - STK_ADJ_QTY)      ELSE 0 END) BASE_QTY
+                                 , SUM(CASE WHEN STK.STK_DT BETWEEN SUBSTR(SCH.STK_S_DT, 1, 6)||'01' AND TO_CHAR(TO_DATE(SCH.STK_S_DT, 'YYYYMMDD')-1, 'YYYYMMDD') THEN (BUY_TOT_SALE_AMT - SALE_SALE_AMT - STK_ADJ_SALE_AMT) ELSE 0 END) BASE_AMT
+                                 , SUM(CASE WHEN STK.STK_DT BETWEEN SCH.STK_S_DT AND SCH.STK_E_DT THEN (BUY_TOT_QTY      - STK_ADJ_QTY)      ELSE 0 END) MAEIP_QTY
+                                 , SUM(CASE WHEN STK.STK_DT BETWEEN SCH.STK_S_DT AND SCH.STK_E_DT THEN (BUY_TOT_SALE_AMT - STK_ADJ_SALE_AMT) ELSE 0 END) MAEIP_AMT
+                                 , SUM(CASE WHEN STK.STK_DT BETWEEN SCH.STK_S_DT AND SCH.STK_E_DT THEN (SALE_QTY) ELSE 0 END) SALE_QTY
+                                 , SUM(CASE WHEN STK.STK_DT BETWEEN SCH.STK_S_DT AND SCH.STK_E_DT THEN (SALE_SALE_AMT) ELSE 0 END) SALE_AMT
+                              FROM DPS.PT_PBNDAY STK
+                                 , DPS.PC_STRPBN PBN
+                                 , DPS.PC_ORGMST MYORG
+                                 , DPS.PT_SCHEDULE SCH
+                             WHERE SCH.STR_CD    = ?                     -- 점코드
+                               AND SCH.STK_YM    = ?                     -- 재고조사년월 
+                               AND STK.STR_CD    = SCH.STR_CD
+                               AND STK.STK_DT    BETWEEN TO_CHAR(TO_DATE(SCH.STK_S_DT, 'YYYYMMDD')-1, 'YYYYMMDD') AND SCH.STK_E_DT
+                               AND PBN.STR_CD    = STK.STR_CD
+                               AND PBN.PUMBUN_CD = STK.PUMBUN_CD
+                               AND MYORG.STR_CD  = PBN.STR_CD
+                               AND MYORG.ORG_CD  = PBN.SALE_ORG_CD
+                               AND STK.STR_CD    = MYORG.STR_CD
+                               AND MYORG.STR_CD  = ?                  -- 점코드
+                               AND MYORG.DEPT_CD = ?                  -- 부문
+                               AND MYORG.TEAM_CD = ?                  -- 팀
+                               AND MYORG.PC_CD   = ?                  -- PC
+                               AND STK.PUMBUN_CD LIKE ?||'%'          -- 품번코드
+                             GROUP BY
+                                   STK.STR_CD
+                                 , STK.PUMBUN_CD
+                                 , PBN.PUMBUN_NAME
+                                 , MYORG.DEPT_CD
+                                 , MYORG.TEAM_CD
+                                 , MYORG.PC_CD
+                                 , PBN.SKU_FLAG
+                           ) X             
+                     GROUP BY
+                           STR_CD
+                         , PUMBUN_CD
+                         , PUMBUN_NAME
+                         , DEPT_CD
+                         , TEAM_CD
+                         , PC_CD
+                         , SKU_FLAG
+                   ) A
+                 , DPS.PT_STKLOSS B
+             WHERE B.STR_CD    (+) = A.STR_CD
+               AND B.PUMBUN_CD (+) = A.PUMBUN_CD
+               AND B.STK_YYYY  (+)  = SUBSTR(?, 1, 4)        
+             ORDER BY
+                   A.PUMBUN_CD
+                                      
+        ]]>    
+    </query>    
+    <query name="SEL_TOTAL_PUMBUN_CD">
+        <![CDATA[
+               AND A.PUMBUN_CD = ?             
+        ]]>    
+    </query>
+    <query name="SEL_TOTAL_SKU_GROUP_BY">
+        <![CDATA[
+             GROUP BY A.PUMBUN_CD
+                    , A.PUMBUN_NAME
+                    , A.CLOSE_DT
+                    , A.CLOSE_ID
+                    , A.STR_CD
+                    , A.DEPT_CD
+                    , A.TEAM_CD 
+                    , A.PC_CD
+                    , B.APP_LOSS_RATE
+                    , A.STK_YM
+        ]]>    
+    </query>
+    <query name="SEL_TOTAL_PBN_GROUP_BY">
+        <![CDATA[
+             GROUP BY A.PUMBUN_CD
+                    , A.PUMBUN_NAME
+                    , A.CLOSE_DT
+                    , A.CLOSE_ID
+                    , A.STR_CD
+                    , A.DEPT_CD
+                    , A.TEAM_CD 
+                    , A.PC_CD
+                    , A.APP_LOSS_RATE
+                    , A.STK_YM
+        ]]>    
+    </query>
+    <query name="SEL_STKPUMBUN_ORDER">
+        <![CDATA[
+            ORDER BY PUMBUN_CD
+        ]]>    
+    </query>
+    
+    <!-- 재고실사일 조회쿼리  -->
+    <query name="SEL_SRVY_DT">
+        <![CDATA[        
+            SELECT SRVY_DT 
+              FROM DPS.PT_SCHEDULE 
+             WHERE STR_CD = ?
+               AND STK_YM = ?               
+        ]]> 
+    </query>
+    
+    <!-- 재고실사 조회 쿼리  -->
+    <query name="SEL_PBNSTK">
+        <![CDATA[
+            SELECT SCH.SRVY_DT, STF.STK_FLAG_NAME
+              FROM DPS.PT_SCHEDULE SCH
+                , (SELECT COMM_CODE , COMM_NAME1 AS STK_FLAG_NAME
+                     FROM COM.TC_COMMCODE
+                    WHERE SYS_PART = 'D'
+                      AND COMM_PART = 'P801') STF
+             WHERE STF.COMM_CODE = SCH.STK_FLAG
+               AND SCH.STR_CD    = ?  
+               AND SCH.STK_YM    = ?
+        ]]>    
+    </query>
+    
+    <!-- 사용자 체크 쿼리 
+    <query name="SEL_EVENT_FLAG">
+        <![CDATA[        
+            SELECT EVENT_FLAG  ,EVENT_RATE ,   NORM_MG_RATE             
+              FROM DPS.PC_MARGINMST
+             WHERE STR_CD    = ?
+               AND PUMBUN_CD = ?               
+        ]]> 
+    </query> 
+     -->
+</service>

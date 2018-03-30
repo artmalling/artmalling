@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 박래형
+ * 회 사 명    : FKSS
+ * 작 성 일    : 2010.04.08
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  개발팀에서 기입해주세요
+ --> 
+<service name="/pord401.po">
+    <!-- 매입현황표  리스트 --> 
+    <gauce name="H_LIST"> 
+        <column colName="STR_CD"             colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_NM"             colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="SALE_ORG_BM"        colType="TB_STRING"     size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_ORG_BM_NM"     colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_ORG_TEAM"      colType="TB_STRING"     size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_ORG_TEAM_NM"   colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_ORG_PC"        colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_ORG_PC_NM"     colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="SALE_ORG_CD"        colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_ORG_NM"        colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="PUMBUN_CD"          colType="TB_STRING"     size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_NM"          colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="EVENT_CD"           colType="TB_STRING"     size="4"    dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MG_RATE"            colType="TB_DECIMAL"    size="5"    dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"             colType="TB_STRING"     size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"             colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_QTY"            colType="TB_DECIMAL"    size="8"    dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_COST_TAMT"      colType="TB_DECIMAL"    size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VAT_AMT"            colType="TB_DECIMAL"    size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"            colType="TB_DECIMAL"    size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CHK_SALE_TAMT"      colType="TB_DECIMAL"    size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 품목 매입현황표조회  리스트 조회(판매) -->
+    <query name="SEL_LIST1">
+        <![CDATA[
+            SELECT PBNB.STR_CD                                                  /* 점코드     */
+                 , DPS.FN_GET_STORE_NAME(PBNB.STR_CD)      AS STR_NM            /* 점명       */
+                 , SUBSTR(SPBN.SALE_ORG_CD,1,4)            AS SALE_ORG_BM       /* 부문 조직코드   */
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(SPBN.SALE_ORG_CD,1,2),
+                                       SUBSTR(SPBN.SALE_ORG_CD,3,2),
+                                       '00',
+                                       '00',
+                                       '00'
+                                      )                    AS SALE_ORG_BM_NM    /* 부문 조직명     */
+                 , SUBSTR(SPBN.SALE_ORG_CD,1,6)            AS SALE_ORG_TEAM     /* 팀 조직코드   */
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(SPBN.SALE_ORG_CD,1,2),
+                                       SUBSTR(SPBN.SALE_ORG_CD,3,2),
+                                       SUBSTR(SPBN.SALE_ORG_CD,5,2),
+                                       '00',
+                                       '00'
+                                      )                    AS SALE_ORG_TEAM_NM  /* 팀 조직명     */
+                 , SUBSTR(SPBN.SALE_ORG_CD,1,8)            AS SALE_ORG_PC       /* PC 조직코드   */
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(SPBN.SALE_ORG_CD,1,2),
+                                       SUBSTR(SPBN.SALE_ORG_CD,3,2),
+                                       SUBSTR(SPBN.SALE_ORG_CD,5,2),
+                                       SUBSTR(SPBN.SALE_ORG_CD,7,2),
+                                       '00'
+                                      )                    AS SALE_ORG_PC_NM    /* PC 조직명     */
+                 , SPBN.SALE_ORG_CD                                             /* 조직코드   */
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(SPBN.SALE_ORG_CD,1,2),
+                                       SUBSTR(SPBN.SALE_ORG_CD,3,2),
+                                       SUBSTR(SPBN.SALE_ORG_CD,5,2),
+                                       SUBSTR(SPBN.SALE_ORG_CD,7,2),
+                                       SUBSTR(SPBN.SALE_ORG_CD,9,2)
+                                      )                    AS SALE_ORG_NM  /* 조직명     */
+                 , PBNB.PUMBUN_CD                                          /* 품번코드   */
+                 , DPS.FN_GET_PUMBUN_NAME(PBNB.PUMBUN_CD)  AS PUMBUN_NM    /* 품번명     */
+                 , PBNB.EVENT_CD                                           /* 행사코드 */
+                 , PBNB.MG_RATE                            AS MG_RATE      /* 마진율     */
+                 , PBNB.VEN_CD                                             /* 협력사코드 */
+                 , DPS.FN_GET_VENDOR_NAME(PBNB.VEN_CD)     AS VEN_NM       /* 협력사명   */
+                 , PBNB.BUY_QTY
+                   - PBNB.RFD_QTY
+                   - PBNB.LEND_QTY
+                   + PBNB.BORROW_QTY 
+                   + PBNB.STRI_QTY
+                   - PBNB.STRO_QTY                         AS CHK_QTY      /* 확정수량   매가인상하는 수량이 변동되지 않는다 */
+                 , PBNB.BUY_COST_AMT
+                   - PBNB.RFD_COST_AMT
+                   - PBNB.LEND_COST_AMT
+                   + PBNB.BORROW_COST_AMT 
+                   + PBNB.STRI_COST_AMT
+                   - PBNB.STRO_COST_AMT                    AS CHK_COST_TAMT /* 확정원가금액 */
+                 , PBNB.BUY_VAT_AMT                           
+                   - PBNB.RFD_VAT_AMT
+                   + PBNB.BORROW_VAT_AMT
+                   - PBNB.LEND_VAT_AMT
+                   + PBNB.STRI_VAT_AMT
+                   - PBNB.STRO_VAT_AMT                     AS VAT_AMT       /* 확정VAT금액  */
+                 , PBNB.BUY_COST_AMT
+                   - PBNB.RFD_COST_AMT
+                   - PBNB.LEND_COST_AMT
+                   + PBNB.BORROW_COST_AMT 
+                   + PBNB.STRI_COST_AMT
+                   - PBNB.STRO_COST_AMT
+                   + PBNB.BUY_VAT_AMT                           
+                   - PBNB.RFD_VAT_AMT
+                   + PBNB.BORROW_VAT_AMT
+                   - PBNB.LEND_VAT_AMT
+                   + PBNB.STRI_VAT_AMT
+                   - PBNB.STRO_VAT_AMT                     AS TOT_AMT       /* 확정합계금액  */
+                 , PBNB.BUY_SALE_AMT
+                   - PBNB.RFD_SALE_AMT
+                   - PBNB.LEND_SALE_AMT
+                   + PBNB.BORROW_SALE_AMT 
+                   + PBNB.STRI_SALE_AMT
+                   - PBNB.STRO_SALE_AMT
+                   + PBNB.SALE_PRC_DOWN_AF_AMT - PBNB.SALE_PRC_UP_BF_AMT                 AS CHK_SALE_TAMT /* 확정매가금액 */
+               FROM (
+                     SELECT PBNB.STR_CD
+                          , PBNB.PUMBUN_CD
+                          , PBNB.VEN_CD
+                          , PBNB.EVENT_FLAG || PBNB.EVENT_RATE  AS EVENT_CD
+                          , NVL(PBNB.MG_RATE,0)              AS MG_RATE
+                          , SUM(
+                                CASE WHEN ? = 'A' THEN NVL(PBNB.BUY_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BUY_QTY
+                          , SUM(
+                                CASE WHEN ? = 'B' THEN NVL(PBNB.RFD_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS RFD_QTY
+                          , SUM(
+                                CASE WHEN ? = 'D' THEN NVL(PBNB.LEND_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS LEND_QTY
+                          , SUM(
+                                CASE WHEN ? = 'C' THEN NVL(PBNB.BORROW_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BORROW_QTY
+                          , SUM(
+                                CASE WHEN ? = 'F' THEN NVL(PBNB.STRI_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRI_QTY
+                          , SUM(
+                                CASE WHEN ? = 'E' THEN NVL(PBNB.STRO_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRO_QTY
+                          , SUM(
+                                CASE WHEN ? = 'A' THEN NVL(PBNB.BUY_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BUY_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'B' THEN NVL(PBNB.RFD_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS RFD_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'D' THEN NVL(PBNB.LEND_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS LEND_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'C' THEN NVL(PBNB.BORROW_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BORROW_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'F' THEN NVL(PBNB.STRI_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRI_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'E' THEN NVL(PBNB.STRO_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRO_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'A' THEN NVL(PBNB.BUY_SALE_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BUY_SALE_AMT
+                          , SUM(
+                                CASE WHEN ? = 'B' THEN NVL(PBNB.RFD_SALE_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS RFD_SALE_AMT
+                          , SUM(
+                                CASE WHEN ? = 'D' THEN NVL(PBNB.LEND_SALE_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS LEND_SALE_AMT
+                          , SUM(
+                                CASE WHEN ? = 'C' THEN NVL(PBNB.BORROW_SALE_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BORROW_SALE_AMT
+                          , SUM(
+                                CASE WHEN ? = 'F' THEN NVL(PBNB.STRI_SALE_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRI_SALE_AMT
+                          , SUM(
+                                CASE WHEN ? = 'E' THEN NVL(PBNB.STRO_SALE_AMT,0)
+                                     ELSE 0
+                                     END
+                               )                             AS STRO_SALE_AMT                             
+                          , SUM(
+                                CASE WHEN ? = 'A' THEN NVL(PBNB.BUY_VAT_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BUY_VAT_AMT
+                          , SUM(
+                                CASE WHEN ? = 'B' THEN NVL(PBNB.RFD_VAT_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS RFD_VAT_AMT
+                          , SUM(
+                                CASE WHEN ? = 'D' THEN NVL(PBNB.BORROW_VAT_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BORROW_VAT_AMT
+                          , SUM(
+                                CASE WHEN ? = 'C' THEN NVL(PBNB.LEND_VAT_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS LEND_VAT_AMT
+                          , SUM(
+                                CASE WHEN ? = 'F' THEN NVL(PBNB.STRI_VAT_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRI_VAT_AMT
+                          , SUM(
+                                CASE WHEN ? = 'E' THEN NVL(PBNB.STRO_VAT_AMT,0)
+                                     ELSE 0
+                                     END
+                               )                             AS STRO_VAT_AMT                
+                          , SUM(
+                                CASE WHEN ? = 'G' THEN NVL(PBNB.SALE_PRC_UP_BF_AMT,0)
+                                     ELSE 0
+                                     END
+                               )                             AS SALE_PRC_UP_BF_AMT    
+                          , SUM(
+                                CASE WHEN ? = 'G' THEN NVL(PBNB.SALE_PRC_DOWN_AF_AMT,0)
+                                     ELSE 0
+                                     END
+                               )                             AS SALE_PRC_DOWN_AF_AMT                                  
+                       FROM DPS.PT_PBNBUY PBNB
+                      WHERE PBNB.STR_CD = ?
+                        AND PBNB.STK_DT = ?
+                      GROUP BY PBNB.STR_CD
+                             , PBNB.PUMBUN_CD
+                             , PBNB.VEN_CD
+                             , PBNB.EVENT_FLAG || PBNB.EVENT_RATE
+                             , PBNB.MG_RATE
+                    ) PBNB
+                  , DPS.PC_STRPBN SPBN
+               WHERE SPBN.SALE_ORG_CD LIKE ? || ? || ? || ? ||'%'               
+                 AND SPBN.BIZ_TYPE IN (?, ?)
+                 AND PBNB.STR_CD      = SPBN.STR_CD
+                 AND PBNB.PUMBUN_CD   = SPBN.PUMBUN_CD
+                 AND PBNB.PUMBUN_CD   LIKE ? || '%'
+                 AND (PBNB.BUY_COST_AMT
+                       - PBNB.RFD_COST_AMT
+                       - PBNB.LEND_COST_AMT
+                       + PBNB.BORROW_COST_AMT 
+                       + PBNB.STRI_COST_AMT
+                       - PBNB.STRO_COST_AMT <> 0
+                     OR
+                     PBNB.BUY_SALE_AMT
+                       - PBNB.RFD_SALE_AMT
+                       - PBNB.LEND_SALE_AMT
+                       + PBNB.BORROW_SALE_AMT 
+                       + PBNB.STRI_SALE_AMT
+                       - PBNB.STRO_SALE_AMT
+                       + PBNB.SALE_PRC_DOWN_AF_AMT - PBNB.SALE_PRC_UP_BF_AMT <> 0
+                     )
+                 AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = SPBN.STR_CD
+                                 AND MYORG.PUMBUN_CD   = SPBN.PUMBUN_CD
+                                 AND MYORG.USER_ID     = ?
+                                 AND ROWNUM            = 1
+                                 AND MYORG.ORG_FLAG    = ?
+                             )
+            ORDER BY SPBN.SALE_ORG_CD, SALE_ORG_PC, SALE_ORG_TEAM, SALE_ORG_BM, PUMBUN_CD
+        ]]>
+    </query> 
+    
+    <!-- 매입현황표조회  리스트 조회(매입) -->
+    <query name="SEL_LIST2">
+        <![CDATA[
+            SELECT PBNB.STR_CD                                                  /* 점코드     */
+                 , DPS.FN_GET_STORE_NAME(PBNB.STR_CD)      AS STR_NM            /* 점명       */
+                 , SUBSTR(SPBN.BUY_ORG_CD,1,4)            AS SALE_ORG_BM       /* 부문 조직코드   */
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(SPBN.BUY_ORG_CD,1,2),
+                                       SUBSTR(SPBN.BUY_ORG_CD,3,2),
+                                       '00',
+                                       '00',
+                                       '00'
+                                      )                    AS SALE_ORG_BM_NM    /* 부문 조직명     */
+                 , SUBSTR(SPBN.BUY_ORG_CD,1,6)            AS SALE_ORG_TEAM     /* 팀 조직코드   */
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(SPBN.BUY_ORG_CD,1,2),
+                                       SUBSTR(SPBN.BUY_ORG_CD,3,2),
+                                       SUBSTR(SPBN.BUY_ORG_CD,5,2),
+                                       '00',
+                                       '00'
+                                      )                    AS SALE_ORG_TEAM_NM  /* 팀 조직명     */
+                 , SUBSTR(SPBN.BUY_ORG_CD,1,8)            AS SALE_ORG_PC       /* PC 조직코드   */
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(SPBN.BUY_ORG_CD,1,2),
+                                       SUBSTR(SPBN.BUY_ORG_CD,3,2),
+                                       SUBSTR(SPBN.BUY_ORG_CD,5,2),
+                                       SUBSTR(SPBN.BUY_ORG_CD,7,2),
+                                       '00'
+                                      )                    AS SALE_ORG_PC_NM    /* PC 조직명     */
+                 , SPBN.BUY_ORG_CD                                             /* 조직코드   */
+                 , DPS.FN_GET_ORG_NAME(
+                                       SUBSTR(SPBN.BUY_ORG_CD,1,2),
+                                       SUBSTR(SPBN.BUY_ORG_CD,3,2),
+                                       SUBSTR(SPBN.BUY_ORG_CD,5,2),
+                                       SUBSTR(SPBN.BUY_ORG_CD,7,2),
+                                       SUBSTR(SPBN.BUY_ORG_CD,9,2)
+                                      )                    AS SALE_ORG_NM  /* 조직명     */
+                 , PBNB.PUMBUN_CD                                          /* 품번코드   */
+                 , DPS.FN_GET_PUMBUN_NAME(PBNB.PUMBUN_CD)  AS PUMBUN_NM    /* 품번명     */
+                 , PBNB.EVENT_CD                                           /* 행사코드 */
+                 , PBNB.MG_RATE                            AS MG_RATE      /* 마진율     */
+                 , PBNB.VEN_CD                                             /* 협력사코드 */
+                 , DPS.FN_GET_VENDOR_NAME(PBNB.VEN_CD)     AS VEN_NM       /* 협력사명   */
+                 , PBNB.BUY_QTY
+                   - PBNB.RFD_QTY
+                   - PBNB.LEND_QTY
+                   + PBNB.BORROW_QTY 
+                   + PBNB.STRI_QTY
+                   - PBNB.STRO_QTY                         AS CHK_QTY      /* 확정수량  매가인상하는 수량이 변동하지 않는다  */
+                 , PBNB.BUY_COST_AMT
+                   - PBNB.RFD_COST_AMT
+                   - PBNB.LEND_COST_AMT
+                   + PBNB.BORROW_COST_AMT 
+                   + PBNB.STRI_COST_AMT
+                   - PBNB.STRO_COST_AMT                    AS CHK_COST_TAMT /* 확정원가금액 */
+                 , PBNB.BUY_VAT_AMT                           
+                   - PBNB.RFD_VAT_AMT
+                   + PBNB.BORROW_VAT_AMT
+                   - PBNB.LEND_VAT_AMT
+                   + PBNB.STRI_VAT_AMT
+                   - PBNB.STRO_VAT_AMT                     AS VAT_AMT       /* 확정VAT금액  */
+                 , PBNB.BUY_COST_AMT
+                   - PBNB.RFD_COST_AMT
+                   - PBNB.LEND_COST_AMT
+                   + PBNB.BORROW_COST_AMT 
+                   + PBNB.STRI_COST_AMT
+                   - PBNB.STRO_COST_AMT
+                   + PBNB.BUY_VAT_AMT                           
+                   - PBNB.RFD_VAT_AMT
+                   + PBNB.BORROW_VAT_AMT
+                   - PBNB.LEND_VAT_AMT
+                   + PBNB.STRI_VAT_AMT
+                   - PBNB.STRO_VAT_AMT                     AS TOT_AMT       /* 확정합계금액  */
+                 , PBNB.BUY_SALE_AMT
+                   - PBNB.RFD_SALE_AMT
+                   - PBNB.LEND_SALE_AMT
+                   + PBNB.BORROW_SALE_AMT 
+                   + PBNB.STRI_SALE_AMT
+                   - PBNB.STRO_SALE_AMT
+                   + PBNB.SALE_PRC_DOWN_AF_AMT - PBNB.SALE_PRC_UP_BF_AMT                 AS CHK_SALE_TAMT /* 확정매가금액 */
+               FROM (
+                     SELECT PBNB.STR_CD
+                          , PBNB.PUMBUN_CD
+                          , PBNB.VEN_CD
+                          , PBNB.EVENT_FLAG || PBNB.EVENT_RATE  AS EVENT_CD
+                          , NVL(PBNB.MG_RATE,0)              AS MG_RATE
+                          , SUM(
+                                CASE WHEN ? = 'A' THEN NVL(PBNB.BUY_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BUY_QTY
+                          , SUM(
+                                CASE WHEN ? = 'B' THEN NVL(PBNB.RFD_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS RFD_QTY
+                          , SUM(
+                                CASE WHEN ? = 'D' THEN NVL(PBNB.LEND_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS LEND_QTY
+                          , SUM(
+                                CASE WHEN ? = 'C' THEN NVL(PBNB.BORROW_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BORROW_QTY
+                          , SUM(
+                                CASE WHEN ? = 'F' THEN NVL(PBNB.STRI_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRI_QTY
+                          , SUM(
+                                CASE WHEN ? = 'E' THEN NVL(PBNB.STRO_QTY,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRO_QTY
+                          , SUM(
+                                CASE WHEN ? = 'A' THEN NVL(PBNB.BUY_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BUY_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'B' THEN NVL(PBNB.RFD_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS RFD_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'D' THEN NVL(PBNB.LEND_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS LEND_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'C' THEN NVL(PBNB.BORROW_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BORROW_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'F' THEN NVL(PBNB.STRI_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRI_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'E' THEN NVL(PBNB.STRO_COST_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRO_COST_AMT
+                          , SUM(
+                                CASE WHEN ? = 'A' THEN NVL(PBNB.BUY_SALE_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BUY_SALE_AMT
+                          , SUM(
+                                CASE WHEN ? = 'B' THEN NVL(PBNB.RFD_SALE_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS RFD_SALE_AMT
+                          , SUM(
+                                CASE WHEN ? = 'D' THEN NVL(PBNB.LEND_SALE_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS LEND_SALE_AMT
+                          , SUM(
+                                CASE WHEN ? = 'C' THEN NVL(PBNB.BORROW_SALE_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BORROW_SALE_AMT
+                          , SUM(
+                                CASE WHEN ? = 'F' THEN NVL(PBNB.STRI_SALE_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRI_SALE_AMT
+                          , SUM(
+                                CASE WHEN ? = 'E' THEN NVL(PBNB.STRO_SALE_AMT,0)
+                                     ELSE 0
+                                     END
+                               )                             AS STRO_SALE_AMT                  
+                          , SUM(
+                                CASE WHEN ? = 'A' THEN NVL(PBNB.BUY_VAT_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BUY_VAT_AMT
+                          , SUM(
+                                CASE WHEN ? = 'B' THEN NVL(PBNB.RFD_VAT_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS RFD_VAT_AMT
+                          , SUM(
+                                CASE WHEN ? = 'D' THEN NVL(PBNB.BORROW_VAT_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS BORROW_VAT_AMT
+                          , SUM(
+                                CASE WHEN ? = 'C' THEN NVL(PBNB.LEND_VAT_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS LEND_VAT_AMT
+                          , SUM(
+                                CASE WHEN ? = 'F' THEN NVL(PBNB.STRI_VAT_AMT,0)
+                                     ELSE 0
+                                     END 
+                               )                             AS STRI_VAT_AMT
+                          , SUM(
+                                CASE WHEN ? = 'E' THEN NVL(PBNB.STRO_VAT_AMT,0)
+                                     ELSE 0
+                                     END
+                               )                             AS STRO_VAT_AMT                
+                          , SUM(
+                                CASE WHEN ? = 'G' THEN NVL(PBNB.SALE_PRC_UP_BF_AMT,0)
+                                     ELSE 0
+                                     END
+                               )                             AS SALE_PRC_UP_BF_AMT    
+                          , SUM(
+                                CASE WHEN ? = 'G' THEN NVL(PBNB.SALE_PRC_DOWN_AF_AMT,0)
+                                     ELSE 0
+                                     END
+                               )                             AS SALE_PRC_DOWN_AF_AMT                                  
+                       FROM DPS.PT_PBNBUY PBNB
+                      WHERE PBNB.STR_CD = ?
+                        AND PBNB.STK_DT = ?
+                      GROUP BY PBNB.STR_CD
+                             , PBNB.PUMBUN_CD
+                             , PBNB.VEN_CD
+                             , PBNB.EVENT_FLAG || PBNB.EVENT_RATE
+                             , PBNB.MG_RATE
+                    ) PBNB
+                  , DPS.PC_STRPBN SPBN
+               WHERE SPBN.BUY_ORG_CD LIKE ? || ? || ? || ? ||'%'               
+                 AND SPBN.BIZ_TYPE IN (?, ?)
+                 AND PBNB.STR_CD      = SPBN.STR_CD
+                 AND PBNB.PUMBUN_CD   = SPBN.PUMBUN_CD
+                 AND PBNB.PUMBUN_CD   LIKE ? || '%'
+                 AND (PBNB.BUY_COST_AMT
+                       - PBNB.RFD_COST_AMT
+                       - PBNB.LEND_COST_AMT
+                       + PBNB.BORROW_COST_AMT 
+                       + PBNB.STRI_COST_AMT
+                       - PBNB.STRO_COST_AMT <> 0
+                     OR
+                     PBNB.BUY_SALE_AMT
+                       - PBNB.RFD_SALE_AMT
+                       - PBNB.LEND_SALE_AMT
+                       + PBNB.BORROW_SALE_AMT 
+                       + PBNB.STRI_SALE_AMT
+                       - PBNB.STRO_SALE_AMT
+                       + PBNB.SALE_PRC_DOWN_AF_AMT - PBNB.SALE_PRC_UP_BF_AMT <> 0
+                     )
+                 AND EXISTS ( SELECT MYORG.USER_ID
+                                FROM COM.V_MYORG MYORG
+                               WHERE MYORG.STR_CD      = SPBN.STR_CD
+                                 AND MYORG.PUMBUN_CD   = SPBN.PUMBUN_CD
+                                 AND MYORG.USER_ID     = ?
+                                 AND ROWNUM            = 1
+                                 AND MYORG.ORG_FLAG    = ?
+                             )
+            ORDER BY SPBN.BUY_ORG_CD, SALE_ORG_PC, SALE_ORG_TEAM, SALE_ORG_BM, PUMBUN_CD
+        ]]>
+    </query>     
+</service>

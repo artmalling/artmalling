@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2010.04.13
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  시재정정현황
+ -->
+<service name="/psal508.ps">
+    <!-- 시재정정현황 MASTER 헤더  -->
+    <gauce name="H_SEL_COR_MON_MST">
+        <column colName="STR_CD"          colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="MOD_TRG_SALE_DT" colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="MOD_TRG_POS_NO"  colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 시재정정현황 DETAIL 헤더  -->
+    <gauce name="H_SEL_COR_MON_DTL">
+        <column colName="SALE_DT"      colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="POS_NO"       colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TRAN_NO"      colType="TB_STRING"  size="5"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SEQ_NO"       colType="TB_STRING"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_USER_NM" colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TRAN_MODE"    colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TRAN_FLAG"    colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CASH_AMT"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="COU_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 시재정정현황 MASTER 조회쿼리  -->
+    <query name="SEL_COR_MON_MST">
+        <![CDATA[
+        SELECT STR_CD
+             , MOD_TRG_SALE_DT
+             , MOD_TRG_POS_NO
+          FROM DPS.PS_TRHEADER
+         WHERE STR_CD         = ?
+           AND MOD_TRG_SALE_DT BETWEEN ? AND ?
+           AND TRAN_TYPE      = ?
+           AND TRAN_MODE IN (?, ?, ?, ?, ?)
+        ]]>
+    </query>
+    
+    <query name="SEL_COR_MON_MST_WHERE_POS_NO">
+        <![CDATA[
+           AND MOD_TRG_POS_NO IN ( SELECT POS_NO
+                                     FROM DPS.PC_POSMST
+                                    WHERE STR_CD = ?
+                                      AND POS_NO LIKE ?||'%'
+                                      AND POS_FLAG = '09' )
+        ]]>
+    </query>
+    
+    <query name="SEL_COR_MON_MST_GROUPBY">
+        <![CDATA[
+         GROUP BY
+               STR_CD
+             , MOD_TRG_SALE_DT
+             , MOD_TRG_POS_NO
+        ]]>
+    </query>
+    
+    <query name="SEL_COR_MON_DTL">
+        <![CDATA[
+        SELECT X.SALE_DT
+             , X.POS_NO
+             , X.TRAN_NO
+             , X.SEQ_NO
+             , COM.FN_GET_USER_NAME(X.SALE_USER_ID) AS SALE_USER_NM
+             , CASE X.TRAN_MODE WHEN ? THEN '준비금'
+                                WHEN ? THEN '중간입금'
+                                WHEN ? THEN 'PDA입금'
+                                WHEN ? THEN '상품권교환'
+                                WHEN ? THEN '마감입금'
+                                ELSE ''
+               END                                  AS TRAN_MODE  
+             , DECODE(X.TRAN_FLAG, '0', '정상', '오타') AS TRAN_FLAG
+             , SUM(CASH_AMT)                        AS CASH_AMT
+             , SUM(COU_AMT)                         AS COU_AMT
+          FROM ( SELECT ETC.SALE_DT
+                      , ETC.POS_NO
+                      , ETC.TRAN_NO
+                      , ETC.SEQ_NO
+                      , HDR.SALE_USER_ID
+                      , HDR.TRAN_MODE
+                      , HDR.TRAN_FLAG
+                      , ETC.AMT                     AS CASH_AMT
+                      , 0                           AS COU_AMT
+                   FROM DPS.PS_TRHEADER HDR
+                      , DPS.PS_TRETC    ETC
+                  WHERE HDR.STR_CD          = ETC.STR_CD
+                    AND HDR.SALE_DT         = ETC.SALE_DT
+                    AND HDR.POS_NO          = ETC.POS_NO
+                    AND HDR.TRAN_NO         = ETC.TRAN_NO
+                    AND HDR.STR_CD          = ?
+                    AND HDR.MOD_TRG_SALE_DT = ?
+                    AND HDR.MOD_TRG_POS_NO  = ?
+                    AND ETC.DATA_TYPE       = '00'
+                  UNION ALL
+                 SELECT ETC.SALE_DT
+                      , ETC.POS_NO
+                      , ETC.TRAN_NO
+                      , ETC.SEQ_NO
+                      , HDR.SALE_USER_ID
+                      , HDR.TRAN_MODE
+                      , HDR.TRAN_FLAG
+                      , 0                           AS CASH_AMT
+                      , ETC.AMT                     AS COU_AMT
+                   FROM DPS.PS_TRHEADER HDR
+                      , DPS.PS_TRETC    ETC
+                  WHERE HDR.STR_CD          = ETC.STR_CD
+                    AND HDR.SALE_DT         = ETC.SALE_DT
+                    AND HDR.POS_NO          = ETC.POS_NO
+                    AND HDR.TRAN_NO         = ETC.TRAN_NO
+                    AND HDR.STR_CD          = ?
+                    AND HDR.MOD_TRG_SALE_DT = ?
+                    AND HDR.MOD_TRG_POS_NO  = ?
+                    AND ETC.DATA_TYPE       = '20'
+               ) X
+         GROUP BY 
+               X.SALE_DT
+             , X.POS_NO
+             , X.TRAN_NO
+             , X.SEQ_NO
+             , X.SALE_USER_ID
+             , X.TRAN_MODE
+             , X.TRAN_FLAG         
+        ]]>
+    </query>
+    
+</service>

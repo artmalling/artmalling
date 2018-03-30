@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  도시가스요금표관리
+ -->
+<service name="/mren106.mr">
+    <!-- 도시가스요금표관리 내역 -->
+    <gauce name="H_SEL_MR_GASPRC">
+        <column colName="AREA_FLAG"         colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAS_KIND_CD"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAS_KIND_DTL_CD"   colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ"               colType="TB_DECIMAL" size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_MM"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_MM"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BAS_PRC"           colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT_PRC"          colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAS_REDU1_PRC"     colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GAS_REDU2_PRC"     colType="TB_DECIMAL" size="9"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUPCHK"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <gauce name="H_SEL_DUP_KEYVALUE">
+        <column colName="DUPVALUE"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 조회 Query  -->
+    <query name="SEL_MR_GASPRC"> 
+        <![CDATA[   
+			SELECT MRG.AREA_FLAG
+			     , MRG.GAS_KIND_CD
+			     , MRG.GAS_KIND_DTL_CD
+			     , MRG.SEQ
+			     , MRG.APP_S_MM
+			     , MRG.APP_E_MM
+			     , MRG.BAS_PRC
+			     , MRG.UNIT_PRC
+			     , MRG.GAS_REDU1_PRC
+			     , MRG.GAS_REDU2_PRC
+			     , 'N' AS DUPCHK
+			  FROM MSS.MR_GASPRC MRG
+			 WHERE MRG.GAS_KIND_CD      LIKE ?||'%'
+			   AND MRG.GAS_KIND_DTL_CD  LIKE ?||'%'
+			   AND MRG.AREA_FLAG        LIKE ?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 등록(저장) Query  -->
+    <query name="INS_MR_GASPRC"> 
+        <![CDATA[   
+            INSERT 
+              INTO MSS.MR_GASPRC
+                 ( AREA_FLAG 
+				 , GAS_KIND_CD 
+				 , GAS_KIND_DTL_CD 
+				 , SEQ 
+				 , APP_S_MM 
+				 , APP_E_MM 
+				 , BAS_PRC 
+				 , UNIT_PRC 
+				 , GAS_REDU1_PRC 
+				 , GAS_REDU2_PRC 
+				 , REG_ID 
+				 , REG_DATE 
+				 , MOD_ID 
+				 , MOD_DATE )
+            VALUES
+                 ( ?
+                 , ?
+                 , ?
+                 , (SELECT NVL(MAX(SEQ)+1, 1) AS SEQ
+                      FROM MSS.MR_GASPRC
+                     WHERE AREA_FLAG = ?
+                       AND GAS_KIND_CD = ?
+                       AND GAS_KIND_DTL_CD = ?)
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , SYSDATE  
+                 , ?
+                 , SYSDATE 
+                 )
+        ]]>        
+    </query>
+    
+    <!-- 등록(수정) Query  -->
+    <query name="UPD_MR_GASPRC"> 
+        <![CDATA[   
+            UPDATE MSS.MR_GASPRC
+               SET APP_S_MM     = ? 
+                 , APP_E_MM     = ? 
+                 , BAS_PRC      = ? 
+                 , UNIT_PRC     = ? 
+                 , GAS_REDU1_PRC = ?
+                 , GAS_REDU2_PRC = ? 
+                 , MOD_ID       = ?
+                 , MOD_DATE     = SYSDATE
+             WHERE AREA_FLAG    = ?
+               AND GAS_KIND_CD  = ?
+               AND GAS_KIND_DTL_CD = ?
+               AND SEQ          = ?
+        ]]>        
+    </query>
+
+    <!-- 삭제 Query  -->
+    <query name="DEL_MR_GASPRC"> 
+        <![CDATA[ 
+            DELETE MSS.MR_GASPRC
+             WHERE AREA_FLAG    = ?
+               AND GAS_KIND_CD  = ?
+               AND GAS_KIND_DTL_CD = ?
+               AND SEQ          = ?
+        ]]>        
+    </query>
+
+    <!-- 키값체크 Query  -->
+    <query name="SEL_DUP_KEYVALUE"> 
+        <![CDATA[ 
+		SELECT DISTINCT DUPVALUE
+		  FROM (
+        ]]>        
+    </query>
+    <!-- 키값체크 Query  -->
+    <query name="SEL_SUB_DUP_KEYVALUE"> 
+        <![CDATA[ 
+            SELECT GAS_KIND_CD||GAS_KIND_DTL_CD||AREA_FLAG||? AS DUPVALUE
+              FROM MSS.MR_GASPRC
+             WHERE ROWNUM = 1
+               AND AREA_FLAG = ?
+               AND GAS_KIND_CD = ?
+               AND GAS_KIND_DTL_CD = ?
+               AND ((? >= APP_S_MM AND  ? <=APP_E_MM) OR
+                    (? >= APP_S_MM AND  ? <=APP_E_MM))
+        ]]>        
+    </query>
+    <query name="SEL_DUP_UPDATE"> 
+        <![CDATA[ 
+               AND SEQ <> ?
+        ]]>  
+    </query>
+    <query name="SEL_DUP_UNIONALL"> 
+                UNION ALL
+    </query>
+    <query name="SEL_DUP_CLOSE"> 
+        )
+    </query>
+    
+    <!-- 공통코드 -->
+    <gauce name="H_SEL_TC_COMMCODE">
+        <column colName="CODE"      colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RCODE"     colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 조회 Query -->
+    <query name="SEL_TC_COMMCODE"> 
+        <![CDATA[   
+            SELECT COMM_CODE    AS CODE
+                 , COMM_NAME1   AS NAME
+                 , REFER_CODE   AS RCODE
+              FROM COM.TC_COMMCODE
+             WHERE SYS_PART  = 'D'
+               AND COMM_PART = ?
+               AND USE_YN = 'Y'
+             ORDER BY CODE
+        ]]>        
+    </query>
+</service>

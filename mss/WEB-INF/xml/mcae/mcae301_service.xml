@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae301.mc">
+
+    <!-- 입고/반품  Master -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FULL_SLIP_NO"   colType="TB_STRING" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"   colType="TB_STRING" size="15" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_FLAG"  colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_DT"    colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"  colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"  colType="TB_STRING" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NM"  colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"  colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"  colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_QTY"  colType="TB_STRING" size="9" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"  colType="TB_STRING" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 입고/ 반품 Detail -->   
+    <gauce name="H_DETAIL"> 
+        <column colName="IN_DT"    colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"    colType="TB_STRING" size="15"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"    colType="TB_STRING" size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_FLAG"  colType="TB_STRING" size="1" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"    colType="TB_STRING" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"  colType="TB_STRING" size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"  colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"    colType="TB_STRING" size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"    colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD" colType="TB_STRING" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME" colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_COST_PRC"   colType="TB_INT" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY"   colType="TB_INT" size="10" dec="7" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"   colType="TB_INT" size="10" dec="7" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+
+     <!-- 물품 입고/반품  마스터 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+            SELECT MAX(STR_CD) STR_CD
+                 , MAX(IN_DT)||'-' ||MAX(SLIP_NO) FULL_SLIP_NO
+                 , MAX(SLIP_NO) SLIP_NO
+                 , MAX(BUY_FLAG) BUY_FLAG
+                 , MAX(IN_DT) IN_DT
+                 , MAX(VEN_CD) VEN_CD
+                 , MAX(A.EVENT_CD) EVENT_CD
+                 , MAX(EVENT_NAME) EVENT_NM
+                 , MAX(EVENT_S_DT) EVENT_S_DT
+                 , MAX(EVENT_E_DT) EVENT_E_DT
+                 , SUM(QTY) TOT_QTY
+                 , SUM(BUY_COST_PRC) TOT_AMT
+              FROM MSS.MC_EVTSKUINOUT A, DPS.PC_EVTMST B
+             WHERE A.EVENT_CD = B.EVENT_CD
+               AND A.STR_CD LIKE ?
+               AND IN_DT BETWEEN ? AND ?
+               AND A.VEN_CD LIKE ? || '%'
+               AND BUY_FLAG LIKE ? || '%'
+               AND A.EVENT_CD LIKE ? || '%'
+               AND A.STR_CD IN (SELECT DISTINCT STR_CD FROM COM.V_MYORG 
+                     WHERE USER_ID = ? AND ORG_FLAG = ?)
+          GROUP BY IN_DT, SLIP_NO
+          ORDER BY STR_CD, IN_DT, SLIP_NO
+        ]]>
+    </query> 
+        
+      <!-- 협력사 코드 선택에 따른 사은품 조회 -->
+    <query name="SEL_SKU">
+        <![CDATA[
+                SELECT ? AS IN_DT
+                     , '' AS SLIP_NO
+                     , A.STR_CD
+                     , ? AS BUY_FLAG
+                     , '' AS SEQ_NO
+                     , A.EVENT_CD
+                     , D.VEN_CD
+                     , B.PUMBUN_CD
+                     , C.PUMBUN_NAME
+                     , A.SKU_CD
+                     , B.SKU_NAME
+                     , A.BUY_COST_PRC
+                     , 0 AS QTY
+                     , 0 AS AMT
+                  FROM MSS.MC_EVTSKUMST A
+                     , DPS.PC_STRSKUMST B
+                     , DPS.PC_STRPBN C
+                     , DPS.PC_PBNMST D
+                 WHERE A.STR_CD = B.STR_CD
+                   AND A.SKU_CD = B.SKU_CD
+                   AND B.STR_CD = C.STR_CD
+                   AND B.PUMBUN_CD = C.PUMBUN_CD
+                   AND C.PUMBUN_CD = D.PUMBUN_CD
+                   AND A.SKU_GB = '1' 
+                   AND A.STR_CD = ?
+                   AND A.EVENT_CD = ?
+                   AND D.VEN_CD = ?
+                 ORDER BY SKU_CD
+        ]]>
+    </query> 
+    
+    <!-- 물품 입고/반품  상세 조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+            SELECT A.IN_DT
+                 , A.SLIP_NO
+                 , A.STR_CD
+                 , A.BUY_FLAG
+                 , A.SEQ_NO
+                 , A.EVENT_CD
+                 , A.VEN_CD
+                 , A.PUMBUN_CD
+                 , PUMBUN_NAME
+                 , A.SKU_CD
+                 , SKU_NAME 
+                 , A.BUY_COST_PRC
+                 , QTY
+                 , (A.BUY_COST_PRC * QTY) AS AMT
+              FROM MSS.MC_EVTSKUINOUT A, DPS.PC_STRSKUMST B, DPS.PC_PBNMST C
+             WHERE A.STR_CD = B.STR_CD
+               AND A.SKU_CD = B.SKU_CD
+               AND A.PUMBUN_CD = C.PUMBUN_CD
+			   AND IN_DT = ?
+			   AND SLIP_NO = ?
+        ]]>
+    </query> 
+    
+      <!-- 전표번호 조회 -->
+    <query name="SEL_SLIP_NO">
+        <![CDATA[
+          SELECT  MSS.SQ_MC_EVTSKUINOUT.NEXTVAL AS SLIP_NO FROM DUAL
+        ]]>
+    </query> 
+    
+    
+    <!-- 전표번호 순번 -->
+    <query name="SEL_SEQ_NO">
+        <![CDATA[
+           SELECT LPAD(NVL(MAX(SEQ_NO),0)+1,3,'0') SEQ_NO
+             FROM MSS.MC_EVTSKUINOUT
+            WHERE IN_DT = ?
+              AND SLIP_NO = ?
+        ]]>
+    </query> 
+    
+    
+      <!-- 물품 입고/반품 등록 -->
+    <query name="INS_EVTSKUONOUT">
+        <![CDATA[
+            INSERT INTO MSS.MC_EVTSKUINOUT(IN_DT,  SLIP_NO
+                              ,   SEQ_NO
+                              ,   STR_CD,   BUY_FLAG
+                              , VEN_CD, PUMBUN_CD, EVENT_CD, SKU_CD,   BUY_COST_PRC
+                              , QTY,    REG_DATE,  REG_ID,   MOD_DATE, MOD_ID)
+                        VALUES( ?     , ?         
+                              , (SELECT NVL(MAX(SEQ_NO),0) + 1 FROM MSS.MC_EVTSKUINOUT WHERE IN_DT = ? AND STR_CD = ? AND SLIP_NO = ?)      
+                              , ?       , ?
+                              , ?     , ?         , ?      , ?       , ?
+                              , ?     , SYSDATE         , ?      , SYSDATE       , ?)
+        ]]>
+    </query> 
+    
+      <!-- 물품 입고/반품 수정 -->
+    <query name="UPD_EVTSKUONOUT">
+        <![CDATA[
+            UPDATE MSS.MC_EVTSKUINOUT
+		       SET QTY = ?
+		         , MOD_ID = ?
+		         , MOD_DATE = SYSDATE
+		     WHERE IN_DT = ?
+		       AND STR_CD = ?
+		       AND SLIP_NO = ?
+		       AND SEQ_NO = ? 
+        ]]>
+    </query> 
+    
+      <!-- 물품 입고/반품 삭제 -->
+    <query name="DEL_EVTSKUONOUT">
+        <![CDATA[
+		 DELETE FROM MSS.MC_EVTSKUINOUT
+		  WHERE IN_DT = ?
+		    AND STR_CD = ?
+		    AND SLIP_NO = ?
+		    AND SEQ_NO = ? 
+        ]]>
+    </query> 
+    
+    
+     <!-- 물품 입고/반품 삭제 (마스터 에서 직접 삭제) -->
+    <query name="DEL_MST_EVTSKUONOUT">
+        <![CDATA[
+         DELETE FROM MSS.MC_EVTSKUINOUT
+          WHERE SLIP_NO = ?
+        ]]>
+    </query> 
+    
+     <!-- 신규 전표번호 채번 -->
+    <query name="SEL_SLIPNO">
+        <![CDATA[
+         SELECT MSS.SQ_MC_EVTSKUINOUT.NEXTVAL AS SLIP_NO FROM DUAL
+        ]]>
+    </query> 
+    
+</service>

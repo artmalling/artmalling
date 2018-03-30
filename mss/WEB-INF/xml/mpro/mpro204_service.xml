@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 오형규
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.03.09
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  조직별 약속 현황
+ -->
+<service name="/mpro204.mp">
+    <!-- 일자별 HEAD -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD" colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STRNM" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NM" colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_NM" colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NM" colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CORNER_NM" colType="TB_STRING" size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD" colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROM_REPAIR" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROM_ORDERS" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROM_DELIVER" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROM_OTHER" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DELI_FROM" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DELI_RECEIVE" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT1" colType="TB_INT" size="2" dec="5" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_STAT" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_STAT_MI" colType="TB_INT" size="5" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CNT2" colType="TB_INT" size="2" dec="5" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 조직별 약속 조회  -->
+    <query name="SEL_ORGANIZATIN_PROMISS">
+        <![CDATA[
+        SELECT A.STR_CD STR_CD 
+             , DPS.FN_GET_STORE_NAME(A.STR_CD) STRNM
+             , DEPT_NM DEPT_NM
+             , TEAM_NM  TEAM_NM
+             , PC_NM PC_NM
+             , CORNER_NM CORNER_NM
+             , ORG_CD ORG_CD					                        
+             , SUM(PROM_REPAIR) PROM_REPAIR
+             , SUM(PROM_ORDERS) PROM_ORDERS
+             , SUM(PROM_DELIVER) PROM_DELIVER
+             , SUM(PROM_OTHER) PROM_OTHER          
+             , SUM(DELI_FROM) DELI_FROM
+             , SUM(DELI_RECEIVE) DELI_RECEIVE
+             , SUM( DELI_FROM + DELI_RECEIVE ) CNT1
+             , SUM(PROC_STAT) PROC_STAT
+             , SUM(PROC_STAT_MI) PROC_STAT_MI
+             , SUM(PROC_STAT + PROC_STAT_MI) CNT2
+          FROM (        
+		        SELECT A.STR_CD STR_CD, A.PUMBUN_CD                                                            
+                     , SUM( CASE A.PROM_TYPE WHEN '01' THEN 1  ELSE 0 END )  PROM_REPAIR
+                     , SUM (CASE A.PROM_TYPE WHEN '02' THEN 1 ELSE 0 END)  PROM_ORDERS
+                     , SUM(CASE A.PROM_TYPE WHEN '03' THEN 1  ELSE 0 END ) PROM_DELIVER
+                     , SUM(CASE A.PROM_TYPE  WHEN '04' THEN 1  ELSE 0 END  )  PROM_OTHER 
+                     , SUM( CASE A.DELI_TYPE WHEN '01' THEN 1  ELSE 0 END )  DELI_FROM
+                     , SUM( CASE A.DELI_TYPE WHEN '02' THEN 1 ELSE 0 END )  DELI_RECEIVE
+                     , 0  AS PROC_STAT
+                     , 0  AS PROC_STAT_MI
+		          FROM MSS.MP_PROMISECERT A
+		         WHERE A.STR_CD LIKE ? || '%'
+		           AND A.TAKE_DT  >= ? AND A.TAKE_DT <= ?
+		           AND A.STR_CD IN (SELECT DISTINCT STR_CD FROM COM.V_MYORG WHERE USER_ID = ? AND ORG_FLAG = '1')
+		      GROUP BY A.STR_CD, A.PUMBUN_CD
+		     UNION ALL
+		        SELECT A.STR_CD STR_CD, A.PUMBUN_CD 
+                     , 0  PROM_REPAIR
+                     , 0  PROM_ORDERS 
+                     , 0 PROM_DELIVER
+                     , 0  PROM_OTHER 
+                     , 0  DELI_FROM
+                     , 0  DELI_RECEIVE
+                     , SUM(CASE WHEN A.PROC_STAT = '3' THEN 1 ELSE 0 END) AS PROC_STAT
+                     , SUM(CASE WHEN A.PROC_STAT <> '3' THEN 1 ELSE 0 END) AS PROC_STAT_MI                            
+		          FROM MSS.MP_PROMISECERT A
+		         WHERE A.STR_CD LIKE ? || '%'
+		           AND A.LAST_PROM_DT  >= ? AND A.LAST_PROM_DT <= ?
+		           AND A.PROC_STAT <> '4'
+		           AND A.STR_CD IN (SELECT DISTINCT STR_CD FROM COM.V_MYORG WHERE USER_ID = ? AND ORG_FLAG = '1') 
+		      GROUP BY A.STR_CD, A.PUMBUN_CD
+		        ) A, DPS.PC_STRPBN B, DPS.V_ORGPART C
+	     WHERE A.STR_CD = B.STR_CD
+		   AND A.PUMBUN_CD = B.PUMBUN_CD
+		   AND B.SALE_ORG_CD = C.ORG_CD
+      GROUP BY           A.STR_CD, DEPT_NM, TEAM_NM, PC_NM, CORNER_NM, ORG_CD
+	  ORDER BY                                A.STR_CD, ORG_CD                     
+        ]]>
+    </query>  
+    
+</service>

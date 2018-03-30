@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal458.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        
+        <column colName="VEN_CD"             colType="TB_STRING"       size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"           colType="TB_STRING"       size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+        <column colName="NET_SALE_AMT"       colType="TB_DECIMAL"      size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIGO"               colType="TB_STRING"       size="1000"     dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT"    	         colType="TB_DECIMAL"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    
+    <query name="SEL_SALE_STRCD">
+        <![CDATA[
+            SELECT A.VEN_CD
+                 , B.VEN_NAME
+                 , SUM( A.NET_SALE_AMT)
+                 , ' ' AS BIGO
+                 , ?   AS UNIT 
+         FROM DPS.PS_DAYPBN A
+                , DPS.PC_STRVENMST B
+	        WHERE A.STR_CD = ?
+	          AND A.SALE_DT BETWEEN ? AND ?
+	          AND B.STR_CD = A.STR_CD
+	          AND B.VEN_CD = A.VEN_CD
+	          AND A.PUMBUN_CD NOT IN (SELECT COMM_CODE FROM COM.TC_COMMCODE WHERE SYS_PART = 'D' AND COMM_PART = 'P423' AND COMM_CODE <> '000000')			--마리오상품권 제외		박승재 대리 요청 20121112
+	          GROUP BY  A.VEN_CD
+                        , B.VEN_NAME
+                        ORDER BY  A.VEN_CD
+        ]]>    
+    </query>      
+    
+         
+</service>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mcae302.mc">
+<!-- 상품권 입고/반품조회 -MASTER -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_CD"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_CD"      colType="TB_STRING"  size="11" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_NAME"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_S_DT"    colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"    colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_DT"      colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_DT"         colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO"       colType="TB_STRING"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLIP_NO2"       colType="TB_STRING"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_FLAG"       colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="QTY"           colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권 입고/반품조회 -DETAIL -->
+    <gauce name="H_DETAIL">    
+        <column colName="PUMBUN_NAME"   colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"        colType="TB_STRING"  size="20" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUY_COST_PRC"  colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="QTY"           colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 상품권 입고/반품조회 -MASTER -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+        SELECT A.STR_CD
+             , A.EVENT_CD
+             , D.EVENT_NAME
+             , D.EVENT_S_DT
+             , D.EVENT_E_DT
+             , D.EVENT_S_DT||D.EVENT_E_DT AS EVENT_DT 
+             , A.VEN_CD
+             , E.VEN_NAME
+             , A.IN_DT  
+             , A.SLIP_NO
+             , LPAD(TO_CHAR(A.SLIP_NO),5,'0') AS SLIP_NO2  
+             , COM.FN_GET_COMM_NAME('D','M094', A.BUY_FLAG) AS BUY_FLAG                     -- 입고구분
+             , SUM(CASE WHEN A.BUY_FLAG = '1' THEN A.QTY*-1 ELSE A.QTY END) AS QTY     -- 입고수량
+             , SUM(A.BUY_COST_PRC * (CASE WHEN A.BUY_FLAG = '1' THEN A.QTY*-1 ELSE A.QTY END)) AS AMT    -- 입고금액
+          FROM MSS.MC_EVTSKUINOUT A, MSS.MC_EVTMST B, DPS.PC_STREVT C, DPS.PC_EVTMST D, DPS.PC_VENMST E
+         WHERE A.EVENT_CD = B.EVENT_CD
+           AND A.EVENT_CD = C.EVENT_CD
+           AND A.EVENT_CD = D.EVENT_CD
+           AND A.STR_CD = B.STR_CD 
+           AND A.STR_CD = C.STR_CD
+           AND A.VEN_CD = E.VEN_CD
+           AND A.STR_CD = ?
+           AND A.IN_DT BETWEEN ? AND ?
+           AND A.BUY_FLAG LIKE ?
+           AND A.EVENT_CD LIKE ? || '%'
+           AND A.VEN_CD LIKE ? || '%' 
+      GROUP BY A.STR_CD
+             , A.EVENT_CD
+             , D.EVENT_NAME
+             , D.EVENT_S_DT
+             , D.EVENT_E_DT
+             , A.VEN_CD
+             , E.VEN_NAME
+             , A.IN_DT
+             , A.SLIP_NO
+             , A.BUY_FLAG
+      ORDER BY A.STR_CD
+             , A.VEN_CD
+             , A.SLIP_NO        
+        ]]>
+    </query>   
+    
+    <!-- 상품권 입고/반품조회 -DETAIL -->
+    <query name="SEL_DETAIL">
+        <![CDATA[ 
+             SELECT D.PUMBUN_NAME
+	              , A.SKU_CD
+	              , B.SKU_NAME
+	              , A.BUY_COST_PRC   
+	              , (CASE WHEN A.BUY_FLAG = '1' THEN A.QTY*-1 ELSE A.QTY END) AS QTY
+                  , (A.BUY_COST_PRC * (CASE WHEN A.BUY_FLAG = '1' THEN A.QTY*-1 ELSE A.QTY END)) AS AMT
+	           FROM MSS.MC_EVTSKUINOUT A, DPS.PC_SKUMST B, DPS.PC_STRSKUMST C, DPS.PC_PBNMST D
+	          WHERE A.SKU_CD = B.SKU_CD
+	            AND A.SKU_CD = C.SKU_CD
+	            AND A.STR_CD = C.STR_CD
+	            AND A.PUMBUN_CD = D.PUMBUN_CD
+	            AND A.STR_CD = ?
+	            AND A.EVENT_CD = ?
+	            AND A.IN_DT = ?
+	            AND A.SLIP_NO = ?
+	       ORDER BY D.PUMBUN_NAME
+	              , A.SKU_CD
+        ]]>
+    </query>   
+</service>

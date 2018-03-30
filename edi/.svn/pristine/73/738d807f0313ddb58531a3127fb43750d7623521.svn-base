@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  LEFT 메뉴 
+ -->
+<service name="/esal106.es">
+    
+   
+    <!-- 기간별단품매출현황 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+	        SELECT A.SALE_DT
+	             , A.PUMMOK_CD
+		         , E.PUMMOK_NAME
+		         , A.SKU_CD
+		         , (CASE WHEN D.SKU_NAME IS NULL THEN 
+		           E.PUMMOK_NAME
+		           ELSE 
+		           D.SKU_NAME END)                                                   AS SKU_NAME
+		         , SUM(NVL(A.SALE_QTY,0))                                            AS SALE_QTY
+		         , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+		         , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+		         , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS NORM_SALE_AMT
+		         , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+		         , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+		         , SUM(NVL(A.SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+		      FROM DPS.PS_DAYSKU    A
+		         , DPS.PC_STRVENMST B
+		         , DPS.PC_STRPBN    C
+		         , DPS.PC_STRSKUMST D
+		         , DPS.PC_PMKMST    E
+		     WHERE A.STR_CD     = ?
+		       AND A.SALE_DT    BETWEEN ? AND ?
+		       AND B.VEN_CD     = ?
+		       AND A.PUMBUN_CD  LIKE ? || '%'
+               AND C.PUMBUN_TYPE      IN ('0', '4', 'B')
+		       AND A.STR_CD     = B.STR_CD 
+		       AND A.STR_CD     = C.STR_CD
+		       AND A.STR_CD     = D.STR_CD
+		       AND A.PUMBUN_CD  = C.PUMBUN_CD       
+		       AND B.VEN_CD     = C.VEN_CD
+		       AND A.SKU_CD     = D.SKU_CD
+		       AND A.PUMMOK_CD  = E.PUMMOK_CD
+               AND A.SKU_FLAG = '1' 
+		  GROUP BY A.SALE_DT
+		         , A.PUMMOK_CD
+		         , E.PUMMOK_NAME
+		         , A.SKU_CD
+		         , D.SKU_NAME
+		  ORDER BY A.SALE_DT
+		         , A.PUMMOK_CD
+		         , A.SKU_CD 
+        ]]>
+    </query> 
+          
+    <!-- 기간별단품매출현황 조회 EXCEL -->
+    <query name="SEL_MASTER_EXCEL">
+        <![CDATA[
+	        SELECT TO_CHAR(TO_DATE(A.SALE_DT),'YYYY/MM/DD') AS SALE_DT
+	             , A.PUMMOK_CD
+		         , E.PUMMOK_NAME
+		         , A.SKU_CD
+		         , (CASE WHEN D.SKU_NAME IS NULL THEN 
+		           E.PUMMOK_NAME
+		           ELSE 
+		           D.SKU_NAME END)                                                   AS SKU_NAME
+		         , SUM(NVL(A.SALE_QTY,0))                                            AS SALE_QTY
+		         , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+		         , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+		         , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS NORM_SALE_AMT
+		      FROM DPS.PS_DAYSKU    A
+		         , DPS.PC_STRVENMST B
+		         , DPS.PC_STRPBN    C
+		         , DPS.PC_STRSKUMST D
+		         , DPS.PC_PMKMST    E
+		     WHERE A.STR_CD     = ?
+		       AND A.SALE_DT    BETWEEN ? AND ?
+		       AND B.VEN_CD     = ?
+		       AND A.PUMBUN_CD  LIKE ? || '%'
+               AND C.PUMBUN_TYPE      IN ('0', '4', 'B')
+		       AND A.STR_CD     = B.STR_CD 
+		       AND A.STR_CD     = C.STR_CD
+		       AND A.STR_CD     = D.STR_CD
+		       AND A.PUMBUN_CD  = C.PUMBUN_CD       
+		       AND B.VEN_CD     = C.VEN_CD
+		       AND A.SKU_CD     = D.SKU_CD
+		       AND A.PUMMOK_CD  = E.PUMMOK_CD
+               AND A.SKU_FLAG = '1' 
+		  GROUP BY A.SALE_DT
+		         , A.PUMMOK_CD
+		         , E.PUMMOK_NAME
+		         , A.SKU_CD
+		         , D.SKU_NAME
+		  ORDER BY A.SALE_DT
+		         , A.PUMMOK_CD
+		         , A.SKU_CD 
+        ]]>
+    </query>       
+
+</service>

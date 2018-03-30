@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.05.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영계획 배부 기준안 관리
+ -->
+<service name="/meis004.me">
+
+    <!-- 배부기준코드 리스트 헤더  -->
+    <gauce name="H_SEL_DIV_CD_LIST">
+        <column colName="DIV_YM"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_CD"        colType="TB_STRING"  size="4"  dec="0" keyType="TB_KEY"    roundMode="ROUND" />
+        <column colName="CODE"          colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 배부기준안 헤더  -->
+    <gauce name="H_SEL_DIV">
+        <column colName="DIV_YM"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_CD"        colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_SEQ_FLAG"  colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_LEVEL"     colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"        colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CODE"          colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"          colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_DIV_RATE"  colType="TB_INT"     size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"      colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_RATE"      colType="TB_INT"     size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EX_FLAG"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="AREA_SIZE"     colType="TB_DECIMAL" size="13" dec="2" keyType="TB_NORMAL" roundMode="ROUND" />        
+    </gauce>
+    
+    <!-- 전월배부기준안 헤더  -->
+    <gauce name="H_SEL_PRE_DIV">
+        <column colName="ORG_CD"        colType="TB_STRING" size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_RATE"      colType="TB_INT"    size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 배부기준코드 리스트 조회쿼리-->
+    <query name="SEL_DIV_CD_LIST">
+        <![CDATA[
+        SELECT DISTINCT DIV_YM
+             , DIV_CD
+             , '' AS CODE
+          FROM MSS.ME_DIVMST
+         WHERE DIV_YM = ?
+           AND PLAN_RSLT_FLAG = '1'
+        ]]>
+    </query>
+    
+    <!-- 1차배분기준안 조회쿼리-->
+    <query name="SEL_DIV1">
+        <![CDATA[
+        SELECT ?                        AS DIV_YM
+             , ?                        AS DIV_CD
+             , ?                        AS DIV_SEQ_FLAG
+             , ?                        AS ORG_LEVEL
+             , MST.STR_CD || '00000000' AS ORG_CD
+             , MST.STR_CD               AS CODE
+             , MST.STR_NAME             AS NAME
+             , PRE_DIV.DIV_RATE         AS PRE_DIV_RATE
+             , AMT.SALE_AMT
+             , PROF.SALE_PROF_AMT
+             , DIV.DIV_RATE
+             , DIV.DIV_SEQ_FLAG         AS EX_FLAG             
+             , PBN.AREA_SIZE             
+          FROM DPS.PC_STRMST MST
+             , MSS.ME_DIVMST DIV
+             , MSS.ME_DIVMST PRE_DIV
+             , ( SELECT STR_CD
+                      , SUM(NVL(RSLT_AMT, 0)) + SUM(NVL(SUB_RSLT_AMT, 0)) AS SALE_AMT
+                   FROM MSS.ME_BIZRSLTRPT RPT
+                  WHERE EXISTS ( SELECT 1
+                                   FROM COM.TC_COMMCODE A 
+                                  WHERE A.SYS_PART   = 'D'
+                                    AND A.COMM_PART  = 'M104'
+                                    AND A.COMM_CODE  = '1'
+                                    AND A.REFER_CODE = RPT.BIZ_CD )                  
+                    AND BIZ_RSLT_YM = ?
+                  GROUP BY
+                        STR_CD
+                      , BIZ_RSLT_YM
+               ) AMT
+             , ( SELECT STR_CD
+                      , SUM(NVL(RSLT_AMT, 0)) + SUM(NVL(SUB_RSLT_AMT, 0)) AS SALE_PROF_AMT
+                   FROM MSS.ME_BIZRSLTRPT RPT
+                  WHERE EXISTS ( SELECT 1
+                                   FROM COM.TC_COMMCODE A 
+                                  WHERE A.SYS_PART   = 'D'
+                                    AND A.COMM_PART  = 'M104'
+                                    AND A.COMM_CODE  = '3'
+                                    AND A.REFER_CODE = RPT.BIZ_CD )                  
+                    AND BIZ_RSLT_YM = ?
+                  GROUP BY
+                        STR_CD
+                      , BIZ_RSLT_YM
+               ) PROF
+             , (
+                SELECT A.STR_CD
+                       ,SUM(NVL(A.AREA_SIZE,0))  AS AREA_SIZE
+                FROM DPS.PC_STRPBN A WHERE 1 = 1
+                AND SUBSTR(A.APP_S_DT, 1, 6) = ?
+                GROUP BY A.STR_CD             
+               ) PBN               
+         WHERE MST.STR_CD                = AMT.STR_CD(+)
+           AND MST.STR_CD                = PROF.STR_CD(+)
+           AND MST.STR_CD || '00000000'  = DIV.ORG_CD(+)
+           AND MST.STR_CD || '00000000'  = PRE_DIV.ORG_CD(+)
+           AND MST.STR_CD                = PBN.STR_CD(+)
+           AND MST.FCL_FLAG              = '1'
+           AND MST.STR_FLAG              = '1'
+           AND MST.MNG_FLAG              = '0'
+           AND DIV.DIV_YM(+)             = ?
+           AND DIV.DIV_CD(+)             = ?
+           AND DIV.PLAN_RSLT_FLAG(+)     = '1'
+           AND DIV.DIV_SEQ_FLAG(+)       = '1'
+           AND PRE_DIV.DIV_YM(+)         = ?
+           AND PRE_DIV.DIV_CD(+)         = ?
+           AND PRE_DIV.PLAN_RSLT_FLAG(+) = '1'
+           AND PRE_DIV.DIV_SEQ_FLAG(+)   = '1'
+           AND MST.USE_YN                = 'Y'
+         ORDER BY MST.STR_CD
+        ]]>
+    </query>
+    
+    <!-- 2차배분기준안 조회쿼리-->
+    <query name="SEL_DIV2">
+        <![CDATA[
+        SELECT ?                 AS DIV_YM
+             , ?                 AS DIV_CD
+             , ?                 AS DIV_SEQ_FLAG
+             , ?                 AS ORG_LEVEL
+             , MST.ORG_CD
+             , CASE ? WHEN '3' THEN MST.TEAM_CD
+                      ELSE MST.PC_CD 
+                END              AS CODE
+             , MST.ORG_NAME      AS NAME
+             , PRE_DIV.DIV_RATE  AS PRE_DIV_RATE
+             , AMT.SALE_AMT
+             , PROF.SALE_PROF_AMT
+             , DIV.DIV_RATE
+             , DIV.DIV_SEQ_FLAG  AS EX_FLAG             
+             , PBN.AREA_SIZE             
+          FROM DPS.PC_ORGMST MST
+             , MSS.ME_DIVMST DIV
+             , MSS.ME_DIVMST PRE_DIV
+             , ( SELECT SUBSTR(ORG_CD, 1, 6)||'0000' AS ORG_CD
+                      , SUM(NVL(RSLT_AMT, 0)) + SUM(NVL(SUB_RSLT_AMT, 0)) AS SALE_AMT
+                   FROM MSS.ME_BIZRSLTRPT RPT
+                  WHERE EXISTS ( SELECT 1
+                                   FROM COM.TC_COMMCODE A 
+                                  WHERE A.SYS_PART   = 'D'
+                                    AND A.COMM_PART  = 'M104'
+                                    AND A.COMM_CODE  = '1'
+                                    AND A.REFER_CODE = RPT.BIZ_CD )                  
+                    AND BIZ_RSLT_YM = ?
+                    AND STR_CD      = ?
+                  GROUP BY 
+                        SUBSTR(ORG_CD, 1, 6)
+                      , BIZ_RSLT_YM
+               ) AMT
+             , ( SELECT SUBSTR(ORG_CD, 1, 6)||'0000' AS ORG_CD
+                      , SUM(NVL(RSLT_AMT, 0)) + SUM(NVL(SUB_RSLT_AMT, 0)) AS SALE_PROF_AMT
+                   FROM MSS.ME_BIZRSLTRPT RPT
+                  WHERE EXISTS ( SELECT 1
+                                   FROM COM.TC_COMMCODE A 
+                                  WHERE A.SYS_PART   = 'D'
+                                    AND A.COMM_PART  = 'M104'
+                                    AND A.COMM_CODE  = '3'
+                                    AND A.REFER_CODE = RPT.BIZ_CD )                  
+                    AND BIZ_RSLT_YM = ?
+                    AND STR_CD      = ?
+                  GROUP BY 
+                        SUBSTR(ORG_CD, 1, 6)
+                      , BIZ_RSLT_YM
+               ) PROF
+             , (
+                SELECT SUBSTR(A.SALE_ORG_CD, 1, 6)||'0000' AS ORG_CD
+                       ,SUM(NVL(A.AREA_SIZE,0))  AS AREA_SIZE
+                FROM DPS.PC_STRPBN A WHERE 1 = 1
+                AND SUBSTR(A.APP_S_DT, 1, 6) = ?
+                AND A.STR_CD = ?
+                GROUP BY SUBSTR(A.SALE_ORG_CD, 1, 6)           
+               ) PBN                 
+         WHERE MST.STR_CD                = ?
+           AND MST.ORG_LEVEL             = ?
+           AND MST.ORG_CD                = DIV.ORG_CD(+)
+           AND MST.ORG_CD                = PRE_DIV.ORG_CD(+)
+           AND MST.ORG_CD                = AMT.ORG_CD(+)
+           AND MST.ORG_CD                = PROF.ORG_CD(+)
+           AND MST.ORG_CD                = PBN.ORG_CD(+)
+           AND DIV.DIV_YM(+)             = ?
+           AND DIV.DIV_CD(+)             = ?
+           AND DIV.PLAN_RSLT_FLAG(+)     = '1'
+           AND DIV.DIV_SEQ_FLAG(+)       = '2'
+           AND DIV.STR_CD(+)             = ?
+           AND PRE_DIV.DIV_YM(+)         = ?
+           AND PRE_DIV.DIV_CD(+)         = ?
+           AND PRE_DIV.PLAN_RSLT_FLAG(+) = '1'
+           AND PRE_DIV.DIV_SEQ_FLAG(+)   = '2'
+           AND PRE_DIV.STR_CD(+)         = ?
+           AND MST.USE_YN                = 'Y'
+         ORDER BY MST.ORG_CD
+        ]]>
+    </query>
+    
+    <!-- 3차배분기준안 조회쿼리-->
+    <query name="SEL_DIV3">
+        <![CDATA[
+        SELECT ?                 AS DIV_YM
+             , ?                 AS DIV_CD
+             , ?                 AS DIV_SEQ_FLAG
+             , ?                 AS ORG_LEVEL
+             , MST.ORG_CD
+             , CASE ? WHEN '3' THEN MST.TEAM_CD
+                      ELSE MST.PC_CD 
+                END              AS CODE
+             , MST.ORG_NAME      AS NAME
+             , PRE_DIV.DIV_RATE  AS PRE_DIV_RATE
+             , AMT.SALE_AMT
+             , PROF.SALE_PROF_AMT
+             , DIV.DIV_RATE
+             , DIV.DIV_SEQ_FLAG  AS EX_FLAG             
+             , PBN.AREA_SIZE             
+          FROM DPS.PC_ORGMST MST
+             , MSS.ME_DIVMST DIV
+             , MSS.ME_DIVMST PRE_DIV
+             , ( SELECT SUBSTR(ORG_CD, 1, 8)||'00' AS ORG_CD
+                      , SUM(NVL(RSLT_AMT, 0)) + SUM(NVL(SUB_RSLT_AMT, 0)) AS SALE_AMT
+                   FROM MSS.ME_BIZRSLTRPT RPT
+                  WHERE EXISTS ( SELECT 1
+                                   FROM COM.TC_COMMCODE A 
+                                  WHERE A.SYS_PART   = 'D'
+                                    AND A.COMM_PART  = 'M104'
+                                    AND A.COMM_CODE  = '1'
+                                    AND A.REFER_CODE = RPT.BIZ_CD )                  
+                    AND BIZ_RSLT_YM = ?
+                    AND STR_CD      = ?
+                  GROUP BY 
+                        SUBSTR(ORG_CD, 1, 8)
+                      , BIZ_RSLT_YM
+               ) AMT
+             , ( SELECT SUBSTR(ORG_CD, 1, 8)||'00' AS ORG_CD
+                      , SUM(NVL(RSLT_AMT, 0)) + SUM(NVL(SUB_RSLT_AMT, 0)) AS SALE_PROF_AMT
+                   FROM MSS.ME_BIZRSLTRPT RPT
+                  WHERE EXISTS ( SELECT 1
+                                   FROM COM.TC_COMMCODE A 
+                                  WHERE A.SYS_PART   = 'D'
+                                    AND A.COMM_PART  = 'M104'
+                                    AND A.COMM_CODE  = '3'
+                                    AND A.REFER_CODE = RPT.BIZ_CD )                  
+                    AND BIZ_RSLT_YM = ?
+                    AND STR_CD      = ?
+                  GROUP BY 
+                        SUBSTR(ORG_CD, 1, 8)
+                      , BIZ_RSLT_YM
+               ) PROF
+             , (
+                SELECT SUBSTR(A.SALE_ORG_CD, 1, 8)||'00' AS ORG_CD
+                       ,SUM(NVL(A.AREA_SIZE,0))  AS AREA_SIZE
+                FROM DPS.PC_STRPBN A WHERE 1 = 1
+                AND SUBSTR(A.APP_S_DT, 1, 6) = ?
+                AND A.STR_CD = ?
+                GROUP BY SUBSTR(A.SALE_ORG_CD, 1, 8)           
+               ) PBN                
+         WHERE MST.STR_CD                = ?
+           AND MST.ORG_LEVEL             = ?
+           AND MST.ORG_CD                = DIV.ORG_CD(+)
+           AND MST.ORG_CD                = PRE_DIV.ORG_CD(+)
+           AND MST.ORG_CD                = AMT.ORG_CD(+)
+           AND MST.ORG_CD                = PROF.ORG_CD(+)
+           AND MST.ORG_CD                = PBN.ORG_CD(+)
+           AND MST.ORG_CD                LIKE  ?  || '%'
+           AND DIV.DIV_YM(+)             = ?
+           AND DIV.DIV_CD(+)             = ?
+           AND DIV.PLAN_RSLT_FLAG(+)     = '1'
+           AND DIV.DIV_SEQ_FLAG(+)       = '2'
+           AND DIV.ORG_CD(+)             LIKE  ?  || '%'
+           AND PRE_DIV.DIV_YM(+)         = ?
+           AND PRE_DIV.DIV_CD(+)         = ?
+           AND PRE_DIV.PLAN_RSLT_FLAG(+) = '1'
+           AND PRE_DIV.DIV_SEQ_FLAG(+)   = '2'
+           AND PRE_DIV.ORG_CD(+)         LIKE  ?  || '%'
+           AND MST.USE_YN                = 'Y'
+         ORDER BY MST.ORG_CD
+        ]]>
+    </query>
+    
+    <!-- 배부기준안 수정 및 등록-->
+    <query name="UST_DIV">
+        <![CDATA[
+        MERGE INTO MSS.ME_DIVMST A
+              USING ( SELECT ? AS DIV_YM
+                           , ? AS DIV_CD
+                           , ? AS DIV_SEQ_FLAG
+                           , ? AS ORG_CD
+                           , ? AS PLAN_RSLT_FLAG
+                           , ? AS DIV_RATE
+                           , ? AS ORG_LEVEL
+                           , ? AS USER_ID
+                        FROM DUAL ) B 
+                 ON (        A.DIV_YM         = B.DIV_YM
+                         AND A.DIV_CD         = B.DIV_CD
+                         AND A.DIV_SEQ_FLAG   = B.DIV_SEQ_FLAG
+                         AND A.ORG_CD         = B.ORG_CD
+                         AND A.PLAN_RSLT_FLAG = B.PLAN_RSLT_FLAG )
+               WHEN MATCHED THEN 
+                    UPDATE SET DIV_RATE = B.DIV_RATE
+                             , MOD_ID   = B.USER_ID
+                             , MOD_DATE = SYSDATE
+               WHEN NOT MATCHED THEN
+                    INSERT ( DIV_YM
+                           , DIV_CD
+                           , DIV_SEQ_FLAG
+                           , ORG_CD
+                           , PLAN_RSLT_FLAG
+                           , DIV_RATE
+                           , ORG_LEVEL
+                           , STR_CD
+                           , DEPT_CD
+                           , TEAM_CD
+                           , PC_CD
+                           , REG_DATE
+                           , REG_ID
+                           , MOD_DATE
+                           , MOD_ID ) 
+                    VALUES ( B.DIV_YM
+                           , B.DIV_CD
+                           , B.DIV_SEQ_FLAG
+                           , B.ORG_CD
+                           , B.PLAN_RSLT_FLAG                          
+                           , B.DIV_RATE
+                           , B.ORG_LEVEL
+                           , SUBSTR(B.ORG_CD, 1, 2)
+                           , SUBSTR(B.ORG_CD, 3, 2)
+                           , SUBSTR(B.ORG_CD, 5, 2)
+                           , SUBSTR(B.ORG_CD, 7, 2)
+                           , SYSDATE
+                           , B.USER_ID
+                           , SYSDATE 
+                           , B.USER_ID) 
+        ]]>
+    </query>
+    
+    <!-- 배부기준안 삭제-->
+    <query name="DEL_DIV">
+        <![CDATA[
+        DELETE 
+          FROM MSS.ME_DIVMST
+         WHERE DIV_YM         = ?
+           AND DIV_CD         = ?
+           AND PLAN_RSLT_FLAG = '1'
+           AND STR_CD         = ?
+        ]]>
+    </query>
+    
+    <query name="DEL_DIV_WHERE_TEAM">
+        <![CDATA[
+           AND TEAM_CD        = ?
+        ]]>
+    </query>
+    
+    <query name="DEL_DIV_WHERE_PC">
+        <![CDATA[
+           AND TEAM_CD        = ?
+           AND PC_CD          = ?
+        ]]>
+    </query>
+    
+    <!-- 전월배부기준안 조회쿼리-->
+    <query name="SEL_PRE_DIV">
+        <![CDATA[
+        SELECT /*+ INDEX(MST PK_ME_DIVMST) */ ORG_CD
+             , DIV_RATE
+          FROM MSS.ME_DIVMST MST
+         WHERE DIV_YM         = ?
+           AND DIV_CD         = ?
+           AND DIV_SEQ_FLAG   = ?
+           AND PLAN_RSLT_FLAG = '1'
+        ]]>
+    </query>
+    
+    <query name="SEL_PRE_DIV_WHERE_CD">
+        <![CDATA[
+           AND STR_CD         = ?
+        ]]>
+    </query>
+    
+</service>

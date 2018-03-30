@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.06.27
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  화원정보조회
+ -->
+<service name="/ecmn105.em">
+    <!-- 화원정보조회 쿼리  -->
+    <query name="SEL_CUST_INFO">        
+        <![CDATA[
+			SELECT CUST_NAME
+			     , ENTR_DATE
+			     , ENTR_PATH_CD
+			     , BRCH_NAME
+			     , NOTIC_ETC
+			FROM (  SELECT 1 AS NO
+			             , CUST.CUST_NAME
+			             , TO_CHAR(TO_DATE(CUST.ENTR_DT, 'YYYYMMDD'), 'YYYY/MM/DD') AS ENTR_DATE
+			             , CUST.ENTR_PATH_CD
+			             , (SELECT BRCH_NAME FROM DCS.DB_BRANCH WHERE BRCH_ID = CUST.ENTR_PATH_CD) AS BRCH_NAME
+			             , '정상가입된 고객입니다.' AS NOTIC_ETC
+			          FROM DCS.DM_CUSTOMER CUST
+			         WHERE CUST.SS_NO = ?
+			         UNION ALL
+			        SELECT 2  AS NO
+			             , '' AS CUST_NAME
+			             , '' AS ENTR_DATE
+			             , '' AS ENTR_PATH_CD
+			             , '' AS BRCH_NAME
+			             , '신규 가입된 고객입니다.' AS NOTIC_ETC
+			          FROM DCS.DM_CUST_SSNO CUST
+			         WHERE CUST.SS_NO = ?
+			         ORDER BY NO
+			      )
+			 WHERE ROWNUM = 1
+        ]]>        
+    </query>
+    
+    <!-- 화원정보임시 저장  -->
+    <query name="INS_CUST_INFO">        
+        <![CDATA[
+			INSERT 
+			  INTO DCS.DM_CUST_SSNO
+			     ( SS_NO, GRP_DATA01, GRP_DATA02, GRP_DATA03, REMARK, REG_DATE, REG_ID, MOD_DATE, MOD_ID)
+			VALUES
+			     ( ?,       '', '',      '', ''
+			     , SYSDATE, ? , SYSDATE, ?
+			     )
+        ]]>        
+    </query>
+</service>

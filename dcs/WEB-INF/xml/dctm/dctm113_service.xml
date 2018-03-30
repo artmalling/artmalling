@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김영진
+ * 회 사 명    : 
+ * 작 성 일    : 2010.02.21
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개          요 :  제휴카드사 회원탈퇴 현황
+ -->
+<service name="/dctm113.dm">
+    <!-- 제휴카드사 회원탈퇴 현황 List -->
+    <gauce name="H_MASTER"> 
+        <column colName="CUST_ID"       colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTR_PATH_CD"  colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRCH_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="JCOMP_SCED_DT" colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH1"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH2"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="HOME_PH3"      colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH1"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH2"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOBILE_PH3"    colType="TB_STRING"  size="96"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_GRADE"    colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRADE_NM"      colType="TB_STRING"  size="30"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_DATE"     colType="TB_STRING"  size="19"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_ID"       colType="TB_STRING"  size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_NAME"     colType="TB_STRING"  size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CALL_DESC"     colType="TB_STRING"  size="400" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TAG"           colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        
+    </gauce>
+    
+    <!-- 제휴카드사 회원탈퇴 현황  조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[            
+            SELECT A.CUST_ID
+                 , C.CUST_NAME
+                 , A.ENTR_PATH_CD
+                 , B.BRCH_NAME           
+                 , '' JCOMP_SCED_DT
+                 , C.HOME_PH1
+                 , C.HOME_PH2
+                 , C.HOME_PH3
+                 , C.MOBILE_PH1
+                 , C.MOBILE_PH2
+                 , C.MOBILE_PH3
+                 , D.CUST_GRADE
+                 , COM.FN_GET_COMM_NAME('D', 'D011', D.CUST_GRADE) GRADE_NM
+                 , E.CALL_DATE
+                 , E.CALL_ID
+                 , (
+                     SELECT USER_NAME 
+                       FROM COM.TC_USRMST 
+                      WHERE USER_ID = E.CALL_ID
+                   ) CALL_NAME
+                 , E.CALL_DESC
+                 , DECODE(E.CALL_DATE, NULL, 'N', 'Y') TAG 
+              FROM DCS.DM_ENTR_PATH A
+                 , DCS.DB_BRANCH B
+                 , DCS.DM_CUSTOMER C
+                 , DCS.DO_CUST_GRADE D
+                 , DCS.DM_BANK_SCED E
+             WHERE A.ENTR_PATH_CD   =   B.BRCH_ID
+               AND A.CUST_ID        =   C.CUST_ID
+               AND A.CUST_ID        =   D.CUST_ID
+               AND D.APP_YEAR       =   TO_CHAR(SYSDATE, 'YYYY')
+               AND D.BRCH_ID        =   ?  
+               AND A.CUST_ID        =   E.CUST_ID (+)
+               AND C.CUST_STAT_FLAG =   '1'
+               AND B.BRCH_TYPE      IN  ('41', '51') 
+           ]]>        
+    </query> 
+    
+    <!--  AND A.JCOMP_SCED_DT  BETWEEN ? AND ?-->  
+    
+    <!-- 통화건인 경우 -->
+    <query name="SEL_YESCALL">        
+        <![CDATA[  
+            SELECT A.CUST_ID
+                 , C.CUST_NAME
+                 , A.ENTR_PATH_CD
+                 , B.BRCH_NAME  -- 제휴카드사명
+                 , '' JCOMP_SCED_DT
+                 , C.HOME_PH1
+                 , C.HOME_PH2
+                 , C.HOME_PH3
+                 , C.MOBILE_PH1
+                 , C.MOBILE_PH2
+                 , C.MOBILE_PH3
+                 , D.CUST_GRADE
+                 , COM.FN_GET_COMM_NAME('D', 'D011', D.CUST_GRADE) GRADE_NM  
+                 , E.CALL_DATE
+                 , E.CALL_ID
+                 , (
+                     SELECT USER_NAME 
+                       FROM COM.TC_USRMST 
+                      WHERE USER_ID = E.CALL_ID
+                   ) CALL_NAME
+                 , E.CALL_DESC
+                 , DECODE(E.CALL_DATE, NULL, 'N', 'Y') TAG  
+              FROM DCS.DM_ENTR_PATH A
+                 , DCS.DB_BRANCH B
+                 , DCS.DM_CUSTOMER C
+                 , DCS.DO_CUST_GRADE D
+                 , DCS.DM_BANK_SCED E
+             WHERE A.ENTR_PATH_CD   =   B.BRCH_ID
+               AND A.CUST_ID        =   C.CUST_ID
+               AND A.CUST_ID        =   D.CUST_ID
+               AND D.APP_YEAR       =   TO_CHAR(SYSDATE, 'YYYY')
+               AND D.BRCH_ID        =   ?  
+               AND A.CUST_ID        =   E.CUST_ID (+)
+               AND C.CUST_STAT_FLAG =   '1'
+               AND B.BRCH_TYPE      IN  ('41', '51')
+               AND E.CALL_DATE      =   ?
+     ]]>        
+    </query>  
+    
+     <!-- 미통화건인 경우 -->
+    <query name="SEL_NOCALL">        
+        <![CDATA[  
+            SELECT A.CUST_ID
+                 , C.CUST_NAME
+                 , A.ENTR_PATH_CD
+                 , B.BRCH_NAME  -- 제휴카드사명
+                 , '' JCOMP_SCED_DT
+                 , C.HOME_PH1
+                 , C.HOME_PH2
+                 , C.HOME_PH3
+                 , C.MOBILE_PH1
+                 , C.MOBILE_PH2
+                 , C.MOBILE_PH3
+                 , D.CUST_GRADE
+                 , COM.FN_GET_COMM_NAME('D', 'D011', D.CUST_GRADE) GRADE_NM  -- 전화번호뒤에 회원등급항목을 추가해주세요.... -- 하단과 일치
+                 , '' CALL_DATE 
+                 , '' CALL_ID
+                 , (
+                     SELECT USER_NAME 
+                       FROM COM.TC_USRMST 
+                      WHERE USER_ID = ?
+                   ) CALL_NAME
+                , '' CALL_DESC
+             FROM DCS.DM_ENTR_PATH A
+                , DCS.DB_BRANCH B
+                , DCS.DM_CUSTOMER C
+                , DCS.DO_CUST_GRADE D
+            WHERE A.ENTR_PATH_CD   =   B.BRCH_ID
+              AND A.CUST_ID        =   C.CUST_ID
+              AND A.CUST_ID        =   D.CUST_ID
+              AND D.APP_YEAR       =   TO_CHAR(SYSDATE, 'YYYY')
+              AND D.BRCH_ID        =   ? 
+              AND C.CUST_STAT_FLAG =   '1'
+              AND B.BRCH_TYPE      IN  ('41', '51')                   -- 가맹점유형 제휴포인트, 제휴카드사                 
+              AND A.CUST_ID        =   ?
+     ]]>        
+    </query>  
+    
+    <!-- 미통화건이면 메모등록  -->
+    <query name="INS_BANK_SCED">        
+        <![CDATA[
+            INSERT INTO DCS.DM_BANK_SCED (
+                                          CALL_DATE      
+                                        , CUST_ID    
+                                        , CALL_ID      
+                                        , CALL_DESC  
+                                        , MOD_DATE
+                                        , MOD_ID   
+                                         ) 
+                                  VALUES (
+                                          TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+                                        , ?
+                                        , ?  
+                                        , ?  
+                                        , SYSDATE
+                                        , ?       
+                                         )   
+         ]]>   
+    </query>  
+    
+    <!-- 통화건이면 수정저장 -->
+    <query name="UPD_BANK_SCED">
+        <![CDATA[
+            UPDATE DCS.DM_BANK_SCED
+               SET CALL_DESC    = ?  
+                 , MOD_DATE     = SYSDATE
+                 , MOD_ID       = ?  
+             WHERE CUST_ID      = ?
+               AND CALL_DATE    = ?
+        ]]>
+    </query> 
+</service>

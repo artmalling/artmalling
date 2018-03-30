@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.06.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  계량기매핑관리
+ -->
+<service name="/mren603.mr">
+  
+	<gauce name="H_SEL_MR_GAUGMST">
+	    <column colName="GAUG_ID"          colType="TB_STRING"   size="20"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="INST_PLC"         colType="TB_STRING"   size="200" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="GAUG_USE_FLAG"    colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="DIV_RULE_TYPE"    colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VALID_S_DT"       colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VALID_E_DT"       colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="INST_STR_CD"      colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="GAUG_TYPE"        colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="GAUG_KIND_CD"     colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	</gauce>
+  
+	<gauce name="H_SEL_MR_GAUGMST_DTL">
+	    <column colName="GAUG_ID"          colType="TB_STRING"   size="20"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_ID"          colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_CD"           colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"           colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="DIV_RATE"         colType="TB_DECIMAL"  size="5"   dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="APP_S_DT"         colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="APP_E_DT"         colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="GAUG_TYPE"        colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	</gauce>
+  
+    <!-- 계량기마스터 조회 -->
+    <query name="SEL_MR_GAUGMST">
+       <![CDATA[   
+			SELECT GAUG_ID
+			     , INST_PLC
+			     , GAUG_USE_FLAG
+			     , DIV_RULE_TYPE
+			     , VALID_S_DT
+			     , VALID_E_DT
+			     , INST_STR_CD
+			     , GAUG_TYPE
+			     , GAUG_KIND_CD
+			  FROM MSS.MR_GAUGMST
+			 WHERE VALID_E_DT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+			   --AND GAUG_USE_FLAG IN ('1','2') /*1:개별, 2:공동*/
+			   --AND GAUG_LVL = '3'
+			   AND GAUG_ID LIKE ?||'%'
+			   AND GAUG_TYPE = ?
+			   AND STR_CD = ?  /*설치점 : 실제 설치된 시설위치점*/
+        ]]>
+    </query>
+    
+    <!-- 계량기마스터 조회 : 협력사코드가 조건일시-->
+    <query name="SEL_MR_GAUGMST_W_VENCD">
+       <![CDATA[   
+            SELECT GAU.GAUG_ID
+                 , GAU.INST_PLC
+                 , GAU.GAUG_USE_FLAG
+                 , GAU.DIV_RULE_TYPE
+                 , GAU.VALID_S_DT
+                 , GAU.VALID_E_DT
+                 , GAU.INST_STR_CD
+                 , GAU.GAUG_TYPE
+                 , GAU.GAUG_KIND_CD
+              FROM MSS.MR_GAUGMST GAU
+                 , MSS.MR_GAUGMAP GAM
+                 , MSS.MR_CNTRMST CNT
+             WHERE GAU.VALID_E_DT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+               AND GAU.GAUG_ID = GAM.GAUG_ID
+               AND GAM.CNTR_ID = CNT.CNTR_ID
+               --AND GAU.GAUG_USE_FLAG IN ('1','2')
+               --AND GAU.GAUG_LVL = '3'
+               AND GAU.GAUG_ID LIKE ?||'%'
+               AND CNT.VEN_CD   = ?
+               AND GAU.GAUG_TYPE= ?
+               AND STR_CD = ?  /*설치점 : 실제 설치된 시설위치점*/
+        ]]>
+    </query>
+
+    <!-- 계량기마스터 매핑 조회 -->
+	<query name="SEL_MR_GAUGMST_DTL_H">
+        SELECT CAU.GAUG_ID 
+             , CAU.CNTR_ID 
+             , '' AS VEN_CD
+             , HHO.DONG||'-'||HHO.HO AS VEN_NM
+             , CAU.DIV_RATE 
+             , CAU.APP_S_DT 
+             , CAU.APP_E_DT 
+          FROM MSS.MR_GAUGMAP   CAU
+             , MSS.MR_HHOLDMST  HHO
+         WHERE CAU.CNTR_ID = HHO.HHOLD_ID
+           AND CAU.GAUG_ID = ?
+	</query>  
+	  
+    <!-- 계량기마스터 매핑 조회 -->
+	<query name="SEL_MR_GAUGMST_DTL_C">
+        SELECT CAU.GAUG_ID 
+             , CAU.CNTR_ID 
+             , CNT.VEN_CD
+             , VEN.VEN_NAME AS VEN_NM
+             , CAU.DIV_RATE 
+             , CAU.APP_S_DT 
+             , CAU.APP_E_DT 
+          FROM MSS.MR_GAUGMAP   CAU
+             , MSS.MR_CNTRMST   CNT
+             , DPS.PC_VENMST    VEN
+         WHERE CAU.CNTR_ID = CNT.CNTR_ID
+           AND CNT.VEN_CD = VEN.VEN_CD
+           AND CAU.GAUG_ID = ?
+	</query>    
+	
+	<!-- 매장별 계량기마스터 매핑 등록 -->
+	<query name="INS_MR_GAUGMST_DTL">
+		INSERT 
+		  INTO MSS.MR_GAUGMAP
+		     ( GAUG_ID
+		     , CNTR_ID
+		     , APP_S_DT
+		     , APP_E_DT
+		     , DIV_RATE
+		     , REG_ID
+		     , REG_DATE
+		     , MOD_ID
+		     , MOD_DATE)
+		VALUES 
+		     ( ?
+		     , ?
+		     , ?
+		     , ?
+		     , ?
+		     , ?
+		     , SYSDATE
+		     , ?
+		     , SYSDATE)
+	</query>   
+	 
+	<!-- 매장별 계량기마스터 매핑 변경 -->
+	<query name="UPD_MR_GAUGMST_DTL">
+		UPDATE MSS.MR_GAUGMAP
+		   SET APP_S_DT = ?
+		     , APP_E_DT = ?
+		     , DIV_RATE = ?
+		     , MOD_ID   = ?
+             , MOD_DATE = SYSDATE
+		 WHERE GAUG_ID  = ?
+		   AND CNTR_ID  = ?
+	</query>
+	
+	<!-- 매장별 계량기마스터 매핑 삭제 -->
+	<query name="DEL_MR_GAUGMST_DTL">
+		DELETE MSS.MR_GAUGMAP
+		 WHERE GAUG_ID = ?
+		   AND CNTR_ID = ?
+	</query>
+	    
+</service>

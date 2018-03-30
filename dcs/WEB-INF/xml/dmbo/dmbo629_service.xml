@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : jinjung.kim
+ * 회 사 명 : 
+ * 작 성 일 : 2010.03.29
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : EXCEL SMS 중지등록
+ -->
+<service name="/dmbo629.do">
+
+    <!-- 미확정자료조회 헤더 -->
+    <gauce name="H_MASTER">
+    <column colName="CARD_NO"      colType="TB_STRING"   size="100"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="MOBILE"  		colType="TB_STRING"   size="100"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="SMSYN"  		colType="TB_STRING"   size="100"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    <!-- 미확정자료조회 -->
+    <query name="SEL_MASTER">
+    <![CDATA[
+        SELECT  
+                CARD_NO
+              , MOBILE
+              , SMSYN
+         FROM DCS.SEARCH_SMS_KYS
+        WHERE REG_ID = ?
+     ]]>
+    </query>
+    
+    <!-- 확정처리를 위한 조회 -->
+    <query name="SEL_CONF">
+    <![CDATA[
+        SELECT DISTINCT
+               REG_ID
+         FROM DCS.SEARCH_SMS_KYS
+        WHERE REG_ID = ?
+        ]]>
+    </query>
+    
+    <!-- EXCEL UPLOAD시 데이터 유효성 검증 -->
+    <query name="SEL_VALID">
+    <![CDATA[
+    SELECT DECODE(NVL(?, '0'), '0', 0,
+                                  (SELECT DECODE(COUNT( * ), 0, 1, 0)
+                                     FROM DCS.DM_CUSTOMER A, DCS.DM_CARD B
+                                    WHERE A.CUST_ID(+)   = B.CUST_ID
+                                      AND B.CARD_STAT_CD = '0'
+                                      AND A.SS_NO        LIKE ? || '%'
+                                  )
+                 ) 
+         + DECODE(NVL(?, '0'), '0', 0,
+                                  (SELECT DECODE(COUNT( * ), 0, 1, 0)
+                                     FROM DCS.DM_CUSTOMER A, DCS.DM_CARD B
+                                    WHERE A.CUST_ID(+)   = B.CUST_ID
+                                      AND B.CARD_STAT_CD = '0'
+                                      AND B.CARD_NO      LIKE ? || '%'
+                                   )
+                 ) 
+         + DECODE(NVL(?, '0'), '0', 0,
+                                  (SELECT DECODE(COUNT( * ), 0, 1, 0)
+                                     FROM DPS.PS_TRHEADER A
+                                    WHERE A.STR_CD  = DECODE(SUBSTR(?, 8, 1),'3','03','01')
+                                      AND A.SALE_DT = '20'||SUBSTR(?, 2, 6)
+                                      AND A.POS_NO  = SUBSTR(?, 8, 4)
+                                      AND A.TRAN_NO = SUBSTR(?, 12, 5)
+                                   )
+                  ) AS RESULT
+    FROM DUAL
+    ]]>
+    </query>
+    
+    <!-- EXCEL UPLOAD 자료 등록 -->
+    <query name="saveData">
+    <![CDATA[
+      INSERT INTO DCS.SEARCH_SMS_KYS
+                 (
+                   REG_ID
+                 , CARD_NO
+                 , MOBILE
+                 , REG_DATE
+                 , SMSYN
+                 )
+           VALUES
+                 (
+                  ?
+                 ,REPLACE(TRIM(?),' ','')
+                 ,(SELECT DCS.F_DECRYPTEDSTR_M(A.MOBILE_PH1)||'-'||DCS.F_DECRYPTEDSTR_M(A.MOBILE_PH2)||'-'||DCS.F_DECRYPTEDSTR_M(A.MOBILE_PH3) MOBILE 
+                 	FROM  DCS.DM_CUSTOMER A, DCS.DM_CARD B
+						WHERE B.CARD_NO = DCS.F_ENCRYPTEDSTR_M(?)
+						AND A.CUST_ID = B.CUST_ID)
+                 ,SYSDATE
+                 ,(SELECT A.SMS_YN 
+          			  FROM  DCS.DM_CUSTOMER A, DCS.DM_CARD B
+           				WHERE B.CARD_NO = DCS.F_ENCRYPTEDSTR_M(?)
+                        AND A.CUST_ID = B.CUST_ID)
+                 )
+      ]]>
+    </query>
+    
+    <!-- EXCEL UPLOAD 자료 등록 -->
+    <query name="delData">
+    <![CDATA[
+    DELETE DCS.SEARCH_SMS_KYS
+    WHERE REG_ID = ?
+      ]]>
+    </query>
+    
+</service>

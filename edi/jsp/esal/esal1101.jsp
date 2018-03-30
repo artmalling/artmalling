@@ -1,0 +1,410 @@
+<!--
+/*******************************************************************************
+ * 시스템명 : 고객정보 조회 팝업
+ * 작  성  일  : 2012.06.29
+ * 작  성  자  : 조승배
+ * 수  정  자  :
+ * 파  일  명  : esal1101.jsp
+ * 버         전  : 1.0 (버전은 1.0부터 시작하며 0.1씩 증가)
+ * 개         요  : 고객정보/단골고객정보 조회
+ * 이         력  :
+ ******************************************************************************/
+-->
+<%@ page language="java" contentType="text/html; charset=UTF-8"  pageEncoding="UTF-8"
+ import="kr.fujitsu.ffw.base.BaseProperty,kr.fujitsu.ffw.util.String2,kr.fujitsu.ffw.control.ActionForm" %>
+<%@ page import="ecom.util.Util" %>
+<%@ page import="java.util.*" %>
+<%@ page import="sun.misc.FormattedFloatingDecimal.Form"%>
+<%@ page import="ecom.vo.SessionInfo2"%>
+<%@ taglib uri="/WEB-INF/tld/c.tld" prefix="c"%>
+<%@ taglib uri="/WEB-INF/tld/ajax-lib.tld" prefix="ajax"%>
+
+
+<html>
+<head>
+<ajax:library />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>아트몰링</title>
+<link href="/edi/css/ds.css" rel="stylesheet" type="text/css" />
+<script language="javascript"  src="/edi/js/common.js"  type="text/javascript"></script>
+<script language="javascript"  src="/edi/js/message.js"  type="text/javascript"></script>
+<script language="javascript"  src="/edi/js/global.js"  type="text/javascript"></script>
+<script language="javascript" src="/edi/js/gauce.js"     type="text/javascript"></script>
+<script language="javascript" src="/edi/js/popup.js"     type="text/javascript"></script>
+
+<script language="javascript">
+var returnParam    = dialogArguments[0];
+var mode   			 = dialogArguments[1];	//C - 카드번호 조회(기존 고객 리스트에서 조회), N - 성명 조회(단골 고객 리스트에서 조회)
+
+var strMst = "";
+
+/**
+ * doInit()
+ * 작 성 자 : 김성미
+ * 작 성 일 : 2011-06-24
+ * 개    요 : initialize
+ * return값 : void
+**/
+function doinit(){
+	if(mode == "C") {
+		document.getElementById("title1").innerHTML = "고객정보 조회";
+		document.getElementById("th_param").innerHTML = "카드번호";
+		document.getElementById("td_param").innerHTML = "<input type='text' name='cardNo' id='cardNo' size='18' onfocus='fn_focusCardNo(this)' onblur='fn_blurCardNo(this);' onkeypress='javascript:fn_enterChk();' /><input type='hidden' name='custName' id='custName' />";
+		document.getElementById("cardNo").focus();
+		
+	} else {
+		document.getElementById("title1").innerHTML = "단골 고객정보 조회";
+		document.getElementById("th_param").innerHTML = "고객명";
+		document.getElementById("td_param").innerHTML = "<input type='text' name='custName' id='custName' size='18' onkeypress='javascript:fn_enterChk();' /><input type='hidden' name='cardNo' id='cardNo' />";
+		document.getElementById("custName").focus();
+	}
+}
+/**
+ * btn_close()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2011-04-18
+ * 개    요 :  팝업 닫기
+ * return값 : void
+ */
+function btn_Close(){
+	window.close();
+}
+
+/**
+ * btn_Conf()
+ * 작 성 자 : 정진영
+ * 작 성 일 : 2011.02.21
+ * 개    요 : 확인버튼 클릭 처리
+ * return값 : void
+ * */
+
+function btn_Conf()
+{
+}
+
+function chBak(val) {
+	for(i=1;i<5;i++) {
+		document.getElementById(i+"tdId"+val).style.backgroundColor="#ffff00";
+	}
+}
+
+function reBak(val) {
+	for(i=1;i<5;i++) {
+		document.getElementById(i+"tdId"+val).style.backgroundColor="#ffffff";
+	}
+}
+
+function doOnClick( row ){
+	if (row > -1)
+	{
+		returnParam.put("POST_NO", document.getElementById("d_post_no"+row).value);
+		returnParam.put("ADDR1", document.getElementById("d_addr1"+row).value);
+		returnParam.put("ADDR2", document.getElementById("d_addr2"+row).value);
+		window.returnValue = returnParam;
+		window.close();
+	}
+	return false;
+}
+
+function btn_Search(){
+	
+	if(mode == "C" && document.getElementById("cardNo").value == ""){
+		showMessage(INFORMATION, OK, "USER-1003", "카드번호");
+		document.getElementById("cardNo").focus();
+		document.getElementById("cardNo").select();
+		return;
+	} else if(mode == "N" && document.getElementById("custName").value == ""){
+		showMessage(INFORMATION, OK, "USER-1003", "고객명");
+		document.getElementById("custName").focus();
+		document.getElementById("custName").select();
+		return;
+	}
+
+	var param = param =	  "&goTo=getReguListPop";
+	/*
+	if(mode == "C") {
+		param =	  "&goTo=getReguList";
+	} else if(mode == "N") {
+		param =	  "&goTo=getReguList";
+	}
+	*/
+		
+	param  += "&cardNo="	+ document.getElementById("cardNo").value
+			+ "&custName="	+ encodeURIComponent(document.getElementById("custName").value)
+			+ "&birthDate="	+ document.getElementById("birthDate").value
+			+ "&em_S_Date="	+ document.getElementById("em_S_Date").value
+			+ "&em_E_Date="	+ document.getElementById("em_E_Date").value
+			+ "&mobilePh1="	+ document.getElementById("mobilePh1").value
+			+ "&mobilePh2="	+ document.getElementById("mobilePh2").value
+			+ "&mobilePh3="	+ document.getElementById("mobilePh3").value
+			+ "&mode="		+ mode;
+	
+	
+	var Urleren = "/edi/esal110.es";
+	URL = Urleren + "?" +param;
+	strMst = getXMLHttpRequest();
+	strMst.onreadystatechange = responseGetReguList;
+	strMst.open("GET", URL, true);
+	strMst.send(null);
+
+}
+
+function responseGetReguList() {
+
+	var content = "";
+	
+	if(strMst.readyState==4)
+	{
+		if(strMst.status == 200)
+		{
+			strMst = eval(strMst.responseText);
+
+			if( strMst == undefined ){
+				//데이터가 없을 때 시스템 오류
+				showMessage(StopSign, OK, "GAUCE-1003", "", "");
+			} else if( strMst.length > 0 ) {	//정상처리
+				content += "<table width='100%' cellspacing='0' cellpadding='0' border='0' class='g_table'>";
+				for( i= 0; i < strMst.length; i++  ){
+					content += "	<tr onMouseOver='chBak("+i+");' onMouseOut='reBak("+i+");' >";
+					content += "		<td class='r1' id='1tdId"+i+"' onclick='doOnClick("+i+");' style='cursor:hand;' width='80'>" + strMst[i].CUST_NAME;
+					if(mode == "C") {
+						content += "			<input type='hidden' name='searchID' id='searchID"+i+"' value='" + strMst[i].CUST_ID + "' />";
+					} else if(mode == "N") {
+						content += "			<input type='hidden' name='searchID' id='searchID"+i+"' value='" + strMst[i].REGUCUST_ID + "' />";
+					}
+					
+					content += "		</td>";
+					content += "		<td class='r1' id='2tdId"+i+"' onclick='doOnClick("+i+");' style='cursor:hand;' width='140'>" + fn_getCardNo(strMst[i].CARD_NO) + "</td>";
+					content += "		<td class='r1' id='3tdId"+i+"' onclick='doOnClick("+i+");' style='cursor:hand;' width='100'>" + strMst[i].BIRTH_DT + "</td>";
+					content += "		<td class='r1' id='4tdId"+i+"' onclick='doOnClick("+i+");' style='cursor:hand;' width=''>" + strMst[i].MOBILE_PH1 + "-" + strMst[i].MOBILE_PH2 + "-" + strMst[i].MOBILE_PH3 + "</td>";
+					content += "	</tr>";
+				}
+				content += "</table>";
+				document.getElementById("DIV_Content").innerHTML = content;
+			}
+		}
+	}
+}
+
+/**
+ * getXMLHttpRequest()
+ * 작 성 자 : FKL
+ * 작 성 일 : 2011-04-18
+ * 개    요 :  인터넷 유효성 체크??
+ * return값 : void
+ */
+function getXMLHttpRequest() {
+	if(window.ActiveXObject){
+		try{
+			return new ActiveXObject("Msxml2.XMLHTTP");
+		} catch(e1) {
+			try{
+				return new ActiveXObject("Microsoft.XMLHTTP");
+			} catch (e2){
+				return null;
+			}
+		}
+	} else if(window.XMLHttpRequest) {
+		return new XMLHttpRequest();
+	} else {
+		return null;
+	}
+}
+
+function getKeyCode(){
+	if(window.event.keyCode == 13){
+		btn_Search();
+	}
+}
+function scrollAll(){
+	document.all.topTitle.scrollLeft = document.all.DIV_Content.scrollLeft;
+}
+
+//카드 번호에 포커스가 왔을경우
+function fn_focusCardNo(obj) {
+	if(obj.value.length>0) {
+		obj.value = replaceStr(obj.value, '-', '');	//- 제거
+	}
+}
+
+//카드번호 체크
+function fn_blurCardNo(obj) {
+	
+	var tmpVal = replaceStr(obj.value, '-', '');	//- 제거
+	
+	// '-' 제거된 카드번호가 13자리임
+	if(tmpVal.length != 0) {
+		if(tmpVal.length < 13) {
+			alert("카드번호의 길이가 13자리를 보다 짧습니다.");
+			obj.focus();
+			obj.select();
+		} else if(tmpVal.length > 13) {
+			alert("카드번호의 길이가 13자리를 보다 깁니다.");
+			obj.focus();
+			obj.select();
+		} else {
+			obj.value = fn_getCardNo(obj.value);
+		}
+	}
+}
+
+//카드번호 '-' 처리
+function fn_getCardNo(val) {
+	var rtnVal = "";
+	if(val.indexOf("-")<1 && val != "") {
+		rtnVal = val.substr(0, 4) + "-" + val.substr(4, 4) + "-" + val.substr(8, 4) + "-" + val.substr(12);
+	}
+	return rtnVal;
+}
+
+function doOnClick( row ){
+    if (row > -1) 
+    {
+    	returnParam.put("searchID", document.getElementById("searchID"+row).value);
+        window.returnValue = returnParam;
+        window.close();
+    }
+    return false;   
+}
+
+//엔터키 처리
+function fn_enterChk() {
+	if(event.keyCode == 13) {
+		btn_Search();
+	}
+}
+
+//핸드폰 앞자리 3자리 체크
+function fn_mobilePhoneNumChk(obj) {
+//	firstTelFormatAll(document.getElementById("m_phone1").value);
+	var strPhone1 = obj.value;
+	if(strPhone1.length ==3) {
+		if(strPhone1 == "010" || strPhone1 == "011" || strPhone1 == "016" || strPhone1 == "017" || strPhone1 == "018" || strPhone1 == "019") {
+
+		}
+		else {
+			if(strPhone1.length == 0) {
+			//	alert();
+				return;
+			}
+			showMessage(StopSign, Ok, "USER-1000", "핸드폰 번호를 확인하세요");
+			obj.focus();
+			return;
+		}
+	}
+}
+
+</script>
+
+</head>
+<body onload="doinit();">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+	<tr>
+		<td class="pop01"></td>
+		<td class="pop02" ></td>
+		<td class="pop03" ></td>
+	</tr>
+	<tr>
+		<td class="pop04"></td>
+		<td>
+			<table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<td>
+						<table width="100%" border="0" cellspacing="0" cellpadding="0">
+							<tr>
+								<td class="title">
+									<img src="/edi/imgs/comm/title_head.gif" width="15" height="13"  align="absmiddle" class="popR05 PL03" />
+									<span id="title1" class="PL03">고객정보 조회</span>
+									<input type="hidden" name="mode" value="">
+								</td>
+								<td>
+									<table border="0" align="right" cellpadding="0" cellspacing="0">
+										<tr>
+											<td><img src="/edi/imgs/btn/search.gif" width="50" height="22"  onClick="btn_Search();"/></td>
+											<td><img src="/edi/imgs/btn/close.gif" width="50" height="22"   onClick="btn_Close();"/></td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td class="popT01 PB03">
+						<table width="100%" border="0" cellspacing="0" cellpadding="0" class="o_table">
+							<tr>
+								<td>
+									<table width="100%" border="0" cellpadding="0" cellspacing="0" class="s_table">
+										<tr>
+											<th width="50" class="point" id="th_param">카드번호</th>
+											<td width="210" id="td_param">
+												<input type="text" name="cardNo" id="cardNo" size="18" onkeyup="checkByteLength(this, 13);" onfocus="fn_focusCardNo(this)" onblur="fn_blurCardNo(this);" onkeypress="javascript:fn_enterChk();" />
+											</td>
+											<th width="70">생년월일</th>
+											<td width="150">
+												<input type="text" name="birthDate" id="birthDate" size="10" title="YYYY/MM/DD" value="" maxlength="10" onkeypress="javascript:onlyNumber();" onblur="dateCheck(this, this.value);" onfocus="dateValid(this);" style='text-align: center; IME-MODE: disabled' />
+												&nbsp;<img src="/edi/imgs/icon/ico_calender.gif" alt="생년월일" align="absmiddle" onclick="openCal('G',birthDate);return false;" />
+											</td>
+										</tr>
+										<tr>
+											<th>가입일</th>
+											<td>
+												<input type="text" name="em_S_Date" id="em_S_Date" size="10" title="YYYY/MM/DD" value="" maxlength="10" onkeypress="javascript:onlyNumber();" onblur="dateCheck(this, this.value);" onfocus="dateValid(this);" style='text-align: center; IME-MODE: disabled' />
+												<img src="/edi/imgs/icon/ico_calender.gif" alt="시작일" align="absmiddle" onclick="openCal('G',em_S_Date);return false;" />
+												&nbsp;~&nbsp;<input type="text" name="em_E_Date" id="em_E_Date" size="10" maxlength="10" value="" onkeypress="javascript:onlyNumber();" onblur="dateCheck(this, this.value);" onfocus="dateValid(this);" style='text-align: center; IME-MODE: disabled' />
+												<img src="/edi/imgs/icon/ico_calender.gif" alt="종료일" align="absmiddle" onclick="openCal('G',em_E_Date);return false;" />
+											</td>
+											<th>핸드폰번호</th>
+											<td>
+												<input type="text" name="contents" id="mobilePh1" size="3" maxlength="3" onKeypress="javascript:onlyNumber(this);" onblur="javascript:fn_mobilePhoneNumChk(this);" style="text-align:center;IME-MODE:disabled;" />&nbsp;-&nbsp;
+												<input type="text" name="contents" id="mobilePh2" size="4" maxlength="4" onKeypress="javascript:onlyNumber(this);" style="text-align:center;IME-MODE:disabled;" />&nbsp;-&nbsp;
+												<input type="text" name="contents" id="mobilePh3" size="4" maxlength="4" onKeypress="javascript:onlyNumber(this);" style="text-align:center;IME-MODE:disabled;" />
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<table width="100%"  border="0" cellspacing="0" cellpadding="0" class="BD4A">
+							<tr valign="top">
+								<td>
+									<div id="topTitle" style="width:510px;overflow:hidden;">
+										<table width="100%" cellpadding="0" cellspacing="0" border="0" class="g_table" >
+											<tr>
+												<th width="80">고객명</th>
+												<th width="140">카드번호</th>
+												<th width="100">생년월일</th>
+												<th width="">핸드폰번호</th>
+												<th width="12"></th>
+											</tr>
+										</table>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div id="DIV_Content" style="width:510px;height:330px;overflow:scroll" onscroll="scrollAll();">
+										<table width="100%" cellspacing="0" cellpadding="0" border="0" class="g_table">
+										</table>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+		</td>
+		<td class="pop06" ></td>
+	</tr>
+	<tr>
+		<td class="pop07" ></td>
+		<td class="pop08" ></td>
+		<td class="pop09" ></td>
+	</tr>
+</table>
+</body>
+</html>

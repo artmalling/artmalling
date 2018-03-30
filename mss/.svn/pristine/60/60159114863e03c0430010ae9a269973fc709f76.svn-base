@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김정민
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.03.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif209.mg">
+<!-- MASTER 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="ACDT_SEQ_NO"    colType="TB_STRING" size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACDT_STR"       colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACDT_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="ISSUE_TYPE"     colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />       
+        <column colName="GIFT_TYPE_CD"   colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME" colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="GIFTCARD_NO"    colType="TB_STRING"  size="18"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"  colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"  colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="GIFTCERT_AMT"   colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACDT_PROC_FLAG" colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ACDT_RSN_CD"    colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ACDT_REASON"    colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_ID"         colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REG_NM"         colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAN_DT"         colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAN_STR"        colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CAN_REG_ID"     colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAN_REG_NM"     colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CAN_RSN_CD"     colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="CAN_REASON"     colType="TB_STRING"  size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+    </gauce> 
+    
+    <!-- 사고/해지등록 조회 -->
+    <query name="SEL_GIFTACDT">
+        <![CDATA[ 
+            SELECT A.ACDT_SEQ_NO
+                 , A.ACDT_STR
+			     , A.ACDT_DT  
+			     , A.ISSUE_TYPE
+			     , A.GIFT_TYPE_CD 
+			     , D.GIFT_TYPE_NAME 
+			     , A.GIFTCARD_NO       
+			     , A.GIFT_AMT_TYPE 
+			     , C.GIFT_AMT_NAME 
+			     , C.GIFTCERT_AMT 
+			     , A.ACDT_PROC_FLAG     -- 사고처리구분 = 1:사고 , 2:사고해지
+			     , A.ACDT_RSN_CD      
+			     , A.ACDT_REASON 
+                 , A.REG_ID
+                 , COM.FN_GET_USER_NAME(A.REG_ID) AS REG_NM   
+			     , A.CAN_DT 
+			     , A.CAN_STR 
+			     , A.CAN_REG_ID 
+                 , COM.FN_GET_USER_NAME(A.CAN_REG_ID) AS CAN_REG_NM
+			     , A.CAN_RSN_CD 
+			     , A.CAN_REASON   
+			  FROM MSS.MG_GIFTACDT A, MSS.MG_GIFTMST B, MSS.MG_GIFTAMTMST C, MSS.MG_GIFTTPMST D
+			 WHERE A.ACDT_DT = B.ACDT_REG_DT       
+			   AND A.GIFTCARD_NO = B.GIFTCARD_NO       
+			   AND A.ACDT_STR = B.ACDT_STR             
+			   AND A.GIFT_TYPE_CD = B.GIFT_TYPE_CD     
+			   AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD      
+			   AND A.ISSUE_TYPE   = C.ISSUE_TYPE        
+			   AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE   
+			   AND A.GIFT_AMT_TYPE = C.GIFT_AMT_TYPE    
+			   AND A.GIFT_TYPE_CD = D.GIFT_TYPE_CD
+			   AND A.ACDT_STR LIKE ? || '%'
+			   AND A.ACDT_DT BETWEEN ? AND ?
+        ]]>
+    </query> 
+    
+    <query name="SEL_CHECK">
+        <![CDATA[  
+               AND A.ACDT_PROC_FLAG = ?
+        ]]>
+    </query> 
+    
+    <!-- ORDER BY -->
+    <query name="SEL_ORDERBY">
+        <![CDATA[  
+            ORDER BY A.ACDT_DT , A.GIFTCARD_NO
+        ]]>
+    </query> 
+    
+     <!-- 등록(저장) Query  -->
+    <query name="INS_ACDT"> 
+        <![CDATA[   
+            INSERT 
+              INTO MSS.MG_GIFTACDT
+                 ( ACDT_DT
+                 , ACDT_STR
+                 , ACDT_SEQ_NO
+                 , GIFTCARD_NO
+                 , GIFT_TYPE_CD
+                 , ISSUE_TYPE
+                 , GIFT_AMT_TYPE
+                 , ACDT_PROC_FLAG    -- 사고처리구분 = 1:사고 , 2:사고해지
+                 , ACDT_RSN_CD
+                 , ACDT_REASON
+                 , CAN_DT
+                 , CAN_STR
+                 , CAN_REG_ID
+                 , CAN_RSN_CD
+                 , CAN_REASON
+                 , REG_ID
+                 , REG_DATE
+                 , MOD_ID         
+                 , MOD_DATE     
+                 )
+            VALUES 
+                 ( ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , SYSDATE 
+                 , ?
+                 , SYSDATE
+                 )
+        ]]>        
+    </query>
+    
+    <!-- 등록(수정) Query  -->
+    <query name="UPD_ACDT"> 
+        <![CDATA[   
+            UPDATE MSS.MG_GIFTACDT
+               SET ACDT_PROC_FLAG   = ?     --사고처리구분 1:사고 , 2:사고해지
+                 , ACDT_RSN_CD      = ?
+                 , ACDT_REASON      = ?
+                 , CAN_DT           = ?
+                 , CAN_STR          = ?
+                 , CAN_REG_ID       = ?
+                 , CAN_RSN_CD       = ?
+                 , CAN_REASON       = ?
+                 , MOD_ID           = ?
+                 , MOD_DATE         = SYSDATE
+             WHERE ACDT_DT          = ?
+               AND ACDT_STR         = ?
+               AND ACDT_SEQ_NO      = ?
+        ]]>        
+    </query>
+    
+    <!-- MG_GIFTMST 수정 Query  -->
+    <query name="UPD_GIFTMST_I"> 
+        <![CDATA[   
+            UPDATE MSS.MG_GIFTMST
+               SET ACDT_REG_DT  = ?
+                 , ACDT_STR     = ?
+                 , ACDT_NO      = ?
+                 , ACDT_FLAG    = ? 
+             WHERE GIFTCARD_NO  = ? 
+        ]]>        
+    </query>
+    
+    <!-- MG_GIFTMST 수정 Query  -->
+    <query name="UPD_GIFTMST_U"> 
+        <![CDATA[   
+            UPDATE MSS.MG_GIFTMST
+               SET ACDT_FLAG    = ? 
+             WHERE GIFTCARD_NO  = ? 
+             AND   ACDT_REG_DT  = ?
+             AND   ACDT_STR     = ?
+             AND   ACDT_NO      = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_GIFTACDT_SEQ">
+        <![CDATA[   
+            SELECT LPAD(TO_CHAR(MSS.SQ_MG_GIFTACDT.NEXTVAL),3,'0') AS GIFTACDT_SEQ
+            FROM DUAL
+        ]]>        
+    </query>
+    
+    
+<!-- 상품권종류&금종 조회 -->
+     <gauce name="H_ETCCODE">
+        <column colName="CODE"      colType="TB_STRING"  size="4"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     </gauce>
+    <!-- 조회 Query-상품권종류 -->
+    <query name="SEL_ETCCODE_SELECT"> 
+        <![CDATA[   
+            SELECT GIFT_TYPE_CD AS CODE
+                 , GIFT_TYPE_NAME AS NAME   
+              FROM MSS.MG_GIFTTPMST
+          ORDER BY GIFT_TYPE_CD
+        ]]>        
+    </query>
+    <!-- 조회 Query-금종 -->
+    <query name="SEL_ETCCODE_SELECT2"> 
+        <![CDATA[   
+            SELECT GIFT_AMT_TYPE AS CODE
+		         , GIFT_AMT_NAME AS NAME
+		      FROM MSS.MG_GIFTAMTMST 
+		  ORDER BY GIFT_AMT_TYPE
+        ]]>        
+    </query>
+    
+<!-- 상품권번호에 대한 상품권종류, 금종, 상품권금액 조회 -->
+    <gauce name="H_SPNO">
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING"   size="20"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING"   size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL"  size="12"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ISSUE_TYPE"        colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACDT_FLAG"         colType="TB_STRING"   size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+     </gauce>
+    <!-- 조회 Query-상품권종류 -->
+    <query name="SEL_SPNO"> 
+        <![CDATA[   
+            SELECT B.GIFT_TYPE_CD
+		         , C.GIFT_AMT_TYPE
+		         , A.GIFTCERT_AMT
+		         , A.ISSUE_TYPE
+		         , A.ACDT_FLAG
+		      FROM MSS.MG_GIFTMST A, MSS.MG_GIFTTPMST B, MSS.MG_GIFTAMTMST C
+		     WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+		       AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+		       AND A.ISSUE_TYPE = C.ISSUE_TYPE 
+		       AND A.GIFT_AMT_TYPE = C.GIFT_AMT_TYPE
+		       AND A.GIFTCARD_NO = ?
+		       AND A.ACDT_FLAG = 'N'
+        ]]>        
+    </query>
+
+</service>

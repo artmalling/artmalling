@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김영진
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.31
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개          요 : 발급사별청구집계표를 조회한다.
+ -->
+<service name="/psal952.ps">
+    <!-- 발급사별청구집계표 -->
+    <gauce name="H_SEL_MASTER">
+        <column colName="CARDCO_NM"      colType="TB_STRING"    size="40"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+        <column colName="SEQ_FLAG"       colType="TB_STRING"    size="2"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" /> 
+		<column colName="CONF_DAY"       colType="TB_STRING"    size="8"   dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="WORK_FLAG"      colType="TB_STRING"    size="10"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="CNT"            colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+		<column colName="AMT"            colType="TB_DECIMAL"   size="13"  dec="0"   keyType="TB_NORMAL"   roundMode="ROUND" />
+    </gauce>
+
+    
+    <!-- 발급사별청구집계표 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+SELECT X.*
+  FROM 
+      (
+        SELECT A.CCOMP_CD || '  ' || C.CCOMP_NM AS CARDCO_NM
+             , DECODE(A.WORK_FLAG, '11', '00', '12', '01' ) AS SEQ_FLAG
+             , A.CHRG_DT AS CONF_DAY
+             , DECODE(A.WORK_FLAG, '11', '매출', '12', '반품' ) AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(A.APPR_AMT)   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.CHRG_DT BETWEEN ? AND ?
+         GROUP BY 
+               A.CHRG_DT
+             , A.WORK_FLAG
+             , A.CCOMP_CD
+             , C.CCOMP_NM
+        UNION ALL
+        SELECT '  합계'  AS CARDCO_NM
+             , DECODE(A.WORK_FLAG, '11', '00', '12', '01' ) AS SEQ_FLAG
+             , A.CHRG_DT AS CONF_DAY
+             , DECODE(A.WORK_FLAG, '11', '매출', '12', '반품' ) AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(A.APPR_AMT)   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.CHRG_DT BETWEEN ? AND ?
+         GROUP BY 
+               A.CHRG_DT
+             , A.WORK_FLAG
+        UNION ALL
+        SELECT A.CCOMP_CD || '  ' || C.CCOMP_NM AS CARDCO_NM
+             , '02' AS SEQ_FLAG
+             , A.CHRG_DT AS CONF_DAY
+             , '소계' AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(DECODE(A.WORK_FLAG, '11', A.APPR_AMT, '12', A.APPR_AMT*-1 ))   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.CHRG_DT BETWEEN ? AND ?
+         GROUP BY 
+               CCOMP_NM
+             , A.CCOMP_CD
+             , A.CHRG_DT
+        UNION ALL
+        SELECT '  합계'  AS CARDCO_NM
+             , '02' AS SEQ_FLAG
+             , A.CHRG_DT AS CONF_DAY
+             , '소계' AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(DECODE(A.WORK_FLAG, '11', A.APPR_AMT, '12', A.APPR_AMT*-1 ))   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.CHRG_DT BETWEEN ? AND ?
+         GROUP BY 
+               A.CHRG_DT
+        UNION ALL
+        SELECT A.CCOMP_CD || '  ' || C.CCOMP_NM AS CARDCO_NM
+             , '03' AS SEQ_FLAG
+             , MAX(B.CHRG_DT) AS CONF_DAY
+             , '합계' AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(DECODE(A.WORK_FLAG, '11', A.APPR_AMT, '12', A.APPR_AMT*-1 ))   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.CHRG_DT BETWEEN ? AND ?
+         GROUP BY 
+               CCOMP_NM
+             , A.CCOMP_CD
+        UNION ALL
+        SELECT '  합계'  AS CARDCO_NM
+             , '03' AS SEQ_FLAG
+             , MAX(B.CHRG_DT) AS CONF_DAY
+             , '합계' AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(DECODE(A.WORK_FLAG, '11', A.APPR_AMT, '12', A.APPR_AMT*-1 ))   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.CHRG_DT BETWEEN ? AND ?
+        ) X
+   ORDER BY
+         X.CONF_DAY
+       , X.SEQ_FLAG
+       , X.CARDCO_NM
+       , X.WORK_FLAG DESC
+        ]]>        
+    </query>
+    
+    <!-- 발급사별청구집계표 -->
+    <query name="SEL_MASTER2">        
+        <![CDATA[
+SELECT X.*
+  FROM 
+      (
+        SELECT A.CCOMP_CD || '  ' || C.CCOMP_NM AS CARDCO_NM
+             , DECODE(A.WORK_FLAG, '11', '00', '12', '01' ) AS SEQ_FLAG
+             , B.SALE_DT AS CONF_DAY
+             , DECODE(A.WORK_FLAG, '11', '매출', '12', '반품' ) AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(A.APPR_AMT)   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.SALE_DT BETWEEN ? AND ?
+         GROUP BY 
+               B.SALE_DT
+             , A.WORK_FLAG
+             , A.CCOMP_CD
+             , C.CCOMP_NM
+        UNION ALL
+        SELECT '  합계'  AS CARDCO_NM
+             , DECODE(A.WORK_FLAG, '11', '00', '12', '01' ) AS SEQ_FLAG
+             , A.CHRG_DT AS CONF_DAY
+             , DECODE(A.WORK_FLAG, '11', '매출', '12', '반품' ) AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(A.APPR_AMT)   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.SALE_DT BETWEEN ? AND ?
+         GROUP BY 
+               A.CHRG_DT
+             , A.WORK_FLAG
+        UNION ALL
+        SELECT A.CCOMP_CD || '  ' || C.CCOMP_NM AS CARDCO_NM
+             , '02' AS SEQ_FLAG
+             , B.SALE_DT AS CONF_DAY
+             , '소계' AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(DECODE(A.WORK_FLAG, '11', A.APPR_AMT, '12', A.APPR_AMT*-1 ))   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.SALE_DT BETWEEN ? AND ?
+         GROUP BY 
+               CCOMP_NM
+             , A.CCOMP_CD
+             , B.SALE_DT
+        UNION ALL
+        SELECT '  합계'  AS CARDCO_NM
+             , '02' AS SEQ_FLAG
+             , B.SALE_DT AS CONF_DAY
+             , '소계' AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(DECODE(A.WORK_FLAG, '11', A.APPR_AMT, '12', A.APPR_AMT*-1 ))   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.SALE_DT BETWEEN ? AND ?
+         GROUP BY 
+               B.SALE_DT
+        UNION ALL
+        SELECT A.CCOMP_CD || '  ' || C.CCOMP_NM AS CARDCO_NM
+             , '03' AS SEQ_FLAG
+             , MAX(B.SALE_DT) AS CONF_DAY
+             , '합계' AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(DECODE(A.WORK_FLAG, '11', A.APPR_AMT, '12', A.APPR_AMT*-1 ))   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.SALE_DT BETWEEN ? AND ?
+         GROUP BY 
+               CCOMP_NM
+             , A.CCOMP_CD
+        UNION ALL
+        SELECT '  합계'  AS CARDCO_NM
+             , '03' AS SEQ_FLAG
+             , MAX(B.SALE_DT) AS CONF_DAY
+             , '합계' AS WORK_FLAG
+             , COUNT(A.APPR_AMT) AS CNT
+             , SUM(DECODE(A.WORK_FLAG, '11', A.APPR_AMT, '12', A.APPR_AMT*-1 ))   AS AMT
+          FROM DPS.PD_BUYREQD A
+             , DPS.PD_BUYREQPREP B
+             , DPS.PD_CARDCOMP C
+         WHERE A.CHRG_DT = B.CHRG_DT
+           AND A.CHRG_SEQ = B.CHRG_SEQ
+           AND A.SEQ_NO = B.CHRG_NO
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND B.STR_CD = ?
+           AND B.SALE_DT BETWEEN ? AND ?
+        ) X
+   ORDER BY
+         X.CONF_DAY
+       , X.SEQ_FLAG
+       , X.CARDCO_NM
+       , X.WORK_FLAG DESC
+        ]]>        
+    </query>
+</service>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.05.30
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  회원현황(일)
+ -->
+<service name="/dbri311.db">
+    <!-- 회원현황(일)  -->
+    <gauce name="H_MASTER"> 
+        <column colName="ENTR_CNT"       	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_ENTR_CNT"      colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_ENTR_CNT"      colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_ENTR_RATE"     colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTR_RATE"    		colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTR_TOT_CNT"  	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+                   
+    <gauce name="H_DETAIL"> 
+        <column colName="ENTR_DT"        colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ENTR_CNT"       colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POINT_CNT"      colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_CNT"        colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 회원현황(일) -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT
+			      ENTR_CNT          -- 기준회원수
+			    , PRE_ENTR_CNT      -- 대비신규회원수
+			    , ADD_ENTR_CNT  -- 증감회원수
+			    , ADD_ENTR_RATE     -- 증감율
+			    , ENTR_RATE         -- 구성율
+			    , ENTR_TOT_CNT      -- 총회원수
+			FROM (    
+			    SELECT 
+			           X.ENTR_CNT
+			         , Y.PRE_ENTR_CNT PRE_ENTR_CNT
+			         , X.ENTR_CNT - Y.PRE_ENTR_CNT ADD_ENTR_CNT
+			         , CASE WHEN ENTR_CNT = 0 THEN 0 
+                            ELSE ROUND((X.ENTR_CNT - Y.PRE_ENTR_CNT)/ENTR_CNT * 100,2)   
+                       END  ADD_ENTR_RATE
+			         , ROUND(X.ENTR_CNT / Z.ENTR_TOT_CNT,2) ENTR_RATE
+			         , Z.ENTR_TOT_CNT
+			    FROM (
+					        SELECT COUNT(1) ENTR_CNT
+					        FROM DCS.DM_CUSTOMER
+					        WHERE ENTR_DT >= ?
+					          AND ENTR_DT <= ?
+					     ) X,
+			             (
+			                SELECT COUNT(1) PRE_ENTR_CNT
+			                FROM DCS.DM_CUSTOMER
+			                WHERE ENTR_DT >= ?
+			                  AND ENTR_DT <= ?
+			              ) Y,
+			              (
+			                SELECT COUNT(1) ENTR_TOT_CNT
+			                FROM DCS.DM_CUSTOMER
+			                WHERE ENTR_DT <= ?      
+			          ) Z
+			    ) 
+        ]]>        
+    </query>  
+    
+    
+    
+    <query name="SEL_DETAIL">        
+        <![CDATA[
+			SELECT 
+                 X.ENTR_DT
+               , SUM(X.ENTR_CNT) AS ENTR_CNT
+               , SUM(X.POINT_CNT) AS POINT_CNT
+               , SUM(X.ADD_CNT) AS ADD_CNT
+          FROM (
+                  SELECT ENTR_DT, COUNT(1) ENTR_CNT, 0 POINT_CNT, 0 AS ADD_CNT
+                  FROM DCS.DM_CUSTOMER
+                  WHERE ENTR_DT >= ?
+                    AND ENTR_DT <= ?
+                  GROUP BY ENTR_DT
+                  
+                  UNION ALL 
+                  
+                  SELECT A.ENTR_DT, 0 AS ENTR_CNT, COUNT(1) POINT_CNT, 0 AS ADD_CNT
+                    FROM DCS.DM_CUSTOMER A
+                       , DCS.DO_CUST_TPOINT D
+                   WHERE A.CUST_ID = D.CUST_ID
+                     AND A.ENTR_DT >= ?
+                     AND A.ENTR_DT <= ?
+                     AND D.POINT > 0
+                  GROUP BY A.ENTR_DT
+                  
+                  UNION ALL 
+                  
+                  SELECT A.ADD_DT, 0 AS ENTR_CNT, 0 AS POINT_CNT, COUNT(1) AS ADD_CNT
+                    FROM (
+                          SELECT A.ADD_DT, B.CUST_ID , 1 AS ADD_CNT
+                            FROM DCS.DO_POINT_ADD A
+                               , DCS.DM_CARD B
+                           WHERE A.CARD_NO = B.CARD_NO
+                             AND A.ADD_DT >= ?
+                             AND A.ADD_DT <= ?
+                         GROUP BY A.ADD_DT, B.CUST_ID   
+                         
+                         UNION ALL
+                         
+                          SELECT A.USE_DT AS ADD_DT, B.CUST_ID ,1 AS ADD_CNT
+                            FROM DCS.DO_POINT_USE A
+                               , DCS.DM_CARD B
+                           WHERE A.CARD_NO = B.CARD_NO
+                             AND A.USE_DT >= ?
+                             AND A.USE_DT <= ?
+                         GROUP BY A.USE_DT, B.CUST_ID        
+                         ) A
+                   GROUP BY A.ADD_DT, A.CUST_ID 
+              
+               ) X
+         GROUP BY ENTR_DT
+         ORDER BY ENTR_DT
+        ]]>        
+    </query>  
+</service>

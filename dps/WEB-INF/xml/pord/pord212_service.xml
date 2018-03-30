@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 박래형
+ * 회 사 명    : FKSS
+ * 작 성 일    : 2010.04.08
+ * 변 경 일    : 
+ * 변경내용 :  
+ * 개    요       :  개발팀에서 기입해주세요
+ --> 
+<service name="/pord212.po">
+    <!-- 입고/반품  리스트 -->
+    <gauce name="H_LIST"> 
+        <column colName="CHECK1"             colType="TB_STRING"     size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"             colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_NM"             colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="ORD_DT"             colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SLIP_FLAG"          colType="TB_STRING"     size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SLIP_FLAG_NM"       colType="TB_STRING"     size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SLIP_NO"            colType="TB_STRING"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="PUMBUN_CD"          colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NM"          colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"             colType="TB_STRING"     size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NM"             colType="TB_STRING"     size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLP_TQTY"           colType="TB_DECIMAL"    size="8"    dec="1" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLP_COST_TAMT"      colType="TB_DECIMAL"    size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLP_SALE_TAMT"      colType="TB_DECIMAL"    size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLP_GAP_RATE"       colType="TB_DECIMAL"    size="5"    dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SLP_GAP_TOT_AMT"    colType="TB_DECIMAL"    size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_FLAG"           colType="TB_STRING"     size="1"    dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BOTTLE_SLIP_YN"     colType="TB_STRING"     size="1"    dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FILE_CHECK"         colType="TB_INT"        size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="BIZ_TYPE"           colType="TB_STRING"     size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 전표확정전표 -->
+    <gauce name="H_PRE_SLIP_NO"> 
+        <column colName="STR_CD"             colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SLIP_NO"            colType="TB_STRING"     size="12"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+    </gauce>
+    
+    <gauce name="H_MG_RATE"> 
+        <column colName="RETURN_INT"          colType="TB_STRING"     size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="RETURN_MESSAGE"      colType="TB_STRING"     size="100"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>  
+    
+    <gauce name="H_APPDT_PRICE"> 
+        <column colName="RETURN_INT"          colType="TB_STRING"   size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="RETURN_MESSAGE"      colType="TB_STRING"   size="100" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>  
+    
+    <!-- 대금지불 마감 체크 -->
+    <gauce name="H_PAY_CLOSE_CHK"> 
+        <column colName="RET_FLAG"            colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce> 
+    
+    <!-- 재고실사 가능여부 -->
+    <gauce name="H_CHK_JG_FLAG"> 
+        <column colName="CHK_JG_FLAG"         colType="TB_STRING"     size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+    </gauce>  
+    
+    <!-- 품목 매입발주  리스트 조회 -->
+    <query name="SEL_LIST">
+        <![CDATA[
+           SELECT 'F'               AS  CHECK1
+                 , A.STR_CD
+                 , A.STR_NM
+                 , A.ORD_DT
+                 , A.SLIP_FLAG
+                 , A.SLIP_FLAG_NM
+                 , A.SLIP_NO
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NM
+                 , A.VEN_CD
+                 , A.VEN_NM   
+                 , A.SLP_TQTY
+                 , A.SLP_COST_TAMT
+                 , A.SLP_SALE_TAMT
+                 , A.SLP_GAP_RATE
+                 , A.SLP_GAP_TOT_AMT
+                 , A.SKU_FLAG
+                 , A.BOTTLE_SLIP_YN
+                 , DPS.FN_GET_SLP_RFD_FILE(A.STR_CD, A.SLIP_NO) AS FILE_CHECK
+                 , A.BIZ_TYPE
+              FROM (  
+                    SELECT SLP.STR_CD
+                         , DPS.FN_GET_STORE_NAME(SLP.STR_CD)                             AS STR_NM 
+                         , SLP.ORD_DT
+                         , SLP.SLIP_FLAG
+                         , COM.FN_GET_COMM_NAME('D', 'P201', SLP.SLIP_FLAG)              AS SLIP_FLAG_NM                
+                         , SLP.SLIP_NO
+                         , SLP.PUMBUN_CD
+                         , DPS.FN_GET_PUMBUN_NAME(SLP.PUMBUN_CD)                         AS PUMBUN_NM
+                         , SLP.VEN_CD       
+                         , DPS.FN_GET_VENDOR_NAME(SLP.VEN_CD)                            AS VEN_NM
+                         , SLP.ORD_TOT_QTY                                               AS SLP_TQTY  --수량계                           
+                         , SLP.NEW_COST_TAMT                                             AS SLP_COST_TAMT  --원가계
+                         , SLP.NEW_SALE_TAMT                                             AS SLP_SALE_TAMT --매가계 
+                         , SLP.NEW_GAP_RATE                                              AS SLP_GAP_RATE --차익율
+                         , SLP.GAP_TOT_AMT                                               AS SLP_GAP_TOT_AMT -- 차익 
+                         , SLP.DELI_DT
+                         , SLP.SLIP_ISSUE_CNT
+                         , PBN.SALE_ORG_CD
+                         , PBN.BUY_ORG_CD
+                         , PBN.SKU_FLAG
+                         , SLP.BOTTLE_SLIP_YN
+                         , PBN.BIZ_TYPE
+                      FROM DPS.PO_SLPMST SLP
+                         , DPS.PC_STRPBN PBN
+                     WHERE ( ( SLP.SLIP_FLAG = 'A' 
+                       AND SLP.SLIP_PROC_STAT IN (SELECT COMM_CODE 
+                                                    FROM COM.TC_COMMCODE
+                                                   WHERE COMM_PART = 'P207'
+                                                     AND COMM_CODE BETWEEN  DPS.FN_CONF_RANGE('1','A','09')   AND '09'  ))
+                        OR (SLP.SLIP_FLAG = 'B' 
+                        AND SLP.SLIP_PROC_STAT IN (SELECT COMM_CODE 
+                                                     FROM COM.TC_COMMCODE
+                                                    WHERE COMM_PART = 'P207'
+                                                      AND COMM_CODE BETWEEN  DPS.FN_CONF_RANGE('1','B','09')   AND '09'  ))
+                        OR ( SLP.SLIP_FLAG = 'A' 
+                        AND SLP.SLIP_PROC_STAT IN (SELECT COMM_CODE 
+                                                    FROM COM.TC_COMMCODE
+                                                   WHERE COMM_PART = 'P207'
+                                                     AND COMM_CODE BETWEEN  DPS.FN_CONF_RANGE('2','A','09')   AND '09'  ))
+                        OR (SLP.SLIP_FLAG = 'B' 
+                        AND SLP.SLIP_PROC_STAT IN (SELECT COMM_CODE 
+                                                     FROM COM.TC_COMMCODE
+                                                    WHERE COMM_PART = 'P207'
+                                                      AND COMM_CODE BETWEEN  DPS.FN_CONF_RANGE('2','B','09')   AND '09'  )))                             
+                                                      
+                                                      
+                                                      
+                       AND SLP.STR_CD     = ?
+                       AND SLP.SLIP_NO    = ?
+                       AND SLP.STR_CD    = PBN.STR_CD
+                       AND SLP.PUMBUN_CD = PBN.PUMBUN_CD
+                       AND SLP.SLIP_FLAG IN ('A','B')
+                       AND SLP.IMPORT_FLAG <> '1'
+                       AND SLP.AFT_ORD_FLAG = '0'
+                       AND SLP.SLIP_PROC_STAT <> '09'
+                       AND SLP.DEL_FLAG  = 'N'
+                       AND EXISTS ( 
+                                    SELECT MYORG.USER_ID
+                                      FROM COM.V_MYORG MYORG
+                                     WHERE MYORG.STR_CD      = SLP.STR_CD
+                                       AND MYORG.PUMBUN_CD   = SLP.PUMBUN_CD
+                                       AND MYORG.USER_ID     = ?
+                                       AND ROWNUM            = 1
+                                       AND MYORG.ORG_FLAG    = ?
+                                  )
+                    ) A
+        ]]>
+    </query> 
+    
+    <!-- 검품전표체크  -->
+    <query name="SEL_CONF_SLIP_NO">
+        <![CDATA[
+	        SELECT SLP.STR_CD             
+                 , SLP.SLIP_NO       
+	          FROM DPS.PO_SLPMST SLP
+	         WHERE SLP.STR_CD     = ?
+	           AND SLP.SLIP_NO    = ?
+	           AND SLP.SLIP_FLAG IN ('A','B')
+	           AND SLP.IMPORT_FLAG <> '1'
+	           AND SLP.SLIP_PROC_STAT = '09'
+	           AND SLP.DEL_FLAG  = 'N'
+	           AND EXISTS ( 
+	                        SELECT MYORG.USER_ID
+	                          FROM COM.V_MYORG MYORG
+	                         WHERE MYORG.STR_CD      = SLP.STR_CD
+	                           AND MYORG.PUMBUN_CD   = SLP.PUMBUN_CD
+	                           AND MYORG.USER_ID     = ?
+	                           AND ROWNUM            = 1
+	                           AND MYORG.ORG_FLAG    = ?
+	                      )
+        ]]>
+    </query>      
+     
+    <!-- 대금지불 마감체크 -->
+    <query name="SEL_PAY_CLOSE_CHK">
+        <![CDATA[
+            SELECT DPS.FN_GET_PAYCLOSE_CHK(?, ?, ?) AS RET_FLAG
+              FROM DUAL
+        ]]>
+    </query>   
+     
+    <!-- 재고실사 체크여부-->
+    <query name="SEL_CHK_JG">
+        <![CDATA[
+            SELECT DPS.FN_GET_SRVYCHK(?, ?) AS CHK_JG_FLAG
+              FROM DUAL
+        ]]>
+    </query>  
+</service>

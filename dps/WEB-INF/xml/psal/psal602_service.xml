@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2010.04.18
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  사은품증정현황
+ -->
+<service name="/psal602.ps">
+    <!-- 사은품증정현황 MASTER 헤더  -->
+    <gauce name="H_SEL_GIFT_PRST_MST">
+        <column colName="STR_CD"       colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="START_DT"     colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="END_DT"       colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SKU_CD"       colType="TB_STRING"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SKU_NAME"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_PRC"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TOT_SALE_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PRSNT_QTY"    colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PRSNT_AMT"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="EVENT_CD"     colType="TB_STRING"  size="11"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 사은품증정현황 DETAIL 헤더  -->
+    <gauce name="H_SEL_GIFT_PRST_DTL">
+        <column colName="PRSNT_FLAG"   colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="SALE_PRC"     colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TOT_SALE_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PRSNT_QTY"    colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PRSNT_AMT"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 사은품증정현황 MASTER 조회쿼리 -->
+    <query name="SEL_GIFT_PRST_MST">
+        <![CDATA[
+        SELECT A.STR_CD
+             , ? AS START_DT
+             , ? AS END_DT
+             , A.SKU_CD
+             , B.SKU_NAME
+             , SUM(B.SALE_PRC)     AS SALE_PRC      -- 사은품비용
+             , SUM(A.TOT_SALE_AMT) AS TOT_SALE_AMT  -- 총인정금액
+             , SUM(A.PRSNT_QTY)    AS PRSNT_QTY     -- 지급수량
+             , SUM(A.PRSNT_AMT)    AS PRSNT_AMT     -- 지급금액
+             , ?                   AS EVENT_CD      -- 행사코드
+          FROM MSS.MC_EVTSKUPRSNT A
+             , DPS.PC_STRSKUMST   B
+         WHERE A.STR_CD    = B.STR_CD
+           AND A.SKU_CD    = B.SKU_CD
+           AND A.STR_CD    = ?
+           AND A.CANCEL_GB = '1'
+           AND A.PRSNT_DT BETWEEN ? AND ?
+           AND A.PRSNT_FLAG  IN ( '1', '2' )
+           AND A.EVENT_CD  LIKE ? || '%'
+           AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD  = A.STR_CD
+                           AND MYORG.USER_ID = ? )
+         GROUP BY
+               A.STR_CD
+             , A.SKU_CD
+             , B.SKU_NAME
+        ]]>
+    </query>
+    
+    <query name="SEL_GIFT_PRST_DTL">
+        <![CDATA[
+        SELECT COM.FN_GET_COMM_NAME('D','M004',PRSNT_FLAG) AS PRSNT_FLAG
+             , SUM(B.SALE_PRC)                             AS SALE_PRC      -- 사은품비용
+             , SUM(A.TOT_SALE_AMT)                         AS TOT_SALE_AMT  -- 총인정금액
+             , SUM(A.PRSNT_QTY)                            AS PRSNT_QTY     -- 지급수량
+             , SUM(A.PRSNT_AMT)                            AS PRSNT_AMT     -- 지급금액
+          FROM MSS.MC_EVTSKUPRSNT A
+             , DPS.PC_STRSKUMST   B
+         WHERE A.STR_CD    = B.STR_CD
+           AND A.SKU_CD    = B.SKU_CD
+           AND A.STR_CD    = ?
+           AND A.SKU_CD    = ?
+           AND A.CANCEL_GB = '1'
+           AND A.PRSNT_DT BETWEEN ? AND ?
+           AND A.PRSNT_FLAG  IN ( '1', '2' )
+           AND A.EVENT_CD  LIKE ? || '%'
+           AND EXISTS ( SELECT MYORG.USER_ID
+                          FROM COM.V_MYORG MYORG
+                         WHERE MYORG.STR_CD  = A.STR_CD
+                           AND MYORG.USER_ID = ? )
+         GROUP BY A.PRSNT_FLAG
+        ]]>
+    </query>
+    
+</service>

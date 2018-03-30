@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : jinjung.kim
+ * 회 사 명 : 
+ * 작 성 일 : 2010.03.29
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : EXCEL SMS 중지등록
+ -->
+<service name="/dmbo628.do">
+
+    <!-- 미확정자료조회 헤더 -->
+    <gauce name="H_MASTER">
+    <column colName="MOBILE_EMAIL"      colType="TB_STRING"   size="100"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="FLAG"            	colType="TB_STRING"   size="1"    dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="MOBILE_PH1"  		colType="TB_STRING"   size="32"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="MOBILE_PH2"  		colType="TB_STRING"   size="32"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="MOBILE_PH3"  		colType="TB_STRING"   size="32"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="EMAIL1"    		colType="TB_STRING"   size="128"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="EMAIL2"    		colType="TB_STRING"   size="128"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="MOBILE_PH1_ENCODE" colType="TB_STRING"   size="32"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="MOBILE_PH2_ENCODE" colType="TB_STRING"   size="32"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="MOBILE_PH3_ENCODE" colType="TB_STRING"   size="32"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="EMAIL1_ENCODE"     colType="TB_STRING"   size="128"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="EMAIL2_ENCODE"    	colType="TB_STRING"   size="128"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="REG_ID"          	colType="TB_STRING"   size="10"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="OP_CODE"         	colType="TB_STRING"   size="1"    dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="ERR_CNT"         	colType="TB_DECIMAL"  size="3"    dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    <column colName="ERR_MSG"         	colType="TB_STRING"   size="1000" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    <!-- 미확정자료조회 -->
+    <query name="SEL_MASTER">
+    <![CDATA[
+        SELECT  
+                MOBILE_EMAIL
+              , FLAG
+              , MOBILE_PH1
+              , MOBILE_PH2
+              , MOBILE_PH3
+              , EMAIL1
+              , EMAIL2
+              , MOBILE_PH1_ENCODE
+              , MOBILE_PH2_ENCODE
+              , MOBILE_PH3_ENCODE
+              , EMAIL1_ENCODE
+              , EMAIL2_ENCODE
+              , REG_ID
+              , '' AS OP_CODE
+              , ERR_CNT
+              , ERR_MSG
+         FROM DCS.DO_EXCEL_SMS_TEMP
+        WHERE REG_ID = ?
+        ORDER BY REG_DATE, FLAG DESC, MOBILE_EMAIL
+     ]]>
+    </query>
+    
+    <!-- 확정처리를 위한 조회 -->
+    <query name="SEL_CONF">
+    <![CDATA[
+        SELECT DISTINCT
+               REG_ID
+         FROM DCS.DO_EXCEL_SMS_TEMP
+        WHERE REG_ID = ?
+        ]]>
+    </query>
+    
+    <!-- EXCEL UPLOAD시 데이터 유효성 검증 -->
+    <query name="SEL_VALID">
+    <![CDATA[
+    SELECT DECODE(NVL(?, '0'), '0', 0,
+                                  (SELECT DECODE(COUNT( * ), 0, 1, 0)
+                                     FROM DCS.DM_CUSTOMER A, DCS.DM_CARD B
+                                    WHERE A.CUST_ID(+)   = B.CUST_ID
+                                      AND B.CARD_STAT_CD = '0'
+                                      AND A.SS_NO        LIKE ? || '%'
+                                  )
+                 ) 
+         + DECODE(NVL(?, '0'), '0', 0,
+                                  (SELECT DECODE(COUNT( * ), 0, 1, 0)
+                                     FROM DCS.DM_CUSTOMER A, DCS.DM_CARD B
+                                    WHERE A.CUST_ID(+)   = B.CUST_ID
+                                      AND B.CARD_STAT_CD = '0'
+                                      AND B.CARD_NO      LIKE ? || '%'
+                                   )
+                 ) 
+         + DECODE(NVL(?, '0'), '0', 0,
+                                  (SELECT DECODE(COUNT( * ), 0, 1, 0)
+                                     FROM DPS.PS_TRHEADER A
+                                    WHERE A.STR_CD  = DECODE(SUBSTR(?, 8, 1),'3','03','01')
+                                      AND A.SALE_DT = '20'||SUBSTR(?, 2, 6)
+                                      AND A.POS_NO  = SUBSTR(?, 8, 4)
+                                      AND A.TRAN_NO = SUBSTR(?, 12, 5)
+                                   )
+                  ) AS RESULT
+    FROM DUAL
+    ]]>
+    </query>
+    
+    <!-- EXCEL UPLOAD 자료 등록 -->
+    <query name="saveData">
+    <![CDATA[
+      INSERT INTO DCS.DO_EXCEL_SMS_TEMP
+                 (
+                   REG_ID
+                 , MOBILE_EMAIL
+                 , REG_DATE
+                 )
+           VALUES
+                 (
+                  ?
+                 ,REPLACE(TRIM(?),' ','')
+                 ,SYSDATE
+                 )
+      ]]>
+    </query>
+    
+</service>

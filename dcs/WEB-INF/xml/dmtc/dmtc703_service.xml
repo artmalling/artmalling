@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 장형욱
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.02.23
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  기부적립금기부등록
+ -->
+<service name="/dmtc703.dc">
+  
+    <!-- 기부적립금기부등록 -->
+    <gauce name="H_MASTER"> 
+        <column colName="SAVE_CHK"      colType="TB_STRING"   size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_NAME"      colType="TB_STRING"   size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_ID"        colType="TB_STRING"   size="9"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="S_DT"          colType="TB_STRING"   size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="E_DT"          colType="TB_STRING"   size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_TARGET"    colType="TB_STRING"   size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DON_POINT"     colType="TB_DECIMAL"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TRG_DON_DT"    colType="TB_STRING"   size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="TRG_DON_POINT" colType="TB_DECIMAL"  size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>   
+    
+    <!-- 기부적립금기부등록 리스트 조회 -->
+    <query name="SEL_DC_DON_PLAN">        
+        <![CDATA[
+            SELECT 'F' AS SAVE_CHK
+                 , B.DON_NAME
+                 , A.DON_ID
+                 , B.S_DT
+                 , B.E_DT
+                 , B.DON_TARGET
+                 , SUM(A.DON_POINT) DON_POINT
+                 , TO_CHAR(SYSDATE, 'YYYYMMDD') TRG_DON_DT,
+                   SUM(A.DON_POINT) TRG_DON_POINT       
+              FROM DCS.DC_DON_CUST A
+                 , DCS.DC_DON_PLAN B
+             WHERE A.DON_ID = B.DON_ID
+               AND A.TRG_DON_DT IS   NULL     -- 기부처 기부되지 않은 건만 대상으로 함.
+               AND (   B.S_DT   < ?           -- 시작일자가 종료일자 보다 작거나
+                    OR B.E_DT   > ?           -- 종료일자가 시작일자 보다 크면   조회
+                   ) 
+               AND A.DON_ID     LIKE ? || '%'
+        ]]>        
+    </query>    
+    
+</service>

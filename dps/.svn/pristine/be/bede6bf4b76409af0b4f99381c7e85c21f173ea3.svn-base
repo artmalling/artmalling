@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.03.28
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  단품의 스캔코드(소스마킹코드)를 관리한다.
+ -->
+<service name="/pcod509.pc">
+  <!-- 마스터 헤더  -->
+  <gauce name="H_SEL_MASTER">   
+        <column colName="STR_CD"          colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="SKU_CD"          colType="TB_STRING" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BARCODE"         colType="TB_STRING" size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SKU_NAME"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STYLE_CD"        colType="TB_STRING" size="54"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="COLOR_CD"        colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="SIZE_CD"         colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="FLAG"            colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_SKUMST">
+        <![CDATA[
+            SELECT BAR.STR_CD     , BAR.SKU_CD    , BAR.BARCODE    , SKU.SKU_NAME    , SKU.STYLE_CD
+                 , SKU.COLOR_CD   , SKU.SIZE_CD   , 1   AS FLAG
+              FROM DPS.PC_BARCDMST BAR
+                 , DPS.PC_SKUMST SKU                         
+             WHERE BAR.SKU_CD = SKU.SKU_CD 
+               AND BAR.PUMBUN_CD = SKU.PUMBUN_CD
+               AND EXISTS (SELECT 1 
+                             FROM COM.V_MYORG VMY
+                            WHERE BAR.STR_CD = VMY.STR_CD
+                              AND USER_ID  = ?
+                              AND ORG_FLAG = ?)            
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_STR_CD">
+        <![CDATA[
+               AND BAR.STR_CD     = ?
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND SKU.PUMBUN_CD     = ?
+        ]]>
+    </query> 
+    <query name="SEL_SKUMST_WHERE_PUMMOK_CD">
+        <![CDATA[
+               AND SKU.PUMMOK_CD     = ? 
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_LIKE_SKU_CD">
+        <![CDATA[
+               AND SKU.SKU_CD        LIKE ?||'%'
+               AND SKU.SKU_NAME      LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_BARCODE">
+        <![CDATA[
+               AND BAR.BARCODE      LIKE ?||'%' 
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_STYLE_TYPE">
+        <![CDATA[
+               AND EXISTS (SELECT 1 
+                             FROM DPS.PC_STYLEMST STY 
+                            WHERE SKU.PUMBUN_CD = STY.PUMBUN_CD
+                              AND SKU.STYLE_CD  = STY.STYLE_CD
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_STYLE_TYPE_END">
+        <![CDATA[
+               )
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_STYLE_CD">
+        <![CDATA[
+                              AND SKU.STYLE_CD    LIKE   ?||'%'
+                              AND STY.STYLE_NAME  LIKE   '%'||?||'%' 
+        ]]>
+    </query> 
+    <query name="SEL_SKUMST_WHERE_BRAND_CD">
+        <![CDATA[
+                              AND STY.BRAND_CD           = ? 
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_SUB_BRD_CD">
+        <![CDATA[
+               
+                              AND STY.SUB_BRD_CD          = ?          
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_PLAN_YEAR">
+        <![CDATA[
+                              AND STY.PLAN_YEAR           = ?          
+        ]]>
+    </query> 
+    <query name="SEL_SKUMST_WHERE_SEASON_CD">
+        <![CDATA[
+                              AND STY.SEASON_CD           = ?           
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_ITEM_CD">
+        <![CDATA[
+                              AND STY.ITEM_CD             = ?           
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_MNG_CD1">
+        <![CDATA[
+                              AND STY.MNG_CD1             = ?           
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_MNG_CD2">
+        <![CDATA[
+                              AND STY.MNG_CD2             = ?           
+        ]]>
+    </query> 
+    <query name="SEL_SKUMST_WHERE_MNG_CD3">
+        <![CDATA[
+                              AND STY.MNG_CD3             = ?            
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_MNG_CD4">
+        <![CDATA[
+                              AND STY.MNG_CD4             = ?            
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_WHERE_MNG_CD5">
+        <![CDATA[
+                              AND STY.MNG_CD5             = ?               
+        ]]>
+    </query>
+    <query name="SEL_SKUMST_ORDER">
+        <![CDATA[
+            ORDER BY SKU.STYLE_CD
+                   , SKU.COLOR_CD
+                   , SKU.SIZE_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_SKUMST_ORDER">
+        <![CDATA[
+            ORDER BY SKU.STYLE_CD
+                   , SKU.COLOR_CD
+                   , SKU.SIZE_CD
+        ]]>
+    </query>
+    
+    <!-- 신규시 중복 체크  -->
+    <query name="SEL_BARCDMST_INS_BAR_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_BARCDMST
+             WHERE BARCODE = ?
+               AND SKU_CD != ?
+        ]]> 
+    </query>
+    <!-- 신규시 중복 체크  -->
+    <query name="SEL_BARCDMST_INS_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_BARCDMST
+             WHERE BARCODE = ?
+               AND STR_CD  = ?
+        ]]> 
+    </query>
+    
+    <!-- 단품스캔코드 신규 입력  -->    
+    <query name="INS_BARCDMST">    
+        <![CDATA[
+            INSERT INTO DPS.PC_BARCDMST(STR_CD       
+                                      , BARCODE     
+                                      , SKU_CD   
+                                      , PUMBUN_CD      
+                                      , STAT_FLAG
+                                      , REG_DATE    
+                                      , REG_ID         
+                                      , MOD_DATE   
+                                      , MOD_ID
+                                       )
+                                 VALUES(?    
+                                      , ?         
+                                      , ?        
+                                      , ?        
+                                      , ?                                          
+                                      , SYSDATE   
+                                      , ?        
+                                      , SYSDATE  
+                                      , ?                                 
+                                       )                                                                
+        ]]>
+    </query>
+    
+</service>

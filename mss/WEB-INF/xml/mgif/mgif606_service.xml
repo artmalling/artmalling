@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.04.20
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  자사위탁판매 채권관리
+ -->
+<service name="/mgif606.mg">
+
+    <!-- 자사위탁판매 채권관리 헤더  -->
+    <gauce name="H_SEL_CON_BOND_LIST">
+        <column colName="CAL_YM"        colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="STR_CD"        colType="TB_STRING"  size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="STR_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VEN_CD"        colType="TB_STRING"  size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="VEN_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="BASIC_BOND_AMT"    colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="BOND_AMT"      colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="PAY_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FEE_PAY_AMT"   colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="TOT_PAY_AMT"   colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CUR_BOND_AMT"  colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="FINAL_BOND_AMT"   colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 위탁판매채권 조회쿼리  -->
+    <query name="SEL_CON_BOND_LIST">
+        <![CDATA[
+        SELECT CAL_YM
+             , STR_CD
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+             , VEN_CD
+             , DPS.FN_GET_VENDOR_NAME(VEN_CD) AS VEN_NM
+             , BASIC_BOND_AMT
+             , BOND_AMT
+             , PAY_AMT
+             , FEE_PAY_AMT
+             , PAY_AMT + FEE_PAY_AMT AS TOT_PAY_AMT
+             , CUR_BOND_AMT
+             , FINAL_BOND_AMT
+          FROM MSS.MG_VENCAL
+         WHERE CAL_TYPE = '3'
+           AND PAYREC_FLAG = '1'
+           AND CAL_FLAG = '1'
+           AND STR_CD = ?
+           AND CAL_YM = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_CON_BOND_LIST_WHERE_VEN_CD">
+        <![CDATA[
+           AND VEN_CD   = ?
+        ]]>
+    </query>
+
+</service>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.16
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  :  행사 조회 팝업 ( 행사 마스터 외부조인) 
+ -->
+<service name="/ccom217.cc">	
+
+ <!-- 행사코드  조회 조건 -->
+    <gauce name="H_EVENT_COND">
+        <column colName="SERVICE_ID"    colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="STR_CD"        colType="TB_STRING" size="30"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_S_DT"    colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_E_DT"    colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="COND_TXT"      colType="TB_STRING" size="30"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_TYPE"    colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_GIFT_TYPE"    colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="ADD_CONDITION" colType="TB_STRING" size="200"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    
+    <!-- 행사코드  Title -->
+    <gauce name="H_EVENT">
+        <column colName="STR_CD"  colType="TB_STRING" size="2"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_CD"	colType="TB_STRING" size="11"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_NM"	colType="TB_STRING" size="40"	dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_S_DT"  colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="EVENT_E_DT"  colType="TB_STRING" size="10"   dec="0" keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+
+    <!-- 행사코드   조회 -->
+    <query name="SEL_STR_EVENT_POP">
+        <![CDATA[
+		SELECT A.STR_CD
+		     , A.EVENT_CD 
+		     , EVENT_NAME 
+		     -- MARIO OUTLET  
+		     --, TO_CHAR(TO_DATE(A.EVENT_S_DT),'YYYY/MM/DD') EVENT_S_DT 
+		     --, TO_CHAR(TO_DATE(A.EVENT_E_DT),'YYYY/MM/DD') EVENT_E_DT
+		     , TO_CHAR(TO_DATE(A.EVENT_S_DT,'YYYYMMDD'),'YYYY/MM/DD') EVENT_S_DT 
+		     , TO_CHAR(TO_DATE(A.EVENT_E_DT,'YYYYMMDD'),'YYYY/MM/DD') EVENT_E_DT  
+		  FROM DPS.PC_STREVT A
+		       LEFT OUTER JOIN 
+		       MSS.MC_EVTMST B
+		    ON A.STR_CD = B.STR_CD
+		   AND A.EVENT_CD = B.EVENT_CD
+		     , DPS.PC_EVTMST C
+		 WHERE A.EVENT_CD = C.EVENT_CD
+		  AND (A.EVENT_CD LIKE ?||'%' OR EVENT_NAME LIKE '%'||?|| '%')
+		  AND A.STR_CD LIKE ? || '%'          
+		  AND ((? >= A.EVENT_S_DT AND ? <= A.EVENT_E_DT) OR
+		       (? >= A.EVENT_S_DT AND ? <= A.EVENT_E_DT) OR
+		       (A.EVENT_S_DT >= ? AND A.EVENT_S_DT <= ?) OR
+		       (A.EVENT_E_DT >= ? AND A.EVENT_E_DT <= ?))
+        ]]>
+    </query> 
+    
+     <!-- 행사코드   사은품 품종류 조건 -->
+    <query name="SEL_EVENT_GIFT_TYPE_04">
+        <![CDATA[
+        AND B.EVENT_GIFT_TYPE IN (?, ?) 
+        ]]>
+    </query> 
+    
+     <!-- 행사코드   조회 정렬 -->
+    <query name="SEL_EVENT_GIFT_TYPE">
+        <![CDATA[
+        AND B.EVENT_GIFT_TYPE = ? 
+        ]]>
+    </query> 
+    
+     <!-- 행사코드   조회 정렬 -->
+    <query name="SEL_ORDER">
+        <![CDATA[
+        ORDER BY A.STR_CD, A.EVENT_CD
+        ]]>
+    </query> 
+    
+      <!-- 행사코드   조회 정렬 -->
+    <query name="SEL_MINUS">
+        <![CDATA[
+        MINUS 
+        SELECT A.STR_CD
+             , A.EVENT_CD 
+             , EVENT_NAME 
+             -- MARIO OUTLET
+             --, TO_CHAR(TO_DATE(A.EVENT_S_DT),'YYYY/MM/DD') EVENT_S_DT 
+             --, TO_CHAR(TO_DATE(A.EVENT_E_DT),'YYYY/MM/DD') EVENT_E_DT   
+             , TO_CHAR(TO_DATE(A.EVENT_S_DT,'YYYYMMDD'),'YYYY/MM/DD') EVENT_S_DT 
+             , TO_CHAR(TO_DATE(A.EVENT_E_DT,'YYYYMMDD'),'YYYY/MM/DD') EVENT_E_DT   
+             FROM DPS.PC_STREVT A, DPS.PC_EVTMST C 
+             WHERE A.EVENT_CD = C.EVENT_CD 
+             AND NOT EXISTS (SELECT * FROM MSS.MC_EVTMST AA WHERE AA.STR_CD = A.STR_CD  AND AA.EVENT_CD= A.EVENT_CD)
+             -- MARIO OUTLET
+             --AND A.EVENT_S_DT <= SYSDATE
+             AND A.EVENT_S_DT <= TO_CHAR(SYSDATE,'YYYYMMDD')
+             AND ((? >= A.EVENT_S_DT AND ? <= A.EVENT_E_DT) OR
+                   (? >= A.EVENT_S_DT AND ? <= A.EVENT_E_DT) OR
+                   (A.EVENT_S_DT >= ? AND A.EVENT_S_DT <= ?) OR
+                   (A.EVENT_E_DT >= ? AND A.EVENT_E_DT <= ?))
+        ]]>
+    </query> 
+    
+       <!-- 행사코드   조회 정렬 -->
+    <query name="SEL_ORDER">
+        <![CDATA[
+        -- MARIO OUTLET
+        --ORDER BY A.STR_CD, A.EVENT_CD
+        ORDER BY STR_CD, EVENT_CD
+        ]]>
+    </query> 
+
+      <!-- 행사 명   조회 -->
+    <query name="SEL_STR_EVT_NAME">
+        <![CDATA[
+        SELECT A.STR_CD
+             , A.EVENT_CD 
+             , EVENT_NAME 
+             , TO_CHAR(TO_DATE(A.EVENT_S_DT),'YYYY/MM/DD') EVENT_S_DT 
+             , TO_CHAR(TO_DATE(A.EVENT_E_DT),'YYYY/MM/DD') EVENT_E_DT  
+          FROM DPS.PC_STREVT A
+               LEFT OUTER JOIN 
+               MSS.MC_EVTMST B
+            ON A.STR_CD = B.STR_CD
+           AND A.EVENT_CD = B.EVENT_CD
+             , DPS.PC_EVTMST C
+         WHERE A.EVENT_CD = C.EVENT_CD
+           AND A.EVENT_CD LIKE ? || '%' 
+           AND A.STR_CD LIKE ? || '%'   
+        ]]>
+    </query> 
+    
+</service>
+

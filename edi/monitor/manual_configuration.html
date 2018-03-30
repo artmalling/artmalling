@@ -1,0 +1,241 @@
+<!-- manual_configuration.html : Created on 2008. 7. 29.
+ * 
+ *   Copyright (c) 2000-2008 Shift Information & Communication Co.
+ *   5F, Seongsu Venture town, 231-1, Seongsu2-Ga Seongdong-Gu, Seoul, Korea 133-826
+ *   All rights reserved.
+ *
+ *   This software is the confidential and proprietary information of
+ *   Shift Information & Communication Co. ("Confidential Information").
+ *   You shall not disclose such Confidential Information and shall use 
+ *   it only in accordance with the terms of the license agreement you 
+ *   entered into with Shift Information & Communication.
+-->
+
+<!--
+ *   GAUCE Server configuration에 대한 메뉴얼이다.
+-->
+
+<%@ page language="java" contentType="text/html;charset=EUC-KR" %>
+<%@ include file="inc/session_check.jsp" %>
+<html>
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=euc-kr">
+	<title>GAUCE Administration</title>
+	<link rel="Stylesheet" href="data/style.css">
+		<style>
+		body {
+			background-color : white;
+			margin-right : 0px;
+		}
+		fieldset#menu {
+			padding-bottom : 15px;
+		}
+		li.menu1 {
+			font-weight : bold;
+			color : black;
+			margin-top : 10px;
+		}
+		li.menu2 {
+			list-style : none;
+		}
+		a {
+			text-decoration : underline;
+		}
+	</style>
+	<script type="text/javascript" src="data/script.js"></script>
+	<script type="text/javascript">
+	<!--
+		function OnLoad_window() {
+			InitTooltip();
+		}
+	//-->
+	</script>
+</head>
+<body onload="OnLoad_window();">
+<div id="pageTitle">GAUCE Configuration Manual</div>
+<div class="infomation">
+<li class="menu2">
+	GAUCE-5.2 서버는 여러 개의 환경 설정 파일을 이용해 Multiple Context를 생성하여 이를 서비스에 적용시킴으로써 
+	업무 확장과 유지 및 관리를 좀 더 용의 하도록 하였다.<br>
+	생성된 모든 서비스는 이미 생성된 Context를 재사용 하고, 환경 설정 파일의 수정을 통해 실시간으로 Context 정보를 변경하여 적용함으로써 
+	처리 성능을 향상시킬 수 있다.<p>
+	&nbsp;환경 설정 파일은 GAUCE-5.2 서버의 설치 디렉터리에 존재하는 <b>'gauce_conf'</b> 디렉터리 안에 존재하며, gauce-5.2 서버가 동작함에 있어 
+	기본적으로 설정해야 하는 항목을 <b>'gauce-default.xml'</b> 파일에 정의한다.<br>
+	사용자는 이 default 환경 설정 파일 외에 사용자 정의 환경 설정 파일을 만들어 사용할 수 있으며, 
+	해당 파일 수의 제한은 없으나 안정적 관리를 위해 10개 이내로 관리하는 것을 권장한다.<br>
+	&nbsp;이 환경 설정 파일들은 서버가 기동 될 때 Context Pool에 담겨 관리되며, 새로운 환경 설정 파일을 적용하기 위해서는 
+	서버의 재 기동이 필요하다. 이미 Context Pool에 담겨서 관리되는 Context의 파일이 삭제되면 해당 파일을 찾을 수 없다는 
+	경고 로그가 남지만 서비스에서 해당 Context를 사용함에 있어서는 문제가 되지 않는다. 
+</li>
+	<P>
+</div>
+<li class="menu1">GAUCE-5.2 Configuration</li>
+<div>
+<fieldset>
+	<form name=''>
+	<table>
+		<tr>
+			<td colspan='2'><b>1. gauce-default.xml</b></td>
+		</tr>
+		<tr>
+			<td width='10'> </td>
+			<td> 
+				gauce-default.xml 에 정의된 'connector'정보와  'resource'정보는 모든 Context에서 공통적으로 적용되는 정보이다.<p>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<table bgcolor='#ebebeb'> <tr> <td width=700' > 
+	<xmp>
+	
+    <configuration>
+       <global compressed="false" fragment="50">
+       <charset default="UTF-8" get="UTF-8", post="UTF-8"/>
+          <col-def integer="6" decimal="7.3" string"255" round="R"/>
+          <crypto spi=" com.ixync.common.crypto.impl.InisafeNetAdapter">
+             <param name="conf" value="gauce_home\WEB-INF\license\INISAFENET.properties"/>
+          </crypto>
+          <connector>
+             <request className=""/>
+             <response className=""/>
+          </connector>
+       </global>
+       
+       </resource >
+          <dataSource name="db_Oracle" charsetIn="UTF-8" charsetOut="UTF-8">
+             <jdbc
+             driver="oracle.jdbc.driver.OracleDriver"
+             url="jdbc:oracle:thin:@localhost:1521:ORA9"
+             user="root"
+             password="1234"
+             schema="SCOTT"
+             />
+          </dataSource>
+          <dataSource name="db_Mssql" charsetIn="UTF-8" charsetOut="UTF-8">
+             <jdbc/>
+          </dataSource>
+       </resource>
+    </configuration>
+	</xmp>
+				</tr> </td> </table><p>
+			</td>
+		</tr>
+		<tr>
+			<td colspan='2'><b>2. gauce-config1.xml</b></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<table bgcolor='#ebebeb'> <tr> <td width='700' > 
+	<xmp>
+	
+    <configuration>
+       <global compressed="false" fragment="50">
+          <charset default="UTF-8" get="UTF-8", post="UTF-8"/>
+          <col-def integer="6" decimal="7.3" string"255" round="R"/>
+          <crypto spi="com.ixync.common.crypto.impl.InisafeNetAdapter">
+             <param name="conf" value="gauce_home\WEB-INF\license\INISAFENET.properties"/>
+          </crypto>
+       </global>
+    </configuration>
+
+	</xmp>
+				</tr> </td> </table> <p>
+			</td>
+		</tr>
+	</table>
+	</form>
+</fieldset>
+</div>
+<p>
+<div class="infomation">
+<li class="menu2">
+				사용자는 로드된 Context들을 Context 이름을 이용해 서비스 별로 다양하게 적용해 사용 할 수 있다.<br>
+				Context의 이름은 환경 설정 파일의 gauce-XXX.xml에서 XXX에 해당하는 String 값이며, 이 값을 이용해 
+				request 혹은 response 에서 Context를 적용 하거나, 얻어올 수 있다.<br>
+				GAUCE 서버는 서비스 작성 시에 로드 되어 있는 Context를 변경 하거나, 새롭게 생성하여 적용할 수 있도록 'XenaContext'를 제공한다.<p>
+</li>
+</div>
+<li class="menu1">GAUCE-5.2 Configuration 사용 방법</li>
+<div>
+<fieldset>
+	<form name=''>
+	<table>
+		<tr>
+			<td colspan='2'><b>1. 환경설정 파일로부터 로드된 Context 호출</b></td>
+		</tr>
+		<tr>
+			<td width='10'> </td>
+			<td> 
+				gauce-config1.xml 파일로부터 로드된 Context를 request와 response에 적용한다.
+				
+				<p>
+				<table bgcolor='#ebebeb'> <tr> <td width=600' > 
+	<xmp>
+	
+    (HttpIXyncRequest) request).setContext("config1");
+    ((HttpIXyncResponse) response).setContext("config1");
+
+    IXyncInputStream gis (HttpIXyncRequest)request).getIXyncInputStream();
+    IXyncOutputStream gis (HttpIXyncResponse)request).getIXyncOutputStream();
+	</xmp>
+				</tr> </td> </table>
+				<p><p>
+			</td>
+		</tr>	
+		
+		<tr>
+			<td colspan='2'><b>2. 사용자 정의 Context를 만들어 적용</b></td>
+		</tr>
+		<tr>
+			<td width='10'> </td>
+			<td > 
+				<b>2-1. 환경설정 파일로부터 로드된 Context를 얻어와 이 정보를 변경하여 적용</b> <br>
+				-	gauce-config1.xml 파일로부터 로드된 Context를 XenaContext로 얻어와 그 설정정보를 수정 후 request와 response에 적용한다.
+				<p>
+				<table bgcolor='#ebebeb'> <tr> <td width='600' > 
+	<xmp>
+	
+    XenaContext context = ((HttpIXyncResponse) response).getContext("config1");
+    context.setFirstRowSize(40);
+    context.setCharset("ISO8859_1", "ISO8859_1", "ISO8859_1");
+    ((HttpIXyncResponse) response).setContext(context);
+    
+    IXyncInputStream gis (HttpIXyncRequest)request).getIXyncInputStream();
+    IXyncOutputStream gis (HttpIXyncResponse)request).getIXyncOutputStream();
+	</xmp>
+				</tr> </td> </table>
+			<p><p>
+			</td>
+		</tr>
+		<tr>
+			<td width='10'> </td>
+			<td > 
+				<b>2-2. 새로운 Context를 만들어 적용</b> <br>
+				-	사용자가 XenaContext를 만들어 FristRow크기, 압축여부, 인코딩, 컬럼 값의 정보를 모두 정의 한 후 완성된 Context를 
+				request와 response에 적용한다. 그 외의 환경설정 정보는 gauce-default.xml 파일로부터 로드된 Default Context 정보를 따라간다.
+				<p>
+				<table bgcolor='#ebebeb'> <tr> <td width='600' > 
+	<xmp>
+	
+    XenaContext context = new XenaContext();
+    context.setFirstRowSize(40);
+    context.setCompress(false);         
+    context.setCharset("UTF-8", "UTF-8","UTF-8");
+    context.setVariable("6", "7.2". "255". "R"); 
+    ((HttpIXyncResponse) response).setContext(context);
+    
+    IXyncInputStream gis (HttpIXyncRequest)request).getIXyncInputStream();
+    IXyncOutputStream gis (HttpIXyncResponse)request).getIXyncOutputStream();
+	</xmp>
+				</tr> </td> </table>
+			<p>
+			</td>
+		</tr>	
+	</table>
+	</form>
+</fieldset>
+</div>
+</body>
+</html>

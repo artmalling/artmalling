@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 강진
+ * 회 사 명    : 
+ * 작 성 일    : 2012.05.30
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       :  지역별 회원 매출 현황(월)
+ -->
+<service name="/dbri312.db">
+    <!-- 월단위 포인트 현황  -->
+    <gauce name="H_MASTER"> 
+        <column colName="BUSI_AREA"      	colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUSI_AREA_NM"      colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"  		colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_RATE"     	colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_SAEL_AMT"    	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PRE_SALE_RATE"    	colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_SAEL_AMT"  	colType="TB_DECIMAL" size="9"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ADD_SAEL_RATE"     colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce> 
+    
+    <!-- 지역별 회원 매출 현황(월) -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+			SELECT
+                                 BUSI_AREA
+                                , BUSI_AREA_NM
+                                --, BUSI_AREA_SEQ
+                                --, POINT
+                                , SALE_AMT
+                                --, TOT_AMT
+                                , SALE_RATE  -- 구성비
+                                , PRE_SALE_AMT -- 전월상권매출
+                                , PRE_SALE_RATE  -- 구성비
+                                , ADD_SALE_AMT -- 상권매출증감
+                                , ADD_SALE_RATE -- 상권매출증감율
+                        FROM    (
+                                SELECT
+                                    XX.BUSI_AREA
+                                    , XX.BUSI_AREA_NM
+                                    --, XX.BUSI_AREA_SEQ
+                                    --, XX.POINT         AS  POINT
+                                    , XX.SALE_AMT      AS  SALE_AMT
+                                    , 0         AS  TOT_POINT
+                                    , XZ.TOT_SALE_AMT      AS  TOT_SALE_AMT
+                                    , ROUND( (XX.SALE_AMT / XZ.TOT_SALE_AMT) * 100,2) AS SALE_RATE  -- 구성비
+                                    --, YY.POINT         AS  PRE_POINT
+                                    , YY.SALE_AMT      AS  PRE_SALE_AMT
+                                    --, YZ.TOT_POINT         AS  PRE_TOT_POINT
+                                    , YZ.TOT_SALE_AMT      AS  PRE_TOT_SALE_AMT
+                                    , ROUND( (YY.SALE_AMT / YZ.TOT_SALE_AMT) * 100,2) AS PRE_SALE_RATE  -- 구성비
+                                    , XX.SALE_AMT      -   YY.SALE_AMT      AS  ADD_SALE_AMT
+                                    , DECODE(YY.SALE_AMT,0,0,ROUND((XX.SALE_AMT      -   YY.SALE_AMT) / YY.SALE_AMT * 100, 2)) AS  ADD_SALE_RATE
+                                FROM
+                                (
+                                    SELECT  /*+ INDEX(D IX_BUSI_AREA_POSTNO3_01) INDEX(A PK_DM_CUSTOMER) */ D.BUSI_AREA
+                                        , D.BUSI_AREA_NM
+                                        --, D.BUSI_AREA_SEQ
+                                        --, SUM(POINT)    AS POINT
+                                        --, SUM(SALE_AMT) AS SALE_AMT
+                                        , SUM(NORM_SALE_AMT) AS SALE_AMT
+                                     from dps.ps_daycust c left outer join dcs.dm_customer a on c.cust_no = a.cust_id
+                                                           left outer join dcs.busi_area_postno3 d on nvl(a.HOME_ZIP_CD1,'999') BETWEEN D.POST_ZIP_MIN AND D.POST_ZIP_MAX
+                                     WHERE C.SALE_DT >= ?
+                                       AND C.SALE_DT <= ?
+                                     GROUP BY D.BUSI_AREA, D.BUSI_AREA_NM--, D.BUSI_AREA_SEQ
+                                    ORDER BY  D.BUSI_AREA
+                                            --, D.BUSI_AREA_SEQ
+                                ) XX,
+                                (
+                                    SELECT /*+ INDEX(D IX_BUSI_AREA_POSTNO3_01) INDEX(A PK_DM_CUSTOMER) */ --SUM(POINT)    AS TOT_POINT
+                                        --, SUM(SALE_AMT) AS TOT_SALE_AMT
+                                         SUM(NORM_SALE_AMT) AS TOT_SALE_AMT
+                                    from dps.ps_daycust c left outer join dcs.dm_customer a on c.cust_no = a.cust_id
+                                                           left outer join dcs.busi_area_postno3 d on nvl(a.HOME_ZIP_CD1,'999') BETWEEN D.POST_ZIP_MIN AND D.POST_ZIP_MAX
+                         			 WHERE C.SALE_DT >= ?
+                                       AND C.SALE_DT <= ?
+                                ) XZ,
+                                    (
+                                    SELECT  /*+ INDEX(D IX_BUSI_AREA_POSTNO3_01) INDEX(A PK_DM_CUSTOMER) */ D.BUSI_AREA
+                                        , D.BUSI_AREA_NM
+                                        --, D.BUSI_AREA_SEQ
+                                        --, SUM(POINT)    AS POINT
+                                        --, SUM(SALE_AMT) AS SALE_AMT
+                                        , SUM(NORM_SALE_AMT) AS SALE_AMT
+                                    from dps.ps_daycust c left outer join dcs.dm_customer a on c.cust_no = a.cust_id
+                                                           left outer join dcs.busi_area_postno3 d on nvl(a.HOME_ZIP_CD1,'999') BETWEEN D.POST_ZIP_MIN AND D.POST_ZIP_MAX
+                        			 WHERE C.SALE_DT >= ?
+                                       AND C.SALE_DT <= ?
+                                    GROUP BY D.BUSI_AREA, D.BUSI_AREA_NM--, D.BUSI_AREA_SEQ
+                                    ORDER BY  D.BUSI_AREA
+                                            --, D.BUSI_AREA_SEQ
+                                ) YY,
+                                    (
+                                    SELECT /*+ INDEX(D IX_BUSI_AREA_POSTNO3_01) INDEX(A PK_DM_CUSTOMER) */
+                                         --SUM(POINT)    AS TOT_POINT
+                                        --, SUM(SALE_AMT) AS TOT_SALE_AMT
+                                         SUM(NORM_SALE_AMT) AS TOT_SALE_AMT
+                                    from dps.ps_daycust c left outer join dcs.dm_customer a on c.cust_no = a.cust_id
+                                                           left outer join dcs.busi_area_postno3 d on nvl(a.HOME_ZIP_CD1,'999') BETWEEN D.POST_ZIP_MIN AND D.POST_ZIP_MAX
+                         			 WHERE C.SALE_DT >= ?
+                                       AND C.SALE_DT <= ?
+                                ) YZ
+                              WHERE   XX.BUSI_AREA = YY.BUSI_AREA(+)
+                                AND   XX.BUSI_AREA_NM = YY.BUSI_AREA_NM(+)
+                            )
+                        ORDER BY
+                                 BUSI_AREA, SALE_AMT DESC
+        ]]>        
+    </query>  
+</service>

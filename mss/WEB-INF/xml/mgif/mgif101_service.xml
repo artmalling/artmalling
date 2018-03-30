@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif101.mg">
+<!-- 코드/명 조회 -->
+    <gauce name="H_COMM_CODE">
+      <column colName="CODE"         colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"         colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+     <gauce name="H_MASTER">
+      <column colName="GIFT_TYPE_CD"     colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_NAME"   colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>  
+    
+     <gauce name="H_DETAIL">
+      <column colName="GIFT_TYPE_CD"       colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ISSUE_TYPE"         colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ISSUE_TYPE_NM"      colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_TYPE"      colType="TB_STRING" size="4"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_NAME"      colType="TB_STRING" size="40"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT"       colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="RFD_PERMIT_RATE"    colType="TB_DECIMAL" size="5,2"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMBUN_CD"          colType="TB_STRING" size="6"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="PUMMOK_CD"          colType="TB_STRING" size="8"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="USE_YN"             colType="TB_STRING" size="1"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="CONF_FLAG"      	   colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>  
+
+  <!-- 상품권 종류 구분 조회 -->
+    <query name="SEL_PUMMOK">
+        <![CDATA[                                        
+        SELECT A.PUMMOK_CD AS CODE
+		     , PUMMOK_NAME AS NAME
+		  FROM DPS.PC_PBNPMK A, DPS.PC_PMKMST B
+		 WHERE A.PUMMOK_CD = B.PUMMOK_CD
+		   AND A.USE_YN = 'Y'
+		   AND A.PUMBUN_CD = (SELECT COMM_CODE 
+		                        FROM COM.TC_COMMCODE 
+		                       WHERE COMM_PART = 'M103')
+        ]]>
+    </query>
+    
+    <!-- 상품권 종류 구분 조회 -->
+    <query name="SEL_GIFT_TYPE_FLAG">
+        <![CDATA[                                        
+		SELECT COMM_CODE AS CODE
+		     , COMM_NAME1 AS NAME
+		  FROM COM.TC_COMMCODE
+		 WHERE COMM_PART = 'M008'
+		   AND COMM_CODE = '01'
+        ]]>
+    </query>
+    
+    <!-- 상품권 종류 조회 -->
+    <query name="SEL_GIFT_TYPE_CD">
+        <![CDATA[                                        
+         SELECT CODE
+              , NAME
+          FROM (
+		        SELECT '%' AS CODE
+		             , '전체' AS NAME
+		          FROM DUAL
+		         UNION ALL
+				SELECT GIFT_TYPE_CD AS CODE
+				     , GIFT_TYPE_NAME AS NAME
+				  FROM MSS.MG_GIFTTPMST
+				 WHERE GIFT_TYPE_FLAG = ?
+				)
+	    ORDER BY CODE
+        ]]>
+    </query>
+    
+    <!-- 금종코드 조회 -->
+    <query name="SEL_GIFT_AMT_TYPE">
+        <![CDATA[                                        
+		SELECT '%' AS CODE
+		     , '전체' AS NAME
+		  FROM DUAL
+		 UNION ALL
+		SELECT GIFT_AMT_TYPE AS CODE
+		     , GIFT_AMT_NAME AS NAME
+		  FROM MSS.MG_GIFTAMTMST
+		 WHERE ISSUE_TYPE LIKE ? || '%'
+        ]]>
+    </query>
+    
+        <!--  발행형태 -->
+    <query name="SEL_ISSUE_TYPE">
+        <![CDATA[                                        
+       SELECT COMM_CODE AS CODE
+            , COMM_NAME1 AS NAME
+         FROM COM.TC_COMMCODE
+        WHERE COMM_PART = 'M009'
+          AND COMM_CODE = '1'
+        ]]>
+    </query>
+    
+        <!-- 상품권종류 리스트 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[                                        
+		SELECT GIFT_TYPE_CD
+		     , GIFT_TYPE_NAME
+		  FROM MSS.MG_GIFTTPMST 
+		 WHERE GIFT_TYPE_FLAG = ?
+		   AND GIFT_TYPE_CD LIKE ? || '%'
+        ]]>
+    </query>
+    
+    <!-- 금종정보 리스트 조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[                                        
+        SELECT A.GIFT_TYPE_CD
+             , A.ISSUE_TYPE
+             , COM.FN_GET_COMM_NAME('D', 'M009', A.ISSUE_TYPE) AS ISSUE_TYPE_NM
+             , A.GIFT_AMT_TYPE
+             , GIFT_AMT_NAME
+             , GIFTCERT_AMT
+             , RFD_PERMIT_RATE
+             , A.PUMBUN_CD
+             , A.PUMMOK_CD
+             , DECODE(A.USE_YN,'Y','T','F') AS USE_YN
+          FROM MSS.MG_GIFTAMTMST A
+         WHERE A.GIFT_TYPE_CD = ?
+           AND A.ISSUE_TYPE = ?
+      ORDER BY A.GIFT_AMT_TYPE
+        ]]>
+    </query>
+    
+    <!-- 상품권 종류 코드 발번 -->
+    <query name="SEL_NEW_GIFT_TYPE_CD">
+        <![CDATA[                                        
+		SELECT DECODE(NVL(MAX(GIFT_TYPE_CD),0),0,'0001', LPAD(MAX(NVL(SUBSTR(GIFT_TYPE_CD,2,3),0)) + 1,4,'0') )  AS GIFT_TYPE_CD
+          FROM MSS.MG_GIFTTPMST
+         WHERE GIFT_TYPE_FLAG = '01'
+        ]]>
+    </query>
+        <!-- 상품권 종류 정보 저장 -->
+    <query name="INS_GIFTTPMST">
+        <![CDATA[                                        
+        INSERT INTO MSS.MG_GIFTTPMST ( GIFT_TYPE_CD
+	                                 , GIFT_TYPE_NAME
+	                                 , GIFT_TYPE_FLAG
+	                                 , USE_YN
+	                                 , REG_ID
+	                                 , REG_DATE
+	                                 , MOD_ID
+	                                 , MOD_DATE)
+	                         VALUES(   ?
+	                                 , ?
+	                                 , '01'
+	                                 , 'Y'
+	                                 , ?
+	                                 , SYSDATE
+	                                 , ?
+	                                 , SYSDATE)
+        ]]>
+    </query>
+    
+        <!-- 상품권 종류 정보 수정 -->
+    <query name="UPD_GIFTTPMST">
+        <![CDATA[                                        
+	    UPDATE MSS.MG_GIFTTPMST
+	       SET GIFT_TYPE_NAME = ?
+	         , MOD_ID = ?
+	         , MOD_DATE = SYSDATE
+	     WHERE GIFT_TYPE_CD = ?
+        ]]>
+    </query>
+    
+    <!-- 금종   코드 발번 -->
+    <query name="SEL_NEW_GIFT_AMT_TYPE">
+        <![CDATA[                                        
+        SELECT LPAD(NVL(MAX(GIFT_AMT_TYPE),0)+1,4,'0')  AS GIFT_AMT_TYPE
+          FROM MSS.MG_GIFTAMTMST A
+             , MSS.MG_GIFTTPMST B
+         WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+           AND A.ISSUE_TYPE = ?
+           AND B.GIFT_TYPE_FLAG = '01'
+        ]]>
+    </query>
+         <!-- 금종 정보 저장 -->
+    <query name="INS_GIFTAMTMST">
+        <![CDATA[                                        
+		INSERT INTO MSS.MG_GIFTAMTMST ( GIFT_TYPE_CD
+		                              , ISSUE_TYPE 
+		                              , GIFT_AMT_TYPE
+		                              , GIFT_AMT_NAME
+		                              , GIFTCERT_AMT
+		                              , RFD_PERMIT_RATE
+		                              , PUMBUN_CD
+		                              , PUMMOK_CD
+		                              , USE_YN
+		                              , REG_ID
+		                              , REG_DATE
+		                              , MOD_ID
+		                              , MOD_DATE)
+		                        VALUES( ?
+		                              , ?
+		                              , ?
+		                              , ?
+		                              , ?
+		                              , ?
+		                              , (SELECT COMM_CODE 
+			                               FROM COM.TC_COMMCODE 
+			                              WHERE COMM_PART = 'M103')
+		                              , ?
+		                              , ?
+		                              , ?
+		                              , SYSDATE
+		                              , ?
+		                              , SYSDATE)
+        ]]>
+    </query>
+    
+        <!-- 금종 정보 수정 -->
+    <query name="UPD_GIFTAMTMST">
+        <![CDATA[                                        
+        UPDATE MSS.MG_GIFTAMTMST 
+           SET GIFT_AMT_NAME = ?
+             , GIFTCERT_AMT = ?
+             , RFD_PERMIT_RATE = ?
+             , PUMBUN_CD = (SELECT COMM_CODE 
+                              FROM COM.TC_COMMCODE 
+                             WHERE COMM_PART = 'M103')
+             , PUMMOK_CD = ?
+             , USE_YN = ?
+             , MOD_ID = ?
+             , MOD_DATE = SYSDATE
+         WHERE GIFT_TYPE_CD = ?
+           AND ISSUE_TYPE = ?
+           AND GIFT_AMT_TYPE = ?
+        ]]>
+    </query>
+    
+    <!-- 금종 별 브랜드 이력 INSERT : 사용하지 않음-->
+    <query name="INS_PBNHIS_NEW">
+        <![CDATA[                                        
+        INSERT INTO MSS.MG_GIFTAMTPUMBUNHIS ( GIFT_TYPE_CD
+                                            , ISSUE_TYPE
+                                            , GIFT_AMT_TYPE
+                                            , APP_DT
+                                            , PUMBUN_CD
+                                            , REG_ID
+                                            , REG_DATE
+                                            , MOD_ID
+                                            , MOD_DATE)
+                                     VALUES ( ?
+                                            , ?
+                                            , (SELECT LPAD(NVL(MAX(GIFT_AMT_TYPE),0)+1,4,'0') 
+                                                FROM MSS.MG_GIFTAMTMST 
+                                               WHERE GIFT_TYPE_CD = ? 
+                                                 AND ISSUE_TYPE = ?)
+                                            , TO_CHAR(SYSDATE+1,'yyyymmdd')
+                                            , ?
+                                            , ?
+                                            , SYSDATE
+                                            , ?
+                                            , SYSDATE)
+        ]]>
+    </query>
+          <!-- 금종 별 브랜드 이력 INSERT : 사용하지 않음-->
+    <query name="INS_PBNHIS">
+        <![CDATA[                                        
+        INSERT INTO MSS.MG_GIFTAMTPUMBUNHIS ( GIFT_TYPE_CD
+                                            , ISSUE_TYPE
+                                            , GIFT_AMT_TYPE
+                                            , APP_DT
+                                            , PUMBUN_CD
+                                            , REG_ID
+                                            , REG_DATE
+                                            , MOD_ID
+                                            , MOD_DATE)
+                                     VALUES ( ?
+                                            , ?
+                                            , ?
+                                            , TO_CHAR(SYSDATE+1,'yyyymmdd')
+                                            , ?
+                                            , ?
+                                            , SYSDATE
+                                            , ?
+                                            , SYSDATE)
+        ]]>
+    </query>
+    
+          <!-- 금종 별 브랜드 이력 UPDATE : 사용하지 않음-->
+    <query name="UPD_PBNHIS">
+        <![CDATA[                                        
+        UPDATE MSS.MG_GIFTAMTPUMBUNHIS 
+	       SET PUMBUN_CD = ?
+	         , MOD_ID = ?
+	         , MOD_DATE = SYSDATE
+	     WHERE GIFT_TYPE_CD = ?
+	       AND ISSUE_TYPE = ?
+	       AND GIFT_AMT_TYPE = ?
+	       AND APP_DT = ?
+        ]]>
+    </query>
+</service>

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.20
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  발행입고 내역 조회
+ -->
+<service name="/mgif109.mg">
+    <!-- 발행입고 조회 조건 : 상품권종류코드  -->
+    <gauce name="H_COMBO"> 
+        <column colName="CODE"          colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NAME"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+     
+    <!-- 상품권 발행대기 입고 수량 조회  -->
+    <gauce name="H_MASTER"> 
+        <column colName="REQ_DT"        colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"        colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"        colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_SLIP_NO"   colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_QTY"       colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_QTY"        colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+     <!-- 발행입고확정 상세 조회 -->
+    <gauce name="H_DETAIL"> 
+        <column colName="STR_CD"            colType="TB_STRING" size="2" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"          colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_DT"             colType="TB_STRING" size="8" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_SLIP_NO"        colType="TB_STRING" size="6" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_CD"      colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_TYPE_NAME"    colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_TYPE"     colType="TB_STRING" size="4" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_AMT_NAME"     colType="TB_STRING" size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"      colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_QTY"            colType="TB_DECIMAL" size="7" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_S_NO"         colType="TB_STRING" size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_E_NO"         colType="TB_STRING" size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_AMT"           colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--(자사) 상품권종류 코드 콤보 -->
+    <query name="SEL_COMBO">
+        <![CDATA[
+		SELECT GIFT_TYPE_CD AS CODE
+		     , GIFT_TYPE_NAME
+		FROM MSS.MG_GIFTTPMST 
+		WHERE GIFT_TYPE_FLAG = '01'
+		ORDER BY GIFT_TYPE_CD
+        ]]>
+    </query>  
+    
+    <!-- 상품권 발행대기 입고 수량 조회  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+		WITH T_REQ AS ( SELECT REQ_DT 
+				    	     , STR_CD
+						     , REQ_SLIP_NO
+						     , SUM(REQ_QTY) AS REQ_QTY
+						     , SUM(REQ_AMT) AS REQ_AMT
+						     FROM (
+						SELECT REQ_DT
+						     , STR_CD
+						     , REQ_SLIP_NO
+						     , REQ_QTY
+						     , REQ_QTY * GIFTCERT_AMT AS REQ_AMT
+						FROM MSS.MG_GIFTISSUEREQ A
+						   , MSS.MG_GIFTAMTMST B
+						WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD   
+						  AND A.ISSUE_TYPE = B.ISSUE_TYPE
+						  AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+						  AND A.REQ_DT BETWEEN ? AND ?
+						  AND A.STR_CD = ? 
+						  AND A.GIFT_TYPE_CD LIKE ? || '%'
+						)
+						GROUP BY REQ_DT, STR_CD, REQ_SLIP_NO),
+		  T_IN AS ( SELECT REQ_DT 
+					     , STR_CD
+					     , REQ_SLIP_NO
+					     , SUM(IN_QTY) AS IN_QTY
+					     , SUM(IN_AMT) AS IN_AMT
+					     FROM (
+					SELECT REQ_DT
+					     , STR_CD
+					     , REQ_SLIP_NO
+					     , IN_QTY
+					     , IN_QTY * GIFTCERT_AMT AS IN_AMT
+					FROM MSS.MG_GIFTISSUEIN A
+					   , MSS.MG_GIFTAMTMST B
+					WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD   
+					  AND A.ISSUE_TYPE = B.ISSUE_TYPE
+					  AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+					)
+			GROUP BY REQ_DT, STR_CD, REQ_SLIP_NO)
+		
+		SELECT A.REQ_DT
+		     , A.STR_CD
+		     , DPS.FN_GET_STORE_NAME(A.STR_CD) AS STR_NM
+		     , A.REQ_SLIP_NO
+		     , A.REQ_QTY
+		     , A.REQ_AMT
+		     , B.IN_QTY
+		     , B.IN_AMT
+		FROM T_REQ A
+		     LEFT OUTER JOIN
+		     T_IN B
+		  ON A.REQ_DT= B.REQ_DT
+		  AND A.STR_CD = B.STR_CD
+		  AND A.REQ_SLIP_NO = B.REQ_SLIP_NO
+     ORDER BY A.REQ_DT, A.REQ_SLIP_NO, A.STR_CD
+        ]]>
+    </query>  
+    
+    <!-- 발행입고 상세 조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+		SELECT STR_CD
+		     , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NAME
+		     , IN_DT
+		     , IN_SLIP_NO
+		     , A.GIFT_TYPE_CD
+		     , GIFT_TYPE_NAME
+		     , A.GIFT_AMT_TYPE
+		     , GIFT_AMT_NAME
+		     , GIFTCERT_AMT
+		     , IN_QTY
+		     , GIFT_S_NO
+		     , GIFT_E_NO
+		     , IN_QTY * GIFTCERT_AMT AS TOT_AMT
+		  FROM MSS.MG_GIFTISSUEIN A
+		     , MSS.MG_GIFTTPMST B
+		     , MSS.MG_GIFTAMTMST C
+		 WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+		   AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+		   AND A.ISSUE_TYPE = C. ISSUE_TYPE
+		   AND A.GIFT_AMT_TYPE = C.GIFT_AMT_TYPE
+		   AND REQ_DT = ?
+		   AND STR_CD = ?
+		   AND REQ_SLIP_NO = ?
+		   AND A.GIFT_TYPE_CD LIKE ? || '%'
+	  ORDER BY STR_CD, IN_DT, IN_SLIP_NO, A.GIFT_TYPE_CD , A.GIFT_AMT_TYPE
+        ]]>
+    </query>    
+
+    <!-- 발행입고확정상품권번호 유효성 체크-->
+    <query name="SEL_GIFTCARD_NO">
+        <![CDATA[
+        SELECT SUM(REQ_CNT) AS REQ_CNT
+             , SUM(IN_CNT) AS IN_CNT
+         FROM (
+        SELECT COUNT(*) AS REQ_CNT
+             , 0 AS IN_CNT
+          FROM MSS.MG_GIFTREQ A
+          WHERE GIFTCARD_NO = ?
+            AND GIFT_AMT_TYPE = ?
+            AND GIFT_TYPE_CD = ?
+            AND ISSUE_TYPE = ?
+            UNION ALL
+         SELECT 0 AS REQ_CNT
+              , COUNT(*) AS IN_CNT 
+           FROM MSS.MG_GIFTMST 
+           WHERE GIFTCARD_NO = ?)
+        ]]>
+    </query> 
+</service>

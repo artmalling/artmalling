@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자    : 김경은
+ * 회 사 명    : 
+ * 작 성 일    : 2011.06.13
+ * 변 경 일    : 
+ * 변경내용 : 
+ * 개    요       : 평가항목배점관리
+ -->
+<service name="/psal701.ps">
+    
+    <!-- 평가항목배점관리LIST -->
+    <gauce name="H_LIST"> 
+    <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="STR_NM"             colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="EVALU_YM"           colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="VEN_EVALU_CD"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="VEN_EVALU_NAME"     colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="ALLOT_SCORE"        colType="TB_INT"     size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="ALLOC_BASE"         colType="TB_STRING"  size="400" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    <column colName="SEL"                colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 확정여부확인 -->
+    <gauce name="H_CHECK"> 
+    <column colName="STR_CD"             colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="EVALU_YM"           colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    <column colName="CONF_DT"            colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+
+    <!-- 평가항목배점관리LIST  -->
+    <query name="SEL_LIST">
+        <![CDATA[
+        SELECT STR_CD                                      /* 점  */
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM     /* 점명  */
+			 , EVALU_YM                                    /* 평가년월  */
+			 , VEN_EVALU_CD                                /* 평가항목코드 */
+			 , VEN_EVALU_NAME                              /* 평가항목명 */
+			 , ALLOT_SCORE                                 /* 배점 */
+			 , ALLOC_BASE                                  /* 점수부여기준 */
+			 , 'F' AS SEL
+		  FROM DPS.PS_EVALUCDMST
+		 WHERE STR_CD   = ?
+		   AND EVALU_YM = ?
+		 ORDER BY VEN_EVALU_CD
+        ]]>
+    </query>
+    
+    <!-- 평가항목배점관리 DATA  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+        SELECT STR_CD                                      /* 점  */
+             , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM     /* 점명  */
+             , EVALU_YM                                    /* 평가년월  */
+             , VEN_EVALU_CD                                /* 평가항목코드 */
+             , VEN_EVALU_NAME                              /* 평가항목명 */
+             , ALLOT_SCORE                                 /* 배점 */
+             , ALLOC_BASE                                  /* 점수부여기준 */
+             , 'F' AS SEL
+          FROM DPS.PS_EVALUCDMST
+         WHERE STR_CD       = ?
+           AND EVALU_YM     = ?
+           AND VEN_EVALU_CD = ?
+        ]]>
+    </query> 
+ 
+
+    <!-- 평가항목배점관리 등록  -->
+    <query name="INS_MASTER">
+        <![CDATA[
+            INSERT INTO DPS.PS_EVALUCDMST (  STR_CD                                      /* 점  */
+							               , EVALU_YM                                    /* 평가년월  */
+							               , VEN_EVALU_CD                                /* 평가항목코드 */
+							               , VEN_EVALU_NAME                              /* 평가항목명 */
+							               , ALLOT_SCORE                                 /* 배점 */
+							               , ALLOC_BASE                                  /* 점수부여기준 */
+                                           , REG_DATE                                    /* 등록일시 */
+                                           , REG_ID                                      /* 등록자 */
+                                           , MOD_DATE                                    /* 수정일시 */
+                                           , MOD_ID                                      /* 수정자 */                
+                                            )
+                                     VALUES (
+                                             ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , ?
+                                           , SYSDATE
+                                           , ?
+                                           , SYSDATE
+                                           , ?      
+                                           )
+
+        ]]>
+    </query>  
+   
+    <!--  평가항목배점관리  수정  -->
+    <query name="UPD_MASTER">
+        <![CDATA[
+            UPDATE DPS.PS_EVALUCDMST
+               SET VEN_EVALU_NAME   = ?                            /* 평가항목명 */
+                 , ALLOT_SCORE      = ?                            /* 배점 */
+                 , ALLOC_BASE       = ?                            /* 점수부여기준 */
+                 , MOD_DATE         = SYSDATE                      /* 수정일시 */
+                 , MOD_ID           = ?                            /* 수정자 */ 
+             WHERE STR_CD           = ?
+               AND EVALU_YM         = ? 
+               AND VEN_EVALU_CD     = ?
+        ]]>
+    </query>
+    
+    <!-- 평가항목배점관리 삭제  -->
+    <query name="DEL_MASTER">
+        <![CDATA[
+            DELETE
+              FROM DPS.PS_EVALUCDMST
+             WHERE STR_CD           = ?
+               AND EVALU_YM         = ? 
+               AND VEN_EVALU_CD     = ?
+        ]]>
+    </query>
+    
+    <!-- 평가항목배점관리 전월내역복사  -->
+    <query name="INS_MASTER_COPY">
+        <![CDATA[
+            INSERT INTO DPS.PS_EVALUCDMST (  STR_CD                                      /* 점  */
+                                           , EVALU_YM                                    /* 평가년월  */
+                                           , VEN_EVALU_CD                                /* 평가항목코드 */
+                                           , VEN_EVALU_NAME                              /* 평가항목명 */
+                                           , ALLOT_SCORE                                 /* 배점 */
+                                           , ALLOC_BASE                                  /* 점수부여기준 */
+                                           , REG_DATE                                    /* 등록일시 */
+                                           , REG_ID                                      /* 등록자 */
+                                           , MOD_DATE                                    /* 수정일시 */
+                                           , MOD_ID                                      /* 수정자 */                
+                                            )
+                                            (SELECT STR_CD                                     
+									              , ?                                   
+									              , VEN_EVALU_CD                               
+									              , VEN_EVALU_NAME                             
+									              , ALLOT_SCORE                                
+									              , ALLOC_BASE                                 
+									              , SYSDATE
+		                                          , ?
+		                                          , SYSDATE
+		                                          , ?      
+									          FROM DPS.PS_EVALUCDMST
+									         WHERE STR_CD   = ?
+									           AND EVALU_YM = TO_CHAR(ADD_MONTHS(?||'01',-1),'YYYYMM')
+                                             )
+
+        ]]>
+    </query>  
+    
+    
+   <!-- 평가항목배점관리LIST  -->
+    <query name="SEL_CONF_CHECK">
+        <![CDATA[
+        SELECT STR_CD
+             , EVALU_YM
+             , CONF_DT
+          FROM DPS.PS_YM_EVALUMST
+         WHERE STR_CD   = ?
+           AND EVALU_YM = ?
+           AND NVL(CONF_DT, ' ') <> ' '
+        ]]>
+    </query>
+    
+ </service>

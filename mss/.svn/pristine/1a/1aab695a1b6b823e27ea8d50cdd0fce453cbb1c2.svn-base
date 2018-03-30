@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.06.09
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  세금계산서관리
+ -->
+<service name="/mgif615.mg">
+    <gauce name="H_SEL_MR_CALMST">
+        <column colName="CHK_BOX"          colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+	    <column colName="STR_CD"           colType="TB_STRING"   size="2"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_YM"           colType="TB_STRING"   size="6"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="STR_NAME"         colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CAL_TYPE"         colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+        <column colName="CAL_TYPENM"       colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_CD"           colType="TB_STRING"   size="6"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"           colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="FEE_RATE"         colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REAL_PAY_AMT"     colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_GB"           colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_GB_NM"        colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="SUP_AMT"          colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VAT_AMT"          colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TOT_AMT"          colType="TB_DECIMAL"  size="12" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ETAX_STAT_YN"     colType="TB_STRING"   size="1"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ETAX_STAT_NM"     colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ETAX_STAT"        colType="TB_STRING"   size="40" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MR_CALMST">
+        <![CDATA[
+           SELECT 'F' AS CHK_BOX 
+                , VA.STR_CD                   -- 점코드
+                , VA.CAL_YM
+                , VB.STR_NAME
+                , VA.CAL_TYPE
+                , DECODE(VA.CAL_TYPE, '1', '제휴협력사정산', '가맹점정산') AS CAL_TYPENM
+                , VA.VEN_CD                   -- 제휴협력사
+                , VC.VEN_NAME AS VEN_NM
+                , VA.FEE_RATE                 -- 수수료율
+                , VA.REAL_PAY_AMT             -- 실정산금액
+                , VA.TAX_GB                   --계산서 구분('1') 과세
+                , DECODE(VA.TAX_GB, '1', '과세', '면세') AS TAX_GB_NM       --계산서 구분('1') 과세
+                , DECODE(VA.ETAX_STAT, '@', VA.FEE_SUP_AMT, VA.SUP_AMT) AS SUP_AMT    -- 공급가액
+                , DECODE(VA.ETAX_STAT, '@', VA.FEE_VAT_AMT, VA.VAT_AMT) AS VAT_AMT    -- 부가세
+                , DECODE(VA.ETAX_STAT, '@', VA.FEE_TOT_AMT, VA.TOT_AMT) AS TOT_AMT    -- 합계금액
+                , VA.ETAX_STAT_YN
+                , VA.ETAX_STAT_NM
+                , DECODE(VA.ETAX_STAT, '@', '미발행', VA.ETAX_STAT) AS ETAX_STAT         /*전자세금계산서상태*/ 
+            FROM (
+                    SELECT TA.STR_CD           -- 점코드
+                         , TA.CAL_YM           -- 부과년월
+                         , TA.VEN_CD           -- 제휴협력사
+                         , '1' AS TAX_GB       -- 계산서 구분('1') 과세
+                         , TA.CAL_TYPE
+                         , TA.FEE_RATE
+                         , TA.REAL_PAY_AMT
+                         , TA.FEE_SUP_AMT      -- 정산 수수료 공급가
+                         , TA.FEE_VAT_AMT      -- 정산 수수료 부가세
+                         , TA.FEE_TOT_AMT      -- 정산 수수료 합계
+                         , TB.SUP_AMT          -- 공급가액
+                         , TB.VAT_AMT          -- 부가세
+                         , TB.TOT_AMT          -- 합계금액
+                         , DECODE(TA.TAX_ISSUE_SEQ_NO, NULL, 'N', 'Y') AS ETAX_STAT_YN
+                         , DECODE(TA.TAX_ISSUE_SEQ_NO, NULL, '미발행', '발행') AS ETAX_STAT_NM
+                         , CASE WHEN DECODE(TA.TAX_ISSUE_SEQ_NO, NULL, '@', '$') = '$' THEN DPS.FN_GET_TAX_STATE(TB.EDI_SEQ_NO)
+                                            ELSE '@' END  AS ETAX_STAT  /*전자세금계산서상태*/ 
+                    FROM (
+                           SELECT CAL_YM
+                                , STR_CD
+                                , CAL_TYPE
+                                , VEN_CD
+                                , FEE_RATE
+                                , REAL_PAY_AMT
+                                , FEE_SUP_AMT
+                                , FEE_VAT_AMT
+                                , FEE_TOT_AMT
+                                , TAX_ISSUE_DT
+                                , TAX_ISSUE_SEQ_NO                                
+                             FROM MSS.MG_VENCAL
+                            WHERE STR_CD        = ?
+                              AND CAL_YM        = ?
+                              AND CAL_TYPE      = '2'           -- 가맹점정산 
+                              AND PAYREC_FLAG   = '1'           -- 지급정산
+                              AND CAL_FLAG      = '1'           -- 상품권
+                              AND FEE_SUP_AMT   > 0
+                            UNION ALL
+                           SELECT CAL_YM
+                                , STR_CD
+                                , CAL_TYPE
+                                , VEN_CD
+                                , FEE_RATE
+                                , REAL_PAY_AMT
+                                , FEE_SUP_AMT
+                                , FEE_VAT_AMT
+                                , FEE_TOT_AMT
+                                , TAX_ISSUE_DT
+                                , TAX_ISSUE_SEQ_NO
+                             FROM MSS.MG_VENCAL
+                            WHERE STR_CD        = ?
+                              AND CAL_YM        = ?
+                              AND CAL_TYPE      = '1'         -- 제휴협력사정산 
+                              AND PAYREC_FLAG   = '2'         -- 수취정산
+                              AND CAL_FLAG      = '2'         -- 쿠폰
+                              AND FEE_SUP_AMT   > 0
+                         ) TA,
+                         DPS.PP_TAXMST TB
+                    WHERE TA.STR_CD = TB.STR_CD(+)
+                      AND TA.TAX_ISSUE_DT = TB.TAX_ISSUE_DT(+)
+                      AND TA.TAX_ISSUE_SEQ_NO = TB.TAX_ISSUE_SEQ_NO(+)
+                      AND TA.VEN_CD   LIKE ? || '%'
+                      AND TA.CAL_TYPE LIKE ? || '%'
+              ) VA,
+              DPS.PC_STRMST VB,
+              DPS.PC_STRVENMST VC
+            WHERE VA.STR_CD = VB.STR_CD
+              AND VA.STR_CD = VC.STR_CD
+              AND VA.VEN_CD = VC.VEN_CD 
+              AND VA.ETAX_STAT_YN LIKE ?||'%'
+        ]]>
+    </query>
+    
+    <query name="SEL_MR_CALMST2">
+        <![CDATA[
+            SELECT 'F' AS CHK_BOX, 
+			       VA.STR_CD,   --점코드
+			       VA.CAL_YM,
+			       VB.STR_NAME,
+			       VA.VEN_CD,   --제휴협력사
+			       VC.VEN_NAME,
+			       VA.CPN_REC_AMT,  --쿠폰결제금액
+			       VA.CPN_RECFEE_AMT,   --수수료 금액(이금액을 넘겨야 한다)
+			       VA.TAX_GB,    --계산서 구분('1') 과세
+			       DECODE(VA.TAX_GB,'1','과세','면세') AS TAX_GB_NM,       --계산서 구분('1') 과세
+			       VA.SUP_AMT,          --공급가액
+			       VA.VAT_AMT,          --부가세
+			       VA.TOT_AMT,          --합계금액
+			       VA.ETAX_STAT_NM,
+			       VA.ETAX_STAT  /*전자세금계산서상태*/ 
+			FROM (
+			        SELECT TA.STR_CD,   --점코드
+			               TA.CAL_YM,    --부과년월
+			               TA.VEN_CD,   --제휴협력사
+			               TA.CPN_REC_AMT,  --쿠폰결제금액
+			               TA.CPN_RECFEE_AMT,   --수수료 금액(이금액을 넘겨야 한다)
+			               '1' AS TAX_GB,       --계산서 구분('1') 과세
+			               TB.SUP_AMT,          --공급가액
+			               TB.VAT_AMT,          --부가세
+			               TB.TOT_AMT,          --합계금액
+			               DECODE(TA.TAX_ISSUE_SEQ_NO, NULL, '미발행', '발행') AS ETAX_STAT_NM,
+                           CASE WHEN DECODE(TA.TAX_ISSUE_SEQ_NO, NULL, 'N', 'Y') = 'Y' THEN DPS.FN_GET_TAX_STATE(TB.EDI_SEQ_NO)
+			                                ELSE '미발행' END  AS ETAX_STAT  /*전자세금계산서상태*/ 
+			        FROM MSS.MG_JOINCAL TA,
+			             DPS.PP_TAXMST TB
+			        WHERE TA.STR_CD = TB.STR_CD(+)
+			          AND TA.TAX_ISSUE_DT = TB.TAX_ISSUE_DT(+)
+			          AND TA.TAX_ISSUE_SEQ_NO = TB.TAX_ISSUE_SEQ_NO(+)
+			          AND TA.STR_CD = ?
+			          AND TA.CAL_YM = ?
+			          AND TA.CAL_FLAG = '3'
+			          AND TA.CPN_RECFEE_AMT > 0
+			          AND TA.VEN_CD LIKE ?||'%'
+			  ) VA,
+			  DPS.PC_STRMST VB,
+			  DPS.PC_STRVENMST VC
+			WHERE VA.STR_CD = VB.STR_CD
+			  AND VA.STR_CD = VC.STR_CD
+			  AND VA.VEN_CD = VC.VEN_CD 
+			  AND VA.ETAX_STAT_NM LIKE ?||'%'
+        ]]>
+    </query>
+</service>

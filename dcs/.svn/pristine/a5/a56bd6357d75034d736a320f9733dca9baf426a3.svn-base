@@ -1,0 +1,139 @@
+﻿/*
+ * @(#)WFA_020DAO.java 1.0 06/02/06
+ *
+ * Copyright 2006 Korea Exchange Bank. All rights reserved.
+ * KEB PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+package loan.wf.wfa.dao;
+
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import kr.fujitsu.ffw.control.ActionForm;
+import kr.fujitsu.ffw.control.cfg.svc.tobe.MiPlatformData;
+import kr.fujitsu.ffw.model.AbstractDAO;
+import kr.fujitsu.ffw.model.SqlWrapper;
+import loan.wf.wfa.query.WFA_020Query;
+
+/**
+ * 코딩 표준을 설명하기 위한 셈플 DAO 클래스입니다.
+ * <p>
+ * WFA_020DAO 예시로는 게시판입니다. 게시물의 리스트를 출력하고, <br>
+ * 상세내용을 출력하고, 게시물에대한 입력, 수정, 삭제 업무를 수행 할 <br>
+ * 수 있습니다.
+ * 
+ * @created  on 1.0, 06/02/05
+ * @created  by 홍길동(FUJITSU KOREA LTD.)
+ * 
+ * @modified on 1.1, 06/02/06
+ * @modified by 아무개(Other Company)
+ * @caused   by 보다 낳은 셈플을 제공하기 위한 예시...
+ */
+public class WFA_020DAO extends AbstractDAO {
+    private static Logger logger = Logger.getLogger("loan.wf.wfa.dao.WFA_020DAO");
+	
+    /**
+     * 모든 KEBBOARD 테이블의 모든 리스트를 조회해 옵니다.
+     * 
+     * @param form 프레임워크
+     * @return 
+     * @throws Exception
+     */
+	public List getBoardList(ActionForm form) throws Exception {
+		List list = null;
+		SqlWrapper sql = null;
+		try {
+			sql = new SqlWrapper();
+			sql.put(WFA_020Query.SEL_KEBBOARD);
+			connect("LOANDBPOOL");
+			
+			logger.info("System.out.println대신 info를 사용하고 있습니다.");
+			list = select(sql);
+		} catch (Exception e) {
+			throw e;
+		}
+		
+		return list;
+	}
+	
+	/**
+	 * 화면으로부터 데이터셋에 입력, 수정, 삭제된 정보를 받아 
+	 * AbstractDAO를 상속받은 DAO에서는 반드시 
+	 * @param board
+	 * @return
+	 * @throws Exception
+	 */
+	public int insertBoard(MiPlatformData board) throws Exception {
+		int ret = 0;
+		SqlWrapper sql = null;
+		/*
+		 * 입력,수정,삭제 작업은 반드시 트랜잭션의 시작을 알리는 begin() 문장을 입력해 주어야 합니다.
+		 */
+		begin();
+		try {
+			sql = new SqlWrapper();
+			/*
+			 * 데이터베이스에 커넥션을 준비합니다.
+			 */
+			connect("LOANDBPOOL");
+			/*
+			 * 화면에서 입력된 데이터를 커서의 마지막까지 루푸를 돌리며 입력, 수정, 삭제 작업을
+			 * 합니다.
+			 */
+			while (board.hasNext()) {
+				/* 만약 현재의 커서가 insert라면 */
+				if (board.getStatus().equals("insert")) {
+					/* 반드시 SqlWrapper는 close부터 시작하며 작업을 시작합니다. */
+					sql.close();
+					/* Query 클래스로부터 INSERT 쿼리를 읽어옵니다. */
+					sql.put(WFA_020Query.INS_KEBBOARD);
+					/* 화면에서 읽은 데이터 값을 쿼리에 바인딩합니다. */
+					sql.setString(1, board.getDataAsString("title"));
+					sql.setString(2, board.getDataAsString("contents"));
+					sql.setString(3, board.getDataAsString("writer"));
+				
+				/* 만약 현재의 커서가 update라면 */
+				} else if (board.getStatus().equals("update")) {
+					/* 반드시 SqlWrapper는 close부터 시작하며 작업을 시작합니다. */
+					sql.close();
+					sql.put(WFA_020Query.UPD_KEBBOARD);
+					sql.setString(1, board.getDataAsString("title"));
+					sql.setString(2, board.getDataAsString("contents"));
+					sql.setString(3, board.getDataAsString("writer"));
+					sql.setInt(4, board.getDataAsInteger("no").intValue());
+				} else if (board.getStatus().endsWith("delete")) {
+					sql.close();
+					sql.put(WFA_020Query.DEL_KEBBOARD);
+					sql.setInt(1, board.getDataAsInteger("no").intValue());
+				}
+				/*
+				 * 업데이트를 위해 SqlWrapper만 넘깁니다.
+				 * 이때 업데이트한 결과가 1이 아니라면 입력, 수정, 삭제한 로우에 문제가 있으므로
+				 * 롤백을 합니다. 롤백은 Exception을 던지면 자동으로 수행됩니다.
+				 */
+				ret = update(sql);
+				if (ret != 1) 
+					throw new Exception("데이터의 정합성 문제로 인하여 " +
+							"작업을 완료하지 못하였습니다.");
+			}
+			
+		} catch (Exception e) {
+			/*
+			 * begin이 들어간 문장에는 반드시 Exception에서 rollback()이 들어가야 합니다.
+			 */
+			rollback();
+			/*
+			 * Action클래스로 Exception 객체를 넘겨줍니다.
+			 */
+			throw e;
+		} finally {
+			/*
+			 * finally에서는 반드시 트랜잭션의 종료를 알리는 end 문장이 입력되어 있어야 합니다.
+			 */
+			end();
+		}
+		
+		return ret;
+	}
+}

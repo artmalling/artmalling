@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.06
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  단품별 재고실사집계표를 조회한다.
+ -->
+<service name="/pstk211.pt">
+  
+  <gauce name="H_SEL_MASTER">        
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"      colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"    colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="STK_YM"         colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+        <column colName="STK_QTY"        colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STK_AMT"        colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_QTY"       colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="LOSS_QTY"       colType="TB_DECIMAL" size="8"  dec="1" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="LOST_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="LOSS_RATE"      colType="TB_DECIMAL" size="5"  dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOSS_ADD_AMT"   colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_QTY"       colType="TB_DECIMAL" size="8"  dec="1" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="SALE_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+  </gauce> 
+  <gauce name="H_SEL_DETAIL"> 
+        <column colName="PUMMOK_CD"      colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="PUMMOK_NAME"    colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"         colType="TB_STRING"  size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SKU_NAME"       colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />              
+        <column colName="STK_QTY"        colType="TB_INT"     size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STK_AMT"        colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NORM_QTY"       colType="TB_INT"     size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="NORM_AMT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INFRR_QTY"      colType="TB_INT"     size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="INFRR_AMT"      colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_QTY"       colType="TB_INT"     size="7"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SRVY_SALE_AMT"  colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOSS_QTY"       colType="TB_DECIMAL" size="8"   dec="1" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="LOST_AMT"       colType="TB_DECIMAL" size="13"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="LOSS_RATE"      colType="TB_DECIMAL" size="5"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />        
+  </gauce> 
+    <!-- 재고스케쥴에 있는 정보 쿼리  -->
+  <gauce name="H_SEL_PBNSTK">
+        <column colName="SRVY_DT"         colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG"        colType="TB_STRING"  size="3"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_FLAG_NAME"   colType="TB_STRING"  size="40"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CLOSE_DT"        colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />  
+        <column colName="SRVY_S_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SRVY_E_DT"       colType="TB_STRING"  size="8"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="STR_CD"          colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_YM"          colType="TB_STRING"  size="6"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+  </gauce>
+   
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+            SELECT A.STR_CD 
+                 , A.PUMBUN_CD
+                 , A.PUMBUN_NAME                  
+                 , A.STK_YM                                  
+                 , SUM(STK_QTY)                                 AS STK_QTY
+                 , SUM(STK_AMT)                                 AS STK_AMT
+                 , SUM(SRVY_QTY)                                AS SRVY_QTY
+                 , SUM(SRVY_SALE_AMT)                           AS SRVY_AMT
+                 , SUM(LOSS_QTY)                                AS LOSS_QTY
+                 , SUM(LOSS_AMT)                                AS LOSS_AMT
+                 , CASE WHEN SUM(A.SALE_AMT) <> 0 THEN ROUND(SUM(A.LOSS_AMT) / SUM(A.SALE_AMT) * 100,2)
+                        ELSE 0
+                   END                                          AS LOSS_RATE
+                 , SUM(LOSS_ADD_AMT)                            AS LOSS_ADD_AMT
+                 , SUM(SALE_QTY)                                AS SALE_QTY
+                 , SUM(SALE_AMT)                                AS SALE_AMT
+              FROM (SELECT A.STR_CD
+                         , A.STK_YM
+                         , B.DEPT_CD
+                         , B.TEAM_CD                         
+                         , B.PC_CD  
+                         , A.PUMBUN_CD
+                         , DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD)  AS PUMBUN_NAME                       
+                         , SUM(A.SKU_STK_QTY)                   AS STK_QTY
+                         , SUM(A.SKU_STK_AMT)                   AS STK_AMT
+                         , SUM(A.SKU_SRVY_QTY)                  AS SRVY_QTY
+                         , SUM(A.SKU_SRVY_SALE_AMT)             AS SRVY_SALE_AMT
+                         , SUM(A.SALE_QTY)                      AS SALE_QTY
+                         , SUM(A.SALE_AMT)                      AS SALE_AMT
+                         , SUM(A.LOSS_QTY)                      AS LOSS_QTY
+                         , SUM(A.LOSS_AMT)                      AS LOSS_AMT
+                         , SUM(A.LOSS_ADD_AMT)                  AS LOSS_ADD_AMT
+                      FROM (SELECT X.STR_CD
+                                 , X.STK_YM
+                                 , X.PUMBUN_CD
+                                 , SUM(X.BASE_STK_QTY  + X.BUY_TOT_QTY      - X.SALE_QTY)      AS SKU_STK_QTY
+                                 , SUM(X.BASE_SALE_AMT + X.BUY_TOT_SALE_AMT - X.SALE_SALE_AMT) AS SKU_STK_AMT
+                                 , SUM(X.SRVY_QTY)      AS SKU_SRVY_QTY
+                                 , SUM(X.SRVY_SALE_AMT) AS SKU_SRVY_SALE_AMT
+                                 , SUM(X.SALE_QTY)      AS SALE_QTY
+                                 , SUM(X.SALE_SALE_AMT) AS SALE_AMT
+                                 , SUM(X.LOSS_QTY)      AS LOSS_QTY
+                                 , SUM(X.LOSS_SALE_AMT) AS LOSS_AMT
+                                 , CASE WHEN SUM(X.LOSS_SALE_AMT) > ROUND(SUM(X.SALE_SALE_AMT) * X.APP_LOSS_RATE / 100,0) THEN SUM(X.LOSS_SALE_AMT) - ROUND(SUM(X.SALE_SALE_AMT) * X.APP_LOSS_RATE / 100,0) ELSE 0 END AS LOSS_ADD_AMT  
+                              FROM DPS.PT_TOTALSKU X
+                             WHERE X.STR_CD = ?
+                               AND X.STK_YM = ?
+                             GROUP BY
+                                   X.STR_CD
+                                 , X.STK_YM
+                                 , X.PUMBUN_CD   
+                                 , X.APP_LOSS_RATE
+                            ) A 
+                          ,(SELECT Z.STR_CD
+                                 , Z.PUMBUN_CD
+                                 , Y.DEPT_CD
+                                 , Y.TEAM_CD
+                                 , Y.PC_CD
+                                 , Z.SKU_FLAG
+                              FROM DPS.PC_ORGMST Y
+                                 , DPS.PC_STRPBN Z
+                             WHERE Y.STR_CD  = Z.STR_CD
+                               AND Y.ORG_CD  = Z.SALE_ORG_CD
+                               AND Z.STR_CD  = ?
+                            ) B
+                     WHERE A.STR_CD    = B.STR_CD
+                       AND A.PUMBUN_CD = B.PUMBUN_CD
+                       AND A.STR_CD    = ?         
+                    GROUP BY A.STR_CD
+                           , A.STK_YM
+                           , B.DEPT_CD
+                           , B.TEAM_CD
+                           , B.PC_CD
+                           , A.PUMBUN_CD
+                             ) A
+             WHERE A.DEPT_CD = ?
+               AND A.TEAM_CD = ?
+               AND A.PC_CD   = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND A.PUMBUN_CD = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_GROUP">
+        <![CDATA[
+            GROUP BY A.STR_CD
+                   , A.PUMBUN_CD
+                   , A.PUMBUN_NAME
+                   , A.STK_YM                     
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_ORDER">
+        <![CDATA[
+            ORDER BY A.PUMBUN_CD
+        ]]>    
+    </query>
+    
+    <!-- 디테일 조회 쿼리  -->
+    <query name="SEL_DETAIL">
+        <![CDATA[
+            SELECT A.PUMMOK_CD
+                 , A.PUMMOK_NAME                 
+                 , A.SKU_CD 
+                 , A.SKU_NAME
+                 , A.STK_QTY
+                 , A.STK_AMT
+                 , NORM_QTY
+                 , NORM_AMT
+                 , INFRR_QTY
+                 , INFRR_AMT
+                 , A.SRVY_QTY
+                 , A.SRVY_SALE_AMT
+                 , A.LOSS_QTY AS LOSS_QTY
+                 , A.LOSS_AMT                                     AS LOSS_SALE_AMT
+                 , CASE WHEN A.SALE_AMT <> 0 THEN ROUND(A.LOSS_AMT / A.SALE_AMT * 100,2)
+                        ELSE 0
+                   END
+              FROM(SELECT SKU.PUMMOK_CD
+                        , DPS.FN_GET_PUMMOK_NAME(SKU.PUMMOK_CD) AS PUMMOK_NAME                 
+                        , SKU.SKU_CD 
+                        , DPS.FN_GET_SKU_NAME(SKU.SKU_CD)       AS SKU_NAME
+                        , SKU.BASE_STK_QTY  + SKU.BUY_TOT_QTY      - SKU.SALE_QTY       AS STK_QTY
+                        , SKU.BASE_SALE_AMT + SKU.BUY_TOT_SALE_AMT - SKU.SALE_SALE_AMT  AS STK_AMT
+                        , NORM_QTY
+                        , NORM_AMT
+                        , INFRR_QTY
+                        , INFRR_AMT
+                        , SKU.SRVY_QTY
+                        , SKU.SRVY_SALE_AMT
+                        , SKU.SALE_SALE_AMT AS SALE_AMT
+                        , SKU.LOSS_QTY
+                        , SKU.LOSS_SALE_AMT AS LOSS_AMT                        
+                     FROM DPS.PT_TOTALSKU SKU
+                    WHERE SKU.STR_CD    = ?
+                      AND SKU.STK_YM    = ?
+                      AND SKU.PUMBUN_CD = ?) A
+        ]]>    
+    </query>
+    <query name="SEL_DETAIL_ORDER">
+        <![CDATA[
+            ORDER BY A.PUMMOK_CD
+                   , A.SKU_CD
+        ]]>    
+    </query>
+    
+    <!-- 재고실사 조회 쿼리  -->
+    <query name="SEL_PBNSTK">
+        <![CDATA[
+            SELECT SCH.SRVY_DT 
+                 , SCH.STK_FLAG
+                 , (SELECT X.COMM_NAME1
+                     FROM COM.TC_COMMCODE X
+                    WHERE X.SYS_PART = 'D'
+                      AND X.COMM_PART = 'P801'
+                      AND X.COMM_CODE = SCH.STK_FLAG)  AS STK_FLAG_NAME
+                 , CASE WHEN NVL(SCH.CLOSE_DT,NULL) IS NULL 
+                     THEN '진행' ELSE '마감' END        AS CLOSE_DT
+                 , SCH.SRVY_S_DT
+                 , SCH.SRVY_E_DT
+                 , SCH.STR_CD
+                 , SCH.STK_YM
+              FROM DPS.PT_SCHEDULE SCH
+             WHERE SCH.STR_CD = ?
+               AND SCH.STK_YM = ?
+        ]]>    
+    </query>
+    
+</service>

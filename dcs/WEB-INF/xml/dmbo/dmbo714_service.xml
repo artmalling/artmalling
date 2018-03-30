@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작  성  자  : 김영진
+ * 회  사  명  : 
+ * 작  성  일  : 2010.06.30
+ * 변  경  일  : 
+ * 변경내용 : 
+ * 개          요 : 회원별 방문횟수조회
+ -->
+<service name="/dmbo714.do">
+    <!-- 회원별 방문횟수 마스터 조회 -->
+    <gauce name="H_MASTER">
+        <column colName="CUST_ID"         colType="TB_STRING"   size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CUST_NAME"       colType="TB_STRING"   size="40"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CUST_GRADE"      colType="TB_STRING"   size="10"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="CRM_GRADE"       colType="TB_STRING"   size="10"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="VIP_QTY"         colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="BRCH_ID"         colType="TB_STRING"   size="10"    dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    <!-- 회원별 방문횟수 상세 조회 -->
+    <gauce name="H_DETAIL">
+        <column colName="IN_DATE"         colType="TB_STRING"   size="8"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="IN_TIME"         colType="TB_STRING"   size="6"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+        <column colName="MEMBER_QTY"      colType="TB_DECIMAL"  size="9"     dec="0"   keyType="TB_NORMAL"  roundMode="ROUND"/>
+    </gauce>
+    
+    <query name="SEL_MASTER">
+    <![CDATA[
+        SELECT CUST_ID
+             , CUST_NAME
+             , CUST_GRADE
+             , CRM_GRADE
+             , VISIT_QTY
+             , BRCH_ID
+          FROM (
+                 SELECT A.CUST_ID
+                      , B.CUST_NAME
+                      , C.CUST_GRADE || ' ' || COM.FN_GET_COMM_NAME('D', 'D011', C.CUST_GRADE) CUST_GRADE
+                      , C.CRM_GRADE || ' ' || C.CRM_GRADE_VAL CRM_GRADE
+                      , COUNT(*) VISIT_QTY
+                      , A.BRCH_ID
+                   FROM DCS.DO_VIP_VISIT A
+                      , DCS.DM_CUSTOMER B
+                      , DCS.DO_CUST_GRADE C
+                  WHERE A.CUST_ID = B.CUST_ID
+                    AND A.CUST_ID = C.CUST_ID
+                    --AND B.COMP_PERS_FLAG = 'P'
+                    AND ? = C.BRCH_ID
+                    AND A.BRCH_ID = ?
+                    AND A.VISIT_IN_DATE BETWEEN ? || '000000'
+                                            AND ? || '235959'
+                  GROUP BY A.CUST_ID
+                      , B.CUST_NAME
+                      , C.CUST_GRADE || ' ' || COM.FN_GET_COMM_NAME('D', 'D011', C.CUST_GRADE) 
+                      , C.CRM_GRADE || ' ' || C.CRM_GRADE_VAL
+                      , A.BRCH_ID
+               )
+         WHERE VISIT_QTY >= ?
+         ORDER BY CUST_NAME   
+     ]]>
+    </query>
+
+    <query name="SEL_DETAIL">
+    <![CDATA[
+        SELECT TO_CHAR(TO_DATE(VISIT_IN_DATE, 'YYYYMMDDHH24MISS'), 'YYYYMMDD') IN_DATE
+             , TO_CHAR(TO_DATE(VISIT_IN_DATE, 'YYYYMMDDHH24MISS'), 'HH24MISS') IN_TIME
+             , MEMBER_QTY
+          FROM DCS.DO_VIP_VISIT
+         WHERE VISIT_IN_DATE BETWEEN ? || '000000'
+                                 AND ? || '235959'
+           AND CUST_ID = ?
+           AND BRCH_ID = ?
+         ORDER BY VISIT_IN_DATE DESC                         
+     ]]>
+    </query>
+</service>

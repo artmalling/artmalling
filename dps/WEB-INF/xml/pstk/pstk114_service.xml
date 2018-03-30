@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이재득
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.13
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  규격/신선 단품별 장부재고 현황을 조회한다.
+ -->
+<service name="/pstk114.pt">
+  
+  <gauce name="H_SEL_MASTER">        
+        <column colName="PUMBUN_CD"        	colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"      	colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_CD"        	colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMMOK_NAME"      	colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="MODEL_NO"          colType="TB_STRING"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_CD"           	colType="TB_STRING"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"         	colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                  
+        <column colName="BASE_QTY"         	colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BASE_COST"        	colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <!--column colName="BASE_TOT_COST"    colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /-->
+        <column colName="BUY_QTY"      		colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <!--column colName="BUY_TOT_SALE_AMT" colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /-->
+        <column colName="BUY_COST" 			colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="SALE_QTY"         	colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SALE_COST_PRC"    	colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_COST"    		colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STK_ADJ_QTY"      	colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="STK_ADJ_COST" 		colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="SRVY_E_QTY"       	colType="TB_INT"     size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <!--column colName="SRVY_E_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /-->
+        <column colName="SRVY_E_COST"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <!--column colName="INPUT_PLU_CD"     colType="TB_STRING"  size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /-->        
+        <!--column colName="SALE_UNIT_CD"     colType="TB_STRING"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /-->
+        <!--column colName="CMP_SPEC_UNIT"    colType="TB_STRING"  size="3"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /-->      
+  </gauce> 
+  
+  <!-- 품번정보조회 -->
+    <gauce name="H_SEL_PBNINF">        
+        <column colName="ORG_NAME"         colType="TB_STRING"  size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />                                             
+    </gauce>
+  
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 마스터 조회 쿼리  -->    
+    
+    <query name="SEL_MASTER">
+        <![CDATA[    
+            SELECT  --STR_CD                                                          -- 점코드
+                    PUMBUN_CD                                                       -- 품번코드
+                  , PUMBUN_NAME                                                     -- 품번명
+                  , PUMMOK_CD                                                       -- 품목코드
+                  , PUMMOK_NAME                                                     -- 품목명
+				  , DPS.FN_GET_SKU_MODEL_NO(PUMBUN_CD, SKU_CD) MODEL_NO				-- 브랜드상품코드
+                  , SKU_CD                                                          -- 상품코드
+                  , SKU_NAME                                                        -- 상품명
+                  , BASE_QTY                                                        -- 기초재고수량
+                  , BASE_COST                                                       -- 기초재고금액
+                  , BUY_QTY                                                         -- 매입수량
+                  , BUY_COST                                                        -- 매입금액
+                  , SALE_QTY                                                        -- 매출수량
+                  , SALE_COST_PRC                                                   -- 매출단가(총평균법으로 변동됨)
+                  , SALE_COST                                                       -- 매출금액
+                  , STK_ADJ_QTY                                                     -- 재고조정수량
+                  , STK_ADJ_COST                                                    -- 재고조정금액
+                  , (BASE_QTY + BUY_QTY) - (SALE_QTY + STK_ADJ_QTY) SRVY_E_QTY      -- 기말재고수량
+                  , (BASE_COST + BUY_COST) - (SALE_COST + STK_ADJ_COST) SRVY_E_COST -- 기말재고금액
+              FROM 
+            (    
+            SELECT  A.STR_CD
+                  , A.PUMBUN_CD
+                  , DPS.FN_GET_PUMBUN_NAME(A.PUMBUN_CD) PUMBUN_NAME
+                  , A.PUMMOK_CD
+                  , DPS.FN_GET_PUMMOK_NAME(A.PUMMOK_CD) PUMMOK_NAME
+                  , A.SKU_CD
+                  , DPS.FN_GET_SKU_NAME(A.SKU_CD) SKU_NAME
+                  , SUM(BASE_QTY) BASE_QTY
+                  , SUM(BASE_COST) BASE_COST
+                  , SUM(BUY_QTY) BUY_QTY
+                  , SUM(BUY_COST) BUY_COST
+                  , SUM(SALE_QTY) SALE_QTY
+                  , SUM(SALE_COST_PRC) SALE_COST_PRC
+                  , SUM(SALE_COST) SALE_COST
+                  , SUM(STK_ADJ_QTY) STK_ADJ_QTY
+                  , SUM(STK_ADJ_COST) STK_ADJ_COST
+              FROM DPS.PC_PBNMST PBN
+                 , DPS.PC_SKUMST SKU
+                 , (
+                 	-- 기초재고 조회를 위한 재고월 테이블 조회
+                    SELECT STR_CD
+                         , PUMBUN_CD
+                         , PUMMOK_CD 
+                         , SKU_CD
+                         , SUM(NVL(CAO_QTY,0))         AS BASE_QTY
+                         , SUM(NVL(CAO_COST_AMT,0))    AS BASE_COST
+                         , 0                           AS BUY_QTY
+                         , 0                           AS BUY_COST
+                         , 0                           AS SALE_QTY
+                         , 0                           AS SALE_COST_PRC
+                         , 0                           AS SALE_COST
+                         , 0                           AS STK_ADJ_QTY
+                         , 0                           AS STK_ADJ_COST
+                      FROM DPS.PT_SKUMONTH
+                     WHERE STR_CD = ?
+                       AND STK_YM = ?
+                       GROUP BY STR_CD
+                              , PUMBUN_CD
+                              , PUMMOK_CD
+                              , SKU_CD
+                    UNION ALL  
+                    -- 매입 판매분 조회를 위한 재고일 테이블 조회  
+                    SELECT SKU.STR_CD
+                         , SKU.PUMBUN_CD
+                         , MST.PUMMOK_CD                       
+                         , SKU.SKU_CD
+                         , 0                                AS BASE_QTY
+                         , 0                                AS BASE_COST
+                         , SUM(NVL(STK.BUY_TOT_QTY,0))              AS BUY_QTY
+                         , SUM(NVL(STK.BUY_TOT_COST_AMT,0))         AS BUY_COST
+                         , SUM(NVL(STK.SALE_QTY,0))             AS SALE_QTY
+                         , DPS.FN_GET_SKU_COST_PRC(SKU.STR_CD, SKU.PUMBUN_CD,SKU.SKU_CD,?) SALE_COST_PRC
+                         , DPS.FN_GET_SKU_COST_PRC(SKU.STR_CD, SKU.PUMBUN_CD,SKU.SKU_CD,?)*SUM(NVL(SALE_QTY,0))  AS SALE_COST
+                         , SUM(NVL(STK.STK_ADJ_COST_AMT,0))     AS STK_ADJ_QTY
+                         , SUM(NVL(STK.STK_ADJ_SALE_AMT,0))     AS STK_ADJ_COST
+                      FROM DPS.PT_SKUDAY STK
+                         , DPS.PC_STRSKUMST SKU
+                         , DPS.PC_SKUMST    MST
+                     WHERE SKU.STR_CD (+)      = ?
+                       AND STK_DT(+) BETWEEN ? AND ?
+                       AND SKU.SKU_CD = STK.SKU_CD(+)
+                       AND SKU.SKU_CD = MST.SKU_CD
+                     GROUP BY SKU.STR_CD
+                            , SKU.PUMBUN_CD
+                            , MST.PUMMOK_CD 
+                            , SKU.SKU_CD   
+                     ) A
+             WHERE SKU.SKU_CD    = A.SKU_CD
+               AND PBN.PUMBUN_CD = A.PUMBUN_CD
+               AND PBN.PUMBUN_TYPE <> '2'
+               AND PBN.SKU_TYPE  = ?    
+      ]]>    
+    </query>
+    
+     <query name="SEL_MASTER_WHERE_MAKER_CD">
+        <![CDATA[
+               AND SKU.MAKER_CD = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_PUMBUN_CD">
+        <![CDATA[
+               AND A.PUMBUN_CD  = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_PUMMOK_CD">
+        <![CDATA[
+               AND A.PUMMOK_CD  = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_WHERE_SKU_CD">
+        <![CDATA[
+               AND SKU.SKU_CD = ?
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_GROUP">
+        <![CDATA[
+			GROUP BY A.STR_CD
+				   , A.PUMBUN_CD
+                   , A.PUMMOK_CD
+                   , A.SKU_CD
+                   --, SKU.INPUT_PLU_CD                 
+                   --, SKU.SALE_UNIT_CD
+                   --, SKU.CMP_SPEC_UNIT
+                   ) A
+        ]]>    
+    </query>
+    
+    <query name="SEL_MASTER_ORDER">
+        <![CDATA[
+			ORDER BY PUMBUN_CD
+                   , PUMMOK_CD 
+                   , SKU_CD
+        ]]>    
+    </query>
+    
+    <!-- 품번정보조회  -->
+    <query name="SEL_PBNINF">
+        <![CDATA[
+            SELECT ORG.ORG_SHORT_NAME AS ORG_NAME
+              FROM DPS.PC_STRPBN STP
+                 , DPS.PC_ORGMST ORG
+            WHERE STP.SALE_ORG_CD = ORG.ORG_CD 
+              AND STP.STR_CD    = ?
+              AND STP.PUMBUN_CD = ?
+        ]]>    
+    </query>
+    
+</service>

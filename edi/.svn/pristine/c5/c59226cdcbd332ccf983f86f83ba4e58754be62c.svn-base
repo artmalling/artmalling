@@ -1,0 +1,290 @@
+<!---------------------------------------------------------------------------
+프로그램 ID : CalendarM.html
+유       형 : 
+사 용 언 어 : Dynamic HTML 4.0/ JavaScript
+기 능 정 의 : 월력가져오기
+특 기 사 항 :
+----------------------------------------------------------------------------->
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script language="javascript"  src="/edi/js/global.js" type="text/javascript"></script>
+<script language="javascript"  src="/edi/js/common.js" type="text/javascript"></script>
+<script language="JScript"> 
+<!--
+
+this.title="달력";
+
+var objArgs = dialogArguments;
+
+var gcGray = "#808080"; 
+var gcToggle = "EFE2B1"; 
+var gcBG = "#ffffff"; 
+
+var gdCurDate = new Date(); 
+var giYear = gdCurDate.getFullYear(); 
+var giMonth = gdCurDate.getMonth()+1; 
+var giDay = gdCurDate.getDate();
+
+function onstart() {
+  fSetYear(giYear);
+
+	if(objArgs.length == 1 && objArgs[0] != "" && objArgs[0] != null){
+
+	    if (checkYYYYMMDD(objArgs[0].replace(/-/gi, ""))){
+    	    tbSelYear.value = objArgs[0].substr(0,4);
+    	    if (eval(objArgs[0].substr(4,2)) <  10) {
+    	        tbSelMonth.value = objArgs[0].substr(4,2).replace(/0/gi,"");
+    	    } else {
+    	        tbSelMonth.value = objArgs[0].substr(4,2);
+    	    }
+    	    fUpdateCal(tbSelYear.value);
+    	}
+    	
+	} else if (objArgs.length == 2 && typeof(objArgs[1]) == "object"){
+	    switch(objArgs[0]){
+			case 'H' :
+			    var htmlDate = objArgs[1].value.replace(/-/gi, "");
+			    if(htmlDate.length<8 && htmlDate.length>=6 ){
+			    	htmlDate = htmlDate.substr(0,6)+"01";
+			    }
+			    if (checkYYYYMMDD(htmlDate)){
+			        tbSelYear.value = htmlDate.substr(0,4);
+			        if (eval(htmlDate.substr(4,2)) < 10) {
+			           tbSelMonth.value = htmlDate.substr(4,2).replace(/0/gi,"");
+			        } else {
+			           tbSelMonth.value = htmlDate.substr(4,2);
+			        }
+			        fUpdateCal(tbSelYear.value)
+			    }
+			    
+				break;
+			case 'G' :
+			    var meditDate = objArgs[1].Text.trim();
+			    if(meditDate.length<8 && meditDate.length>=6){
+			    	meditDate = meditDate.substr(0,6)+"01";
+			    }
+			    
+			    if (checkYYYYMMDD(meditDate)){
+    			    tbSelYear.value = meditDate.substr(0,4);    			    
+    			    if (eval(meditDate.substr(4,2)) < 10) {
+    			       tbSelMonth.value = meditDate.substr(4,2).replace(/0/gi,"");
+    			    } else {
+    			       tbSelMonth.value = meditDate.substr(4,2);
+    			    }    			    
+    			    fUpdateCal(tbSelYear.value)
+    			}
+				break;
+			 
+			case 'M' :
+				var meditDate = objArgs[1].Text.trim();
+			    
+			    if (checkYYYYMM(meditDate)){
+    			    tbSelYear.value = meditDate.substr(0,4);    			    
+    			    if (eval(meditDate.substr(4,2)) < 10) {
+    			       tbSelMonth.value = meditDate.substr(4,2).replace(/0/gi,"");
+    			    } else {
+    			       tbSelMonth.value = meditDate.substr(4,2);
+    			    }    			    
+    			    fUpdateCal(tbSelYear.value);
+    			}
+				break;
+			case 'Y' :
+				var meditDate = objArgs[1].Text.trim();
+			    
+			    if (checkYYYYMM(meditDate)){
+    			    tbSelYear.value = meditDate.substr(0,4);    			    
+    			    //if (eval(meditDate.substr(4,2)) < 10) {
+    			    //   tbSelMonth.value = meditDate.substr(4,2).replace(/0/gi,"");
+    			    //} else {
+    			    //   tbSelMonth.value = meditDate.substr(4,2);
+    			    //}    		
+    			    tbSelMonth.value = "12";	    
+    			    fUpdateCal(tbSelYear.value);
+    			}
+				break;
+				
+			default :
+				break;
+		}
+	}
+	//tbSelMonth.focus();
+}
+
+function fSetDate(iYear){ 
+	
+	window.returnValue=iYear;
+	if (objArgs.length == 2 && typeof(objArgs[1]) == "object"){
+		switch(objArgs[0]){			
+			case 'Y' :
+			
+					objArgs[1].text = iYear;
+				break;
+			default :
+				break;
+		}
+	}
+	window.close();
+} 
+
+function gn_lpad(Rstring,pad_str,base_len){
+	 var Rstring = Rstring.toString();
+	 var str_len = Rstring.length;
+	
+	for(  var i=str_len ; i<= base_len; i++){
+	
+	       if (str_len != base_len)  {
+		Rstring = pad_str + Rstring;
+	                str_len = Rstring.length;
+	
+	      } 
+	}
+	
+	return Rstring;
+}
+
+function fSetSelected(aCell){ 
+  var iOffset = 0; 
+  var iYear = parseInt(tbSelYear.value); 
+  //var iMonth = parseInt(tbSelMonth.value); 
+
+  aCell.bgColor = gcBG; 
+  with (aCell.children["cellText"]){ 
+          var iDay = parseInt(innerText); 
+        if (color=="#b7b7b7"){ 
+        return;
+        }
+        
+        
+  } 
+  fSetDate(iYear); 
+} 
+
+
+//날짜 format 만들기
+function fBuildCal(iYear) { 
+  var aMonth=new Array(); 
+  for(i=1;i<7;i++) 
+          aMonth[i]=new Array(i); 
+
+  var dCalDate=new Date(iYear, 12-1, 1); 
+  var iDayOfFirst=dCalDate.getDay(); 
+  var iDaysInMonth=new Date(iYear, 12, 0).getDate(); 
+  var iOffsetLast=new Date(iYear, 12-1, 0).getDate()-iDayOfFirst+1; 
+  var iDate = 1; 
+  var iNext = 1; 
+
+  for (d = 0; d < 7; d++) 
+        aMonth[1][d] = (d<iDayOfFirst)?-(iOffsetLast+d):iDate++; 
+  for (w = 2; w < 7; w++) 
+          for (d = 0; d < 7; d++) 
+                aMonth[w][d] = (iDate<=iDaysInMonth)?iDate++:-(iNext++); 
+  return aMonth; 
+} 
+
+
+// 날짜 setting
+function fUpdateCal(iYear) { 
+  myMonth = fBuildCal(iYear); 
+
+  calendarImage.src = "/edi/imgs/calendar/month_" + giMonth + ".gif";
+} 
+
+// 년,월 select  setting
+function fSetYear(iYear){ 
+  //tbSelMonth.value = iMon;
+  tbSelYear.value = iYear;
+  fUpdateCal(iYear); 
+} 
+
+
+function fPrevYear(){ 
+ // var iMon = tbSelMonth.value; 
+  var iYear = tbSelYear.value; 
+  iYear--; 
+  fSetYear(iYear); 
+} 
+
+function fNextYear(){ 
+ // var iMon = tbSelMonth.value; 
+  var iYear = tbSelYear.value; 
+  iYear++; 
+  fSetYear(iYear); 
+} 
+
+function fPrevMonth(){ 
+//  var iMon = tbSelMonth.value; 
+  var iYear = tbSelYear.value; 
+
+  if (--iMon<1) { 
+          iMon = 12; 
+          iYear--; 
+  } 
+
+  fSetYear(iYear); 
+} 
+
+function fNextMonth(){ 
+ // var iMon = tbSelMonth.value; 
+  var iYear = tbSelYear.value; 
+  if (++iMon>12) { 
+          iMon = 1; 
+          iYear++; 
+  } 
+
+  fSetYear(iYear); 
+} 
+var gMonths = new Array("1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월");
+
+function fnConfirm(){
+  var iYear = tbSelYear.value; 
+  fSetDate(iYear);
+  window.close();
+}
+
+
+with(document){ 
+write("<title>년도 선택</title>");
+write("<body onload='onstart()' bgcolor='#F5F5F5' leftmargin=1 topmargin=1 marginwidth=0 marginheight=0>");
+write("<table width='280' border='0' cellspacing='0' cellpadding='0'>");
+write("	<tr>");
+write("		<td  bgColor='#FFFFFF' valign='bottom'>");
+write("			<table width='100%' border='0' cellspacing='0' cellpadding='0'>");
+write("				<tr>");
+write("					<td width='82' rowspan='2'><img id='calendarImage' src='/edi/imgs/calendar/month_1.gif'  width='82' height='49'></td>");
+write("					<td height='20'><img src='/edi/imgs/calendar/cal_text.gif'  width='54' height='20'></td>");
+write("					<td  bgColor='#FFFFFF' align='center' valign='bottom'><table height='10' border='0' cellpadding='0' cellspacing='0'>");
+write("				<tr>");
+write("					<td width='20' ></td>");
+write("					<td width='20' align='right'></td>");
+write("				</tr>");
+write("			</table>");
+write("		</td>");
+write("	</tr>");
+write("	<tr>");
+write("		<td>");
+write("     <table width=120 border='0' cellspacing='0' cellpadding='0'><tr><td>");
+write("         <input type=button id=previewYear size=1 value='<<' align='middle' style='cursor:hand; color:#000000; background-color:#eeeeee; border:1 solid #666666; font-family:'굴림체'; font-size:9pt; text-align:center;' onClick='fPrevYear();'></td><td>");
+//write("         <input type=button id=previewMonth value='<' style='cursor:hand; color:#000000; background-color:#eeeeee; border:1 solid #666666; font-family:'굴림체'; font-size:9pt; text-align:center;' onClick='fPrevMonth();'> </td><td>");
+write("		<input type=text id='tbSelYear' size=4 tabIndex=-1 ReadOnly onChange='fUpdateCal(tbSelYear.value)' style='color:#000000; background-color:#ffffff; border:1 solid #ffffff; font-family:'굴림체'; font-size:9pt; text-align:center;'></td><td>"); 
+//write("		<input type=text id='tbSelMonth' size=1 tabIndex=-1 ReadOnly onChange='fUpdateCal(tbSelYear.value)' style='color:#000000; background-color:#ffffff; border:1 solid #ffffff; font-family:'굴림체'; font-size:9pt; text-align:center;'></td><td>"); 
+//write("         <input type=button id=NextMonth size=1 value='>' style='cursor:hand; color:#000000; background-color:#eeeeee; border:1 solid #666666; font-family:'굴림체'; font-size:9pt; text-align:center;' onClick='fNextMonth();'></td><td>");
+write("         <input type=button id=NextYear size=1 value='>>' style='cursor:hand; color:#000000; background-color:#eeeeee; border:1 solid #666666; font-family:'굴림체'; font-size:9pt; text-align:center;' onClick='fNextYear();'>");
+write("     </td></tr></table>");
+write("     </td>");
+write("<table id='DAY_TABLE' width='210' border='0' cellspacing='0' cellpadding='0'>");
+write("	<tr>");
+write("		<td height=1 bgcolor='619ABA'></td>");
+write("	</tr>");
+write("	<tr>");
+write("		<td height=3></td>");
+write("	</tr>");
+write("	<tr>");
+write("		<td align='center'><img src='/edi/imgs/btn/confirm.gif' onClick='fnConfirm();'></td>");
+write("	</tr>");
+write("	<tr>");
+write("		<td height=3></td>");
+write("	</tr>");
+write("</table>");
+write("</body>");
+} 
+-->
+</script> 

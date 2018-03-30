@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 이정식
+ * 회 사 명 : 
+ * 작 성 일 : 2011.06.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  경영계획2차배부처리
+ -->
+<service name="/meis030.me">
+    
+    <!-- 배부처리 헤더  -->
+    <gauce name="H_SEL_BIZ_PLAN">
+        <column colName="CHECK_FLAG"     colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EDIT_FLAG"      colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DIV_FLAG"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_PLAN_YM"    colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_FLAG"       colType="TB_STRING"  size="1"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_CD"         colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"       colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_NM"        colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NM"          colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PLAN_AMT"       colType="TB_DECIMAL" size="13" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SD_DIV_CD"      colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SD_DIV_BIZ_CD"  colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD_NM"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_CD"         colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BIZ_NM"         colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LST_DIV_CD"     colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LST_BIZ_CD"     colType="TB_STRING"  size="6"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LST_BIZ_NM"     colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 2차배부처리 대상조회-->
+    <query name="SEL_BIZ_PLAN_TOP">
+        <![CDATA[
+        SELECT 'F'                                   AS CHECK_FLAG
+             , CASE WHEN (NVL(PLAN_AMT,0) + NVL(PR_DIV_RECV_AMT,0) + NVL(SD_DIV_RECV_AMT,0) - NVL(PR_DIV_AMT,0) - NVL(SD_DIV_AMT,0)) > 0  
+                         AND BIZ.SD_DIV_CD IS NULL THEN '1' 
+                    WHEN (NVL(PLAN_AMT,0) + NVL(PR_DIV_RECV_AMT,0) + NVL(SD_DIV_RECV_AMT,0) - NVL(PR_DIV_AMT,0) - NVL(SD_DIV_AMT,0)) > 0  
+                         AND BIZ.SD_DIV_CD = '' THEN '1' 
+                    ELSE '0'  END                    AS EDIT_FLAG
+             , ?                                     AS DIV_FLAG
+             , BIZ.BIZ_PLAN_YM
+             , BIZ.STR_CD
+             , BIZ.ORG_FLAG
+             , BIZ.ORG_CD
+             , CASE BIZ.ORG_CD WHEN '9999999999' 
+                                   THEN '1차배부내역' 
+                               ELSE ORG.ORG_NAME END AS ORG_NAME
+             , CASE WHEN BIZ.ORG_LEVEL >= '2' 
+                         THEN DPS.FN_GET_ORG_SHORT_NAME(BIZ.STR_CD, BIZ.DEPT_CD, '00', '00', '00') 
+                    ELSE '' END                      AS DEPT_NM
+             , CASE WHEN BIZ.ORG_LEVEL >= '3' 
+                        THEN DPS.FN_GET_ORG_SHORT_NAME(BIZ.STR_CD, BIZ.DEPT_CD, BIZ.TEAM_CD, '00', '00') 
+                    ELSE '' END                      AS TEAM_NM
+             , CASE WHEN BIZ.ORG_LEVEL >= '4' 
+                        THEN DPS.FN_GET_ORG_SHORT_NAME(BIZ.STR_CD, BIZ.DEPT_CD, BIZ.TEAM_CD, BIZ.PC_CD, '00') 
+                    ELSE '' END                      AS PC_NM
+             , (NVL(PLAN_AMT,0) + NVL(PR_DIV_RECV_AMT,0) + NVL(SD_DIV_RECV_AMT,0) - NVL(PR_DIV_AMT,0) - NVL(SD_DIV_AMT,0)) AS PLAN_AMT
+             , BIZ.SD_DIV_CD
+             , BIZ.SD_DIV_BIZ_CD
+             , ( SELECT BIZ_CD_NM
+                   FROM MSS.ME_BIZCDMST
+                  WHERE BIZ_CD = BIZ.SD_DIV_BIZ_CD ) AS BIZ_CD_NM
+             , BIZ.BIZ_CD
+             , MST.BIZ_CD_NM                         AS BIZ_NM
+             , LST.SD_DIV_CD                         AS LST_DIV_CD
+             , LST.SD_DIV_BIZ_CD                     AS LST_BIZ_CD
+             , LST.LST_BIZ_NM
+          FROM MSS.ME_BIZPLAN  BIZ
+             , DPS.PC_ORGMST   ORG
+             , MSS.ME_BIZCDMST MST
+             , ( SELECT A.BIZ_CD
+                      , A.ORG_CD
+                      , ? AS BIZ_PLAN_YEAR
+                      , A.SD_DIV_CD
+                      , A.SD_DIV_BIZ_CD
+                      , B.BIZ_CD_NM AS LST_BIZ_NM
+                   FROM MSS.ME_BIZPLAN  A
+                      , MSS.ME_BIZCDMST B
+                  WHERE A.SD_DIV_BIZ_CD = B.BIZ_CD
+                    AND A.STR_CD        = ?
+                    AND A.BIZ_PLAN_YM   = ?) LST
+         WHERE BIZ.BIZ_CD        = LST.BIZ_CD(+)
+           AND BIZ.ORG_CD        = LST.ORG_CD(+)
+           AND BIZ.BIZ_PLAN_YEAR = LST.BIZ_PLAN_YEAR(+)
+           AND BIZ.ORG_CD        = ORG.ORG_CD(+)
+           AND BIZ.BIZ_CD        = MST.BIZ_CD
+           AND BIZ.STR_CD        = ?
+           AND BIZ.BIZ_PLAN_YM   = ?
+           
+           AND BIZ.ORG_FLAG		 LIKE ?
+           AND BIZ.DEPT_CD		 LIKE ?
+           AND BIZ.TEAM_CD		 LIKE ?
+           
+        ]]>
+    </query>
+    
+    <!-- 2차배부처리 대상조회-->
+    <query name="SEL_BIZ_PLAN_BOTTOM">
+        <![CDATA[
+         ORDER BY BIZ.ORG_CD
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_PLAN_WHERE_PC">
+        <![CDATA[
+           AND BIZ.ORG_LEVEL   = '3'
+        ]]>
+    </query>
+    
+    <query name="SEL_BIZ_PLAN_WHERE_TEAM">
+        <![CDATA[
+           AND (BIZ.ORG_LEVEL   = '1' OR BIZ.ORG_LEVEL   = '2')
+        ]]>
+    </query>    
+    
+    <!-- 2차 배부처리 내역 수정-->
+    <query name="UPD_BIZ_PLAN">
+        <![CDATA[
+        UPDATE MSS.ME_BIZPLAN
+           SET SD_DIV_YN     = 'Y'
+             , SD_DIV_CD     = ?
+             , SD_DIV_BIZ_CD = ?
+             , SD_DIV_AMT    = ?
+             , MOD_DATE      = SYSDATE
+             , MOD_ID        = ?
+         WHERE BIZ_PLAN_YM   = ?
+           AND STR_CD        = ?
+           AND ORG_CD        = ?
+           AND BIZ_CD        = ?
+        ]]>
+    </query>
+    
+    <!-- 2차 배부처리-->
+    <query name="UST_BIZ_PLAN">
+        <![CDATA[
+        MERGE INTO MSS.ME_BIZPLAN A
+              USING ( SELECT ? AS BIZ_PLAN_YM
+                           , ? AS BIZ_PLAN_YEAR
+                           , ? AS STR_CD
+                           , ? AS BIZ_CD
+                           , ? AS ORG_CD
+                           , ? AS ORG_FLAG
+                           , ? AS ORG_LEVEL
+                           , ? AS SD_DIV_RECV_AMT
+                           , ? AS USER_ID
+                        FROM DUAL ) B 
+                 ON (        A.BIZ_PLAN_YM   = B.BIZ_PLAN_YM
+                         AND A.BIZ_PLAN_YEAR = B.BIZ_PLAN_YEAR
+                         AND A.STR_CD        = B.STR_CD
+                         AND A.BIZ_CD        = B.BIZ_CD
+                         AND A.ORG_CD        = B.ORG_CD )
+               WHEN MATCHED THEN 
+                    UPDATE SET SD_DIV_RECV_AMT = NVL(A.SD_DIV_RECV_AMT,0) + B.SD_DIV_RECV_AMT
+                             , MOD_ID          = B.USER_ID
+                             , MOD_DATE        = SYSDATE
+               WHEN NOT MATCHED THEN
+                    INSERT ( BIZ_PLAN_YM
+                           , STR_CD
+                           , BIZ_CD
+                           , ORG_CD
+                           , BIZ_PLAN_YEAR
+                           , ORG_FLAG
+                           , ORG_LEVEL
+                           , DEPT_CD
+                           , TEAM_CD
+                           , PC_CD
+                           , PLAN_AMT
+                           , PR_DIV_AMT
+                           , PR_DIV_RECV_AMT
+                           , SD_DIV_AMT
+                           , SD_DIV_RECV_AMT
+                           , REG_DATE
+                           , REG_ID
+                           , MOD_DATE
+                           , MOD_ID )
+                    VALUES ( B.BIZ_PLAN_YM
+                           , B.STR_CD
+                           , B.BIZ_CD
+                           , B.ORG_CD
+                           , B.BIZ_PLAN_YEAR
+                           , B.ORG_FLAG
+                           , B.ORG_LEVEL
+                           , SUBSTR(B.ORG_CD, 3, 2)
+                           , SUBSTR(B.ORG_CD, 5, 2)
+                           , SUBSTR(B.ORG_CD, 7, 2)
+                           , 0
+                           , 0
+                           , 0
+                           , 0
+                           , B.SD_DIV_RECV_AMT
+                           , SYSDATE
+                           , B.USER_ID
+                           , SYSDATE
+                           , B.USER_ID )
+        ]]>
+    </query>
+    
+    <!-- 배부기준정보 가져오기-->
+    <query name="SEL_DIV_MST">
+        <![CDATA[
+        SELECT DIV.ORG_CD
+             , DIV.ORG_LEVEL
+             , ORG.ORG_FLAG
+             , DIV_RATE
+             , DIV.STR_CD
+          FROM MSS.ME_DIVMST DIV
+             , DPS.PC_ORGMST ORG
+         WHERE DIV.ORG_CD         = ORG.ORG_CD 
+           AND DIV.DIV_YM         = ?
+           AND DIV.STR_CD         = ?
+           AND DIV.DIV_CD         = ?
+           AND DIV.DIV_SEQ_FLAG   = '2'
+           AND DIV.PLAN_RSLT_FLAG = '1'
+           AND DIV.ORG_LEVEL      = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_DIV_MST_WHERE_CD">
+        <![CDATA[
+           AND DIV.DEPT_CD        = ?
+           AND DIV.TEAM_CD        = ?
+        ]]>
+    </query>
+    
+    <!-- 배부이력저장-->
+    <query name="INS_HISTORY">
+        <![CDATA[
+        INSERT INTO MSS.ME_BIZDIVHIST( DIV_YM
+                                     , DIV_RECV_STR_CD
+                                     , DIV_RECV_ORG_CD
+                                     , DIV_RECV_BIZ_CD
+                                     , DIV_RECV_SEQ
+                                     , DIV_CD
+                                     , DIV_SEQ_FLAG
+                                     , PLAN_RSLT_FLAG
+                                     , DIV_RATE
+                                     , ORG_LEVEL
+                                     , DIV_RECV_AMT
+                                     , DIV_STR_CD
+                                     , DIV_ORG_CD
+                                     , DIV_BIZ_CD                                     
+                                     , REG_DATE
+                                     , REG_ID
+                                     , MOD_DATE
+                                     , MOD_ID ) 
+                              VALUES ( ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ( SELECT NVL(MAX(DIV_RECV_SEQ), 0) + 1
+                                           FROM MSS.ME_BIZDIVHIST
+                                          WHERE DIV_YM          = ?
+                                            AND DIV_RECV_STR_CD = ?
+                                            AND DIV_RECV_ORG_CD = ?
+                                            AND DIV_RECV_BIZ_CD = ? )
+                                     , ?
+                                     , '2'
+                                     , '1'
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?
+                                     , ?                                     
+                                     , SYSDATE
+                                     , ?
+                                     , SYSDATE 
+                                     , ? )
+        ]]>
+    </query>
+    
+</service>

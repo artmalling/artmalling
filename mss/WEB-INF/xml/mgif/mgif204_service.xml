@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정지인
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.12.12
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  개발팀에서 기입해주세요
+ -->
+<service name="/mgif204.mg">
+<!-- DS_Master -->
+    <gauce name="H_MASTER"> 
+        <column colName="FLAG"          colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_STR"       colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_STR"       colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_NAME"      colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_DT"        colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+        <column colName="REQ_DT"        colType="TB_STRING"  size="8"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />         
+        <column colName="REQ_SLIP_NO"   colType="TB_STRING"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="OUT_SLIP_NO"   colType="TB_STRING"  size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_QTY_SUM"   colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_AMT_SUM"   colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="IN_CONF"       colType="TB_STRING"  size="10" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+                 
+    <!-- DS_Detail -->   
+    <gauce name="H_DETAIL"> 
+        <column colName="GIFT_AMT_NAME" colType="TB_STRING"  size="40" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFTCERT_AMT"  colType="TB_DECIMAL" size="9"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_S_NO"     colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GIFT_E_NO"     colType="TB_STRING"  size="18" dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="OUT_QTY"       colType="TB_DECIMAL" size="7"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />      
+        <column colName="OUT_AMT"       colType="TB_DECIMAL" size="12" dec="0" keyType="TB_NORMAL" roundMode="ROUND" /> 
+    </gauce>
+
+    <!-- 출고  조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[               
+            SELECT 'F' FLAG
+                 , ORC.OUT_STR
+			     , DPS.FN_GET_STORE_NAME(ORC.OUT_STR) OUT_NAME
+			     , ORC.REQ_STR
+			     , DPS.FN_GET_STORE_NAME(ORC.REQ_STR) REQ_NAME
+			     , ORC.OUT_DT
+                 , ORC.REQ_DT
+                 , ORC.REQ_SLIP_NO
+                 , ORC.OUT_SLIP_NO
+			     , SUM(ORC.OUT_QTY) OUT_QTY_SUM
+			     , SUM(ORC.OUT_QTY * GAM.GIFTCERT_AMT) OUT_AMT_SUM
+			     , CASE WHEN NVL(ORC.IN_CONF, 'N') = 'N' THEN '미확정' ELSE '확정' END IN_CONF
+			  FROM MSS.MG_OUTREQCONF ORC
+			     , MSS.MG_GIFTAMTMST GAM
+			 WHERE ORC.GIFT_TYPE_CD = GAM.GIFT_TYPE_CD
+			   AND ORC.ISSUE_TYPE = GAM.ISSUE_TYPE
+			   AND ORC.GIFT_AMT_TYPE = GAM.GIFT_AMT_TYPE
+			   AND ORC.OUT_STR = ?
+			   AND ORC.REQ_STR LIKE ?||'%'
+			   AND ORC.OUT_DT BETWEEN ? AND ?
+			   AND ORC.STAT_FLAG IN ('01', '02')
+			   AND IN_CONF LIKE ?||'%'
+	      GROUP BY ORC.OUT_STR
+			     , ORC.REQ_STR
+			     , ORC.OUT_DT
+                 , ORC.REQ_DT
+                 , ORC.OUT_SLIP_NO
+                 , ORC.REQ_SLIP_NO
+			     , IN_CONF
+        ]]> 
+    </query> 
+    
+    <!-- 출고세부내역 조회 -->
+    <query name="SEL_DETAIL">
+        <![CDATA[    
+            SELECT GAM.GIFT_AMT_NAME
+			     , GAM.GIFTCERT_AMT
+			     , ORC.GIFT_S_NO     
+			     , ORC.GIFT_E_NO
+			     , ORC.OUT_QTY
+			     , (ORC.OUT_QTY * GAM.GIFTCERT_AMT) OUT_AMT
+			  FROM MSS.MG_OUTREQCONF ORC
+			     , MSS.MG_GIFTAMTMST GAM
+			 WHERE ORC.GIFT_TYPE_CD = GAM.GIFT_TYPE_CD
+			   AND ORC.ISSUE_TYPE = GAM.ISSUE_TYPE
+			   AND ORC.GIFT_AMT_TYPE = GAM.GIFT_AMT_TYPE
+			   AND ORC.OUT_DT      = ?
+			   AND ORC.OUT_STR     = ?   
+			   AND ORC.OUT_SLIP_NO = ?
+        ]]>
+    </query>       
+   
+    <!-- 출고내역 삭제 -->
+    <query name="DEL_OUTREQCONF">
+        <![CDATA[            
+            DELETE FROM MSS.MG_OUTREQCONF
+             WHERE OUT_DT      = ?
+               AND OUT_STR     = ?   
+               AND OUT_SLIP_NO = ?
+               AND IN_CONF     = 'N' 
+        ]]>
+    </query>     
+    
+    <!-- 출고신청내역 업데이트 -->
+    <query name="UPD_OUTREQ">
+        <![CDATA[            
+            UPDATE MSS.MG_OUTREQ
+               SET STAT_FLAG   = '01'
+                 , MOD_ID      = ?
+                 , MOD_DATE    = SYSDATE  
+             WHERE REQ_DT      = ?
+               AND REQ_STR     = ?   
+               AND REQ_SLIP_NO = ?
+        ]]>
+    </query>     
+    
+     <!-- 카드마스터에 구분값 업데이트 -->
+    <query name="UPD_GIFTMST">
+        <![CDATA[            
+            UPDATE MSS.MG_GIFTMST
+			   SET STAT_FLAG = '01'
+			     , OUT_DT = ''
+			     , MOD_ID = ?
+			     , MOD_DATE = SYSDATE 
+			 WHERE GIFTCARD_NO BETWEEN ? AND ?
+			   AND ISSUE_IN_STR = ?
+		       AND OUT_DT = ?
+			   AND STAT_FLAG = '02'
+        ]]>
+    </query>  
+</service>

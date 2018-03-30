@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal555.ps">    
+    <gauce name="H_MASTER"> 
+        <column colName="COMM_CODE"         	colType="TB_STRING"   size="20"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMM_NAME2"        	colType="TB_STRING"   size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMM_NAME1"        	colType="TB_STRING"   size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"           	colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACT_AMT"            	colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACC_SALE_AMT"          colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACHI_RATE"           	colType="TB_STRING"   size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_SALE_AMT"           	colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EXP_RATE"        		colType="TB_STRING"   size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_ACT_AMT"           	colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_ACC_SALE_AMT"        colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_ACHI_RATE"           colType="TB_STRING"   size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_PRE_ACC_AMT"         colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="P_EXP_RATE"        	colType="TB_STRING"   size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INQR_ORDER"        	colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT"         			colType="TB_DECIMAL"  size="13"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!--일매출 미확인 list 조회 -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+            SELECT
+				    COMM_CODE
+				    ,COMM_NAME2
+				    ,COMM_NAME1
+				    ,SUM(SALE_AMT) SALE_AMT
+				    ,SUM(ACT_AMT) ACT_AMT
+				    ,SUM(ACC_SALE_AMT) ACC_SALE_AMT
+				    ,SUM(ACHI_RATE) ACHI_RATE
+				    ,SUM(P_SALE_AMT) P_SALE_AMT
+				    ,MAX(EXP_RATE) EXP_RATE
+				    ,SUM(P_ACT_AMT) P_ACT_AMT
+				    ,SUM(P_ACC_SALE_AMT) P_ACC_SALE_AMT
+				    ,CASE WHEN NVL(SUM(P_ACT_AMT),0) = 0 THEN 0 ELSE ROUND(SUM(P_ACC_SALE_AMT)/NVL(SUM(P_ACT_AMT),0)*100,1) END P_ACHI_RATE
+				    ,SUM(P_PRE_ACC_AMT) P_PRE_ACC_AMT
+				    ,CASE WHEN SUM(P_PRE_ACC_AMT) <= 0 THEN
+				                '0'
+				         ELSE
+				            CASE WHEN ROUND((SUM(P_ACC_SALE_AMT)/SUM(P_PRE_ACC_AMT)*100)-100,1) <= 0 THEN
+	                                 '▲'||TRIM(TO_CHAR(ABS(ROUND((SUM(P_ACC_SALE_AMT)/SUM(P_PRE_ACC_AMT)*100)-100,1)),'99999999990D9'))
+	                         ELSE
+	                             TRIM(TO_CHAR(ROUND((SUM(P_ACC_SALE_AMT)/SUM(P_PRE_ACC_AMT)*100)-100,1),'99999999990D9'))
+	                         END
+				         END P_EXP_RATE
+				    ,MAX(INQR_ORDER) INQR_ORDER
+				    ,DECODE(?,'01',1,'02',1000,0) UNIT
+				FROM
+				    (SELECT
+				        B.COMM_CODE,B.COMM_NAME2,B.COMM_NAME1
+				        ,B.DAY_SALE_AMT SALE_AMT
+				        ,NVL(A.ACT_AMT,0) ACT_AMT
+				        ,B.ACC_SALE_AMT ACC_SALE_AMT
+				        ,CASE WHEN NVL(A.ACT_AMT,0) = 0 THEN 0 ELSE ROUND(B.ACC_SALE_AMT/NVL(A.ACT_AMT,0)*100,1) END ACHI_RATE
+				        ,PRE_ACC_AMT P_SALE_AMT
+				        ,CASE WHEN PRE_ACC_AMT <= 0 THEN
+				                '0'
+				         ELSE
+				            CASE WHEN ROUND((B.ACC_SALE_AMT/PRE_ACC_AMT*100)-100,1) <= 0 THEN
+                                '▲'||TRIM(TO_CHAR(ABS(ROUND((B.ACC_SALE_AMT/PRE_ACC_AMT*100)-100,1)),'99999999990D9'))
+                            ELSE
+                                TRIM(TO_CHAR(ROUND((B.ACC_SALE_AMT/PRE_ACC_AMT*100)-100,1),'99999999990D9'))
+                            END
+				         END EXP_RATE
+				        ,0 P_ACT_AMT
+				        ,0 P_ACC_SALE_AMT
+				        ,0 P_PRE_ACC_AMT
+				        ,B.INQR_ORDER
+				    FROM
+				        (SELECT
+				             STR_CD,
+				             YYYYMM,
+				             COMM_CODE,
+				             COMM_NAME2,COMM_NAME1,
+				             NVL(DAY_SALE_AMT,0) DAY_SALE_AMT,
+				             NVL(ACC_SALE_AMT,0) ACC_SALE_AMT,
+				             NVL(PRE_ACC_AMT,0) PRE_ACC_AMT,
+				             INQR_ORDER
+				        FROM
+				            COM.TC_COMMCODE A,
+				            (SELECT
+				                    STR_CD,
+				                    MAX(YYYYMM) YYYYMM,
+				                    PC_CD,
+				                    SUM(DAY_SALE_AMT) DAY_SALE_AMT,
+				                    SUM(ACC_SALE_AMT) ACC_SALE_AMT,
+				                    SUM(CUST_CNT) CUST_CNT,
+				                    SUM(PRE_ACC_AMT) PRE_ACC_AMT
+				                FROM
+				                    (SELECT            A.STR_CD
+				                                             , SUBSTR(A.SALE_DT,1,6) YYYYMM
+				                                             , D.SAP_ORG_CD PC_CD
+				                                             , SUM(CASE WHEN A.SALE_DT = ? THEN NVL(A.TOT_SALE_AMT,0) ELSE 0 END ) AS DAY_SALE_AMT      -- 조회일자
+				                                             , SUM(NVL(A.TOT_SALE_AMT,0))  AS ACC_SALE_AMT
+				                                             , SUM(SALE_QTY) CUST_CNT
+				                                             , 0 PRE_ACC_AMT
+				                                          FROM DPS.PS_DAYPBN A
+				                                             , DPS.PC_PMKMST B
+				                                             , DPS.PC_STRPBN C
+				                                             , DPS.PC_ORGMST D
+				                                         WHERE A.SALE_DT >= ?       -- 조회기준월 1일
+				                                           AND A.SALE_DT <= ?       -- 조회일자
+				                                           AND A.STR_CD   = ?
+				                                           AND A.PUMMOK_CD IN (SELECT COMM_CODE
+				                                                                 FROM COM.TC_COMMCODE C
+				                                                                WHERE C.SYS_PART = 'D'
+				                                                                  AND C.COMM_PART = 'P613'
+				                                                                  AND C.USE_YN = 'Y'
+				                                                              )
+				                                           AND B.PUMMOK_CD = A.PUMMOK_CD
+				                                           AND C.STR_CD    = A.STR_CD
+				                                           AND C.PUMBUN_CD = A.PUMBUN_CD
+				                                           AND SALE_ORG_CD = D.ORG_CD
+				                                         GROUP BY A.STR_CD,SUBSTR(A.SALE_DT,1,6),D.SAP_ORG_CD
+				                            UNION ALL
+				                            SELECT            A.STR_CD
+				                                             , SUBSTR(A.SALE_DT,1,6) YYYYMM
+				                                             , D.SAP_ORG_CD PC_CD
+				                                             , 0 AS DAY_SALE_AMT
+				                                             , 0 AS ACC_SALE_AMT
+				                                             , 0 CUST_CNT
+				                                             , SUM(NVL(A.TOT_SALE_AMT,0)) PRE_ACC_AMT
+				                                          FROM DPS.PS_DAYPBN A
+				                                             , DPS.PC_PMKMST B
+				                                             , DPS.PC_STRPBN C
+				                                             , DPS.PC_ORGMST D
+				                                         WHERE A.SALE_DT >= ?       -- 전년조회월01
+				                                           AND A.SALE_DT <= ?       -- 전년조회일자
+				                                           AND A.STR_CD   = ?
+				                                           AND A.PUMMOK_CD IN (SELECT COMM_CODE
+				                                                                 FROM COM.TC_COMMCODE C
+				                                                                WHERE C.SYS_PART = 'D'
+				                                                                  AND C.COMM_PART = 'P613'
+				                                                                  AND C.USE_YN = 'Y'
+				                                                              )
+				                                           AND B.PUMMOK_CD = A.PUMMOK_CD
+				                                           AND C.STR_CD    = A.STR_CD
+				                                           AND C.PUMBUN_CD = A.PUMBUN_CD
+				                                           AND SALE_ORG_CD = D.ORG_CD
+				                                         GROUP BY A.STR_CD,SUBSTR(A.SALE_DT,1,6),D.SAP_ORG_CD
+				                        )
+				                    GROUP BY STR_CD,PC_CD
+				                ) B
+				        WHERE A.SYS_PART = 'D' AND A.COMM_PART = 'PS34' AND A.USE_YN = 'Y'
+				                AND A.COMM_CODE = B.PC_CD(+)
+				        ) B,DPS.PS_ACTPC_ON A
+				    WHERE B.STR_CD = A.STR_CD(+) AND B.YYYYMM = A.EXE_YM(+) AND B.COMM_CODE = A.PC_CD(+)
+				
+				    UNION ALL
+				
+				    SELECT
+				    COMM_CODE
+				    ,COMM_NAME2
+				    ,COMM_NAME1
+				    ,0,0,0,0,0,'0'
+				    ,SUM(P_ACT_AMT) P_ACT_AMT
+				    ,MAX(P_ACC_SALE_AMT) P_ACC_SALE_AMT
+				    ,MAX(P_PRE_ACC_AMT) P_PRE_ACC_AMT
+				    ,MAX(INQR_ORDER) INQR_ORDER
+				FROM
+				    (SELECT
+				            COMM_CODE,COMM_NAME2,COMM_NAME1
+				
+				            ,NVL(A.ACT_AMT,0) P_ACT_AMT
+				            ,ACC_SALE_AMT P_ACC_SALE_AMT
+				            ,PRE_ACC_AMT P_PRE_ACC_AMT
+				            ,INQR_ORDER
+				        FROM
+				            (SELECT
+				                 STR_CD,
+				                 YYYYMM,
+				                 COMM_CODE,
+				                 COMM_NAME2,COMM_NAME1,
+				                 NVL(DAY_SALE_AMT,0) DAY_SALE_AMT,
+				                 NVL(ACC_SALE_AMT,0) ACC_SALE_AMT,
+				                 NVL(PRE_ACC_AMT,0) PRE_ACC_AMT,
+				                 INQR_ORDER
+				            FROM
+				                COM.TC_COMMCODE A,
+				                (SELECT
+				                        STR_CD,
+				                        MAX(YYYYMM) YYYYMM,
+				                        PC_CD,
+				                        SUM(DAY_SALE_AMT) DAY_SALE_AMT,
+				                        SUM(ACC_SALE_AMT) ACC_SALE_AMT,
+				                        SUM(CUST_CNT) CUST_CNT,
+				                        SUM(PRE_ACC_AMT) PRE_ACC_AMT
+				                    FROM
+				                        (SELECT            A.STR_CD
+				                                                 , SUBSTR(A.SALE_DT,1,6) YYYYMM
+				                                                 , D.SAP_ORG_CD PC_CD
+				                                                 , 0 AS DAY_SALE_AMT
+				                                                 , SUM(NVL(A.TOT_SALE_AMT,0))  AS ACC_SALE_AMT
+				                                                 , SUM(SALE_QTY) CUST_CNT
+				                                                 , 0 PRE_ACC_AMT
+				                                              FROM DPS.PS_DAYPBN A
+				                                                 , DPS.PC_PMKMST B
+				                                                 , DPS.PC_STRPBN C
+				                                                 , DPS.PC_ORGMST D
+				                                             WHERE A.SALE_DT >= ?       -- 당년0101
+				                                               AND A.SALE_DT <= ?       -- 전월말일
+				                                               AND A.STR_CD   = ?
+				                                               AND A.PUMMOK_CD IN (SELECT COMM_CODE
+				                                                                     FROM COM.TC_COMMCODE C
+				                                                                    WHERE C.SYS_PART = 'D'
+				                                                                      AND C.COMM_PART = 'P613'
+				                                                                      AND C.USE_YN = 'Y'
+				                                                                  )
+				                                               AND B.PUMMOK_CD = A.PUMMOK_CD
+				                                               AND C.STR_CD    = A.STR_CD
+				                                               AND C.PUMBUN_CD = A.PUMBUN_CD
+				                                               AND SALE_ORG_CD = D.ORG_CD
+				                                             GROUP BY A.STR_CD,SUBSTR(A.SALE_DT,1,6),D.SAP_ORG_CD
+				                                UNION ALL
+				                                SELECT            A.STR_CD
+				                                                 , SUBSTR(A.SALE_DT,1,6) YYYYMM
+				                                                 , D.SAP_ORG_CD PC_CD
+				                                                 , 0 AS DAY_SALE_AMT
+				                                                 , 0 AS ACC_SALE_AMT
+				                                                 , 0 CUST_CNT
+				                                                 , SUM(NVL(A.TOT_SALE_AMT,0)) PRE_ACC_AMT
+				                                              FROM DPS.PS_DAYPBN A
+				                                                 , DPS.PC_PMKMST B
+				                                                 , DPS.PC_STRPBN C
+				                                                 , DPS.PC_ORGMST D
+				                                             WHERE A.SALE_DT >= ?       -- 전년0101
+				                                               AND A.SALE_DT <= ?       --전년전월말일
+				                                               AND A.STR_CD   = ?
+				                                               AND A.PUMMOK_CD IN (SELECT COMM_CODE
+				                                                                     FROM COM.TC_COMMCODE C
+				                                                                    WHERE C.SYS_PART = 'D'
+				                                                                      AND C.COMM_PART = 'P613'
+				                                                                      AND C.USE_YN = 'Y'
+				                                                                  )
+				                                               AND B.PUMMOK_CD = A.PUMMOK_CD
+				                                               AND C.STR_CD    = A.STR_CD
+				                                               AND C.PUMBUN_CD = A.PUMBUN_CD
+				                                               AND SALE_ORG_CD = D.ORG_CD
+				                                             GROUP BY A.STR_CD,SUBSTR(A.SALE_DT,1,6),D.SAP_ORG_CD
+				                            )
+				                        GROUP BY STR_CD,PC_CD
+				                    ) B
+				            WHERE A.SYS_PART = 'D' AND A.COMM_PART = 'PS34' AND A.USE_YN = 'Y'
+				                    AND A.COMM_CODE = B.PC_CD(+)
+				            ) B,DPS.PS_ACTPC_ON A
+				        WHERE B.STR_CD = A.STR_CD(+) AND A.EXE_YM(+) BETWEEN ? AND ?            -- 당년1월~ 기준월전달 
+				        AND B.COMM_CODE = A.PC_CD(+)
+				    )
+				    GROUP BY COMM_CODE,COMM_NAME2,COMM_NAME1
+				    )
+				GROUP BY COMM_CODE,COMM_NAME2,COMM_NAME1 
+				ORDER BY INQR_ORDER
+				
+				
+				
+        ]]>        
+    </query>
+</service>

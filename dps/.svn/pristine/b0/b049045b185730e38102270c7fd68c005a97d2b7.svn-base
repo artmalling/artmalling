@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : DHL
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2012.06.22
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  일별 카드사별 수수료조회
+ -->
+<service name="/psal953.ps">
+    <gauce name="H_MASTER"> 
+        <column colName="SALE_DT"      colType="TB_STRING"    size="8"    dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BCOM_NM"      colType="TB_STRING"    size="40"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />        
+        <column colName="CCOM_NM"      colType="TB_STRING"    size="40"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DCARD_NM"     colType="TB_STRING"    size="40"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FEE_RATE_GB"  colType="TB_STRING"    size="40"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"     colType="TB_DECIMAL"   size="15"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FEE_RATE"     colType="TB_DECIMAL"   size="7"    dec="2"   keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FEE_AMT"      colType="TB_DECIMAL"   size="15"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="INCOME_AMT"   colType="TB_DECIMAL"   size="15"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ROUND_FG"     colType="TB_STRING"    size="40"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <query name="SEL_MASTER">
+        <![CDATA[            
+SELECT X.*
+  FROM (   
+        SELECT A.SALE_DT                  -- 매출일자
+             , A.BCOMP_CD || '  ' || DPS.FN_GET_CCOMP_NM(A.BCOMP_CD) AS BCOM_NM  -- 매입사코드
+             , A.CCOMP_CD || '  ' || DPS.FN_GET_CCOMP_NM(A.CCOMP_CD) AS CCOM_NM  -- 발급사코드
+             , C.DCARD_TYPE || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'D071' AND B.COMM_CODE = C.DCARD_TYPE) AS DCARD_NM -- 카드종류 [D071]
+             , C.FEE_RATE_GB || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'D102' AND B.COMM_CODE = C.FEE_RATE_GB) AS FEE_RATE_GB  -- 수수료구분 [D102]
+             , SUM(A.APPR_AMT) AS SALE_AMT                 -- 승인금액
+             , MAX(C.FEE_RATE) AS FEE_RATE                -- 수수료율
+             , SUM(DPS.FN_GET_ROUND_PROC(C.TRUNC_GB, A.APPR_AMT*(C.FEE_RATE/100), 0)) AS FEE_AMT --수수료금액
+             , SUM(A.APPR_AMT - DPS.FN_GET_ROUND_PROC(C.TRUNC_GB, A.APPR_AMT*(C.FEE_RATE/100), 0)) AS INCOME_AMT -- 예상입금액
+             , C.TRUNC_GB || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'P021' AND B.COMM_CODE = C.TRUNC_GB) AS ROUND_FG   -- 반올림처리 [P021]
+          FROM DPS.PD_BUYREQPREP A
+             , DPS.PD_FEERULE    C
+         WHERE A.STR_CD = C.STR_CD
+           AND A.BCOMP_CD = C.BCOMP_CD
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND A.SALE_DT BETWEEN C.START_DT AND C.END_DT
+           AND A.STR_CD = ?
+           AND A.SALE_DT BETWEEN ? AND ?
+         GROUP BY
+               A.SALE_DT
+             , A.BCOMP_CD
+             , A.CCOMP_CD
+             , C.DCARD_TYPE
+             , C.FEE_RATE_GB
+             , C.TRUNC_GB 
+        UNION ALL
+        SELECT A.SALE_DT                  -- 매출일자
+             , A.BCOMP_CD || '  ' || DPS.FN_GET_CCOMP_NM(A.BCOMP_CD) AS BCOM_NM  -- 매입사코드
+             --, MAX(A.CCOMP_CD || '  ' || DPS.FN_GET_CCOMP_NM(A.CCOMP_CD)) AS CCOM_NM  -- 발급사코드
+             , '소 계' AS CCOM_NM  -- 발급사코드
+             --, MAX(C.DCARD_TYPE || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'D071' AND B.COMM_CODE = C.DCARD_TYPE)) AS DCARD_NM -- 카드종류 [D071]
+             , ' ' AS DCARD_NM -- 카드종류 [D071]
+             -- , MAX(C.FEE_RATE_GB || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'D102' AND B.COMM_CODE = C.FEE_RATE_GB)) AS FEE_GB  -- 수수료구분 [D102]
+             , ' ' AS FEE_RATE_GB                         -- 수수료구분 [D102]
+             , SUM(A.APPR_AMT) AS SALE_AMT                -- 승인금액
+             , MAX(C.FEE_RATE) AS FEE_RATE                -- 수수료율
+             , SUM(DPS.FN_GET_ROUND_PROC(C.TRUNC_GB, A.APPR_AMT*(C.FEE_RATE/100), 0)) AS FEE_AMT --수수료금액
+             , SUM(A.APPR_AMT - DPS.FN_GET_ROUND_PROC(C.TRUNC_GB, A.APPR_AMT*(C.FEE_RATE/100), 0)) AS INCOME_AMT -- 예상입금액
+             --, MAX(C.TRUNC_GB || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'P021' AND B.COMM_CODE = C.TRUNC_GB)) AS ROUND_FG   -- 반올림처리 [P021]
+             , ' ' AS ROUND_FG   -- 반올림처리 [P021]
+          FROM DPS.PD_BUYREQPREP A
+             , DPS.PD_FEERULE    C
+         WHERE A.STR_CD = C.STR_CD
+           AND A.BCOMP_CD = C.BCOMP_CD
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND A.SALE_DT BETWEEN C.START_DT AND C.END_DT
+           AND A.STR_CD = ?
+           AND A.SALE_DT BETWEEN ? AND ?
+         GROUP BY 
+               A.SALE_DT
+             , A.BCOMP_CD
+        UNION ALL
+        SELECT A.SALE_DT                  -- 매출일자
+             -- , A.BCOMP_CD || '  ' || DPS.FN_GET_CCOMP_NM(A.BCOMP_CD) AS BCOM_NM  -- 매입사코드
+             , '소 계' AS BCOM_NM         -- 매입사코드
+             --, MAX(A.CCOMP_CD || '  ' || DPS.FN_GET_CCOMP_NM(A.CCOMP_CD)) AS CCOM_NM  -- 발급사코드
+             , ' ' AS CCOM_NM             -- 발급사코드
+             --, MAX(C.DCARD_TYPE || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'D071' AND B.COMM_CODE = C.DCARD_TYPE)) AS DCARD_NM -- 카드종류 [D071]
+             , ' ' AS DCARD_NM            -- 카드종류 [D071]
+             --, MAX(C.FEE_RATE_GB || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'D102' AND B.COMM_CODE = C.FEE_RATE_GB)) AS FEE_GB  -- 수수료구분 [D102]
+             , ' ' AS FEE_RATE_GB                        -- 수수료구분 [D102]
+             , SUM(A.APPR_AMT) AS SALE_AMT                -- 승인금액
+             , MAX(C.FEE_RATE) AS FEE_RATE                -- 수수료율
+             , SUM(DPS.FN_GET_ROUND_PROC(C.TRUNC_GB, A.APPR_AMT*(C.FEE_RATE/100), 0)) AS FEE_AMT --수수료금액
+             , SUM(A.APPR_AMT - DPS.FN_GET_ROUND_PROC(C.TRUNC_GB, A.APPR_AMT*(C.FEE_RATE/100), 0)) AS INCOME_AMT -- 예상입금액
+             --, MAX(C.TRUNC_GB || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'P021' AND B.COMM_CODE = C.TRUNC_GB)) AS ROUND_FG   -- 반올림처리 [P021]
+             , ' ' AS ROUND_FG             -- 반올림처리 [P021]
+          FROM DPS.PD_BUYREQPREP A
+             , DPS.PD_FEERULE    C
+         WHERE A.STR_CD = C.STR_CD
+           AND A.BCOMP_CD = C.BCOMP_CD
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND A.SALE_DT BETWEEN C.START_DT AND C.END_DT
+           AND A.STR_CD = ?
+           AND A.SALE_DT BETWEEN ? AND ?
+         GROUP BY 
+               A.SALE_DT
+        UNION ALL
+        SELECT '합 계'                  -- 매출일자
+             -- , A.BCOMP_CD || '  ' || DPS.FN_GET_CCOMP_NM(A.BCOMP_CD) AS BCOM_NM  -- 매입사코드
+             , ' ' AS BCOM_NM         -- 매입사코드
+             --, MAX(A.CCOMP_CD || '  ' || DPS.FN_GET_CCOMP_NM(A.CCOMP_CD)) AS CCOM_NM  -- 발급사코드
+             , ' ' AS CCOM_NM             -- 발급사코드
+             --, MAX(C.DCARD_TYPE || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'D071' AND B.COMM_CODE = C.DCARD_TYPE)) AS DCARD_NM -- 카드종류 [D071]
+             , ' ' AS DCARD_NM            -- 카드종류 [D071]
+             --, MAX(C.FEE_RATE_GB || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'D102' AND B.COMM_CODE = C.FEE_RATE_GB)) AS FEE_GB  -- 수수료구분 [D102]
+             , ' ' AS FEE_RATE_GB                        -- 수수료구분 [D102]
+             , SUM(A.APPR_AMT) AS SALE_AMT                -- 승인금액
+             , MAX(C.FEE_RATE) AS FEE_RATE                -- 수수료율
+             , SUM(DPS.FN_GET_ROUND_PROC(C.TRUNC_GB, A.APPR_AMT*(C.FEE_RATE/100), 0)) AS FEE_AMT --수수료금액
+             , SUM(A.APPR_AMT - DPS.FN_GET_ROUND_PROC(C.TRUNC_GB, A.APPR_AMT*(C.FEE_RATE/100), 0)) AS INCOME_AMT -- 예상입금액
+             --, MAX(C.TRUNC_GB || '  ' || (SELECT B.COMM_NAME1 FROM COM.TC_COMMCODE B WHERE B.SYS_PART = 'D' AND B.COMM_PART = 'P021' AND B.COMM_CODE = C.TRUNC_GB)) AS ROUND_FG   -- 반올림처리 [P021]
+             , ' ' AS ROUND_FG             -- 반올림처리 [P021]
+          FROM DPS.PD_BUYREQPREP A
+             , DPS.PD_FEERULE    C
+         WHERE A.STR_CD = C.STR_CD
+           AND A.BCOMP_CD = C.BCOMP_CD
+           AND A.CCOMP_CD = C.CCOMP_CD
+           AND A.SALE_DT BETWEEN C.START_DT AND C.END_DT
+           AND A.STR_CD = ?
+           AND A.SALE_DT BETWEEN ? AND ?
+       ) X
+ ORDER BY
+       X.SALE_DT
+     , X.BCOM_NM
+     , X.CCOM_NM
+     , X.DCARD_NM
+     , X.FEE_RATE_GB
+     , X.ROUND_FG
+        ]]>        
+    </query>
+</service>

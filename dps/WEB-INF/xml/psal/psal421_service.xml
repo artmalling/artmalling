@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.17
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal421.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="ORG_CD"                  colType="TB_STRING"      size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_NAME"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORIGIN_SALE_TAMT"        colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ACHIEVERATE"             colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROF_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROFRATE"                colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_CNT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="CUST_DANGA"              colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <gauce name="H_SEL_EVENTDT"> 
+        <column colName="EVENT_S_DT"              colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_E_DT"              colType="TB_STRING"      size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_EVENTDT">        
+        <![CDATA[
+            SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME     AS ORG_NAME
+                 , A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.ORIGIN_SALE_TAMT
+                 , A.TOT_SALE_AMT
+                 , A.ACHIEVERATE
+                 , A.REDU_AMT
+                 , A.SALE_AMT
+                 , A.DC_AMT
+                 , A.NET_SALE_AMT
+                 , A.PROF_AMT
+                 , A.PROF_RATE
+                 , A.CUST_CNT
+                 , A.CUST_DANGA
+              FROM (
+                     SELECT LPAD(A.ORG_CD, 8) || '00'                                                      AS ORG_CD
+                          , A.PUMBUN_CD
+                          , (NVL(G.ORIGIN_SALE_TAMT,0))                                                                  AS ORIGIN_SALE_TAMT
+                          , SUM(NVL(A.TOT_SALE_AMT,0))                                          AS TOT_SALE_AMT
+                          , ( CASE WHEN (NVL(G.ORIGIN_SALE_TAMT,0)) = 0 THEN 0 
+                              ELSE ( SUM(NVL(A.TOT_SALE_AMT,0))/(NVL(G.ORIGIN_SALE_TAMT,0)))*100 END)                  AS ACHIEVERATE
+                          , SUM(NVL(A.REDU_AMT,0))                                                         AS REDU_AMT
+                          , SUM(NVL(A.NORM_SALE_AMT,0))                                                    AS SALE_AMT
+                          , SUM(NVL(A.DC_AMT,0))                                                           AS DC_AMT
+                          , SUM(NVL(A.NET_SALE_AMT,0))                                                     AS NET_SALE_AMT
+                          , SUM(A.SALE_PROF_AMT)                                                           AS PROF_AMT
+                          , CASE WHEN SUM(A.TOT_SALE_AMT) = 0 THEN 0
+                                 ELSE ROUND(SUM(A.SALE_PROF_AMT)/SUM(A.TOT_SALE_AMT)*100,2)
+                            END                          AS PROF_RATE
+                          , SUM(A.CUST_CNT)                                                                AS CUST_CNT
+                          , CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0 
+                                 ELSE ROUND(SUM(A.TOT_SALE_AMT)/SUM(A.CUST_CNT),0)
+                            END                                   AS CUST_DANGA
+                       FROM DPS.PS_DAYEVENT   A
+                          , DPS.PC_ORGMST     F
+                          , (SELECT STR_CD
+                                   ,ORG_CD
+                                   ,PUMBUN_CD
+                                   ,SUM(NVL(C.ORIGIN_SALE_TAMT,0))  AS ORIGIN_SALE_TAMT
+                               FROM DPS.PS_ACTPUMBUN  C
+                              WHERE C.EXE_DT BETWEEN  ? AND ?
+                              GROUP BY STR_CD
+                                   ,ORG_CD
+                                   ,PUMBUN_CD) G
+                          , DPS.PC_STRPBN H
+                      WHERE H.SALE_ORG_CD = F.ORG_CD
+                        AND A.STR_CD      = H.STR_CD
+                        AND A.PUMBUN_CD   = H.PUMBUN_CD 
+                        AND A.STR_CD                         = G.STR_CD(+)
+                        AND A.PUMBUN_CD                      = G.PUMBUN_CD(+)
+                        AND F.STR_CD     = ?
+                        AND F.DEPT_CD    = ?
+                        AND F.TEAM_CD    = ?
+                        AND F.PC_CD      = ?
+                        AND A.PUMBUN_CD  LIKE ? || '%'
+                        AND A.EVENT_CD   = ?
+                        AND A.SALE_DT    >= ?
+                        AND A.SALE_DT    <= ?
+                        AND EXISTS ( SELECT MYORG.USER_ID
+                                       FROM COM.V_MYORG MYORG
+                                      WHERE MYORG.STR_CD      = F.STR_CD
+                                        AND MYORG.DEPT_CD     = F.DEPT_CD
+                                        AND MYORG.TEAM_CD     = F.TEAM_CD
+                                        AND MYORG.PC_CD       = F.PC_CD
+                                        AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                        AND MYORG.USER_ID     = ?
+                                   )
+                      GROUP BY
+                            LPAD(A.ORG_CD, 8)
+                          , A.PUMBUN_CD
+                          , G.ORIGIN_SALE_TAMT
+                   ) A
+                 , DPS.PC_ORGMST B
+                 , DPS.PC_STRPBN    C
+             WHERE A.ORG_CD    = B.ORG_CD
+               AND B.STR_CD    = C.STR_CD
+               AND A.PUMBUN_CD = C.PUMBUN_CD
+             ORDER BY
+                   A.ORG_CD
+                 , A.PUMBUN_CD
+        ]]>        
+    </query>
+    <query name="SEL_SALE_EVENTDT2">        
+        <![CDATA[
+            SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME     AS ORG_NAME
+                 , A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.ORIGIN_SALE_TAMT
+                 , A.TOT_SALE_AMT
+                 , A.ACHIEVERATE
+                 , A.REDU_AMT
+                 , A.SALE_AMT
+                 , A.DC_AMT
+                 , A.NET_SALE_AMT
+                 , A.PROF_AMT
+                 , A.PROF_RATE
+                 , A.CUST_CNT
+                 , A.CUST_DANGA
+              FROM (
+                     SELECT LPAD(A.ORG_CD, 8) || '00'                                                      AS ORG_CD
+                          , A.PUMBUN_CD
+                          , (NVL(G.ORIGIN_SALE_TAMT,0))                                                                  AS ORIGIN_SALE_TAMT
+                          , SUM(NVL(A.TOT_SALE_AMT,0))                                          AS TOT_SALE_AMT
+                          , ( CASE WHEN (NVL(G.ORIGIN_SALE_TAMT,0)) = 0 THEN 0 
+                              ELSE ( SUM(NVL(A.TOT_SALE_AMT,0))/(NVL(G.ORIGIN_SALE_TAMT,0)))*100 END)                  AS ACHIEVERATE
+                          , SUM(NVL(A.REDU_AMT,0))                                                         AS REDU_AMT
+                          , SUM(NVL(A.NORM_SALE_AMT,0))                                                    AS SALE_AMT
+                          , SUM(NVL(A.DC_AMT,0))                                                           AS DC_AMT
+                          , SUM(NVL(A.NET_SALE_AMT,0))                                                     AS NET_SALE_AMT
+                          , SUM(A.SALE_PROF_AMT)                                                           AS PROF_AMT
+                          , CASE WHEN SUM(A.TOT_SALE_AMT) = 0 THEN 0
+                                 ELSE ROUND(SUM(A.SALE_PROF_AMT)/SUM(A.TOT_SALE_AMT)*100,2)
+                            END                          AS PROF_RATE
+                          , SUM(A.CUST_CNT)                                                                AS CUST_CNT
+                          , CASE WHEN SUM(A.CUST_CNT) = 0 THEN 0 
+                                 ELSE ROUND(SUM(A.TOT_SALE_AMT)/SUM(A.CUST_CNT),0)
+                            END                                   AS CUST_DANGA
+                       FROM DPS.PS_DAYEVENT   A
+                          , DPS.PC_ORGMST     F
+                          , (SELECT STR_CD
+                                   ,ORG_CD
+                                   ,PUMBUN_CD
+                                   ,SUM(NVL(C.ORIGIN_SALE_TAMT,0))  AS ORIGIN_SALE_TAMT
+                               FROM DPS.PS_ACTPUMBUN  C
+                              WHERE C.EXE_DT BETWEEN  ? AND ?
+                              GROUP BY STR_CD
+                                   ,ORG_CD
+                                   ,PUMBUN_CD) G
+                          , DPS.PC_STRPBN H
+                      WHERE H.BUY_ORG_CD = F.ORG_CD
+                        AND A.STR_CD      = H.STR_CD
+                        AND A.PUMBUN_CD   = H.PUMBUN_CD 
+                        AND A.STR_CD                         = G.STR_CD(+)
+                        AND A.PUMBUN_CD                      = G.PUMBUN_CD(+)
+                        AND F.STR_CD     = ?
+                        AND F.DEPT_CD    = ?
+                        AND F.TEAM_CD    = ?
+                        AND F.PC_CD      = ?
+                        AND A.PUMBUN_CD  LIKE ? || '%'
+                        AND A.EVENT_CD   = ?
+                        AND A.SALE_DT    >= ?
+                        AND A.SALE_DT    <= ?
+                        AND EXISTS ( SELECT MYORG.USER_ID
+                                       FROM COM.V_MYORG MYORG
+                                      WHERE MYORG.STR_CD      = F.STR_CD
+                                        AND MYORG.DEPT_CD     = F.DEPT_CD
+                                        AND MYORG.TEAM_CD     = F.TEAM_CD
+                                        AND MYORG.PC_CD       = F.PC_CD
+                                        AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                        AND MYORG.USER_ID     = ?
+                                   )
+                      GROUP BY
+                            LPAD(A.ORG_CD, 8)
+                          , A.PUMBUN_CD
+                          , G.ORIGIN_SALE_TAMT
+                   ) A
+                 , DPS.PC_ORGMST B
+                 , DPS.PC_STRPBN    C
+             WHERE A.ORG_CD    = B.ORG_CD
+               AND B.STR_CD    = C.STR_CD
+               AND A.PUMBUN_CD = C.PUMBUN_CD
+             ORDER BY
+                   A.ORG_CD
+                 , A.PUMBUN_CD
+        ]]>        
+    </query>
+    <query name="SEL_SALE_EVENTDT_TEMP">        
+        <![CDATA[
+            
+            SELECT A.ORG_CD
+                 , B.ORG_SHORT_NAME     AS ORG_NAME
+                 , A.PUMBUN_CD
+                 , C.PUMBUN_NAME
+                 , A.ORIGIN_SALE_TAMT
+                 , A.TOT_SALE_AMT
+                 , A.ACHIEVERATE
+                 , A.REDU_AMT
+                 , A.SALE_AMT
+                 , A.DC_AMT
+                 , A.NET_SALE_AMT
+                 , A.PROF_AMT
+                 , A.PROF_RATE
+                 , A.CUST_CNT
+                 , A.CUST_DANGA
+              FROM (
+                     SELECT LPAD(A.ORG_CD, 8) || '00'                                                      AS ORG_CD
+                          , A.PUMBUN_CD
+                          , (SELECT SUM(NVL(C.ORIGIN_SALE_TAMT,0)) 
+                               FROM DPS.PS_ACTPUMBUN  C
+                              WHERE C.ORG_CD    = LPAD(A.ORG_CD, 8) || '00'
+                                AND C.PUMBUN_CD = A.PUMBUN_CD
+                                AND C.EXE_DT BETWEEN  ? AND ?
+                             )                                                                  AS ORIGIN_SALE_TAMT
+                          , SUM(NVL(A.TOT_SALE_AMT,0))                                          AS TOT_SALE_AMT
+                          , ( CASE WHEN (SELECT SUM(NVL(C.ORIGIN_SALE_TAMT,0)) 
+                                           FROM DPS.PS_ACTPUMBUN  C
+                                          WHERE C.ORG_CD    = LPAD(A.ORG_CD, 8) || '00'
+                                            AND C.PUMBUN_CD = A.PUMBUN_CD
+                                            AND C.EXE_DT BETWEEN  ? AND ?
+                                         ) = 0 THEN 0 
+                              ELSE ( SUM(NVL(A.TOT_SALE_AMT,0))/(SELECT SUM(NVL(C.ORIGIN_SALE_TAMT,0)) 
+                                                                   FROM DPS.PS_ACTPUMBUN  C
+                                                                  WHERE C.ORG_CD    = LPAD(A.ORG_CD, 8) || '00'
+                                                                    AND C.PUMBUN_CD = A.PUMBUN_CD
+                                                                    AND C.EXE_DT BETWEEN  ? AND ?
+                                                                 ))*100 END)                  AS ACHIEVERATE
+                          , SUM(NVL(A.REDU_AMT,0))                                                         AS REDU_AMT
+                          , SUM(NVL(A.NORM_SALE_AMT,0))                                                    AS SALE_AMT
+                          , SUM(NVL(A.DC_AMT,0))                                                           AS DC_AMT
+                          , SUM(NVL(A.NET_SALE_AMT,0))                                                     AS NET_SALE_AMT
+                          , SUM(A.SALE_PROF_AMT)                                                           AS PROF_AMT
+                          , ROUND(SUM(A.SALE_PROF_AMT)/SUM(A.TOT_SALE_AMT)*100,2)                          AS PROF_RATE
+                          , SUM(A.CUST_CNT)                                                                AS CUST_CNT
+                          , ROUND(SUM(A.TOT_SALE_AMT)/SUM(A.CUST_CNT),0)                                   AS CUST_DANGA
+                       FROM DPS.PS_DAYEVENT   A
+                          , DPS.PC_ORGMST     F
+                      WHERE A.ORG_CD     = F.ORG_CD
+                        AND F.STR_CD     = ?
+                        AND F.DEPT_CD    = ?
+                        AND F.TEAM_CD    = ?
+                        AND F.PC_CD      = ?
+                        AND A.PUMBUN_CD  LIKE ? || '%'
+                        AND A.EVENT_CD   = ?
+                        AND A.SALE_DT    >= ?
+                        AND A.SALE_DT    <= ?
+                        AND EXISTS ( SELECT MYORG.USER_ID
+                                       FROM COM.V_MYORG MYORG
+                                      WHERE MYORG.STR_CD      = F.STR_CD
+                                        AND MYORG.DEPT_CD     = F.DEPT_CD
+                                        AND MYORG.TEAM_CD     = F.TEAM_CD
+                                        AND MYORG.PC_CD       = F.PC_CD
+                                        AND MYORG.PUMBUN_CD   = A.PUMBUN_CD
+                                        AND MYORG.USER_ID     = ?
+                                   )
+                      GROUP BY
+                            LPAD(A.ORG_CD, 8)
+                          , A.PUMBUN_CD
+                   ) A
+                 , DPS.PC_ORGMST B
+                 , DPS.PC_STRPBN    C
+             WHERE A.ORG_CD    = B.ORG_CD
+               AND B.STR_CD    = C.STR_CD
+               AND A.PUMBUN_CD = C.PUMBUN_CD
+             ORDER BY
+                   A.ORG_CD
+                 , A.PUMBUN_CD
+            
+        ]]>        
+    </query>
+    
+    <query name="SEL_EVENTDT">        
+        <![CDATA[
+            SELECT EVENT_S_DT
+                 , EVENT_E_DT
+              FROM DPS.PC_EVTMST
+             WHERE EVENT_CD = ?
+        ]]>        
+    </query>
+</service>

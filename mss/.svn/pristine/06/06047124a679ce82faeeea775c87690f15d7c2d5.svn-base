@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 하진영
+ * 회 사 명 : 가하홀딩스
+ * 작 성 일 : 2011.09.24
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : 사은품지급내역(영수증별)
+ -->
+<service name="/mcae412.mc">
+
+<!-- 사은행사 MASTER 조회 -->
+    <gauce name="H_MASTER"> 
+        <column colName="STR_NM"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  /> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="SALE_DT"           colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />  
+        <column colName="POS_NO"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="TRAN_NO"           colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="EVENT_CD"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />  
+        <column colName="EVENT_NAME"        colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  /> 
+        <column colName="SALE_AMT"          colType="TB_DECIMAL"    size="20"    dec="0" keyType="TB_NORMAL"  />   
+        <column colName="DIV_AMT"           colType="TB_DECIMAL"    size="20"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="PRSNT_DT"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="PRSNT_NO"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="SEQ_NO"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="SKU_CD"            colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  /> 
+        <column colName="SKU_NAME"          colType="TB_STRING"     size="40"    dec="0" keyType="TB_NORMAL"  />
+        <column colName="BUY_COST_PRC"      colType="TB_DECIMAL"    size="20"    dec="0" keyType="TB_NORMAL"  />
+        
+    </gauce>
+     
+    <query name="SEL_MASTER">
+        <![CDATA[   
+
+		SELECT 
+		       DPS.FN_GET_STORE_NAME(A.STR_CD)   AS STR_NM
+		      ,A.STR_CD                          AS STR_CD
+		      ,B.SALE_DT                         AS SALE_DT
+		      ,B.POS_NO                          AS POS_NO
+		      ,B.TRAN_NO                         AS TRAN_NO
+		      ,A.EVENT_CD                        AS EVENT_CD
+		      ,DPS.FN_GET_EVENT_NAME(A.EVENT_CD) AS EVENT_NM
+		      ,B.SALE_AMT                        AS SALE_AMT
+		      ,B.DIV_AMT                         AS DIV_AMT
+		      ,A.PRSNT_DT                        AS PRSNT_DT
+		      ,A.PRSNT_NO                        AS PRSNT_NO
+		      ,B.SEQ_NO                          AS SEQ_NO
+		      ,A.SKU_CD                          AS SKU_CD
+		      ,DPS.FN_GET_SKU_NAME(A.SKU_CD)     AS SKU_NAME
+		      ,C.BUY_COST_PRC                    AS BUY_COST_PRC
+		FROM  MSS.MC_EVTSKUPRSNT A, 
+		      MSS.MC_PRSNTRECP   B,
+		      MSS.MC_EVTSKUMST   C
+		WHERE A.PRSNT_DT = B.PRSNT_DT
+		  AND A.PRSNT_NO = B.PRSNT_NO
+		  AND A.STR_CD   = B.STR_CD
+		  AND A.STR_CD   = C.STR_CD
+		  AND A.EVENT_CD = C.EVENT_CD
+		  AND A.SKU_CD   = C.SKU_CD
+	      AND A.CANCEL_GB = '1'    -- 취소구분  (취소구분 1: 정상, 2:취소)
+	      AND A.PRSNT_FLAG IN ('1', '2', '3')  -- 지급구분(D-M004)  정상/사후/기타지급
+		  AND A.STR_CD   = ?
+        ]]>        
+    </query>
+    
+    <query name="SEL_SALE_DT">
+        <![CDATA[
+          AND B.SALE_DT = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_POS_NO">
+        <![CDATA[
+          AND B.POS_NO = ?
+        ]]>
+    </query>
+    
+    <query name="SEL_TRAN_NO">
+        <![CDATA[
+          AND B.TRAN_NO = ?
+        ]]>
+    </query>
+    <query name="SEL_EVENT_ORDER">
+	     <![CDATA[
+	          ORDER BY A.STR_CD, B.SALE_DT, B.POS_NO, B.TRAN_NO, A.EVENT_CD
+	     ]]>
+    </query>
+</service>

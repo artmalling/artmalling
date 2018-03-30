@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 신익수
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.03
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  전력시간대 관리
+ -->
+<service name="/mren113.mr">
+  
+    <!-- 전력 시간대 헤더 -->
+    <gauce name="H_MASTER">
+        <column colName="CHECKGB"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIME_FLAG"       colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MONTH"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIME"       colType="TB_STRING"  size="2"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TIME_ZONE"       colType="TB_STRING"  size="2"   dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DUPCHK"            colType="TB_STRING"  size="1"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+   
+   <gauce name="H_SEL_DUP_KEYVALUE">
+        <column colName="DUPVALUE"          colType="TB_STRING"  size="10"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 전력 시간대 조회  -->
+    <query name="SEL_MR_POWERTIME"> 
+        <![CDATA[   
+	         SELECT 'T' CHECKGB 
+	               ,TA.TIME_FLAG
+			       ,TA.MONTH
+			       ,TA.TIME
+			       ,TA.TIME_ZONE
+			       ,'N' AS DUPCHK
+			  FROM MSS.MR_POWERTIME TA
+			 WHERE TA.TIME_FLAG = ?
+			   AND TA.MONTH = ?
+			 ORDER BY TA.TIME
+        ]]>        
+    </query>
+    
+ 
+    <!-- 전력 시간대 등록  -->
+    <query name="INS_MR_POWERTIME"> 
+        <![CDATA[   
+          INSERT INTO MSS.MR_POWERTIME (
+                            TIME_FLAG
+                           ,MONTH
+                           ,TIME
+                           ,TIME_ZONE
+                           ,REG_ID
+                           ,REG_DATE
+                           ,MOD_ID
+                           ,MOD_DATE
+                           )
+                   VALUES (
+                            ?
+                           ,?
+                           ,?
+                           ,?
+                           ,?
+                           ,SYSDATE
+                           ,?
+                           ,SYSDATE
+                            )
+        ]]>        
+    </query>
+    
+    <!-- 전력 시간대  수정 -->
+    <query name="UPD_MR_POWERTIME"> 
+        <![CDATA[   
+            UPDATE MSS.MR_POWERTIME
+			   SET TIME_ZONE = ?
+			       ,MOD_ID = ?
+			       ,MOD_DATE = SYSDATE
+			 WHERE TIME_FLAG = ?
+			   AND MONTH = ?
+			   AND TIME = ?
+        ]]>        
+    </query>
+    
+    <!-- 전력 시간대 삭제  -->
+    <query name="DEL_MR_POWERTIME"> 
+        <![CDATA[   
+           DELETE MSS.MR_POWERTIME
+            WHERE TIME_FLAG = ?
+              AND MONTH = ?
+              AND TIME = ?
+        ]]>        
+    </query>
+    
+    <!-- 키값체크 Query  -->
+    <query name="SEL_DUP_KEYVALUE"> 
+        <![CDATA[ 
+        SELECT DISTINCT DUPVALUE
+          FROM (
+        ]]>        
+    </query>
+    <!-- 키값체크 Query  -->
+    <query name="SEL_SUB_DUP_KEYVALUE"> 
+        <![CDATA[ 
+            SELECT TIME_FLAG||MONTH||TIME||TIME_ZONE AS DUPVALUE
+              FROM MSS.MR_POWERTIME
+             WHERE TIME_FLAG = ?
+               AND MONTH = ?
+               AND TIME = ?
+        ]]>        
+    </query>
+    <query name="SEL_DUP_UNIONALL"> 
+                UNION ALL
+    </query>
+    <query name="SEL_DUP_CLOSE"> 
+        )
+    </query>
+    
+</service>

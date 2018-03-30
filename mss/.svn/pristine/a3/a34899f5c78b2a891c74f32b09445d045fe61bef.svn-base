@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김성미
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  발행신청
+ -->
+<service name="/mgif111.mg">
+    <!--  상품권종류 콤보 -->
+    <gauce name="H_COMBO">
+      <column colName="CODE"              	colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="NAME"              	colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    <!--  -->
+    <!--  발행신청 마스터-->
+    <gauce name="H_MASTER">
+      <column colName="STR_CD"              colType="TB_STRING" size="2"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STR_NM"              colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="REQ_DT"              colType="TB_STRING" size="8"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="REQ_SLIP_NO"         colType="TB_STRING" size="6"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STAT_FLAG"           colType="TB_STRING" size="10"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_CD"        colType="TB_STRING" size="4"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    
+    <!--  발행신청 상세-->
+    <gauce name="H_DETAIL">
+      <column colName="REQ_SEQ_NO"          colType="TB_STRING" size="3"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_CD"        colType="TB_STRING" size="4"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_TYPE_NAME"      colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="ISSUE_TYPE"          colType="TB_STRING" size="1"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_TYPE"       colType="TB_STRING" size="4"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_AMT_NAME"       colType="TB_STRING" size="40"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="REQ_QTY"             colType="TB_DECIMAL" size="7"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFTCERT_AMT"        colType="TB_DECIMAL" size="9"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="TOT_AMT"             colType="TB_DECIMAL" size="12"  dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_S_NO"           colType="TB_STRING" size="18"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="GIFT_E_NO"           colType="TB_STRING" size="18"  	dec="0" keyType="TB_NORMAL"  roundMode="" />
+      <column colName="STAT_FLAG"           colType="TB_STRING" size="2"  	dec="2" keyType="TB_NORMAL"  roundMode="" />
+    </gauce>
+    
+    <!--  상품권종류 콤보 -->
+    <query name="SEL_COMBO">
+        <![CDATA[                                        
+		SELECT GIFT_TYPE_CD     AS CODE
+		     , GIFT_TYPE_NAME   AS NAME
+		  FROM MSS.MG_GIFTTPMST
+		 WHERE GIFT_TYPE_FLAG = '01'
+      ORDER BY GIFT_TYPE_CD
+        ]]>
+    </query>
+    
+    <!--  발행신청 마스터  -->
+    <query name="SEL_MASTER">
+        <![CDATA[                                        
+		SELECT STR_CD
+		     , DPS.FN_GET_STORE_NAME(STR_CD) AS STR_NM
+		     , REQ_DT
+		     , REQ_SLIP_NO
+		     , DECODE(MAX(STAT_FLAG), '0', '미생성', '생성') AS STAT_FLAG
+		     , GIFT_TYPE_CD
+	    FROM ( SELECT A.STR_CD
+		            , A.REQ_DT
+		            , A.REQ_SLIP_NO
+		            , DECODE(STAT_FLAG, '01', '0', '02', '1','03', '1')  AS STAT_FLAG
+			        , GIFT_TYPE_CD
+			     FROM MSS.MG_GIFTISSUEREQ A
+			    WHERE A.STAT_FLAG <> '09'
+			      AND A.STR_CD = ?
+			      AND A.REQ_DT BETWEEN ? AND ?) X
+	    WHERE STAT_FLAG LIKE ? || '%'
+	 GROUP BY STR_CD, REQ_DT, REQ_SLIP_NO, GIFT_TYPE_CD
+	 ORDER BY STR_CD, REQ_DT, REQ_SLIP_NO
+        ]]>
+    </query>
+    
+    <!--  발행신청 상세  -->
+    <query name="SEL_DETAIL">
+        <![CDATA[                                        
+        SELECT A.REQ_SEQ_NO
+             , A.GIFT_TYPE_CD
+             , C.GIFT_TYPE_NAME
+             , A.ISSUE_TYPE
+             , A.GIFT_AMT_TYPE
+             , B.GIFT_AMT_NAME
+             , A.REQ_QTY
+             , B.GIFTCERT_AMT
+             , A.REQ_QTY * B.GIFTCERT_AMT AS TOT_AMT
+             , SUBSTR(A.GIFT_S_NO, 1,17) AS GIFT_S_NO
+             , SUBSTR(A.GIFT_E_NO, 1,17) AS GIFT_E_NO
+             , A.STAT_FLAG
+        FROM MSS.MG_GIFTISSUEREQ A
+           , MSS.MG_GIFTAMTMST B
+           , MSS.MG_GIFTTPMST C
+        WHERE A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+          AND A.ISSUE_TYPE = B.ISSUE_TYPE
+          AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE
+          AND A.GIFT_TYPE_CD = C.GIFT_TYPE_CD
+		  AND A.REQ_DT= ?
+		  AND A.STR_CD = ?
+		  AND A.REQ_SLIP_NO = ?
+        ]]>
+    </query>
+    
+        <!--  발행신청 금종 목록 조회  -->
+    <query name="SEL_NEW_DETAIL">
+        <![CDATA[                                        
+		SELECT '' AS REQ_SEQ_NO
+		     , A.GIFT_TYPE_CD
+		     , C.GIFT_TYPE_NAME
+		     , A.ISSUE_TYPE 
+		     , A.GIFT_AMT_TYPE
+		     , GIFT_AMT_NAME
+		     , 0 AS REQ_QTY
+		     , GIFTCERT_AMT
+		     , 0 AS TOT_AMT
+		      -- DC
+		      --, DECODE(STAT_FLAG, ''
+              --        , (SELECT COMM_CODE 
+              --             FROM COM.TC_COMMCODE 
+              --            WHERE COMM_PART = 'M102') || A.ISSUE_TYPE || A.GIFT_AMT_TYPE || LPAD((SELECT NVL(SUBSTR(MAX(GIFT_E_NO),10,17),0)+1
+			  --														                          FROM MSS.MG_GIFTISSUEREQ 
+			  --															                         WHERE ISSUE_TYPE = A.ISSUE_TYPE
+			  --															                           AND GIFT_AMT_TYPE = A.GIFT_AMT_TYPE
+			  --															                           AND STAT_FLAG <> '09') ,8, '0'), '') AS GIFT_S_NO
+		     /*
+		     , DECODE(STAT_FLAG, ''
+                      , (SELECT COMM_CODE
+                           FROM COM.TC_COMMCODE
+                          WHERE COMM_PART = 'M102'
+                            AND USE_YN = 'Y' ) || SUBSTR(A.GIFT_AMT_TYPE,2,3) || A.ISSUE_TYPE || LPAD((SELECT NVL(SUBSTR(MAX(GIFT_E_NO),10,15),0)+1
+																		                          FROM MSS.MG_GIFTISSUEREQ
+																		                         WHERE ISSUE_TYPE = A.ISSUE_TYPE
+																		                           AND GIFT_AMT_TYPE = A.GIFT_AMT_TYPE
+																		                           AND STAT_FLAG <> '09') ,8, '0'), '') AS GIFT_S_NO
+		      */
+		      , DECODE(STAT_FLAG, ''
+              , A.GIFT_TYPE_CD || A.GIFT_AMT_TYPE || SUBSTR(?,3,4) || LPAD((SELECT NVL(SUBSTR(MAX(GIFT_E_NO),7,12),0)+1
+													                          FROM MSS.MG_GIFTISSUEREQ
+													                         WHERE ISSUE_TYPE = A.ISSUE_TYPE
+													                           AND GIFT_AMT_TYPE = A.GIFT_AMT_TYPE
+													                           AND STAT_FLAG <> '09') ,6, '0'), '') AS GIFT_S_NO
+		      , '' AS GIFT_E_NO
+		      , STAT_FLAG
+		  FROM MSS.MG_GIFTAMTMST A
+		       LEFT OUTER JOIN 
+		       (SELECT GIFT_TYPE_CD
+		             , ISSUE_TYPE 
+		             , GIFT_AMT_TYPE
+		             , STAT_FLAG
+		           FROM MSS.MG_GIFTISSUEREQ
+		          WHERE STAT_FLAG = '01'
+		       GROUP BY GIFT_TYPE_CD, ISSUE_TYPE, GIFT_AMT_TYPE, STAT_FLAG)B
+		    ON A.GIFT_TYPE_CD = B.GIFT_TYPE_CD
+		   AND A.GIFT_AMT_TYPE = B.GIFT_AMT_TYPE 
+		    , MSS.MG_GIFTTPMST C
+		WHERE A.GIFT_TYPE_CD = C.GIFt_TYPE_CD
+		AND A.ISSUE_TYPE = '1'    -- 발행형태 1: 지류
+		AND A.GIFT_TYPE_CD = ?
+		AND A.USE_YN = 'Y'
+		ORDER BY A.GIFT_AMT_TYPE
+        ]]>
+    </query>
+    
+    <!--  발행신청등록 신규 신청번호 발번  -->
+    <query name="SEL_SLIP_NO">
+        <![CDATA[                                        
+	    SELECT LPAD(MSS.SQ_MG_GIFTISSUEREQ.NEXTVAL,6,'0') AS SLIP_NO FROM DUAL
+        ]]>
+    </query>  
+    
+    <!--  발행신청 등록  -->
+    <query name="INS_DETAIL">
+        <![CDATA[                                        
+		INSERT INTO MSS.MG_GIFTISSUEREQ ( REQ_DT
+		                                , STR_CD
+		                                , REQ_SLIP_NO
+		                                , REQ_SEQ_NO
+		                                , GIFT_TYPE_CD
+		                                , ISSUE_TYPE
+		                                , GIFT_AMT_TYPE
+		                                , REQ_QTY
+		                                , GIFT_S_NO
+		                                , GIFT_E_NO
+		                                , STAT_FLAG
+		                                , REQ_EMP_ID
+		                                , REG_ID
+		                                , REG_DATE
+		                                , MOD_ID
+		                                , MOD_DATE )
+		                         VALUES ( ?
+		                                , ?
+		                                , ?
+		                                , (SELECT NVL(MAX(REQ_SEQ_NO),0) + 1 
+		                                     FROM MSS.MG_GIFTISSUEREQ 
+		                                    WHERE REQ_DT = ? 
+		                                      AND STR_CD = ? 
+		                                      AND REQ_SLIP_NO = ?)
+		                                , ?
+		                                , ?
+		                                , ?
+		                                , ?
+		                                , ?
+		                                , ?
+		                                , ?
+		                                , ?
+		                                , ?
+		                                , SYSDATE
+		                                , ?
+		                                , SYSDATE )
+        ]]>
+    </query>    
+    
+    
+    <!--  발행신청 수정  -->
+    <query name="UPD_DETAIL">
+        <![CDATA[                                        
+       UPDATE MSS.MG_GIFTISSUEREQ
+          SET REQ_QTY = ?
+            , GIFT_S_NO = ?
+            , GIFT_E_NO = ?
+            , MOD_ID = ?
+            , MOD_DATE = SYSDATE
+        WHERE REQ_DT = ?
+          AND STR_CD = ?
+          AND REQ_SLIP_NO = ?
+          AND REQ_SEQ_NO = ?
+        ]]>
+    </query>
+    
+        <!--  발행신청 삭제  -->
+    <query name="DEL_DETAIL">
+        <![CDATA[                                        
+        DELETE FROM MSS.MG_GIFTISSUEREQ                                
+         WHERE REQ_DT = ?
+           AND STR_CD = ?
+           AND REQ_SLIP_NO = ?
+           AND REQ_SEQ_NO = ?
+        ]]>
+    </query>
+</service>

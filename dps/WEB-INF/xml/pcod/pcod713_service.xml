@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박래형
+ * 회 사 명 : 이어울림
+ * 작 성 일 : 2016.11.02
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : POS별 브랜드관리한다.
+ -->
+<service name="/pcod713.pc">
+    
+    <!-- 행사마스터 HEADER -->
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"        colType="TB_STRING"  size="2"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"        colType="TB_STRING"  size="4"  dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 행사마스터 조회 -->
+    <query name="SEL_MASTER">
+        <![CDATA[
+			SELECT A.STR_CD
+			     , A.POS_NO
+			  FROM DPS.PC_POSMST A
+			 WHERE STR_CD   = ?
+			   AND A.POS_NO LIKE '%' || ? || '%'
+			   AND A.USE_YN = 'Y'
+			 ORDER BY A.POS_NO
+        ]]>
+    </query>
+    
+    <!-- POS별 브랜드그룹관리 HEADER -->
+    <gauce name="H_SEL_DETAIL1">
+        <column colName="CHK"            colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRP_CD"         colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRP_NM"         colType="TB_STRING"   size="200"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORDER_SEQ"      colType="TB_DECIMAL"  size="1000" dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"         colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- POS별 브랜드그룹관리 조회 -->
+    <query name="SEL_DETAIL1">
+        <![CDATA[
+			SELECT 'F'                AS CHK
+			     , A.STR_CD
+			     , A.POS_NO
+			     , A.GRP_CD
+			     , A.GRP_NM
+			     , A.ORDER_SEQ 
+			     , NVL(A.USE_YN, 'N') AS USE_YN
+			  FROM DPS.PC_POSGRP A
+			 WHERE A.STR_CD = ?
+			   AND A.POS_NO = ?
+			 ORDER BY A.ORDER_SEQ
+        ]]>
+    </query>
+    
+    <!-- POS별 브랜드그룹관리 입력 -->
+    <query name="INS_DETAIL1">
+        <![CDATA[
+			INSERT INTO DPS.PC_POSGRP
+			          (
+			            STR_CD
+			          , POS_NO
+			          , GRP_CD
+			          , GRP_NM
+			          , ORDER_SEQ
+			          , USE_YN
+			          , REG_DATE
+			          , REG_ID
+			          , MOD_DATE
+			          , MOD_ID
+			          )
+			   VALUES (
+			            ?
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , ?
+			          , SYSDATE
+			          , ?
+			          , SYSDATE
+			          , ?
+			          )
+        ]]>
+    </query>
+    
+    <!-- POS별 브랜드그룹관리 수정 -->
+    <query name="UPD_DETAIL1">
+        <![CDATA[
+			UPDATE DPS.PC_POSGRP
+			   SET GRP_NM    = ?
+			     , ORDER_SEQ = ?
+			     , USE_YN    = ?
+			     , MOD_DATE  = SYSDATE
+			     , MOD_ID    = ?
+			 WHERE STR_CD    = ?
+			   AND POS_NO    = ?
+			   AND GRP_CD    = ?
+        ]]>
+    </query>
+    
+    <!-- POS별 브랜드그룹관리 삭제 -->
+    <query name="DEL_DETAIL1">
+        <![CDATA[
+			DELETE FROM DPS.PC_POSGRP 
+			 WHERE STR_CD = ?
+			   AND POS_NO = ?
+			   AND GRP_CD = ?
+        ]]>
+    </query>
+    
+    <!-- POS별 브랜드그룹관리 중복체크-->
+    <query name="CHK_DUPDTL1">
+        <![CDATA[
+			SELECT COUNT(*) AS CNT
+			  FROM DPS.PC_POSGRP
+			 WHERE STR_CD = ?
+			   AND POS_NO = ?
+			   AND GRP_CD = ?
+        ]]>
+    </query>
+    
+    <!-- POS별 브랜드 마스터 데이터 존재여부 체크-->
+    <query name="CHK_POSPBN_CNT">
+        <![CDATA[
+			SELECT COUNT(*) AS CNT
+			  FROM DPS.PC_POSPBN
+			 WHERE STR_CD = ?
+			   AND POS_NO = ?
+			   AND GRP_CD = ?
+        ]]>
+    </query>
+    
+    <!-- POS별 브랜드관리 HEADER -->
+    <gauce name="H_SEL_DETAIL2">
+        <column colName="CHK"            colType="TB_STRING"  size="1"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_CD"         colType="TB_STRING"  size="2"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="POS_NO"         colType="TB_STRING"  size="4"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="GRP_CD"         colType="TB_STRING"  size="4"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"      colType="TB_STRING"  size="6"  dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"    colType="TB_STRING"  size="50" dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- POS별 브랜드관리 조회 -->
+    <query name="SEL_DETAIL2">
+        <![CDATA[
+			SELECT 'F'       AS CHK
+			     , A.STR_CD
+			     , A.POS_NO
+			     , A.GRP_CD
+			     , A.PUMBUN_CD
+			     , B.PUMBUN_NAME
+			  FROM DPS.PC_POSPBN A
+			     , DPS.PC_STRPBN B
+			 WHERE A.STR_CD    = B.STR_CD
+			   AND A.PUMBUN_CD = B.PUMBUN_CD
+			   AND A.STR_CD    = ?
+			   AND A.POS_NO    = ?
+			   AND A.GRP_CD    = ?
+			 ORDER BY A.PUMBUN_CD
+        ]]>
+    </query>
+    
+    <!-- POS별 브랜드관리 입력 -->
+    <query name="INS_DETAIL2">
+        <![CDATA[
+			INSERT INTO DPS.PC_POSPBN
+			          (
+			            STR_CD
+			          , POS_NO
+			          , GRP_CD
+			          , PUMBUN_CD
+			          , REG_DATE
+			          , REG_ID
+			          , MOD_DATE
+			          , MOD_ID
+			          )
+			   VALUES (
+			            ?
+			          , ?
+			          , ?
+			          , ?
+			          , SYSDATE
+			          , ?
+			          , SYSDATE
+			          , ?
+			          )
+        ]]>
+    </query>
+    
+    <!-- POS별 브랜드관리 삭제 -->
+    <query name="DEL_DETAIL2">
+        <![CDATA[
+			DELETE FROM DPS.PC_POSPBN 
+			 WHERE STR_CD    = ?
+			   AND POS_NO    = ?
+			   AND GRP_CD    = ?
+			   AND PUMBUN_CD = ?
+        ]]>
+    </query>
+    
+    
+    <!-- POS별 브랜드 중복체크-->
+    <query name="CHK_DUPDTL2">
+        <![CDATA[
+			SELECT COUNT(*) AS CNT
+			  FROM DPS.PC_POSPBN
+			 WHERE STR_CD    = ?
+			   AND POS_NO    = ?
+			   AND GRP_CD    = ?
+			   AND PUMBUN_CD = ?
+        ]]>
+    </query>
+    
+</service>

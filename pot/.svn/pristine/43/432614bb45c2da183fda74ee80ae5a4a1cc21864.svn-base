@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 남형석
+ * 회 사 명 : 
+ * 작 성 일 : 2010.01.25
+ * 변 경 일  :
+ * 변경내용 :
+ * 개     요  : 가맹점 찾기 xml
+ -->
+<service name="/ccom400.cc">	
+
+    <!-- 가맹점 조회 헤더 정의  -->
+    <gauce name="H_MASTER">
+        <column colName="BRCH_ID"        colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL"  roundMode="" />
+        <column colName="BRCH_NAME"      colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="STR_CD"         colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="STR_NAME"       colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="COMP_NO"        colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL"  roundMode=""/>
+        <column colName="REP_BRAND_NM"   colType="TB_STRING" size="40"    dec="0" keyType="TB_NORMAL"  roundMode=""/>
+    </gauce>
+   
+    <!-- Pop-Up  조회 SQL -->
+    <query name="searchMaster">
+        <![CDATA[
+            SELECT A.BRCH_ID
+                 , A.BRCH_NAME 
+                 , A.STR_CD
+                 , B.STR_NAME
+                 , A.COMP_NO 
+                 , A.REP_BRAND_NM          
+              FROM DCS.DB_BRANCH A, DPS.PC_STRMST B
+             WHERE A.STR_CD = B.STR_CD 
+               AND A.BRCH_NAME LIKE '%' || ? || '%'
+               AND A.COMP_NO LIKE     ? || '%'
+             ORDER BY A.BRCH_ID
+        ]]>
+    </query>
+</service>
+

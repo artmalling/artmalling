@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.16
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 : F&B메뉴를 관리한다.
+ -->
+<service name="/pcod906.pc">
+    <gauce name="H_SEL_MASTER">
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="FNB_SHOP_CD"        colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MENU_FLAG_CD"       colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MENU_FLAG_NAME"     colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"             colType="TB_STRING"   size="6"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <gauce name="H_SEL_DETAIL">
+        <column colName="STR_CD"             colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="FNB_SHOP_CD"        colType="TB_STRING"   size="4"    dec="0"  keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="MENU_FLAG_CD"       colType="TB_STRING"   size="2"    dec="0"  keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="SKU_CD"             colType="TB_STRING"   size="13"   dec="0"  keyType="TB_NORMAL"    roundMode="ROUND" />
+        <column colName="RECP_NAME"          colType="TB_STRING"   size="20"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SORT_NO"            colType="TB_INT"      size="2"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="USE_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SKU_NAME"           colType="TB_STRING"   size="40"   dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEL_YN"             colType="TB_STRING"   size="1"    dec="0"  keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- F&B매장메뉴분류 마스터 조회 쿼리  -->
+    <query name="SEL_FNBMENUKIND">
+        <![CDATA[
+            SELECT FMK.STR_CD        
+                 , FMK.FNB_SHOP_CD      
+                 , FMK.MENU_FLAG_CD
+                 , FMK.MENU_FLAG_NAME
+                 , FSM.VEN_CD
+                 , FMK.USE_YN     
+              FROM DPS.PC_FNBSHOPMST  FSM
+                 , DPS.PC_FNBMENUKIND FMK
+             WHERE FMK.STR_CD         = FSM.STR_CD
+               AND FMK.FNB_SHOP_CD    = FSM.FNB_SHOP_CD
+               AND FSM.FNB_SHOP_FLAG  = ?
+               AND FMK.STR_CD         = ?
+               AND FMK.FNB_SHOP_CD    = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBMENUKIND_WHERE_MENU_FLAG_CD">
+        <![CDATA[
+               AND FMK.MENU_FLAG_CD   LIKE ?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBMENUKIND_WHERE_MENU_FLAG_NAME">
+        <![CDATA[
+               AND FMK.MENU_FLAG_NAME LIKE '%'||?||'%'
+        ]]>
+    </query>
+    <query name="SEL_FNBMENUKIND_WHERE_USE_YN">
+        <![CDATA[
+               AND FMK.USE_YN         = ?
+        ]]>
+    </query>
+    <query name="SEL_FNBMENUKIND_ORDER">
+        <![CDATA[
+             ORDER BY FMK.SORT_NO, FMK.MENU_FLAG_CD
+        ]]>
+    </query>
+    
+    <!-- F&B메뉴마스터 조회 쿼리  -->
+    <query name="SEL_FNBMENUMST">
+        <![CDATA[
+            SELECT STR_CD        
+                 , FNB_SHOP_CD      
+                 , MENU_FLAG_CD
+                 , SKU_CD
+                 , RECP_NAME  
+                 , SORT_NO  
+                 , USE_YN     
+                 , RECP_NAME                AS SKU_NAME
+                 , CASE WHEN TO_CHAR(REG_DATE,'YYYYMMDD') = TO_CHAR(SYSDATE,'YYYYMMDD') 
+                        THEN 'Y'
+                        ELSE 'N'
+                   END                      AS DEL_YN
+              FROM DPS.PC_FNBMENUMST
+             WHERE STR_CD         = ?
+               AND FNB_SHOP_CD    = ?
+               AND MENU_FLAG_CD   = ?
+             ORDER BY SORT_NO, SKU_CD
+        ]]>
+    </query>
+    
+    <!-- F&B매장메뉴분류 사용여부 -->
+    <query name="SEL_FNBMENUKIND_USE_YN">
+        <![CDATA[
+            SELECT USE_YN
+              FROM DPS.PC_FNBMENUKIND 
+             WHERE STR_CD       = ?
+               AND FNB_SHOP_CD  = ?
+               AND MENU_FLAG_CD = ?
+        ]]>
+    </query>
+    <!-- F&B메뉴마스터 단품 코드 중복 체크 -->
+    <query name="SEL_FNBMENUMST_SKU_CD_CNT">
+        <![CDATA[
+            SELECT COUNT(*)  AS CNT
+              FROM DPS.PC_FNBMENUMST 
+             WHERE STR_CD       = ?
+               AND FNB_SHOP_CD  = ?
+               AND MENU_FLAG_CD = ?
+               AND SKU_CD       = ?
+        ]]>
+    </query>
+    
+    <!-- F&B메뉴마스터 등록 -->
+    <query name="INS_FNBMENUMST">
+        <![CDATA[
+            INSERT INTO DPS.PC_FNBMENUMST(STR_CD         
+                                        , FNB_SHOP_CD    
+                                        , MENU_FLAG_CD  
+                                        , SKU_CD   
+                                        , RECP_NAME  
+                                        , SORT_NO         
+                                        , USE_YN 
+                                        , REG_DATE
+                                        , REG_ID
+                                        , MOD_DATE
+                                        , MOD_ID
+                                         )
+                                   VALUES(?         
+                                        , ?      
+                                        , ?     
+                                        , ?       
+                                        , ?
+                                        , ?    
+                                        , ? 
+                                        , SYSDATE
+                                        , ?
+                                        , SYSDATE
+                                        , ?
+                                         )
+        ]]>   
+    </query>
+    <!-- F&B메뉴마스터 수정 -->
+    <query name="UPD_FNBMENUMST">
+        <![CDATA[
+            UPDATE DPS.PC_FNBMENUMST
+               SET RECP_NAME       = ?          
+                 , SORT_NO         = ?    
+                 , USE_YN          = ? 
+                 , MOD_DATE        = SYSDATE
+                 , MOD_ID          = ?
+             WHERE STR_CD          = ?
+               AND FNB_SHOP_CD     = ?
+               AND MENU_FLAG_CD    = ?       
+               AND SKU_CD          = ?  
+        ]]>   
+    </query>
+    <!-- F&B메뉴마스터 삭제 -->
+    <query name="DEL_FNBMENUMST">
+        <![CDATA[
+            DELETE 
+              FROM DPS.PC_FNBMENUMST
+             WHERE STR_CD          = ?
+               AND FNB_SHOP_CD     = ?
+               AND MENU_FLAG_CD    = ?       
+               AND SKU_CD          = ?  
+        ]]>   
+    </query>
+</service>

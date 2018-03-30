@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : HSEON
+ * 회 사 명 : 
+ * 작 성 일 : 2010.07.19
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  업무배너관리
+ -->
+<service name="/tcom404.tc"> 
+    <gauce name="H_SEL_MAIN">   
+        <column colName="BAN_NO"       	colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" Mode="" />       
+        <column colName="BAN_NAME"     	colType="TB_STRING" size="50"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="BAN_LINK" 		colType="TB_STRING" size="200"   dec="0" keyType="TB_NORMAL" Mode="" />  
+        <column colName="FILE_NM"    	colType="TB_STRING" size="100"   dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="IMG"    		colType="TB_STRING" size="30"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="USE_YN"     	colType="TB_STRING" size="1"     dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="REG_DATE"      colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL" Mode="" />          
+        <column colName="REG_ID"        colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" />
+        <column colName="MOD_DATE"      colType="TB_STRING" size="20"    dec="0" keyType="TB_NORMAL" Mode="" />   
+        <column colName="MOD_ID"        colType="TB_STRING" size="10"    dec="0" keyType="TB_NORMAL" Mode="" />  
+        <column colName="FILE_PATH"     colType="TB_URL"    size="200"   dec="0" keyType="TB_NORMAL" Mode="" /> 
+        <column colName="ORG_FILE_NM"   colType="TB_STRING" size="100"   dec="0" keyType="TB_NORMAL" Mode="" />
+    </gauce> 
+        <!-- 배너리스트 조회 -->
+    <query name="SEL_BANNER_LIST">        
+        <![CDATA[
+			SELECT A.GBN                                     BAN_NO
+			     , BAN_NAME
+			     , BAN_LINK
+			     , FILE_NM   
+			     , 'file_search' 							 IMG
+				 , DECODE (USE_YN, 'Y', 'T', 'N', 'F' )      USE_YN           
+			     , TO_CHAR(REG_DATE,'YYYY/MM/DD HH24:MI:SS') REG_DATE
+			     , COM.FN_GET_USER_NAME(REG_ID)              REG_NAME
+			     , TO_CHAR(REG_DATE,'YYYY/MM/DD HH24:MI:SS') MOD_DATE
+			     , COM.FN_GET_USER_NAME(MOD_ID)              MOD_NAME 
+			     ,''										 FILE_PATH 
+			     , FILE_NM   								 ORG_FILE_NM
+			  FROM (
+			            SELECT '1' AS GBN FROM DUAL
+			            UNION 
+			            SELECT '2' AS GBN FROM DUAL
+			            UNION 
+			            SELECT '3' AS GBN FROM DUAL
+			            UNION 
+			            SELECT '4' AS GBN FROM DUAL
+			            UNION 
+			            SELECT '5' AS GBN FROM DUAL
+			       ) A
+			     , COM.TC_BANNER B
+			 WHERE A.GBN = B.BAN_NO(+)
+			 ORDER BY 1
+        ]]>        
+    </query>  
+    <!-- 배너저장 --> 
+    <query name="INS_BANNER">
+        <![CDATA[
+			INSERT INTO COM.TC_BANNER
+			(
+                    BAN_NO
+                  , BAN_NAME  
+                  , BAN_LINK  
+                  , FILE_NM  
+                  , USE_YN  
+                  , REG_DATE  
+                  , REG_ID  
+                  , MOD_DATE  
+                  , MOD_ID  
+			)
+            VALUES
+            (
+                    ?
+                  , ?
+                  , ?
+                  , ?
+                  , DECODE(?,'T','Y','N')
+                  , SYSDATE  
+                  , ? 
+                  , SYSDATE
+                  , ? 
+            )
+        ]]>    
+    </query>
+    
+    <query name="UPT_BANNER">
+        <![CDATA[ 
+		    UPDATE COM.TC_BANNER
+		       SET BAN_NAME   = ?
+		         , BAN_LINK   = ?
+				 , FILE_NM    = ?
+				 , USE_YN     = DECODE(?,'T','Y','N')
+				 , MOD_ID     = ?
+			     , MOD_DATE   = SYSDATE
+			 WHERE BAN_NO 	  = ?
+        ]]>    
+    </query>
+    
+    <!-- 배너건수조회 --> 
+    <query name="SEL_BANNER_CNT">
+        <![CDATA[
+			SELECT COUNT(*) AS CNT
+			  FROM COM.TC_BANNER
+			 WHERE BAN_NO = ?
+        ]]>    
+    </query>
+    <!-- 배너삭제 --> 
+    <query name="DEL_BANNER">
+        <![CDATA[
+			DELETE FROM COM.TC_BANNER
+			 WHERE BAN_NO = ?
+        ]]>    
+    </query>
+    
+    
+    <query name="MERGE_BANNER">
+    	<![CDATA[
+			MERGE INTO COM.TC_BANNER A
+			USING (
+			            SELECT ? BAN_NO
+			                 , ? BAN_NAME
+			                 , ? BAN_LINK
+			                 , ? FILE_NM
+			                 , DECODE(?,'T','Y','N') USE_YN
+			                 , ? USER_ID
+			              FROM DUAL
+                  )B
+               ON ( A.BAN_NO = B.BAN_NO ) 
+		 	 WHEN MATCHED THEN
+			    UPDATE SET A.BAN_NAME 	= B.BAN_NAME
+			             , A.BAN_LINK   = B.BAN_LINK
+			             , A.FILE_NM    = B.FILE_NM
+			             , A.USE_YN     = B.USE_YN
+			             , A.MOD_ID     = B.USER_ID
+			             , A.MOD_DATE   = SYSDATE
+			WHEN NOT MATCHED THEN
+			    INSERT
+			    (
+			            A.BAN_NO
+			          , A.BAN_NAME  
+			          , A.BAN_LINK  
+			          , A.FILE_NM  
+			          , A.USE_YN  
+			          , A.REG_DATE  
+			          , A.REG_ID  
+			          , A.MOD_DATE  
+			          , A.MOD_ID  
+			    )
+			    VALUES
+			    (
+			            B.BAN_NO
+			          , B.BAN_NAME  
+			          , B.BAN_LINK  
+			          , B.FILE_NM  
+			          , B.USE_YN  
+			          , SYSDATE 
+			          , B.USER_ID 
+			          , SYSDATE  
+			          , B.USER_ID
+			    ) 
+    	]]>
+    </query>
+    
+</service>

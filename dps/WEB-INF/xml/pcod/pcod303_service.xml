@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 정진영
+ * 회 사 명 : FKSS
+ * 작 성 일 : 2010.05.18
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  임대을B수수료관리
+ -->
+<service name="/pcod303.pc">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NAME"          colType="TB_STRING"     size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_CD"            colType="TB_STRING"     size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="VEN_NAME"          colType="TB_STRING"     size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"         colType="TB_STRING"     size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"       colType="TB_STRING"     size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="RENTB_MGAPP_FLAG"  colType="TB_STRING"     size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="LOW_MG_RATE"       colType="TB_DECIMAL"    size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <gauce name="H_SEL_MARGINMST_DT"> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"         colType="TB_STRING"     size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"        colType="TB_STRING"     size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"          colType="TB_STRING"     size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"          colType="TB_STRING"     size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EDIT_YN"           colType="TB_STRING"     size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_APP_S_DT"      colType="TB_STRING"     size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    <gauce name="H_SEL_MARGINMST"> 
+        <column colName="STR_CD"            colType="TB_STRING"     size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"         colType="TB_STRING"     size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_FLAG"        colType="TB_STRING"     size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"        colType="TB_STRING"     size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NORM_MG_RATE"      colType="TB_DECIMAL"    size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_S_DT"          colType="TB_STRING"     size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="APP_E_DT"          colType="TB_STRING"     size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BAS_AMT_FROM"      colType="TB_DECIMAL"    size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BAS_AMT"           colType="TB_DECIMAL"    size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EDIT_YN"           colType="TB_STRING"     size="1"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_APP_S_DT"      colType="TB_STRING"     size="8"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REMARK"            colType="TB_STRING"     size="100"      dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 쿼리는 전부 대문자 -->
+    <!-- 협력사의 품번 리스트 조회 쿼리  -->
+    <query name="SEL_MASTER">        
+        <![CDATA[
+	        SELECT SVM.STR_CD
+	             , DPS.FN_GET_STORE_NAME(SVM.STR_CD)  AS STR_NAME
+	             , SVM.VEN_CD
+	             , SVM.VEN_NAME
+	             , SPN.PUMBUN_CD
+                 , SPN.PUMBUN_NAME
+                 , SPN.RENTB_MGAPP_FLAG
+                 , SPN.LOW_MG_RATE
+              FROM DPS.PC_STRVENMST SVM
+                 , DPS.PC_STRPBN    SPN
+             WHERE SVM.STR_CD           = SPN.STR_CD
+               AND SVM.VEN_CD           = SPN.VEN_CD
+               AND SVM.BIZ_TYPE         = '5'
+               AND SVM.STR_CD           = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_VEN_CD">        
+        <![CDATA[
+               AND SVM.VEN_CD           LIKE ?||'%'
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_VEN_NAME">        
+        <![CDATA[
+               AND SVM.VEN_NAME         LIKE '%'||?||'%'
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_PUMBUN_CD">        
+        <![CDATA[
+               AND SPN.PUMBUN_CD        LIKE ?||'%'
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_PUMBUN_NAME">        
+        <![CDATA[
+               AND SPN.PUMBUN_NAME      LIKE '%'||?||'%'
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_WHERE_RENTB_MGAPP_FLAG">        
+        <![CDATA[
+               AND SPN.RENTB_MGAPP_FLAG = ?
+        ]]>        
+    </query>
+    <query name="SEL_MASTER_ORDER">        
+        <![CDATA[
+             ORDER BY SVM.VEN_CD, SPN.PUMBUN_CD
+        ]]>        
+    </query>
+
+    <!-- 마진정보 조회 쿼리  -->            
+    <query name="SEL_MARGIN">
+        <![CDATA[
+            SELECT STR_CD
+                 , PUMBUN_CD
+                 , EVENT_FLAG
+                 , EVENT_RATE
+                 , NORM_MG_RATE
+                 , APP_S_DT
+                 , APP_E_DT
+                 , (SELECT NVL( MAX( BAS_AMT),0) 
+                      FROM DPS.PC_MARGINMST 
+                     WHERE STR_CD     = A.STR_CD
+                       AND PUMBUN_CD  = A.PUMBUN_CD
+                       AND EVENT_RATE = A.EVENT_RATE
+                       AND EVENT_CD   = A.EVENT_CD
+                       AND APP_S_DT   = A.APP_S_DT
+                       AND BAS_AMT    < A.BAS_AMT
+                   )        AS BAS_AMT_FROM
+                 , BAS_AMT
+                 , CASE WHEN APP_E_DT = '99991231' 
+                             AND APP_S_DT = (SELECT MAX( APP_S_DT)
+                                               FROM DPS.PC_MARGINMST 
+                                              WHERE STR_CD     = A.STR_CD
+                                                AND PUMBUN_CD  = A.PUMBUN_CD
+                                                AND EVENT_FLAG = A.EVENT_FLAG
+                                                AND EVENT_RATE = A.EVENT_RATE
+                                                AND EVENT_CD   = A.EVENT_CD
+                                            )
+                             AND APP_S_DT > TO_CHAR(SYSDATE,'YYYYMMDD')
+                        THEN 'Y'
+                        ELSE 'N'
+                   END          AS EDIT_YN 
+                 , APP_S_DT     AS ORG_APP_S_DT
+                 , REMARK
+              FROM DPS.PC_MARGINMST A
+             WHERE STR_CD     = ?
+               AND PUMBUN_CD  = ?
+               AND MG_FLAG    = '0'
+               AND EVENT_RATE = '00'
+               AND EVENT_CD   = '00000000000'
+        ]]>
+    </query>
+    <query name="SEL_MARGIN_WHERE_APP_S_DT">        
+        <![CDATA[
+               AND APP_S_DT   = ?
+        ]]>        
+    </query>
+    <query name="SEL_MARGIN_ORDER_AMT">        
+        <![CDATA[
+             ORDER BY BAS_AMT, EVENT_FLAG, APP_S_DT
+        ]]>        
+    </query>
+    <query name="SEL_MARGIN_ORDER">        
+        <![CDATA[
+             ORDER BY EVENT_FLAG, APP_S_DT
+        ]]>        
+    </query>
+
+    <!-- 마진정보 기간 리스트 조회 쿼리  -->            
+    <query name="SEL_MARGIN_DT">
+        <![CDATA[
+            SELECT STR_CD
+                 , PUMBUN_CD
+                 , EVENT_RATE
+                 , APP_S_DT
+                 , APP_E_DT
+                 , CASE WHEN APP_E_DT = '99991231' 
+                             AND APP_S_DT = (SELECT MAX( APP_S_DT)
+                                               FROM DPS.PC_MARGINMST 
+                                              WHERE STR_CD     = A.STR_CD
+                                                AND PUMBUN_CD  = A.PUMBUN_CD
+                                                AND EVENT_RATE = A.EVENT_RATE
+                                                AND EVENT_CD   = A.EVENT_CD
+                                            )
+                             AND APP_S_DT > TO_CHAR(SYSDATE,'YYYYMMDD')
+                        THEN 'Y'
+                        ELSE 'N'
+                   END          AS EDIT_YN
+                 , APP_S_DT     AS ORG_APP_S_DT 
+              FROM (SELECT DISTINCT
+                           STR_CD
+                         , PUMBUN_CD
+                         , EVENT_RATE
+                         , EVENT_CD
+                         , APP_S_DT
+                         , APP_E_DT
+                      FROM DPS.PC_MARGINMST 
+                     WHERE STR_CD     = ?
+                       AND PUMBUN_CD  = ?
+                       AND MG_FLAG    = '0'
+                       AND EVENT_RATE = '00'
+                       AND EVENT_CD   = '00000000000'
+                   ) A
+             ORDER BY APP_S_DT
+        ]]>
+    </query>
+        
+    <!-- 품번별 마진 정보 중복 조회 쿼리  -->            
+    <query name="SEL_MARGIN_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_MARGINMST 
+             WHERE STR_CD     = ?
+               AND PUMBUN_CD  = ?
+               AND EVENT_FLAG = ?
+               AND EVENT_RATE = '00'
+               AND EVENT_CD   = '00000000000'
+               AND APP_S_DT   = ?
+        ]]>
+    </query>
+    
+    <!--  마진의 시작일자보다  큰 시작일자 수 조회 쿼리  -->            
+    <query name="SEL_MARGINMST_APPSDATE_CNT">
+        <![CDATA[
+            SELECT COUNT(*) AS CNT
+              FROM DPS.PC_MARGINMST
+             WHERE STR_CD     = ?
+               AND PUMBUN_CD  = ?
+               AND MG_FLAG    = '0'
+               AND EVENT_RATE = '00'
+               AND APP_S_DT   >= ?            
+        ]]>
+    </query>       
+    <query name="SEL_MARGINMST_APPSDATE_CNT_WHERE_EVENT_FLAG">
+        <![CDATA[
+               AND EVENT_FLAG = ?   
+        ]]>
+    </query>    
+    <query name="SEL_MARGINMST_APPSDATE_CNT_WHERE_NO_ORG_DATA">
+        <![CDATA[
+               AND APP_S_DT   <> ?   
+        ]]>
+    </query>
+    
+    <!--  마진의 시작일자보다 작은것 중에서 가장 큰 시작일자 조회 쿼리  -->            
+    <query name="SEL_MARGINMST_APPSDATE">
+        <![CDATA[
+            SELECT MAX(APP_S_DT) AS APP_S_DT
+              FROM DPS.PC_MARGINMST
+             WHERE STR_CD     = ?
+               AND PUMBUN_CD  = ?
+               AND MG_FLAG    = '0'
+               AND EVENT_RATE = '00'
+               AND APP_S_DT   < ?            
+        ]]>
+    </query>       
+    <query name="SEL_MARGINMST_APPSDATE_WHERE_EVENT_FLAG">
+        <![CDATA[
+               AND EVENT_FLAG = ?   
+        ]]>
+    </query>
+    <query name="SEL_MARGINMST_APPSDATE_WHERE_NO_ORG_DATA">
+        <![CDATA[
+               AND APP_S_DT   <> ?   
+        ]]>
+    </query>
+    <query name="SEL_MARGINMST_APPSDATE_WHERE_NO_LAST">
+        <![CDATA[
+               AND APP_E_DT   <> '99991231'
+        ]]>
+    </query>
+    <!-- 마진  마스터 신규 입력  -->
+    <query name="INS_MARGINMST">        
+        <![CDATA[
+            INSERT INTO DPS.PC_MARGINMST ( STR_CD
+                                         , PUMBUN_CD
+                                         , PUMMOK_CD
+                                         , EVENT_FLAG
+                                         , EVENT_RATE
+                                         , EVENT_CD
+                                         , APP_S_DT
+                                         , APP_E_DT
+                                         , NORM_MG_RATE
+                                         , BAS_AMT
+                                         , REMARK 
+                                         , MG_FLAG
+                                         , REDU_RATE
+                                         , REG_DATE
+                                         , REG_ID
+                                         , MOD_DATE
+                                         , MOD_ID
+                                         )
+                                  VALUES ( ?
+                                         , ?
+                                         , '********'
+                                         , ?
+                                         , ?
+                                         , '00000000000'
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , ?
+                                         , '0'
+                                         , 0
+                                         , SYSDATE
+                                         , ?
+                                         , SYSDATE
+                                         , ?
+                                         )
+            
+        ]]>        
+    </query>
+
+    <!-- 마진  마스터 수정  -->
+    <query name="UPD_MARGINMST">
+        <![CDATA[
+            UPDATE DPS.PC_MARGINMST
+               SET NORM_MG_RATE             = ?
+                 , APP_S_DT                 = ?
+                 , BAS_AMT                  = ?
+                 , REMARK                   = ?
+                 , MOD_DATE                 = SYSDATE
+                 , MOD_ID                   = ?
+             WHERE STR_CD                   = ? 
+               AND PUMBUN_CD                = ?
+               AND APP_S_DT                 = ?
+               AND EVENT_FLAG               = ?
+               AND EVENT_RATE               = '00'
+               AND MG_FLAG                  = '0'
+        ]]>
+    </query>
+    
+    
+    <!-- 마진  마스터 시작일 만 수정  -->
+    <query name="UPD_MARGINMST_ONLY_APPSDT">
+        <![CDATA[
+            UPDATE DPS.PC_MARGINMST
+               SET APP_S_DT                 = ?
+                 , MOD_DATE                 = SYSDATE
+                 , MOD_ID                   = ?
+             WHERE STR_CD                   = ? 
+               AND PUMBUN_CD                = ?
+               AND APP_S_DT                 = ?
+               AND EVENT_RATE               = '00'
+               AND MG_FLAG                  = '0'
+        ]]>
+    </query>
+    <!-- 신규등록시 기존 마진  마스터 종료일자 수정  -->
+    <query name="UPD_MARGINMST_APPEDATE">
+        <![CDATA[
+            UPDATE DPS.PC_MARGINMST
+               SET APP_E_DT                 = TO_CHAR(TO_DATE(?,'YYYYMMDD')-1,'YYYYMMDD')
+                 , MOD_DATE                 = SYSDATE
+                 , MOD_ID                   = ?
+             WHERE STR_CD                   = ? 
+               AND PUMBUN_CD                = ?
+               AND APP_S_DT                 = ?
+               AND MG_FLAG                  = '0'
+               AND EVENT_RATE               = '00'
+        ]]>
+    </query>
+    <query name="UPD_MARGINMST_APPEDATE_WHERE_EVENT_FLAG">
+        <![CDATA[
+               AND EVENT_FLAG               = ?
+        ]]>
+    </query>
+    
+    
+</service>

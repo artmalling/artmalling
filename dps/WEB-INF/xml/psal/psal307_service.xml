@@ -1,0 +1,359 @@
+<?xml version="1.0"	encoding="euc-kr"?>
+<!-- XML 버전 1.0을	사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자	: 박종은
+ * 회 사 명	: 한국후지쯔
+ * 작 성 일	: 2010.06.14
+ * 변 경 일	: 
+ * 변경내용	: 
+ * 개	 요	:  
+ -->
+<service name="/psal307.ps">
+
+	<gauce name="H_SEL_MASTER">
+		<column	colName="STR_CD"				colType="TB_STRING"		size="2"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="PC_CD"					colType="TB_STRING"		size="2"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="TEAM_CD"				colType="TB_STRING"		size="10"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="ORG_NAME"				colType="TB_STRING"		size="5"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="SALE_AMT_TOT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="CMPR_SALE_AMT_TOT"		colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="TREND_RATE"			colType="TB_DECIMAL"	size="5"	dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="SALE_DT_S"				colType="TB_STRING"		size="8"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="CMPR_DT_S"				colType="TB_STRING"		size="8"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="UNIT"    	            colType="TB_DECIMAL"    size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+	
+	<gauce name="H_SEL_MASTER2">
+		<column	colName="STR_CD"				colType="TB_STRING"		size="2"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="PC_CD"					colType="TB_STRING"		size="2"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="TEAM_CD"				colType="TB_STRING"		size="10"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="ORG_NAME"				colType="TB_STRING"		size="5"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="SALE_AMT_TOT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="CMPR_SALE_AMT_TOT"		colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="TREND_RATE"			colType="TB_DECIMAL"	size="5"	dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="SALE_DT_S"				colType="TB_STRING"		size="8"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="CMPR_DT_S"				colType="TB_STRING"		size="8"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="UNIT"    	            colType="TB_DECIMAL"    size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+	
+	<gauce name="H_SEL_DETAIL">
+		<column	colName="STR_CD"				colType="TB_STRING"		size="2"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="PC_CD"					colType="TB_STRING"		size="10"	dec="0"	keyType="TB_NORMAL"	roundMode="ROUND" />
+		<column	colName="ORG_NAME"				colType="TB_STRING"		size="5"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="SALE_AMT_TOT"			colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="CMPR_SALE_AMT_TOT"		colType="TB_DECIMAL"	size="13"	dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column	colName="TREND_RATE"			colType="TB_DECIMAL"	size="5"	dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+		<column colName="UNIT"    	            colType="TB_DECIMAL"    size="10"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+	</gauce>
+	
+		 
+	<!-- 쿼리는	전부 대문자	-->
+	
+	<query name="SEL_SALE_TREND_RATE">
+		<![CDATA[
+			SELECT A.STR_CD
+				 , ?												  AS PC_CD
+				 , A.TEAM_CD
+				 , B.ORG_SHORT_NAME									  AS ORG_NAME
+				 , SUM(A.TOT_SALE_AMT)								  AS TOT_SALE_AMT
+				 , SUM(A.CMPR_TOT_SALE_AMT)							  AS CMPR_TOT_SALE_AMT
+				 , (CASE WHEN SUM(A.CMPR_TOT_SALE_AMT) = 0 THEN	0 
+					ELSE SUM(A.TOT_SALE_AMT)/SUM(A.CMPR_TOT_SALE_AMT)*100 END)	AS TREND_RATE
+				 , ?												  AS SALE_DT_S
+				 , ?												  AS CMPR_DT_S
+				 , ?                                                  AS UNIT
+			  FROM (
+					SELECT A.STR_CD
+						 , SUBSTR(C.SALE_ORG_CD, 0,6) || '0000'	 AS	TEAM_CD
+						 , SUM(A.NORM_SALE_AMT)				AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+						 , 0								AS CMPR_TOT_SALE_AMT
+					  FROM DPS.PS_MONTHPBN	 A
+							 , DPS.PC_ORGMST	 B
+							 , DPS.PC_STRPBN	  C
+					 WHERE B.ORG_CD		= C.SALE_ORG_CD
+					   AND A.STR_CD	= C.STR_CD
+					   AND A.PUMBUN_CD = C.PUMBUN_CD
+					   AND B.STR_CD		= ?
+					   AND B.DEPT_CD	= ?
+					   AND B.TEAM_CD	LIKE ? || '%'
+					   AND B.PC_CD		LIKE ? || '%'
+					   AND A.SALE_YM	= ?
+					   AND EXISTS (	SELECT MYORG.USER_ID
+									  FROM COM.V_MYORG MYORG
+									 WHERE MYORG.STR_CD		 = B.STR_CD
+									   AND MYORG.DEPT_CD	 = B.DEPT_CD
+									   AND MYORG.TEAM_CD	 = B.TEAM_CD
+									   AND MYORG.PC_CD		 = B.PC_CD
+									   AND MYORG.USER_ID	 = ?
+								  )
+					 GROUP BY
+						   A.STR_CD
+						 , SUBSTR(C.SALE_ORG_CD, 0,6)
+					 UNION ALL
+					SELECT A.STR_CD
+						 , SUBSTR(C.SALE_ORG_CD, 0,6) || '0000'	 AS	TEAM_CD
+						 , 0								AS TOT_SALE_AMT
+						 , SUM(A.NORM_SALE_AMT)				AS CMPR_TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+					  FROM DPS.PS_MONTHPBN	 A
+							 , DPS.PC_ORGMST	 B
+							 , DPS.PC_STRPBN	 C
+					 WHERE B.ORG_CD		= C.SALE_ORG_CD
+					   AND A.STR_CD	= C.STR_CD
+					   AND A.PUMBUN_CD = C.PUMBUN_CD
+					   AND B.STR_CD		= ?
+					   AND B.DEPT_CD	= ?
+					   AND B.TEAM_CD	LIKE ? || '%'
+					   AND B.PC_CD		LIKE ? || '%'
+					   AND A.SALE_YM	= ?
+					   AND EXISTS (	SELECT MYORG.USER_ID
+									  FROM COM.V_MYORG MYORG
+									 WHERE MYORG.STR_CD		 = B.STR_CD
+									   AND MYORG.DEPT_CD	 = B.DEPT_CD
+									   AND MYORG.TEAM_CD	 = B.TEAM_CD
+									   AND MYORG.PC_CD		 = B.PC_CD
+									   AND MYORG.USER_ID	 = ?
+								  )
+					 GROUP BY
+						   A.STR_CD
+						 , SUBSTR(C.SALE_ORG_CD, 0,6)
+						) A
+				 , DPS.PC_ORGMST B
+			 WHERE A.TEAM_CD   = B.ORG_CD
+			 GROUP BY
+				   A.STR_CD
+				 , A.TEAM_CD
+				 , B.ORG_SHORT_NAME
+			 ORDER BY
+				   A.TEAM_CD
+		]]>		   
+	</query>
+	<query name="SEL_SALE_TREND_RATE2">		   
+		<![CDATA[
+			SELECT A.STR_CD
+				 , ?												  AS PC_CD
+				 , A.TEAM_CD
+				 , B.ORG_SHORT_NAME									  AS ORG_NAME
+				 , SUM(A.TOT_SALE_AMT)								  AS TOT_SALE_AMT
+				 , SUM(A.CMPR_TOT_SALE_AMT)							  AS CMPR_TOT_SALE_AMT
+				 , (CASE WHEN SUM(A.CMPR_TOT_SALE_AMT) = 0 THEN	0 
+					ELSE SUM(A.TOT_SALE_AMT)/SUM(A.CMPR_TOT_SALE_AMT)*100 END)	AS TREND_RATE
+				 , ?												  AS SALE_DT_S
+				 , ?												  AS CMPR_DT_S
+				 , ?                                                  AS UNIT
+			  FROM (
+					SELECT A.STR_CD
+						 , SUBSTR(C.BUY_ORG_CD,	0,6) ||	'0000'	AS TEAM_CD
+						 , SUM(A.NORM_SALE_AMT)				AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+						 , 0								AS CMPR_TOT_SALE_AMT
+					  FROM DPS.PS_MONTHPBN	 A
+							 , DPS.PC_ORGMST	 B
+							 , DPS.PC_STRPBN	  C
+					 WHERE B.ORG_CD		= C.BUY_ORG_CD
+					   AND A.STR_CD	= C.STR_CD
+					   AND A.PUMBUN_CD = C.PUMBUN_CD
+					   AND B.STR_CD		= ?
+					   AND B.DEPT_CD	= ?
+					   AND B.TEAM_CD	LIKE ? || '%'
+					   AND B.PC_CD		LIKE ? || '%'
+					   AND A.SALE_YM	= ?
+					   AND EXISTS (	SELECT MYORG.USER_ID
+									  FROM COM.V_MYORG MYORG
+									 WHERE MYORG.STR_CD		 = B.STR_CD
+									   AND MYORG.DEPT_CD	 = B.DEPT_CD
+									   AND MYORG.TEAM_CD	 = B.TEAM_CD
+									   AND MYORG.PC_CD		 = B.PC_CD
+									   AND MYORG.USER_ID	 = ?
+								  )
+					 GROUP BY
+						   A.STR_CD
+						 , SUBSTR(C.BUY_ORG_CD,	0,6)
+					 UNION ALL
+					SELECT A.STR_CD
+						 , SUBSTR(C.BUY_ORG_CD,	0,6) ||	'0000'	AS TEAM_CD
+						 , 0								AS TOT_SALE_AMT
+						 , SUM(A.NORM_SALE_AMT)				AS CMPR_TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+					  FROM DPS.PS_MONTHPBN	 A
+							 , DPS.PC_ORGMST	 B
+							 , DPS.PC_STRPBN	 C
+					 WHERE B.ORG_CD		= C.BUY_ORG_CD
+					   AND A.STR_CD	= C.STR_CD
+					   AND A.PUMBUN_CD = C.PUMBUN_CD
+					   AND B.STR_CD		= ?
+					   AND B.DEPT_CD	= ?
+					   AND B.TEAM_CD	LIKE ? || '%'
+					   AND B.PC_CD		LIKE ? || '%'
+					   AND A.SALE_YM	= ?
+					   AND EXISTS (	SELECT MYORG.USER_ID
+									  FROM COM.V_MYORG MYORG
+									 WHERE MYORG.STR_CD		 = B.STR_CD
+									   AND MYORG.DEPT_CD	 = B.DEPT_CD
+									   AND MYORG.TEAM_CD	 = B.TEAM_CD
+									   AND MYORG.PC_CD		 = B.PC_CD
+									   AND MYORG.USER_ID	 = ?
+								  )
+					 GROUP BY
+						   A.STR_CD
+						 , SUBSTR(C.BUY_ORG_CD,	0,6)
+						) A
+				 , DPS.PC_ORGMST B
+			 WHERE A.TEAM_CD   = B.ORG_CD
+			 GROUP BY
+				   A.STR_CD
+				 , A.TEAM_CD
+				 , B.ORG_SHORT_NAME
+			 ORDER BY
+				   A.TEAM_CD
+		]]>		   
+	</query>
+	<query name="SEL_SALE_TREND_RATE_PC">		 
+		<![CDATA[
+			SELECT A.STR_CD
+				 , A.PC_CD
+				 , B.ORG_SHORT_NAME									  AS ORG_NAME
+				 , SUM(A.TOT_SALE_AMT)								  AS TOT_SALE_AMT
+				 , SUM(A.CMPR_TOT_SALE_AMT)							  AS CMPR_TOT_SALE_AMT
+				 , (CASE WHEN SUM(A.CMPR_TOT_SALE_AMT) = 0 THEN	0 
+					ELSE SUM(A.TOT_SALE_AMT)/SUM(A.CMPR_TOT_SALE_AMT)*100 END)	AS TREND_RATE
+				 , ?                                                  AS UNIT
+			  FROM (
+					SELECT A.STR_CD
+						 , SUBSTR(C.SALE_ORG_CD, 0,8) || '00'	 AS	PC_CD
+						 , SUM(A.NORM_SALE_AMT)				AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+						 , 0								AS CMPR_TOT_SALE_AMT
+					  FROM DPS.PS_MONTHPBN	 A
+							 , DPS.PC_ORGMST	 B
+							 , DPS.PC_STRPBN	  C
+					 WHERE B.ORG_CD		= C.SALE_ORG_CD
+					   AND A.STR_CD	= C.STR_CD
+					   AND A.PUMBUN_CD = C.PUMBUN_CD
+					   AND B.STR_CD		= ?
+					   AND B.DEPT_CD	= ?
+					   AND B.TEAM_CD	= ?
+					   AND B.PC_CD		LIKE ? || '%'
+					   AND A.SALE_YM	= ?
+					   AND EXISTS (	SELECT MYORG.USER_ID
+									  FROM COM.V_MYORG MYORG
+									 WHERE MYORG.STR_CD		 = B.STR_CD
+									   AND MYORG.DEPT_CD	 = B.DEPT_CD
+									   AND MYORG.TEAM_CD	 = B.TEAM_CD
+									   AND MYORG.PC_CD		 = B.PC_CD
+									   AND MYORG.USER_ID	 = ?
+								  )
+					 GROUP BY
+						   A.STR_CD
+						 , SUBSTR(C.SALE_ORG_CD, 0,8)
+					 UNION ALL
+					SELECT A.STR_CD
+						 , SUBSTR(C.SALE_ORG_CD, 0,8) || '00'	 AS	PC_CD
+						 , 0								AS TOT_SALE_AMT
+						 , SUM(A.NORM_SALE_AMT)				AS CMPR_TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+					  FROM DPS.PS_MONTHPBN	 A
+							 , DPS.PC_ORGMST	 B
+							 , DPS.PC_STRPBN	 C
+					 WHERE B.ORG_CD		= C.SALE_ORG_CD
+					   AND A.STR_CD	= C.STR_CD
+					   AND A.PUMBUN_CD = C.PUMBUN_CD
+					   AND B.STR_CD		= ?
+					   AND B.DEPT_CD	= ?
+					   AND B.TEAM_CD	= ?
+					   AND B.PC_CD		LIKE ? || '%'
+					   AND A.SALE_YM	= ?
+					   AND EXISTS (	SELECT MYORG.USER_ID
+									  FROM COM.V_MYORG MYORG
+									 WHERE MYORG.STR_CD		 = B.STR_CD
+									   AND MYORG.DEPT_CD	 = B.DEPT_CD
+									   AND MYORG.TEAM_CD	 = B.TEAM_CD
+									   AND MYORG.PC_CD		 = B.PC_CD
+									   AND MYORG.USER_ID	 = ?
+								  )
+					 GROUP BY
+						   A.STR_CD
+						 , SUBSTR(C.SALE_ORG_CD, 0,8)
+						) A
+				 , DPS.PC_ORGMST B
+			 WHERE A.PC_CD	 = B.ORG_CD
+			 GROUP BY
+				   A.STR_CD
+				 , A.PC_CD
+				 , B.ORG_SHORT_NAME
+			 ORDER BY
+				   A.PC_CD
+		]]>		   
+	</query>
+	
+	<query name="SEL_SALE_TREND_RATE_PC2">		  
+		<![CDATA[
+			SELECT A.STR_CD
+				 , A.PC_CD
+				 , B.ORG_SHORT_NAME									  AS ORG_NAME
+				 , SUM(A.TOT_SALE_AMT)								  AS TOT_SALE_AMT
+				 , SUM(A.CMPR_TOT_SALE_AMT)							  AS CMPR_TOT_SALE_AMT
+				 , (CASE WHEN SUM(A.CMPR_TOT_SALE_AMT) = 0 THEN	0 
+					ELSE SUM(A.TOT_SALE_AMT)/SUM(A.CMPR_TOT_SALE_AMT)*100 END)	AS TREND_RATE
+			     , ?                                                  AS UNIT
+			  FROM (
+					SELECT A.STR_CD
+						 , SUBSTR(C.BUY_ORG_CD,	0,8) ||	'00'	AS PC_CD
+						 , SUM(A.NORM_SALE_AMT)				AS TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+						 , 0								AS CMPR_TOT_SALE_AMT
+					  FROM DPS.PS_MONTHPBN	 A
+							 , DPS.PC_ORGMST	 B
+							 , DPS.PC_STRPBN	  C
+					 WHERE B.ORG_CD		= C.BUY_ORG_CD
+					   AND A.STR_CD	= C.STR_CD
+					   AND A.PUMBUN_CD = C.PUMBUN_CD
+					   AND B.STR_CD		= ?
+					   AND B.DEPT_CD	= ?
+					   AND B.TEAM_CD	= ?
+					   AND B.PC_CD		LIKE ? || '%'
+					   AND A.SALE_YM	= ?
+					   AND EXISTS (	SELECT MYORG.USER_ID
+									  FROM COM.V_MYORG MYORG
+									 WHERE MYORG.STR_CD		 = B.STR_CD
+									   AND MYORG.DEPT_CD	 = B.DEPT_CD
+									   AND MYORG.TEAM_CD	 = B.TEAM_CD
+									   AND MYORG.PC_CD		 = B.PC_CD
+									   AND MYORG.USER_ID	 = ?
+								  )
+					 GROUP BY
+						   A.STR_CD
+						 , SUBSTR(C.BUY_ORG_CD,	0,8)
+					 UNION ALL
+					SELECT A.STR_CD
+						 , SUBSTR(C.BUY_ORG_CD,	0,8) ||	'00'	AS PC_CD
+						 , 0								AS TOT_SALE_AMT
+						 , SUM(A.NORM_SALE_AMT)				AS CMPR_TOT_SALE_AMT	-- 20180322 TOT_SALE_AMT >> NORM_SALE_AMT 로 수정(할인 반영)
+					  FROM DPS.PS_MONTHPBN	 A
+							 , DPS.PC_ORGMST	 B
+							 , DPS.PC_STRPBN	 C
+					 WHERE B.ORG_CD		= C.BUY_ORG_CD
+					   AND A.STR_CD	= C.STR_CD
+					   AND A.PUMBUN_CD = C.PUMBUN_CD
+					   AND B.STR_CD		= ?
+					   AND B.DEPT_CD	= ?
+					   AND B.TEAM_CD	= ?
+					   AND B.PC_CD		LIKE ? || '%'
+					   AND A.SALE_YM	= ?
+					   AND EXISTS (	SELECT MYORG.USER_ID
+									  FROM COM.V_MYORG MYORG
+									 WHERE MYORG.STR_CD		 = B.STR_CD
+									   AND MYORG.DEPT_CD	 = B.DEPT_CD
+									   AND MYORG.TEAM_CD	 = B.TEAM_CD
+									   AND MYORG.PC_CD		 = B.PC_CD
+									   AND MYORG.USER_ID	 = ?
+								  )
+					 GROUP BY
+						   A.STR_CD
+						 , SUBSTR(C.BUY_ORG_CD,	0,8)
+						) A
+				 , DPS.PC_ORGMST B
+			 WHERE A.PC_CD	 = B.ORG_CD
+			 GROUP BY
+				   A.STR_CD
+				 , A.PC_CD
+				 , B.ORG_SHORT_NAME
+			 ORDER BY
+				   A.PC_CD
+		]]>		   
+	</query>
+</service>

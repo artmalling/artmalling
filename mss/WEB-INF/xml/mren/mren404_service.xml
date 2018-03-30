@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.05.06
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  관리비입금내역관리 
+ -->
+<service name="/mren404.mr">
+	<gauce name="H_SEL_MR_CALMST">
+	    <column colName="VEN_CD"                colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="VEN_NM"                colType="TB_STRING"   size="40"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_FLAG"              colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_NOVAT_AMT"        colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_VAT_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_AMT"              colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_NOVAT_AMT"         colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_VAT_AMT"           colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="TAX_AMT"               colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="NTAX_AMT"              colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="BAL_AMT"               colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MOD_ARREAR_AMT"        colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_BAL_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MOD_RENT_ARREAR_AMT"   colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="MOD_REASON"            colType="TB_STRING"   size="2"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="REAL_CHAREG_AMT"       colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="RENT_REAL_CHAREG_AMT"  colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CHAREG_AMT"            colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ARR_RATE"              colType="TB_DECIMAL"  size="9"   dec="2"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_YM"                colType="TB_STRING"   size="6"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CNTR_ID"               colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="CAL_TYPE"              colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	</gauce>
+	
+	<gauce name="H_SEL_MR_CALBAL">	    
+	    <column colName="BAL_AMT"               colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ARR_AMT"         		colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	
+	    <column colName="BAL_ARREAR_AMT"     	colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="BAL_CNT"     	        colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>      
+	</gauce>
+	
+	<query name="SEL_MR_CALMST">
+		<![CDATA[  
+			SELECT CNT.VEN_CD
+                 , VEN.VEN_NAME AS VEN_NM
+                 , CAL.PAY_FLAG
+                 , CAL.RENT_NOVAT_AMT        /*정산_당월임대료VAT제외*/                 
+                 , CAL.RENT_VAT_AMT          /*정산_당월임대료VAT*/
+                 , CAL.RENT_AMT              /*정산_당월임대료*/
+                 , CAL.TAX_NOVAT_AMT         /*정산_당월과세금액VAT제외(관리비)*/
+                 , CAL.TAX_VAT_AMT           /*정산_당월과세금액VAT(관리비)*/
+                 , CAL.TAX_AMT               /*정산_당월과세금액(관리비)*/
+                 , CAL.NTAX_AMT              /*정산_당월면세금액(관리비)*/
+                 , CAL.BAL_AMT               /*정산_미수관리비*/
+                 , NVL(CAL.ARREAR_AMT, 0) + NVL(CAL.MOD_ARREAR_AMT,0)     AS MOD_ARREAR_AMT    /*정산_미수연체이자(관리비)*/
+                 --, CAL.MOD_ARREAR_AMT        /*정산_미수연체이자(관리비)*/
+                 , CAL.RENT_BAL_AMT          /*정산_미수임대료*/
+                 --, CAL.MOD_RENT_ARREAR_AMT   /*정산_미수연체이자(임대료)*/    
+                 , CAL.RENT_ARREAR_AMT + CAL.MOD_RENT_ARREAR_AMT    AS MOD_RENT_ARREAR_AMT     /*정산_미수연체이자(임대료)*/               
+                 , CAL.MOD_REASON            /*조정사유*/
+                 --, NVL(CAL.REAL_CHAREG_AMT, 0)      + NVL(CAL.MOD_TOT_BAL_AMT, 0)        AS REAL_CHAREG_AMT        /*정산_실청구금액(관리비)*/
+                 --, CAL.RENT_REAL_CHAREG_AMT + CAL.MOD_RENT_TOT_BAL_AMT   AS RENT_REAL_CHAREG_AMT   /*정산_청구액(임대료)*/
+                 , CAL.REAL_CHAREG_AMT + CAL.BAL_AMT + NVL(CAL.ARREAR_AMT, 0) + NVL(CAL.MOD_ARREAR_AMT,0)  AS REAL_CHAREG_AMT    /*정산_실청구금액(관리비)*/
+                 , CAL.RENT_AMT     + CAL.RENT_BAL_AMT   AS RENT_REAL_CHAREG_AMT   /*정산_청구액(임대료)*/
+                 , CAL.REAL_CHAREG_AMT + CAL.BAL_AMT AS CHAREG_AMT   -- 관리비(당월+연체) --> 연제이자제외
+                 , CNT.ARR_RATE
+                 , CAL.CAL_YM
+                 , CAL.CNTR_ID
+                 , CAL.CAL_TYPE
+			  FROM MSS.MR_CNTRMST   CNT
+			     , MSS.MR_CALMST    CAL
+			     , DPS.PC_VENMST    VEN
+			 WHERE CNT.CNTR_ID  = CAL.CNTR_ID
+			   AND CNT.VEN_CD   = VEN.VEN_CD
+			   AND CAL.PAY_FLAG LIKE ?||'%'
+			   AND CNT.RENT_TYPE LIKE ?||'%'
+			   AND CNT.VEN_CD LIKE ?||'%'
+			   AND CAL.CAL_YM = ?
+			   AND CNT.STR_CD = ?
+			 ORDER BY CNT.VEN_CD
+		]]>
+	</query>
+	
+	<query name="SEL_MR_CALBAL">
+		<![CDATA[  
+			SELECT NVL(MAX(BAL_AMT), 0)     AS BAL_AMT
+			     , NVL(MAX(ARR_AMT), 0)     AS ARR_AMT
+			     , NVL(MAX(ARREAR_AMT), 0)  AS BAL_ARREAR_AMT
+			     , COUNT(*) AS BAL_CNT
+			  FROM MSS.MR_CALBAL    
+			 WHERE CAL_TYPE     = ?
+			   AND CNTR_ID      = ?
+			   AND CAL_YM       = ?
+			   AND MNTN_RENT_GB = ?
+		]]>
+	</query>
+	    
+    <query name="INS_MR_CALPAY">
+       <![CDATA[   
+            INSERT 
+              INTO MSS.MR_CALPAY
+                 ( CAL_YM
+                 , CNTR_ID
+                 , CAL_TYPE
+                 , PAY_SEQ_NO
+                 , PAY_DT
+                 , PAY_AMT
+                 , PAY_ARR_AMT
+                 , MNTN_RENT_GB
+                 , SAP_IF_FLAG
+                 , REMARK
+                 , REG_ID
+                 , REG_DATE
+                 , MOD_ID
+                 , MOD_DATE)
+            VALUES
+                 ( ?
+                 , ?
+                 , ?
+                 , (SELECT NVL((MAX(PAY_SEQ_NO)+1), 1) 
+                      FROM MSS.MR_CALPAY
+                     WHERE CAL_TYPE = ?
+                       AND CNTR_ID = ?
+                       AND CAL_YM = ?)
+                 , ?
+                 , ?
+                 , ?
+                 , ?
+                 , '0'  /*SAP_IF_FLAG[0:미전송, 1:전송, 2:처리완료]*/
+                 , ?
+                 , ?
+                 , SYSDATE
+                 , ?
+                 , SYSDATE)
+        ]]>
+    </query>
+    
+    <query name="UPD_MR_CALPAY">
+       <![CDATA[   
+            UPDATE MSS.MR_CALPAY
+               SET PAY_DT       = ? 
+                 , PAY_AMT      = ?
+                 , PAY_ARR_AMT  = ?
+                 , REMARK       = ?
+                 , MOD_ID       = ?
+                 , MOD_DATE     = SYSDATE
+             WHERE PAY_SEQ_NO   = ?
+               AND CAL_TYPE     = ?
+               AND CNTR_ID      = ?
+               AND CAL_YM       = ?
+        ]]>
+    </query>
+    
+    <query name="DEL_MR_CALPAY">
+       <![CDATA[   
+            DELETE MSS.MR_CALPAY
+             WHERE PAY_SEQ_NO = ?
+               AND CAL_TYPE = ?
+               AND CNTR_ID = ?
+               AND CAL_YM = ?
+        ]]>
+    </query>
+    
+	<gauce name="H_SEL_MR_CALPAY">
+	    <column colName="PAY_DT"               colType="TB_STRING"   size="8"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	    
+	    <column colName="PAY_SEQ_NO"           colType="TB_STRING"   size="3"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="PAY_AMT"              colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	    
+	    <column colName="PAY_ARR_AMT"          colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	    
+	    <column colName="REMARK"               colType="TB_STRING"   size="100" dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="SAP_IF_FLAG"          colType="TB_STRING"   size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="BAL_AMT"              colType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	    <column colName="ARR_AMT"         		olType="TB_DECIMAL"  size="12"  dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>	    
+	</gauce>
+	
+	<gauce name="H_SEL_MR_COUNT">
+	    <column colName="COUNT"                colType="TB_STRING"      size="1"   dec="0"   keyType="TB_NORMAL" roundMode="ROUND"/>
+	</gauce>
+	
+	<query name="SEL_MR_CALPAY">
+		<![CDATA[  
+			SELECT CPA.PAY_DT
+			     , CPA.PAY_SEQ_NO
+			     , CPA.PAY_AMT		
+			     , CPA.PAY_ARR_AMT
+			     , CPA.REMARK
+			     , CPA.SAP_IF_FLAG
+			     , 0 AS BAL_AMT
+			     , 0 AS ARR_AMT
+			  FROM MSS.MR_CALPAY    CPA
+			 WHERE CPA.CAL_TYPE     = ?
+			   AND CPA.CNTR_ID      = ?
+			   AND CPA.CAL_YM       = ?
+			   AND CPA.MNTN_RENT_GB = ?
+             ORDER BY CPA.PAY_DT, CPA.PAY_SEQ_NO
+		]]>
+	</query>
+	
+	<query name="SEL_CALMST_COUNT">
+		<![CDATA[  
+			SELECT COUNT(*) AS COUNT
+              FROM MSS.MR_CALMST
+             WHERE CAL_YM    > ?
+               AND CNTR_ID   = ?
+               AND CAL_TYPE  = ?
+		]]>
+	</query>
+	
+	<!-- 관리비 입금상태구분 UPDATE -->
+    <query name="UPD_PAY_FLAG">
+       <![CDATA[   
+            UPDATE MSS.MR_CALMST 
+               SET PAY_FLAG = (SELECT CASE WHEN NVL(SUM(PAY_AMT), 0) = 0 THEN '0' /*입금상태 : 미입금*/  
+                                      ELSE CASE WHEN ? <= NVL(SUM(PAY_AMT), 0) THEN '2' /*입금상태 : 입금완료*/ 
+                                                ELSE '1' /*입금상태 : 부분입금*/  
+                                                END
+                                      END 
+                                 FROM MSS.MR_CALPAY 
+                                WHERE CAL_TYPE     = ?
+                                  AND CNTR_ID      = ?
+                                  AND CAL_YM       = ?
+                                  AND MNTN_RENT_GB = ?) 
+             WHERE CAL_TYPE = ?
+               AND CNTR_ID  = ?
+               AND CAL_YM   = ?
+        ]]>
+    </query>
+    <!-- 임대료 입금상태구분 UPDATE -->
+    <query name="UPD_PAY_RENT_FLAG">
+       <![CDATA[   
+            UPDATE MSS.MR_CALMST 
+               SET RENT_PAY_FLAG = (SELECT CASE WHEN NVL(SUM(PAY_AMT), 0) = 0 THEN '0' /*입금상태 : 미입금*/  
+                                      ELSE CASE WHEN ? <= NVL(SUM(PAY_AMT), 0) THEN '2' /*입금상태 : 입금완료*/ 
+                                                ELSE '1' /*입금상태 : 부분입금*/  
+                                                END
+                                      END 
+                                 FROM MSS.MR_CALPAY 
+                                WHERE CAL_TYPE     = ?
+                                  AND CNTR_ID      = ?
+                                  AND CAL_YM       = ?
+                                  AND MNTN_RENT_GB = ?) 
+             WHERE CAL_TYPE = ?
+               AND CNTR_ID  = ?
+               AND CAL_YM   = ?
+        ]]>
+    </query>
+
+
+	    
+    <query name="INS_MR_CALBAL">
+       <![CDATA[                    
+            MERGE INTO MSS.MR_CALBAL A
+            USING (SELECT ?       AS CAL_YM
+                        , ?       AS CNTR_ID
+                        , ?       AS MNTN_RENT_GB
+                        , ?       AS CAL_TYPE
+                     FROM DUAL
+                  ) B
+               ON (A.CAL_YM = B.CAL_YM AND A.CNTR_ID = B.CNTR_ID AND A.MNTN_RENT_GB = B.MNTN_RENT_GB AND A.CAL_TYPE = B.CAL_TYPE)
+             WHEN NOT MATCHED THEN
+	               INSERT  
+		                  ( CAL_YM
+		                  , CNTR_ID
+		                  , MNTN_RENT_GB
+		                  , CAL_TYPE
+		                  , BAL_AMT
+		                  , ARR_AMT
+		                  , ARR_RATE
+		                  , REG_ID
+		                  , REG_DATE
+		                  , MOD_ID
+		                  , MOD_DATE
+		                  , ARREAR_AMT)
+		           VALUES 
+		                 ( ?
+		                 , ?
+		                 , ?
+		                 , ?
+		                 , ?
+		                 , ?
+		                 , ?
+		                 , ?
+		                 , SYSDATE
+		                 , ?
+		                 , SYSDATE
+		                 , ?)
+             WHEN MATCHED THEN
+                  UPDATE
+                     SET A.BAL_AMT    = ?,
+                         A.ARR_AMT    = ?,
+                         A.ARR_RATE   = ?,
+                         A.MOD_ID     = ?,
+                         A.MOD_DATE   = SYSDATE,
+                         A.ARREAR_AMT = ?
+                                          
+        ]]>
+    </query>
+                         
+</service>

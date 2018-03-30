@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!--
+ * 작 성 자 : 김유완
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2011.02.25
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  상담/계약 신규상담
+ -->
+<service name="/mcou104.mu">
+    <!-- 상담신청 내역 내역 -->
+    <gauce name="H_SEL_MO_COUNSELREQ">
+        <column colName="STR_CD"        colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="STR_NM"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_NM"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"       colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_NM"       colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"         colType="TB_STRING" size="2"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_NM"         colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BUYER_CD"      colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TITLE"         colType="TB_STRING" size="50"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="COMP_NAME"     colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REP_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_NAME"      colType="TB_STRING" size="4"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_DT"        colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REQ_SEQ"       colType="TB_STRING" size="5"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROC_STAT"     colType="TB_STRING" size="1"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ANS_DT"        colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    <!-- 바이어 변경 내역 -->
+    <gauce name="H_SEL_MO_BUYERMODHIS">
+        <column colName="MOD_DT"            colType="TB_STRING" size="8"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SEQ_NO"            colType="TB_STRING" size="3"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="ORG_BUYER_CD"      colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_ORG_NAME"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="O_BUYER_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MOD_BUYER_CD"      colType="TB_STRING" size="6"    dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="M_ORG_NAME"        colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="M_BUYER_NAME"      colType="TB_STRING" size="40"   dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+
+    <!-- 상담신청 내역 조회 Query  -->
+    <query name="SEL_MO_COUNSELREQ">
+        <![CDATA[   
+            SELECT 
+                   COQ.STR_CD  
+                 , OPR.STR_NM
+                 , COQ.DEPT_CD  
+                 , OPR.DEPT_NM
+                 , COQ.TEAM_CD  
+                 , OPR.TEAM_NM
+                 , COQ.PC_CD    
+                 , OPR.PC_NM
+                 , COQ.BUYER_CD     
+                 , COQ.TITLE        
+                 , COQ.COMP_NAME    
+                 , COQ.REP_NAME
+                 , COQ.REQ_NAME     
+                 , COQ.REQ_DT       
+                 , COQ.REQ_SEQ      
+                 , COQ.PROC_STAT    
+                 , TO_CHAR(COA.REG_DATE, 'YYYYMMDD') AS ANS_DT
+              FROM MSS.MO_COUNSELREQ COQ
+                 , (SELECT REQ_DT, REQ_SEQ, MAX(REG_DATE) AS REG_DATE 
+                      FROM MSS.MO_COUNSELANS 
+                     GROUP BY REQ_DT, REQ_SEQ) COA 
+                 , DPS.V_ORGPART     OPR
+             WHERE COQ.REQ_DT = COA.REQ_DT(+)
+               AND COQ.REQ_SEQ  = COA.REQ_SEQ(+)
+               AND OPR.ORG_CD  = COQ.STR_CD||COQ.DEPT_CD||COQ.TEAM_CD||COQ.PC_CD||'00'
+               AND COQ.STR_CD LIKE ?||'%'
+               AND COQ.DEPT_CD LIKE ?||'%'
+               AND COQ.TEAM_CD LIKE ?||'%'
+               AND COQ.PC_CD LIKE ?||'%'
+               AND COQ.REQ_DT >= ?
+               AND COQ.REQ_DT <= ?
+               AND COQ.PROC_STAT LIKE ?||'%'
+               AND COQ.BUYER_CD LIKE ?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 검색어 - 회사  -->
+    <query name="SEL_MO_COUNSELREQ_COMP">
+        <![CDATA[   
+               AND COQ.COMP_NAME LIKE '%'||?||'%' 
+        ]]>        
+    </query>
+    
+    <!-- 검색어 - 대표자  -->
+    <query name="SEL_MO_COUNSELREQ_REP">
+        <![CDATA[   
+               AND COQ.REP_NAME LIKE '%'||?||'%' 
+        ]]>        
+    </query>
+    
+    <!-- 검색어 - 신청자  -->
+    <query name="SEL_MO_COUNSELREQ_REQ">
+        <![CDATA[   
+               AND COQ.REQ_NAME LIKE '%'||?||'%'
+        ]]>        
+    </query>
+    
+    <!-- 상담신청 내역 조회 Query  -->
+    <query name="SEL_MO_BUYERMODHIS">
+        <![CDATA[   
+			SELECT 
+			       BMH.MOD_DT
+			     , LPAD((BMH.SEQ_NO), 3, '0') AS SEQ_NO
+			     , BMH.ORG_BUYER_CD
+			     , O_ORM.ORG_NAME        AS O_ORG_NAME
+			     , O_BMS.BUYER_NAME      AS O_BUYER_NAME
+			     , BMH.MOD_BUYER_CD
+			     , M_ORM.ORG_NAME        AS M_ORG_NAME
+			     , M_BMS.BUYER_NAME      AS M_BUYER_NAME
+			  FROM MSS.MO_BUYERMODHIS BMH
+			     , DPS.PC_BUYERMST    O_BMS
+			     , DPS.PC_ORGMST      O_ORM
+			     , DPS.PC_BUYERMST    M_BMS
+			     , DPS.PC_ORGMST      M_ORM
+             WHERE BMH.ORG_BUYER_CD = O_BMS.BUYER_CD
+               AND O_BMS.PC_ORG_CD  = O_ORM.ORG_CD
+               AND BMH.MOD_BUYER_CD = M_BMS.BUYER_CD
+               AND M_BMS.PC_ORG_CD  = M_ORM.ORG_CD
+			   AND BMH.REQ_DT   = ?
+			   AND BMH.REQ_SEQ  = ? 
+        ]]>        
+    </query>
+</service>

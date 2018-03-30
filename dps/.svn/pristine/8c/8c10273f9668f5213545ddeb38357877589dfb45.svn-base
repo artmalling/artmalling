@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- XML 버전 1.0을 사용하며 encoding 타입은 ‘euc-kr’로 한다.-->
+<!--
+ * 작 성 자 : 박종은
+ * 회 사 명 : 한국후지쯔
+ * 작 성 일 : 2010.04.08
+ * 변 경 일 : 
+ * 변경내용 : 
+ * 개    요 :  
+ -->
+<service name="/psal403.ps">
+
+    <gauce name="H_SEL_MASTER"> 
+        <column colName="STR_CD"                  colType="TB_STRING"      size="50"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_CD"                colType="TB_STRING"      size="5"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="BRAND_NM"                colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DEPT_CD"                 colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_CD"                 colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TEAM_ORG_NAME"           colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_CD"                   colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PC_ORG_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_CD"               colType="TB_STRING"      size="6"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PUMBUN_NAME"             colType="TB_STRING"      size="40"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_FLAG"              colType="TB_STRING"      size="2"        dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="EVENT_RATE"              colType="TB_STRING"      size="2"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="MG_RATE"                 colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="TOT_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="REDU_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_AMT"                colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="DC_AMT"                  colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="NET_SALE_AMT"            colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="SALE_PROF_AMT"           colType="TB_DECIMAL"     size="13"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="PROFRATE"                colType="TB_DECIMAL"     size="5"        dec="2" keyType="TB_NORMAL" roundMode="ROUND" />
+        <column colName="UNIT"    	              colType="TB_DECIMAL"     size="10"       dec="0" keyType="TB_NORMAL" roundMode="ROUND" />
+    </gauce>
+    
+    
+    <!-- 쿼리는 전부 대문자 -->
+    
+    <query name="SEL_SALE_MG_PUMBUN-01">        
+        <![CDATA[
+             SELECT 
+             		(SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 4) || '000000') STR_CD
+                  , NVL(BRAND_CD, ' ') AS BRAND_CD 
+                  , NVL(BRAND_NM, ' ') AS BRAND_NM
+                  , DEPT_CD
+                  , TEAM_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 6) || '0000') AS TEAM_ORG_NAME
+                  , PC_CD
+                  , ( SELECT ORG_SHORT_NAME
+                        FROM DPS.PC_ORGMST
+                       WHERE ORG_CD = SUBSTR(X.ORG_CD, 1, 8) || '00') AS PC_ORG_NAME
+                  , PUMBUN_CD
+                  , PUMBUN_NAME
+                  , NVL(EVENT_FLAG, ' ')AS EVENT_FLAG
+                  , NVL(EVENT_RATE, ' ')AS EVENT_RATE
+                  , MG_RATE
+                  , TOT_SALE_AMT
+                  , REDU_AMT
+                  , SALE_AMT
+                  , DC_AMT
+                  , NET_SALE_AMT
+                  , SALE_PROF_AMT
+                  , PROFRATE
+                  , ? AS UNIT
+               FROM (SELECT 
+		                    B.STR_CD
+		                  , NVL(BRD.BRAND_CD, ' ') AS BRAND_CD
+		                  , NVL(BRD.BRAND_NM, ' ') AS BRAND_NM
+		                  , B.DEPT_CD
+		                  , B.TEAM_CD
+		                  , SUBSTR(F.SALE_ORG_CD, 1, 8) AS ORG_CD
+		                  , B.PC_CD
+		                  , A.PUMBUN_CD
+		                  , F.PUMBUN_NAME
+		                  , NVL(A.EVENT_FLAG, ' ') AS EVENT_FLAG
+		                  , NVL(A.EVENT_RATE, ' ') AS EVENT_RATE
+		                  , A.MG_RATE
+		                  , SUM(NVL(A.TOT_SALE_AMT,0))                                        AS TOT_SALE_AMT
+		                  , SUM(NVL(A.REDU_AMT,0))                                            AS REDU_AMT
+		                  , SUM(NVL(A.NORM_SALE_AMT,0))                                       AS SALE_AMT
+		                  , SUM(NVL(A.DC_AMT,0))                                              AS DC_AMT
+		                  , SUM(NVL(A.NET_SALE_AMT,0))                                        AS NET_SALE_AMT
+		                  , SUM(NVL(A.SALE_PROF_AMT,0))                                       AS SALE_PROF_AMT
+		                  , CASE WHEN SUM(NVL(A.TOT_SALE_AMT,0)) = 0 THEN 0 ELSE ROUND((SUM(NVL(A.SALE_PROF_AMT,0))/SUM(NVL(A.TOT_SALE_AMT,0)))*100, 2) END     AS PROFRATE
+		               FROM DPS.PS_DAYMGPBN    A
+		                  , DPS.PC_ORGMST      B
+		                  , DPS.PC_STRPBN      F
+		                  , DPS.PC_PBNMST      PBN
+		                  , DPS.PC_BRDMST      BRD
+		              WHERE F.SALE_ORG_CD     = B.ORG_CD
+		                AND A.STR_CD     = F.STR_CD
+		                AND A.PUMBUN_CD  = F.PUMBUN_CD
+		                AND PBN.PUMBUN_CD = F.PUMBUN_CD
+		                AND BRD.BRAND_CD  (+)= PBN.BRAND_CD
+		                AND B.STR_CD    = ?
+		                
+        ]]>        
+    </query>
+
+		                
+		                
+		                
+		                
+    <query name="SEL_SALE_MG_PUMBUN-02">        
+        <![CDATA[
+		                AND A.SALE_DT    >= ?
+		                AND A.SALE_DT    <= ?
+		                AND A.PUMBUN_CD IN (SELECT MYORG.PUMBUN_CD
+		                               FROM COM.V_MYORG MYORG
+		                              WHERE MYORG.USER_ID     = ?
+		                           )
+		              GROUP BY
+		                    B.STR_CD
+		                  , BRD.BRAND_CD
+		                  , BRD.BRAND_NM
+		                  , SUBSTR(F.SALE_ORG_CD, 1, 8)
+		                  , B.DEPT_CD
+		                  , B.TEAM_CD
+		                  , B.PC_CD
+		                  , A.PUMBUN_CD
+		                  , F.PUMBUN_NAME
+		                  , A.EVENT_FLAG
+		                  , A.EVENT_RATE
+		                  , A.MG_RATE
+                    ) X
+              
+			ORDER BY STR_CD,DECODE(SUBSTR(X.ORG_CD,1,4),'0104',NULL,SUBSTR(X.ORG_CD,1,4)) NULLS LAST,(SELECT SORT_ORDER FROM DPS.PC_ORGMST M WHERE M.ORG_CD = X.ORG_CD||'00')
+
+               
+  
+            
+        ]]>        
+    </query>
+    
+    <query name="WHERE_DEPT_CD">        
+        <![CDATA[
+        				AND B.DEPT_CD  = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_TEAM_CD">        
+        <![CDATA[
+        				AND B.TEAM_CD  = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_PC_CD">        
+        <![CDATA[
+        				AND B.PC_CD    = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_PUMBUN_CD">        
+        <![CDATA[
+        				AND A.PUMBUN_CD    = ?
+        ]]>
+	</query>
+	
+	<query name="WHERE_NAVER">        
+        <![CDATA[
+        				AND A.PUMBUN_CD IN
+    						(SELECT DISTINCT PUMBUN_CD FROM DPS.PC_PBNMST
+   							WHERE PUMBUN_NAME LIKE ('%(N%'))
+        ]]>
+	</query>
+    
+    
+</service>
